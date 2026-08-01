@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
-import LogoMark from "@/components/site/LogoMark";
+import BrandLockup from "@/components/site/BrandLockup";
 
 const COLUMNS = [
   {
@@ -72,13 +72,7 @@ export default function Footer({ settings }) {
       <div className="container-wide py-16">
         <div className="grid lg:grid-cols-[1.3fr_repeat(6,minmax(0,1fr))] gap-8">
           <div>
-            <div className="flex items-center gap-2">
-              <LogoMark className="w-9 h-9" />
-              <div className="leading-tight">
-                <div className="font-bold text-lg">ConstructONS</div>
-                <div className="text-[9px] tracking-[0.2em] uppercase text-white/50 -mt-0.5">Everything Construction. Always On.</div>
-              </div>
-            </div>
+            <BrandLockup tone="dark" size="md" />
             <p className="mt-4 text-white/60 text-sm max-w-xs">
               India&rsquo;s most intelligent construction platform for premium home owners.
             </p>

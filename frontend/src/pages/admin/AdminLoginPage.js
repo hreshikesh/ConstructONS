@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
 import LogoMark from "@/components/site/LogoMark";
+import BrandLockup from "@/components/site/BrandLockup";
 import { Loader2, Lock, User } from "lucide-react";
 
 export default function AdminLoginPage() {
@@ -29,12 +30,8 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen grid place-items-center bg-brand-bg p-4">
       <form onSubmit={submit} className="w-full max-w-md bg-white rounded-3xl shadow-premium border border-black/5 p-8">
-        <div className="flex items-center gap-2">
-          <LogoMark className="w-8 h-8" />
-          <div>
-            <div className="font-bold text-brand-navy">ConstructONS Admin</div>
-            <div className="text-xs text-brand-navy/60">Manage your content</div>
-          </div>
+        <div className="flex items-center">
+          <BrandLockup tone="light" size="md" />
         </div>
         <h1 className="mt-8 text-2xl font-bold text-brand-navy">Sign in</h1>
         <p className="text-sm text-brand-navy/60">Enter your credentials to access the CMS.</p>

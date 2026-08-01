@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
-import LogoMark from "@/components/site/LogoMark";
+import BrandLockup from "@/components/site/BrandLockup";
 
 const NAV = [
   { label: "Home", to: "/", hash: "#top" },
@@ -46,12 +46,8 @@ export default function Header() {
               : "bg-white/60 backdrop-blur-md border border-white/50 py-2"
           }`}
         >
-          <Link to="/" className="flex items-center gap-2 shrink-0" data-testid="header-logo">
-            <LogoMark className="w-8 h-8 text-brand-orange" />
-            <div className="leading-tight">
-              <div className="font-bold text-brand-navy text-lg tracking-tight">ConstructONS</div>
-              <div className="text-[9px] tracking-[0.2em] uppercase text-brand-navy/50 -mt-0.5">Everything Construction. Always On.</div>
-            </div>
+          <Link to="/" className="flex items-center shrink-0" data-testid="header-logo">
+            <BrandLockup tone="light" size="md" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">

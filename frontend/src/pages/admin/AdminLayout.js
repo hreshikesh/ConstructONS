@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { adminApi } from "@/lib/api";
 import LogoMark from "@/components/site/LogoMark";
+import BrandLockup from "@/components/site/BrandLockup";
 import { Home, Package, MessageSquare, HelpCircle, Newspaper, ShoppingBag, Landmark, Users, Sparkles, Route, ImageIcon, LayoutDashboard, Settings, LogOut, Star, Inbox, GitCompareArrows, BarChart3 } from "lucide-react";
 
 const NAV = [
@@ -52,12 +53,9 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-brand-bg flex">
       <aside className="w-64 shrink-0 bg-brand-navy text-white flex flex-col fixed inset-y-0 left-0 overflow-y-auto">
-        <div className="p-5 flex items-center gap-2">
-          <LogoMark className="w-7 h-7" />
-          <div>
-            <div className="font-bold">ConstructONS</div>
-            <div className="text-[9px] tracking-widest uppercase text-white/50">Admin CMS</div>
-          </div>
+        <div className="p-5">
+          <BrandLockup tone="dark" size="sm" />
+          <div className="mt-2 text-[9px] tracking-widest uppercase text-white/40">Admin CMS</div>
         </div>
         <nav className="flex-1 px-3 pb-4 space-y-0.5">
           {NAV.map((n) => (
