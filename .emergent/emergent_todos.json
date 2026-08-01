@@ -1,0 +1,42 @@
+[
+  {
+    "content": "Phase 2: Backend - schemas, CRUD APIs, admin auth, seed script",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Backend - Seed sample data & verify APIs",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - design tokens (colors, Poppins), API client, layout primitives",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - Header, Hero, Home Collection, Packages sections (CMS-driven)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - AI Platform, Marketplace, Financial Services, Why ConstructONS",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - Customer Journey, Testimonials, Contact, Footer, Lead form",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - Home detail page route with gallery + specs + floor plan",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - About page, Blog list/detail routes",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - Admin panel (login + CRUD for all entities + Leads inbox)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: End-to-end testing via testing_agent_v3",
+    "status": "in_progress"
+  }
+]
