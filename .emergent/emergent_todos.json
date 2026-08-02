@@ -1,42 +1,34 @@
 [
   {
-    "content": "Phase 2: Backend - schemas, CRUD APIs, admin auth, seed script",
+    "content": "Phase 3: Extend Package model with deep spec categories, scope, exclusions, addons, payment schedule, package FAQs, timeline/warranty",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Backend - Seed sample data & verify APIs",
+    "content": "Phase 3: Rewrite seed with REAL Indian brand data (UltraTech, TATA Tiscon, Jaquar, Kajaria, Asian Paints, Havells, Polycab, etc.) across 4 tiers",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - design tokens (colors, Poppins), API client, layout primitives",
+    "content": "Phase 3: Backend - /api/packages/compare endpoint + /api/packages/{slug}/brochure.pdf with reportlab",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Header, Hero, Home Collection, Packages sections (CMS-driven)",
+    "content": "Phase 3: Frontend - /packages/:slug detail page (banner, specs, scope, exclusions, addons, schedule, FAQs, calculator, brochure download)",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - AI Platform, Marketplace, Financial Services, Why ConstructONS",
+    "content": "Phase 3: Frontend - /packages/compare route with side-by-side spec table",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Customer Journey, Testimonials, Contact, Footer, Lead form",
+    "content": "Phase 3: Update homepage Packages section \"View Details\" to link to detail page",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Home detail page route with gallery + specs + floor plan",
+    "content": "Phase 3: Admin editor upgrades for new package fields (JSON editors + templates)",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - About page, Blog list/detail routes",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Frontend - Admin panel (login + CRUD for all entities + Leads inbox)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: End-to-end testing via testing_agent_v3",
-    "status": "completed"
+    "content": "Phase 3: End-to-end testing",
+    "status": "in_progress"
   }
 ]

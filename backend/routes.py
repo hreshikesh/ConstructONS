@@ -111,6 +111,49 @@ async def del_package(id: str):
     return await delete_doc("packages", id)
 
 
+# ----------------------- Packages: Compare + Brochure -----------------------
+@router.get("/packages-compare")
+async def packages_compare():
+    """Return all published packages side-by-side with unified spec categories."""
+    pkgs = await db.packages.find({"is_published": True}, {"_id": 0}).sort("sort_order", 1).to_list(100)
+    # Collect union of category names in order of first appearance
+    cat_order = []
+    seen = set()
+    for p in pkgs:
+        for c in (p.get("spec_categories") or []):
+            n = c.get("name")
+            if n and n not in seen:
+                cat_order.append(n)
+                seen.add(n)
+    return {"packages": pkgs, "category_order": cat_order}
+
+
+from fastapi.responses import Response  # noqa: E402
+
+
+@router.get("/packages/{slug}/brochure.pdf")
+async def download_brochure(slug: str):
+    """Public endpoint — download PDF brochure for a package by slug or id."""
+    pkg = await db.packages.find_one({"slug": slug}, {"_id": 0})
+    if not pkg:
+        pkg = await db.packages.find_one({"id": slug}, {"_id": 0})
+    if not pkg:
+        raise HTTPException(status_code=404, detail="Package not found")
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+
+    from brochure import generate_brochure
+    pdf_bytes = generate_brochure(pkg, settings)
+    filename = f"ConstructONS-{pkg.get('slug','package')}-brochure.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "public, max-age=300",
+        },
+    )
+
+
 # ----------------------- Generic factory for simpler collections -----------------------
 def make_crud(path: str, collection: str, ModelCls):
     @router.get(f"/{path}")

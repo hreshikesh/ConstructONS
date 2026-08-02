@@ -7,6 +7,8 @@ import { LeadModalProvider } from "@/components/site/LeadModalProvider";
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const HomeDetailPage = lazy(() => import("@/pages/HomeDetailPage"));
 const PackagesPage = lazy(() => import("@/pages/PackagesPage"));
+const PackageDetailPage = lazy(() => import("@/pages/PackageDetailPage"));
+const PackagesComparePage = lazy(() => import("@/pages/PackagesComparePage"));
 const AboutPage = lazy(() => import("@/pages/AboutPage"));
 const BlogListPage = lazy(() => import("@/pages/BlogListPage"));
 const BlogDetailPage = lazy(() => import("@/pages/BlogDetailPage"));
@@ -36,6 +38,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/homes/:slug" element={<HomeDetailPage />} />
               <Route path="/packages" element={<PackagesPage />} />
+              <Route path="/packages/compare" element={<PackagesComparePage />} />
+              <Route path="/packages/:slug" element={<PackageDetailPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/blog" element={<BlogListPage />} />
               <Route path="/blog/:slug" element={<BlogDetailPage />} />

@@ -285,6 +285,8 @@ async def seed_all():
 
     # -------- Packages --------
     await _reset("packages")
+    from package_data import PACKAGES_DETAILED
+
     common_sections = lambda tier: [
         PackageSection(title="Overview", items=[
             f"{tier} tier construction with transparent pricing",
@@ -327,13 +329,16 @@ async def seed_all():
         ]).model_dump(),
     ]
 
+    def _detail(slug):
+        d = next((d for d in PACKAGES_DETAILED if d["slug"] == slug), {})
+        # remove slug from spread — it's already set in outer dict
+        return {k: v for k, v in d.items() if k != "slug"}
+
     packages_data = [
         dict(
             name="Basic Package",
-            slug="basic",
-            tier="basic",
-            price_display="₹1,499",
-            price_unit="/Sq.ft",
+            slug="basic", tier="basic",
+            price_display="₹1,499", price_unit="/Sq.ft",
             tagline="Smart & Affordable",
             description="Perfect for budget-conscious home owners who want quality with transparency.",
             highlights=[
@@ -343,16 +348,13 @@ async def seed_all():
                 "1 Year Warranty",
             ],
             sections=common_sections("Basic"),
-            is_most_popular=False,
-            accent_color="#22C55E",
-            sort_order=1,
+            is_most_popular=False, accent_color="#22C55E", sort_order=1,
+            **_detail("basic"),
         ),
         dict(
             name="Essential Package",
-            slug="essential",
-            tier="essential",
-            price_display="₹1,799",
-            price_unit="/Sq.ft",
+            slug="essential", tier="essential",
+            price_display="₹1,799", price_unit="/Sq.ft",
             tagline="Perfect Balance",
             description="Best combination of quality and value with premium finishes.",
             highlights=[
@@ -362,16 +364,13 @@ async def seed_all():
                 "2 Year Warranty",
             ],
             sections=common_sections("Essential"),
-            is_most_popular=True,
-            accent_color="#0B1220",
-            sort_order=2,
+            is_most_popular=True, accent_color="#0B1220", sort_order=2,
+            **_detail("essential"),
         ),
         dict(
             name="Standard Package",
-            slug="standard",
-            tier="standard",
-            price_display="₹2,199",
-            price_unit="/Sq.ft",
+            slug="standard", tier="standard",
+            price_display="₹2,199", price_unit="/Sq.ft",
             tagline="Premium Value",
             description="Premium construction with advanced features and designer finishes.",
             highlights=[
@@ -381,16 +380,13 @@ async def seed_all():
                 "3 Year Warranty",
             ],
             sections=common_sections("Standard"),
-            is_most_popular=False,
-            accent_color="#FF5A00",
-            sort_order=3,
+            is_most_popular=False, accent_color="#FF5A00", sort_order=3,
+            **_detail("standard"),
         ),
         dict(
             name="Premium Package",
-            slug="premium",
-            tier="premium",
-            price_display="Custom Quote",
-            price_unit="",
+            slug="premium", tier="premium",
+            price_display="Custom Quote", price_unit="",
             tagline="Bespoke Luxury",
             description="Fully customized to your lifestyle and requirements. Every detail crafted for you.",
             highlights=[
@@ -400,10 +396,9 @@ async def seed_all():
                 "Up to 10 Year Warranty",
             ],
             sections=common_sections("Premium"),
-            is_most_popular=False,
-            accent_color="#7C3AED",
-            cta_label="Get Custom Quote",
-            sort_order=4,
+            is_most_popular=False, accent_color="#7C3AED",
+            cta_label="Get Custom Quote", sort_order=4,
+            **_detail("premium"),
         ),
     ]
     for p in packages_data:

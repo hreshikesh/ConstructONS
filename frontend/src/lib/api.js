@@ -17,6 +17,8 @@ export const publicApi = {
   getHome: (idOrSlug) => api.get(`/homes/${idOrSlug}`).then((r) => r.data),
   getPackages: () => api.get("/packages").then((r) => r.data),
   getPackage: (idOrSlug) => api.get(`/packages/${idOrSlug}`).then((r) => r.data),
+  comparePackages: () => api.get("/packages-compare").then((r) => r.data),
+  brochureUrl: (slug) => `${API_BASE}/packages/${slug}/brochure.pdf`,
   getBlogs: () => api.get("/blogs").then((r) => r.data),
   getBlog: (idOrSlug) => api.get(`/blogs/${idOrSlug}`).then((r) => r.data),
   getFaqs: () => api.get("/faqs").then((r) => r.data),

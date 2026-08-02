@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Check, ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Check, ArrowRight, Sparkles, ChevronDown, Download, Scale } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import { publicApi } from "@/lib/api";
 
 export default function Packages({ packages = [] }) {
   const { open: openLead } = useLeadModal();
@@ -19,12 +21,26 @@ export default function Packages({ packages = [] }) {
             <p className="mt-4 text-brand-navy/60 max-w-md leading-relaxed">
               No hidden costs. No surprises. Just quality construction with clear pricing.
             </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Link
+                to="/packages/compare"
+                data-testid="packages-compare-link"
+                className="inline-flex items-center gap-2 rounded-full bg-white border border-black/10 text-brand-navy font-semibold text-sm px-4 py-2 hover:border-brand-navy transition"
+              >
+                <Scale className="w-4 h-4" /> Compare All Packages
+              </Link>
+            </div>
           </FadeIn>
         </div>
 
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
           {packages.map((p, i) => (
-            <PackageCard key={p.id} pkg={p} index={i} onQuote={() => openLead({ package: p.name, source: "packages" })} />
+            <PackageCard
+              key={p.id}
+              pkg={p}
+              index={i}
+              onQuote={() => openLead({ package: p.name, source: "packages" })}
+            />
           ))}
         </div>
       </div>
@@ -36,6 +52,7 @@ function PackageCard({ pkg, onQuote, index }) {
   const [expanded, setExpanded] = useState(false);
   const isPopular = pkg.is_most_popular;
   const isPremium = pkg.tier === "premium";
+  const brochureUrl = publicApi.brochureUrl(pkg.slug);
 
   return (
     <motion.div
@@ -48,6 +65,7 @@ function PackageCard({ pkg, onQuote, index }) {
           ? "bg-brand-navy text-white border-brand-navy shadow-premium"
           : "bg-white border-black/5 shadow-soft"
       }`}
+      data-testid={`package-card-${pkg.slug}`}
     >
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-brand-orange text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-glow">
@@ -82,42 +100,66 @@ function PackageCard({ pkg, onQuote, index }) {
             transition={{ duration: 0.35 }}
             className="overflow-hidden"
           >
-            <div className="mt-5 space-y-4">
-              {pkg.sections?.map((sec, i) => (
+            <div className="mt-5 space-y-3">
+              {(pkg.spec_categories || pkg.sections || []).slice(0, 4).map((sec, i) => (
                 <div key={i}>
                   <div className={`text-[11px] font-bold uppercase tracking-widest ${isPopular ? "text-brand-orangeLight" : "text-brand-orange"}`}>
-                    {sec.title}
+                    {sec.name || sec.title}
                   </div>
                   <ul className="mt-1.5 space-y-1">
-                    {sec.items?.map((it, j) => (
+                    {(sec.items || []).slice(0, 3).map((it, j) => (
                       <li key={j} className={`text-xs flex items-start gap-1.5 ${isPopular ? "text-white/80" : "text-brand-navy/70"}`}>
-                        <Sparkles className={`w-3 h-3 mt-0.5 ${isPopular ? "text-white/40" : "text-brand-navy/30"}`} />
-                        {it}
+                        <Sparkles className={`w-3 h-3 mt-0.5 shrink-0 ${isPopular ? "text-white/40" : "text-brand-navy/30"}`} />
+                        <span className="line-clamp-1">{typeof it === "string" ? it : `${it.spec}: ${it.value || ""}`}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               ))}
+              <div className={`text-[11px] pt-1 ${isPopular ? "text-white/60" : "text-brand-navy/60"}`}>
+                + {(pkg.spec_categories || []).length - 4} more categories &middot; see full details \u2192
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="mt-6 flex flex-col gap-2">
-        <button
+        <Link
+          to={`/packages/${pkg.slug}`}
           data-testid={`package-view-details-${pkg.slug}`}
-          onClick={() => setExpanded((s) => !s)}
           className={`w-full rounded-full px-5 py-2.5 text-sm font-semibold border transition inline-flex items-center justify-center gap-1.5 ${
             isPopular
-              ? "border-white/25 text-white hover:bg-white/10"
+              ? "bg-brand-orange text-white border-brand-orange hover:bg-brand-orangeDark"
               : isPremium
               ? "bg-[#7C3AED] text-white border-[#7C3AED] hover:bg-[#6D28D9]"
               : "bg-white border-black/10 text-brand-navy hover:border-brand-navy"
           }`}
         >
-          {expanded ? "Hide Details" : pkg.cta_label || "View Details"}
-          <ChevronDown className={`w-3.5 h-3.5 transition ${expanded ? "rotate-180" : ""}`} />
-        </button>
+          View Full Details <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setExpanded((s) => !s)}
+            className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold inline-flex items-center justify-center gap-1 ${
+              isPopular ? "text-white/85 hover:bg-white/5" : "text-brand-navy/70 hover:bg-brand-navy/5"
+            }`}
+          >
+            Quick preview
+            <ChevronDown className={`w-3 h-3 transition ${expanded ? "rotate-180" : ""}`} />
+          </button>
+          <a
+            href={brochureUrl}
+            target="_blank"
+            rel="noreferrer"
+            data-testid={`package-brochure-${pkg.slug}`}
+            className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold inline-flex items-center justify-center gap-1 ${
+              isPopular ? "text-brand-orangeLight hover:bg-white/5" : "text-brand-orange hover:bg-brand-orange/10"
+            }`}
+          >
+            <Download className="w-3 h-3" /> Brochure
+          </a>
+        </div>
         {isPremium && (
           <button
             onClick={onQuote}

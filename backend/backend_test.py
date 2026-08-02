@@ -151,6 +151,121 @@ class ConstructONSAPITester:
             self.log(f"  Package tiers: {tiers}", "INFO")
         return success, response
 
+    def test_package_detail(self, slug):
+        """Test GET /api/packages/{slug} with detailed fields"""
+        success, response = self.run_test(
+            f"Get package detail: {slug}",
+            "GET",
+            f"packages/{slug}",
+            200
+        )
+        if success:
+            # Verify required detailed fields
+            required = ['spec_categories', 'addons', 'scope_of_work', 'exclusions', 
+                       'payment_schedule', 'package_faqs', 'timeline_months', 
+                       'warranty_years', 'price_per_sqft', 'min_area_sqft']
+            missing = [f for f in required if f not in response]
+            if missing:
+                self.log(f"⚠️  Package detail missing fields: {missing}", "WARN")
+            else:
+                self.log(f"✓ Package detail has all required fields", "INFO")
+                self.log(f"  - Spec categories: {len(response.get('spec_categories', []))}", "INFO")
+                self.log(f"  - Add-ons: {len(response.get('addons', []))}", "INFO")
+                self.log(f"  - Scope items: {len(response.get('scope_of_work', []))}", "INFO")
+                self.log(f"  - Exclusions: {len(response.get('exclusions', []))}", "INFO")
+                self.log(f"  - Payment milestones: {len(response.get('payment_schedule', []))}", "INFO")
+                self.log(f"  - FAQs: {len(response.get('package_faqs', []))}", "INFO")
+                
+                # Check for real brand names in spec_categories
+                spec_cats = response.get('spec_categories', [])
+                if spec_cats:
+                    brands_found = []
+                    for cat in spec_cats[:3]:  # Check first 3 categories
+                        for item in cat.get('items', [])[:2]:  # Check first 2 items
+                            brand = item.get('brand', '')
+                            if brand:
+                                brands_found.append(brand)
+                    if brands_found:
+                        self.log(f"  - Sample brands: {', '.join(brands_found[:5])}", "INFO")
+        return success, response
+
+    def test_packages_compare(self):
+        """Test GET /api/packages-compare"""
+        success, response = self.run_test(
+            "Compare packages",
+            "GET",
+            "packages-compare",
+            200
+        )
+        if success:
+            packages = response.get('packages', [])
+            category_order = response.get('category_order', [])
+            self.log(f"✓ Compare endpoint returned {len(packages)} packages", "INFO")
+            self.log(f"✓ Category order has {len(category_order)} categories", "INFO")
+            if category_order:
+                self.log(f"  - Sample categories: {', '.join(category_order[:5])}", "INFO")
+        return success, response
+
+    def test_package_brochure(self, slug):
+        """Test GET /api/packages/{slug}/brochure.pdf"""
+        url = f"{self.base_url}/packages/{slug}/brochure.pdf"
+        self.tests_run += 1
+        self.log(f"Testing package brochure: {slug}...")
+        
+        try:
+            response = requests.get(url, timeout=15)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('Content-Type', '')
+                content_length = len(response.content)
+                
+                if 'application/pdf' in content_type:
+                    self.log(f"✓ Content-Type is application/pdf", "INFO")
+                else:
+                    self.log(f"⚠️  Content-Type is {content_type}, expected application/pdf", "WARN")
+                
+                if content_length >= 15000:  # >= 15 KB
+                    self.log(f"✓ PDF size: {content_length / 1024:.1f} KB (>= 15 KB)", "INFO")
+                    self.tests_passed += 1
+                    self.log(f"✅ PASSED - Package brochure: {slug}", "PASS")
+                else:
+                    self.log(f"❌ FAILED - PDF too small: {content_length / 1024:.1f} KB (< 15 KB)", "FAIL")
+                    self.failed_tests.append({
+                        "name": f"Package brochure: {slug}",
+                        "error": f"PDF size {content_length} bytes < 15 KB",
+                        "endpoint": f"packages/{slug}/brochure.pdf"
+                    })
+            else:
+                self.log(f"❌ FAILED - Expected 200, got {response.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": f"Package brochure: {slug}",
+                    "expected": 200,
+                    "actual": response.status_code,
+                    "endpoint": f"packages/{slug}/brochure.pdf"
+                })
+            
+            return success, response.content if success else None
+            
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": f"Package brochure: {slug}",
+                "error": str(e),
+                "endpoint": f"packages/{slug}/brochure.pdf"
+            })
+            return False, None
+
+    def test_package_brochure_404(self):
+        """Test GET /api/packages/invalid-slug/brochure.pdf returns 404"""
+        success, _ = self.run_test(
+            "Package brochure 404 (invalid slug)",
+            "GET",
+            "packages/invalid-slug-xyz/brochure.pdf",
+            404
+        )
+        return success, None
+
     def test_admin_login(self):
         """Test POST /api/admin/login"""
         success, response = self.run_test(
@@ -301,6 +416,23 @@ class ConstructONSAPITester:
         self.test_homes_list()
         self.test_home_detail("modern-aura")
         self.test_packages_list()
+        
+        # Test detailed package endpoints
+        self.log("\n--- Testing Package Detail Endpoints ---", "INFO")
+        self.test_package_detail("basic")
+        self.test_package_detail("essential")
+        self.test_package_detail("standard")
+        self.test_package_detail("premium")
+        
+        # Test packages compare
+        self.log("\n--- Testing Package Compare Endpoint ---", "INFO")
+        self.test_packages_compare()
+        
+        # Test package brochures
+        self.log("\n--- Testing Package Brochure PDFs ---", "INFO")
+        self.test_package_brochure("basic")
+        self.test_package_brochure("premium")
+        self.test_package_brochure_404()
         
         # Create lead (public)
         self.log("\n--- Testing Lead Creation (Public) ---", "INFO")

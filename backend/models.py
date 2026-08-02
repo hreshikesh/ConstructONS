@@ -53,16 +53,65 @@ class PackageSection(BaseModel):
     title: str  # e.g. 'Materials', 'Specifications', 'Warranty', 'Timeline', 'Quality', 'AI Features'
     items: List[str] = Field(default_factory=list)
 
+
+class SpecItem(BaseModel):
+    """A single row inside a spec category — e.g. 'Cement | UltraTech 53 Grade | 10 Yr | PPC blend'."""
+    spec: str  # Label: 'Cement', 'TMT Steel'
+    value: str = ""  # 'UltraTech PPC 53 Grade'
+    brand: Optional[str] = None  # 'UltraTech'
+    warranty: Optional[str] = None  # '10 Years'
+    notes: Optional[str] = None
+
+
+class SpecCategory(BaseModel):
+    """A category in the deep spec sheet — e.g. 'Structure & Foundation'."""
+    name: str
+    icon: Optional[str] = None  # lucide icon
+    items: List[SpecItem] = Field(default_factory=list)
+
+
+class AddOn(BaseModel):
+    name: str
+    description: str = ""
+    price: str  # display, e.g. '₹75,000' or '₹120/Sq.ft'
+    unit: Optional[str] = None
+    image: Optional[str] = None
+
+
+class PaymentMilestone(BaseModel):
+    milestone: str  # e.g. 'Booking Advance'
+    percentage: int = 0
+    description: str = ""
+
+
+class PackageFAQ(BaseModel):
+    question: str
+    answer: str
+
+
 class Package(BaseDoc):
     name: str  # 'Basic Package'
     slug: str
     tier: str  # 'basic' | 'essential' | 'standard' | 'premium'
     price_display: str  # '₹1499' or 'Custom Quote'
     price_unit: Optional[str] = "/Sq.ft"
+    price_per_sqft: Optional[int] = 0  # numeric for calculator, 0 = custom
     tagline: str = ""
     description: str = ""
+    hero_image: Optional[str] = None
     highlights: List[str] = Field(default_factory=list)
-    sections: List[PackageSection] = Field(default_factory=list)
+    sections: List[PackageSection] = Field(default_factory=list)  # legacy summary
+    # New deep systems:
+    spec_categories: List[SpecCategory] = Field(default_factory=list)
+    scope_of_work: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+    addons: List[AddOn] = Field(default_factory=list)
+    payment_schedule: List[PaymentMilestone] = Field(default_factory=list)
+    package_faqs: List[PackageFAQ] = Field(default_factory=list)
+    timeline_months: Optional[str] = None  # '8–10 months'
+    warranty_years: Optional[int] = 1
+    min_area_sqft: Optional[int] = 800
+    # UI:
     is_most_popular: bool = False
     accent_color: str = "#FF5A00"
     cta_label: str = "View Details"
