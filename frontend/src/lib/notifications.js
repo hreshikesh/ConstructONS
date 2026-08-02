@@ -33,7 +33,8 @@ export function playChime() {
       osc.stop(now + i * 0.12 + 0.4);
     });
   } catch (e) {
-    // ignore
+    // Best-effort: browsers may throw on strict autoplay policies.
+    if (typeof console !== "undefined") console.warn("[notifications] chime blocked:", e?.message || e);
   }
 }
 
@@ -66,12 +67,16 @@ export function showNativeNotification(title, options = {}) {
       renotify: true,
     });
     n.onclick = () => {
-      try { window.focus(); } catch {}
+      try {
+        window.focus();
+      } catch (focusErr) {
+        if (typeof console !== "undefined") console.warn("[notifications] window.focus() failed:", focusErr?.message || focusErr);
+      }
       if (options.url) window.location.href = options.url;
       n.close();
     };
     return n;
-  } catch {
-    // ignore
+  } catch (e) {
+    if (typeof console !== "undefined") console.warn("[notifications] showNativeNotification failed:", e?.message || e);
   }
 }

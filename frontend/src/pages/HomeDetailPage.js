@@ -73,7 +73,7 @@ export default function HomeDetailPage() {
                 <div className="p-3 flex gap-2 overflow-x-auto no-scrollbar">
                   {home.gallery.map((g, i) => (
                     <button
-                      key={i}
+                      key={g || `thumb-${i}`}
                       onClick={() => setSelected(i)}
                       data-testid={`gallery-thumb-${i}`}
                       className={`shrink-0 w-24 aspect-[4/3] rounded-xl overflow-hidden border-2 transition ${
@@ -151,7 +151,7 @@ export default function HomeDetailPage() {
                   <div className="text-[10px] uppercase tracking-widest text-brand-navy/50 mb-3">Highlights</div>
                   <div className="grid sm:grid-cols-2 gap-2">
                     {home.features.map((f, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm text-brand-navy/85">
+                      <div key={`feat-${f}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
                         <Check className="w-4 h-4 text-brand-orange mt-0.5" />
                         {f}
                       </div>
@@ -172,7 +172,7 @@ export default function HomeDetailPage() {
               <h3 className="mt-2 text-brand-navy">Space breakdown</h3>
               <ul className="mt-4 space-y-2">
                 {home.floor_areas?.map((f, i) => (
-                  <li key={i} className="flex items-center justify-between text-sm py-2 border-b border-black/5 last:border-0">
+                  <li key={f.label || `area-${i}`} className="flex items-center justify-between text-sm py-2 border-b border-black/5 last:border-0">
                     <span className="text-brand-navy/80">{f.label}</span>
                     <span className="font-semibold text-brand-navy">{f.area}</span>
                   </li>

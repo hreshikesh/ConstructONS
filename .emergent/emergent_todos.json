@@ -1,22 +1,30 @@
 [
   {
-    "content": "Remove page numbers (02, 03, 09 etc.) from SectionLabel component",
+    "content": "#1 XSS - Sanitize dangerouslySetInnerHTML in BlogDetailPage with DOMPurify",
     "status": "completed"
   },
   {
-    "content": "Fix Testimonials layout - stop marquee cards from overlapping the 4.9/5 rating badge",
+    "content": "#2 Fix genuine hook dependency issues (duplicate useEffect, useCallback wrap for load)",
     "status": "completed"
   },
   {
-    "content": "Replace Home Collection thumbnails with typical Indian house front-elevation images",
+    "content": "#3 Move hardcoded credentials in backend_test.py to env vars",
     "status": "completed"
   },
   {
-    "content": "Set all packages to 10 Year Warranty (highlights + warranty_years) and update running DB",
+    "content": "#6 Replace array-index keys with stable IDs across PackageDetailPage/HomeDetailPage/Testimonials/Packages",
     "status": "completed"
   },
   {
-    "content": "Verify changes via screenshots",
+    "content": "#7 'is' comparison anti-patterns - FALSE POSITIVE (all instances are PEP-8 compliant None-checks)",
+    "status": "completed"
+  },
+  {
+    "content": "#9 Log errors from previously-empty catch blocks in notifications & useAdminNotifications",
+    "status": "completed"
+  },
+  {
+    "content": "Verify build + screenshot after all fixes",
     "status": "completed"
   }
 ]

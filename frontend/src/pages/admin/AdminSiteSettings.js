@@ -7,12 +7,15 @@ export default function AdminSiteSettings() {
   const [s, setS] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { adminApi.list("site-settings").then(setS).catch(async () => setS(await fetch("/api/site-settings").then((r)=>r.json()))); }, []);
-  // Note: we fetch via public endpoint too
-
   useEffect(() => {
-    // Use public endpoint since site-settings has no plural list
-    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/site-settings`).then((r) => r.json()).then(setS);
+    // site-settings is a singleton doc — the public endpoint is the source of truth.
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/site-settings`)
+      .then((r) => r.json())
+      .then(setS)
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn("[AdminSiteSettings] failed to load settings", err);
+      });
   }, []);
 
   if (!s) return <div>Loading…</div>;

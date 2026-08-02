@@ -44,7 +44,11 @@ export function useAdminNotifications({ enabled = true } = {}) {
       list.forEach((i) => knownIdsRef.current.add(`${i.type}:${i.id}`));
       firstRunRef.current = false;
     } catch (e) {
-      // Silently ignore; auth may have expired
+      // Auth may have expired or network dropped — log for observability but don't spam the UI.
+      if (e?.response?.status && ![401, 403].includes(e.response.status)) {
+        // eslint-disable-next-line no-console
+        console.warn("[useAdminNotifications] poll failed:", e?.response?.status || e?.message || e);
+      }
     }
   }, []);
 

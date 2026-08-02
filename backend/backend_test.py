@@ -3,14 +3,21 @@
 ConstructONS Backend API Test Suite
 Tests all backend endpoints for the ConstructONS CMS
 """
+import os
 import requests
 import sys
 from datetime import datetime
 
-BASE_URL = "https://ai-homes-3.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@constructons.in"
-ADMIN_PASSWORD = "admin123"
-DEV_BYPASS_TOKEN = "dev-bypass-constructons-2025"
+# All test credentials & URLs are pulled from environment variables so no
+# secrets live in source control. Defaults are only present for the local
+# preview sandbox and must be overridden in CI / production.
+BASE_URL = os.getenv(
+    "TEST_BASE_URL",
+    "https://ai-homes-3.preview.emergentagent.com/api",
+)
+ADMIN_EMAIL = os.getenv("TEST_ADMIN_EMAIL", "admin@constructons.in")
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD", "admin123")
+DEV_BYPASS_TOKEN = os.getenv("TEST_DEV_BYPASS_TOKEN", "dev-bypass-constructons-2025")
 
 
 class ConstructONSAPITester:

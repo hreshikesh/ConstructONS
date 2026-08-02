@@ -24,7 +24,7 @@ export default function Testimonials({ items = [] }) {
               <div className="h-10 w-px bg-white/15 mx-2" />
               <div className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-brand-orange fill-brand-orange" />
+                  <Star key={`hdr-star-${i}`} className="w-4 h-4 text-brand-orange fill-brand-orange" />
                 ))}
               </div>
             </div>
@@ -35,7 +35,7 @@ export default function Testimonials({ items = [] }) {
             <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-brand-bg to-transparent z-10" />
             <div className="marquee-track flex gap-4" style={{ width: "max-content" }}>
               {loop.map((t, i) => (
-                <TestimonialCard t={t} key={i} />
+                <TestimonialCard t={t} key={`${t.id || t.customer_name || "t"}-${i}`} />
               ))}
             </div>
           </div>
@@ -57,7 +57,7 @@ function TestimonialCard({ t }) {
       </div>
       <div className="mt-3 flex items-center gap-0.5">
         {Array.from({ length: t.rating || 5 }).map((_, i) => (
-          <Star key={i} className="w-3.5 h-3.5 text-brand-orange fill-brand-orange" />
+          <Star key={`${t.id || t.customer_name}-star-${i}`} className="w-3.5 h-3.5 text-brand-orange fill-brand-orange" />
         ))}
       </div>
       <p className="mt-3 text-sm text-brand-navy/75 leading-relaxed">“{t.quote}”</p>

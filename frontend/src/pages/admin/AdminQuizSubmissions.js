@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,15 +22,15 @@ export default function AdminQuizSubmissions() {
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const list = await adminApi.listQuizSubmissions();
       setItems(list);
     } catch { toast.error("Failed to load"); }
     setLoading(false);
-  };
-  useEffect(() => { load(); }, []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
 
   const filtered = filter ? items.filter((i) => i.status === filter) : items;
 

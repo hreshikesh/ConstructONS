@@ -237,7 +237,7 @@ function OverviewTab({ pkg }) {
           <div className="section-eyebrow">Key Highlights</div>
           <ul className="mt-3 space-y-2">
             {(pkg.highlights || []).map((h, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-brand-navy/85">
+              <li key={`hl-${h}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
                 <Check className="w-4 h-4 text-brand-orange mt-0.5" /> {h}
               </li>
             ))}
@@ -310,7 +310,7 @@ function SpecsTab({ pkg, expanded, setExpanded }) {
                           </thead>
                           <tbody className="divide-y divide-black/5">
                             {(cat.items || []).map((it, i) => (
-                              <tr key={i} className={i % 2 ? "bg-brand-bg/40" : "bg-white"}>
+                              <tr key={`spec-${cat.name}-${it.spec}-${i}`} className={i % 2 ? "bg-brand-bg/40" : "bg-white"}>
                                 <td className="px-4 py-2 font-semibold text-brand-navy">{it.spec}</td>
                                 <td className="px-4 py-2 text-brand-navy/80">{it.value || "-"}</td>
                                 <td className="px-4 py-2 text-brand-navy/70">{it.brand || "-"}</td>
@@ -341,7 +341,7 @@ function ScopeTab({ pkg }) {
           <h3 className="mt-2 text-brand-navy">What’s included</h3>
           <ul className="mt-4 space-y-2">
             {(pkg.scope_of_work || []).map((s, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-brand-navy/85">
+              <li key={`scope-${s}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
                 <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> {s}
               </li>
             ))}
@@ -352,7 +352,7 @@ function ScopeTab({ pkg }) {
           <h3 className="mt-2 text-brand-navy">Not included</h3>
           <ul className="mt-4 space-y-2">
             {(pkg.exclusions || []).map((s, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-brand-navy/85">
+              <li key={`excl-${s}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
                 <X className="w-4 h-4 text-red-400 mt-0.5 shrink-0" /> {s}
               </li>
             ))}
@@ -372,7 +372,7 @@ function AddonsTab({ pkg, onEnquire }) {
       <h2 className="mt-2 text-brand-navy">Personalise your home</h2>
       <div className="mt-8 grid md:grid-cols-2 xl:grid-cols-3 gap-4">
         {addons.map((a, i) => (
-          <div key={i} data-testid={`pkg-addon-${i}`} className="rounded-2xl bg-white p-5 border border-black/5 shadow-soft hover:shadow-premium hover:-translate-y-0.5 transition-all">
+          <div key={a.slug || a.name || `addon-${i}`} data-testid={`pkg-addon-${i}`} className="rounded-2xl bg-white p-5 border border-black/5 shadow-soft hover:shadow-premium hover:-translate-y-0.5 transition-all">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="font-bold text-brand-navy">{a.name}</div>
@@ -418,7 +418,7 @@ function ScheduleTab({ pkg }) {
           </thead>
           <tbody className="divide-y divide-black/5">
             {schedule.map((s, i) => (
-              <tr key={i} data-testid={`pkg-schedule-${i}`}>
+              <tr key={s.milestone || `sched-${i}`} data-testid={`pkg-schedule-${i}`}>
                 <td className="px-5 py-3 font-semibold text-brand-navy">{s.milestone}</td>
                 <td className="px-5 py-3 text-center text-brand-orange font-bold">{s.percentage}%</td>
                 <td className="px-5 py-3 text-center text-brand-navy/60">{cumulative[i]}%</td>
@@ -441,7 +441,7 @@ function FaqsTab({ pkg }) {
       <h2 className="mt-2 text-brand-navy">Frequently asked questions</h2>
       <div className="mt-8 space-y-3">
         {faqs.map((f, i) => (
-          <div key={i} className="rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden">
+          <div key={f.question || `faq-${i}`} className="rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden">
             <button
               onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
               data-testid={`pkg-faq-${i}`}

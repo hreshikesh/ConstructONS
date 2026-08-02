@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
 import { Trash2, RefreshCw } from "lucide-react";
@@ -7,16 +7,20 @@ export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const l = await adminApi.listLeads();
       setLeads(l);
-    } catch (e) { toast.error("Failed to load"); }
+    } catch (e) {
+      toast.error("Failed to load");
+      // eslint-disable-next-line no-console
+      console.warn("[AdminLeads] load failed", e);
+    }
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const updateStatus = async (id, status) => {
     await adminApi.updateLead(id, { status });

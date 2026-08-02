@@ -92,7 +92,7 @@ function PackageCard({ pkg, onQuote, onBrochure, index }) {
 
       <ul className="mt-5 space-y-2">
         {pkg.highlights?.map((h, i) => (
-          <li key={i} className={`text-sm flex items-start gap-2 ${isPopular ? "text-white/90" : "text-brand-navy/85"}`}>
+          <li key={`${pkg.slug}-hl-${h}-${i}`} className={`text-sm flex items-start gap-2 ${isPopular ? "text-white/90" : "text-brand-navy/85"}`}>
             <Check className={`w-4 h-4 mt-0.5 shrink-0 ${isPopular ? "text-brand-orangeLight" : "text-brand-orange"}`} />
             {h}
           </li>
@@ -110,13 +110,13 @@ function PackageCard({ pkg, onQuote, onBrochure, index }) {
           >
             <div className="mt-5 space-y-3">
               {(pkg.spec_categories || pkg.sections || []).slice(0, 4).map((sec, i) => (
-                <div key={i}>
+                <div key={`${pkg.slug}-sec-${sec.name || sec.title || i}`}>
                   <div className={`text-[11px] font-bold uppercase tracking-widest ${isPopular ? "text-brand-orangeLight" : "text-brand-orange"}`}>
                     {sec.name || sec.title}
                   </div>
                   <ul className="mt-1.5 space-y-1">
                     {(sec.items || []).slice(0, 3).map((it, j) => (
-                      <li key={j} className={`text-xs flex items-start gap-1.5 ${isPopular ? "text-white/80" : "text-brand-navy/70"}`}>
+                      <li key={`${pkg.slug}-sec-${i}-item-${typeof it === "string" ? it : it.spec}-${j}`} className={`text-xs flex items-start gap-1.5 ${isPopular ? "text-white/80" : "text-brand-navy/70"}`}>
                         <Sparkles className={`w-3 h-3 mt-0.5 shrink-0 ${isPopular ? "text-white/40" : "text-brand-navy/30"}`} />
                         <span className="line-clamp-1">{typeof it === "string" ? it : `${it.spec}: ${it.value || ""}`}</span>
                       </li>
