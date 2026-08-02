@@ -371,6 +371,67 @@ async def del_quiz_submission(id: str):
     return await delete_doc("quiz_submissions", id)
 
 
+# ----------------------- Real-time notifications -----------------------
+@router.get("/notifications/pending", dependencies=[Depends(require_admin)])
+async def notifications_pending(since: Optional[str] = None):
+    """Return leads + quiz submissions created after `since` (ISO timestamp).
+    If `since` is omitted, returns items from the last 24 hours (capped 20 each)."""
+    from datetime import timedelta
+    if since:
+        try:
+            # Accept both trailing Z and +00:00
+            since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except Exception:
+            since_dt = datetime.now(timezone.utc) - timedelta(hours=24)
+    else:
+        since_dt = datetime.now(timezone.utc) - timedelta(hours=24)
+    since_iso = since_dt.isoformat()
+
+    leads = await db.leads.find(
+        {"created_at": {"$gt": since_iso}}, {"_id": 0}
+    ).sort("created_at", -1).limit(20).to_list(20)
+    quizzes = await db.quiz_submissions.find(
+        {"created_at": {"$gt": since_iso}}, {"_id": 0}
+    ).sort("created_at", -1).limit(20).to_list(20)
+
+    items = []
+    for l in leads:
+        subtitle_parts = [l.get("phone", "")]
+        if l.get("interested_home"):
+            subtitle_parts.append(f"Home: {l['interested_home']}")
+        if l.get("interested_package"):
+            subtitle_parts.append(f"Package: {l['interested_package']}")
+        items.append({
+            "type": "lead",
+            "id": l.get("id"),
+            "title": f"New lead — {l.get('name','Unknown')}",
+            "subtitle": " · ".join([p for p in subtitle_parts if p]),
+            "created_at": l.get("created_at"),
+            "source": l.get("source"),
+            "link": "/admin/leads",
+        })
+    for q in quizzes:
+        contact = q.get("contact_name") or "Anonymous"
+        pkg = q.get("recommended_package_name") or "—"
+        items.append({
+            "type": "quiz",
+            "id": q.get("id"),
+            "title": f"Quiz submission — {contact}",
+            "subtitle": f"Recommended: {pkg}",
+            "created_at": q.get("created_at"),
+            "link": "/admin/quiz-submissions",
+        })
+
+    # Sort combined desc by created_at
+    items.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    return {
+        "items": items,
+        "now": datetime.now(timezone.utc).isoformat(),
+        "leads_count": len(leads),
+        "quiz_count": len(quizzes),
+    }
+
+
 # ----------------------- Generic factory for simpler collections -----------------------
 def make_crud(path: str, collection: str, ModelCls):
     @router.get(f"/{path}")

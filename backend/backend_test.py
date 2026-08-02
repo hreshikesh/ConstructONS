@@ -614,10 +614,307 @@ class ConstructONSAPITester:
             self.log(f"✓ Quiz submission deleted successfully", "INFO")
         return success, response
 
+    # ----------------------- PHASE 6: Push Notifications Tests -----------------------
+    def test_notifications_pending_unauth(self):
+        """Test GET /api/notifications/pending without auth - should return 401/403"""
+        # Temporarily remove token
+        saved_token = self.token
+        self.token = None
+        
+        url = f"{self.base_url}/notifications/pending"
+        self.tests_run += 1
+        self.log(f"Testing notifications/pending without auth...")
+        
+        try:
+            headers = {'Content-Type': 'application/json'}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            # Should be 401 or 403
+            if response.status_code in [401, 403]:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Unauthorized access blocked: {response.status_code}", "PASS")
+                success = True
+            else:
+                self.log(f"❌ FAILED - Expected 401/403, got {response.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Notifications pending (unauth)",
+                    "expected": "401 or 403",
+                    "actual": response.status_code,
+                    "endpoint": "notifications/pending"
+                })
+                success = False
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Notifications pending (unauth)",
+                "error": str(e),
+                "endpoint": "notifications/pending"
+            })
+            success = False
+        finally:
+            # Restore token
+            self.token = saved_token
+        
+        return success, None
+
+    def test_notifications_pending_basic(self):
+        """Test GET /api/notifications/pending (admin auth) - basic structure"""
+        success, response = self.run_test(
+            "Notifications pending (basic)",
+            "GET",
+            "notifications/pending",
+            200
+        )
+        if success:
+            # Verify response structure
+            required_keys = ['items', 'now', 'leads_count', 'quiz_count']
+            missing = [k for k in required_keys if k not in response]
+            if missing:
+                self.log(f"⚠️  Notifications response missing keys: {missing}", "WARN")
+            else:
+                self.log(f"✓ Notifications response has all required keys", "INFO")
+                self.log(f"  - Items: {len(response.get('items', []))}", "INFO")
+                self.log(f"  - Leads count: {response.get('leads_count')}", "INFO")
+                self.log(f"  - Quiz count: {response.get('quiz_count')}", "INFO")
+                
+                # Verify item structure if items exist
+                items = response.get('items', [])
+                if items:
+                    first_item = items[0]
+                    required_item_keys = ['type', 'id', 'title', 'subtitle', 'created_at', 'link']
+                    missing_item = [k for k in required_item_keys if k not in first_item]
+                    if missing_item:
+                        self.log(f"⚠️  Notification item missing keys: {missing_item}", "WARN")
+                    else:
+                        self.log(f"✓ Notification items have correct structure", "INFO")
+                        self.log(f"  - Sample type: {first_item.get('type')}", "INFO")
+                        self.log(f"  - Sample link: {first_item.get('link')}", "INFO")
+        return success, response
+
+    def test_notifications_pending_future_since(self):
+        """Test GET /api/notifications/pending?since=<future_date> - should return empty"""
+        # Use a future date
+        future_iso = "2030-01-01T00:00:00Z"
+        success, response = self.run_test(
+            "Notifications pending (future since)",
+            "GET",
+            f"notifications/pending?since={future_iso}",
+            200
+        )
+        if success:
+            items = response.get('items', [])
+            leads_count = response.get('leads_count', 0)
+            quiz_count = response.get('quiz_count', 0)
+            
+            if len(items) == 0 and leads_count == 0 and quiz_count == 0:
+                self.log(f"✓ Future 'since' correctly returns empty results", "INFO")
+            else:
+                self.log(f"⚠️  Expected empty results, got {len(items)} items, {leads_count} leads, {quiz_count} quizzes", "WARN")
+        return success, response
+
+    def test_notifications_with_new_lead(self):
+        """Test that a new lead appears in notifications/pending"""
+        # Get current timestamp
+        from datetime import datetime, timezone
+        before_iso = datetime.now(timezone.utc).isoformat()
+        
+        # Wait a moment to ensure timestamp difference
+        import time
+        time.sleep(0.5)
+        
+        # Create a new lead
+        timestamp = datetime.now().strftime("%H%M%S")
+        lead_data = {
+            "name": f"Notif Test Lead {timestamp}",
+            "phone": "+91 9876543210",
+            "email": f"notiftest{timestamp}@example.com",
+            "city": "Bangalore",
+            "message": "Test lead for notifications",
+            "source": "website"
+        }
+        
+        url = f"{self.base_url}/leads"
+        self.tests_run += 1
+        self.log(f"Testing notifications with new lead...")
+        
+        try:
+            headers = {'Content-Type': 'application/json'}
+            create_resp = requests.post(url, json=lead_data, headers=headers, timeout=10)
+            
+            if create_resp.status_code != 200:
+                self.log(f"❌ FAILED - Lead creation failed: {create_resp.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Notifications with new lead",
+                    "error": f"Lead creation failed: {create_resp.status_code}",
+                    "endpoint": "notifications/pending"
+                })
+                return False, None
+            
+            lead_id = create_resp.json().get('id')
+            self.log(f"✓ Lead created: {lead_id}", "INFO")
+            
+            # Now check notifications/pending with since parameter
+            notif_url = f"{self.base_url}/notifications/pending?since={before_iso}"
+            auth_headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.token}'
+            }
+            notif_resp = requests.get(notif_url, headers=auth_headers, timeout=10)
+            
+            if notif_resp.status_code != 200:
+                self.log(f"❌ FAILED - Notifications fetch failed: {notif_resp.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Notifications with new lead",
+                    "error": f"Notifications fetch failed: {notif_resp.status_code}",
+                    "endpoint": "notifications/pending"
+                })
+                return False, None
+            
+            notif_data = notif_resp.json()
+            items = notif_data.get('items', [])
+            
+            # Check if our lead is in the items
+            lead_found = False
+            for item in items:
+                if item.get('type') == 'lead' and item.get('id') == lead_id:
+                    lead_found = True
+                    self.log(f"✓ New lead found in notifications", "INFO")
+                    self.log(f"  - Title: {item.get('title')}", "INFO")
+                    self.log(f"  - Link: {item.get('link')}", "INFO")
+                    
+                    # Verify link is correct
+                    if item.get('link') == '/admin/leads':
+                        self.log(f"✓ Lead link is correct", "INFO")
+                    else:
+                        self.log(f"⚠️  Lead link is '{item.get('link')}', expected '/admin/leads'", "WARN")
+                    break
+            
+            if lead_found:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - New lead appears in notifications", "PASS")
+                return True, lead_id
+            else:
+                self.log(f"❌ FAILED - New lead not found in notifications", "FAIL")
+                self.log(f"  - Total items: {len(items)}", "INFO")
+                self.log(f"  - Leads count: {notif_data.get('leads_count')}", "INFO")
+                self.failed_tests.append({
+                    "name": "Notifications with new lead",
+                    "error": "New lead not found in notifications",
+                    "endpoint": "notifications/pending"
+                })
+                return False, None
+                
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Notifications with new lead",
+                "error": str(e),
+                "endpoint": "notifications/pending"
+            })
+            return False, None
+
+    def test_notifications_with_new_quiz(self):
+        """Test that a new quiz submission appears in notifications/pending"""
+        # Get current timestamp
+        from datetime import datetime, timezone
+        before_iso = datetime.now(timezone.utc).isoformat()
+        
+        # Wait a moment to ensure timestamp difference
+        import time
+        time.sleep(0.5)
+        
+        # Create a new quiz submission
+        quiz_data = {
+            "budget": "premium",
+            "family_size": "5+",
+            "style": "villa",
+            "smart_home": "full"
+        }
+        
+        url = f"{self.base_url}/recommend"
+        self.tests_run += 1
+        self.log(f"Testing notifications with new quiz submission...")
+        
+        try:
+            headers = {'Content-Type': 'application/json'}
+            create_resp = requests.post(url, json=quiz_data, headers=headers, timeout=10)
+            
+            if create_resp.status_code != 200:
+                self.log(f"❌ FAILED - Quiz creation failed: {create_resp.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Notifications with new quiz",
+                    "error": f"Quiz creation failed: {create_resp.status_code}",
+                    "endpoint": "notifications/pending"
+                })
+                return False, None
+            
+            quiz_id = create_resp.json().get('submission_id')
+            self.log(f"✓ Quiz submission created: {quiz_id}", "INFO")
+            
+            # Now check notifications/pending with since parameter
+            notif_url = f"{self.base_url}/notifications/pending?since={before_iso}"
+            auth_headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {self.token}'
+            }
+            notif_resp = requests.get(notif_url, headers=auth_headers, timeout=10)
+            
+            if notif_resp.status_code != 200:
+                self.log(f"❌ FAILED - Notifications fetch failed: {notif_resp.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Notifications with new quiz",
+                    "error": f"Notifications fetch failed: {notif_resp.status_code}",
+                    "endpoint": "notifications/pending"
+                })
+                return False, None
+            
+            notif_data = notif_resp.json()
+            items = notif_data.get('items', [])
+            
+            # Check if our quiz is in the items
+            quiz_found = False
+            for item in items:
+                if item.get('type') == 'quiz' and item.get('id') == quiz_id:
+                    quiz_found = True
+                    self.log(f"✓ New quiz submission found in notifications", "INFO")
+                    self.log(f"  - Title: {item.get('title')}", "INFO")
+                    self.log(f"  - Link: {item.get('link')}", "INFO")
+                    
+                    # Verify link is correct
+                    if item.get('link') == '/admin/quiz-submissions':
+                        self.log(f"✓ Quiz link is correct", "INFO")
+                    else:
+                        self.log(f"⚠️  Quiz link is '{item.get('link')}', expected '/admin/quiz-submissions'", "WARN")
+                    break
+            
+            if quiz_found:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - New quiz submission appears in notifications", "PASS")
+                return True, quiz_id
+            else:
+                self.log(f"❌ FAILED - New quiz submission not found in notifications", "FAIL")
+                self.log(f"  - Total items: {len(items)}", "INFO")
+                self.log(f"  - Quiz count: {notif_data.get('quiz_count')}", "INFO")
+                self.failed_tests.append({
+                    "name": "Notifications with new quiz",
+                    "error": "New quiz submission not found in notifications",
+                    "endpoint": "notifications/pending"
+                })
+                return False, None
+                
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Notifications with new quiz",
+                "error": str(e),
+                "endpoint": "notifications/pending"
+            })
+            return False, None
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("=" * 60, "INFO")
-        self.log("ConstructONS Backend API Test Suite - Phase 5", "INFO")
+        self.log("ConstructONS Backend API Test Suite - Phase 6", "INFO")
         self.log("=" * 60, "INFO")
         
         # Public endpoints
@@ -701,6 +998,14 @@ class ConstructONSAPITester:
             # PHASE 5: Test delete quiz submission
             if submission_id:
                 self.test_delete_quiz_submission(submission_id)
+            
+            # PHASE 6: Test push notifications
+            self.log("\n--- PHASE 6: Testing Push Notifications ---", "INFO")
+            self.test_notifications_pending_unauth()
+            self.test_notifications_pending_basic()
+            self.test_notifications_pending_future_since()
+            self.test_notifications_with_new_lead()
+            self.test_notifications_with_new_quiz()
         
         # Print summary
         self.log("\n" + "=" * 60, "INFO")

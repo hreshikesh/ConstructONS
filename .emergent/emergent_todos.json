@@ -1,26 +1,22 @@
 [
   {
-    "content": "Phase 5: Backend - QuizSubmission model + CRUD endpoints + link to Lead",
+    "content": "Phase 6: Backend - /api/notifications/pending endpoint",
     "status": "completed"
   },
   {
-    "content": "Phase 5: Frontend - FindMyPackagePage saves anonymous submission on result + passes ID to BrochureModal/LeadModal",
+    "content": "Phase 6: Frontend - notifications helper (Web Audio chime, Notification API)",
     "status": "completed"
   },
   {
-    "content": "Phase 5: Admin - Quiz Submissions page (list + detail with picked answers, contact, status, notes)",
+    "content": "Phase 6: Frontend - useAdminNotifications polling hook + last-seen state",
     "status": "completed"
   },
   {
-    "content": "Phase 5: Mobile audit - screenshot key pages at 375px & 414px viewports, identify issues",
+    "content": "Phase 6: Frontend - Bell icon + badge + dropdown in AdminLayout (mobile & desktop)",
     "status": "completed"
   },
   {
-    "content": "Phase 5: Mobile fixes - Header, Hero (floating cards), Package Detail sticky tabs, Compare table scroll, Quiz, Admin",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 5: End-to-end testing via testing_agent_v3 (quiz insights + mobile responsiveness)",
-    "status": "completed"
+    "content": "Phase 6: End-to-end testing via testing_agent_v3",
+    "status": "in_progress"
   }
 ]
