@@ -1,30 +1,26 @@
 [
   {
-    "content": "Phase 4: Backend - personalised brochure endpoint (accept name/phone/email, generate quote ref, create lead, return PDF)",
+    "content": "Phase 5: Backend - QuizSubmission model + CRUD endpoints + link to Lead",
     "status": "completed"
   },
   {
-    "content": "Phase 4: Update brochure.py to render 'Prepared for' + 'Quote Ref' + 'Date' on cover when provided",
+    "content": "Phase 5: Frontend - FindMyPackagePage saves anonymous submission on result + passes ID to BrochureModal/LeadModal",
     "status": "completed"
   },
   {
-    "content": "Phase 4: Frontend - BrochureModal that collects name/phone and downloads personalised PDF",
+    "content": "Phase 5: Admin - Quiz Submissions page (list + detail with picked answers, contact, status, notes)",
     "status": "completed"
   },
   {
-    "content": "Phase 4: Frontend - wire BrochureModal to all Download Brochure buttons (homepage cards, detail page, compare page)",
+    "content": "Phase 5: Mobile audit - screenshot key pages at 375px & 414px viewports, identify issues",
     "status": "completed"
   },
   {
-    "content": "Phase 4: Frontend - PackageChooser (4-question quiz) component with animated flow + result screen",
+    "content": "Phase 5: Mobile fixes - Header, Hero (floating cards), Package Detail sticky tabs, Compare table scroll, Quiz, Admin",
     "status": "completed"
   },
   {
-    "content": "Phase 4: Frontend - dedicated /find-my-package route + homepage entry point + CTA in Hero/Packages",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 4: End-to-end testing via testing_agent_v3",
-    "status": "completed"
+    "content": "Phase 5: End-to-end testing via testing_agent_v3 (quiz insights + mobile responsiveness)",
+    "status": "in_progress"
   }
 ]

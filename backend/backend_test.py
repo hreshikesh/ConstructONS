@@ -404,10 +404,220 @@ class ConstructONSAPITester:
         )
         return delete_success, {}
 
+    # ----------------------- PHASE 5: Quiz Insights Tests -----------------------
+    def test_recommend_package(self):
+        """Test POST /api/recommend - should return submission_id"""
+        quiz_data = {
+            "budget": "balanced",
+            "family_size": "3-4",
+            "style": "modern",
+            "smart_home": "basic"
+        }
+        success, response = self.run_test(
+            "Recommend package (quiz)",
+            "POST",
+            "recommend",
+            200,
+            data=quiz_data
+        )
+        if success:
+            # Verify response structure
+            required_keys = ['recommended_package', 'shortlisted_homes', 'score', 'submission_id']
+            missing = [k for k in required_keys if k not in response]
+            if missing:
+                self.log(f"⚠️  Recommend response missing keys: {missing}", "WARN")
+            else:
+                self.log(f"✓ Recommend response has all required keys", "INFO")
+                submission_id = response.get('submission_id')
+                if submission_id:
+                    self.log(f"✓ Quiz submission created with ID: {submission_id}", "INFO")
+                    return success, submission_id
+        return success, None
+
+    def test_list_quiz_submissions(self):
+        """Test GET /api/quiz-submissions (requires admin auth)"""
+        success, response = self.run_test(
+            "List quiz submissions (admin)",
+            "GET",
+            "quiz-submissions",
+            200
+        )
+        if success and isinstance(response, list):
+            self.log(f"✓ Found {len(response)} quiz submissions", "INFO")
+            if len(response) > 0:
+                # Check first submission structure
+                first = response[0]
+                required = ['id', 'budget', 'family_size', 'recommended_package_slug', 'status', 'created_at']
+                missing = [k for k in required if k not in first]
+                if missing:
+                    self.log(f"⚠️  Quiz submission missing fields: {missing}", "WARN")
+                else:
+                    self.log(f"✓ Quiz submission has all required fields", "INFO")
+        return success, response
+
+    def test_get_quiz_submission(self, submission_id):
+        """Test GET /api/quiz-submissions/{id} (requires admin auth)"""
+        success, response = self.run_test(
+            f"Get quiz submission: {submission_id}",
+            "GET",
+            f"quiz-submissions/{submission_id}",
+            200
+        )
+        if success:
+            self.log(f"✓ Retrieved quiz submission: {submission_id}", "INFO")
+            self.log(f"  - Budget: {response.get('budget')}", "INFO")
+            self.log(f"  - Family size: {response.get('family_size')}", "INFO")
+            self.log(f"  - Recommended package: {response.get('recommended_package_name')}", "INFO")
+            self.log(f"  - Status: {response.get('status')}", "INFO")
+        return success, response
+
+    def test_update_quiz_submission(self, submission_id):
+        """Test PUT /api/quiz-submissions/{id} (requires admin auth)"""
+        update_data = {
+            "status": "closed",
+            "notes": "Called customer - not interested"
+        }
+        success, response = self.run_test(
+            f"Update quiz submission: {submission_id}",
+            "PUT",
+            f"quiz-submissions/{submission_id}",
+            200,
+            data=update_data
+        )
+        if success:
+            self.log(f"✓ Quiz submission updated successfully", "INFO")
+        return success, response
+
+    def test_lead_with_quiz_submission(self, submission_id):
+        """Test POST /api/leads with quiz_submission_id - should update quiz submission"""
+        timestamp = datetime.now().strftime("%H%M%S")
+        lead_data = {
+            "name": f"Quiz Lead {timestamp}",
+            "phone": "+91 9876543210",
+            "email": f"quizlead{timestamp}@example.com",
+            "city": "Mumbai",
+            "message": "Interested in package from quiz",
+            "source": "quiz",
+            "quiz_submission_id": submission_id
+        }
+        success, response = self.run_test(
+            "Create lead with quiz_submission_id",
+            "POST",
+            "leads",
+            200,
+            data=lead_data
+        )
+        if success and response.get('id'):
+            lead_id = response['id']
+            self.log(f"✓ Lead created with ID: {lead_id}", "INFO")
+            
+            # Now verify the quiz submission was updated
+            get_success, quiz_sub = self.run_test(
+                f"Verify quiz submission updated (lead link)",
+                "GET",
+                f"quiz-submissions/{submission_id}",
+                200
+            )
+            if get_success:
+                if quiz_sub.get('status') == 'converted':
+                    self.log(f"✓ Quiz submission status updated to 'converted'", "INFO")
+                else:
+                    self.log(f"⚠️  Quiz submission status is '{quiz_sub.get('status')}', expected 'converted'", "WARN")
+                
+                if quiz_sub.get('converted_to_lead_id') == lead_id:
+                    self.log(f"✓ Quiz submission linked to lead ID: {lead_id}", "INFO")
+                else:
+                    self.log(f"⚠️  Quiz submission not linked to lead", "WARN")
+                
+                if quiz_sub.get('contact_name') == lead_data['name']:
+                    self.log(f"✓ Contact info saved in quiz submission", "INFO")
+                else:
+                    self.log(f"⚠️  Contact info not saved in quiz submission", "WARN")
+            
+            return success, lead_id
+        return success, None
+
+    def test_brochure_with_quiz_submission(self, submission_id):
+        """Test POST /api/packages/{slug}/brochure with quiz_submission_id"""
+        timestamp = datetime.now().strftime("%H%M%S")
+        brochure_data = {
+            "name": f"Brochure User {timestamp}",
+            "phone": "+91 9876543210",
+            "email": f"brochure{timestamp}@example.com",
+            "city": "Delhi",
+            "save_lead": True,
+            "quiz_submission_id": submission_id
+        }
+        
+        url = f"{self.base_url}/packages/standard/brochure"
+        self.tests_run += 1
+        self.log(f"Testing personalized brochure with quiz_submission_id...")
+        
+        try:
+            headers = {'Content-Type': 'application/json'}
+            response = requests.post(url, json=brochure_data, headers=headers, timeout=15)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('Content-Type', '')
+                if 'application/pdf' in content_type:
+                    self.tests_passed += 1
+                    self.log(f"✅ PASSED - Personalized brochure with quiz link", "PASS")
+                    
+                    # Verify quiz submission was updated
+                    if self.token:
+                        headers_auth = {'Authorization': f'Bearer {self.token}'}
+                        get_resp = requests.get(f"{self.base_url}/quiz-submissions/{submission_id}", 
+                                              headers=headers_auth, timeout=10)
+                        if get_resp.status_code == 200:
+                            quiz_sub = get_resp.json()
+                            if quiz_sub.get('contact_name') == brochure_data['name']:
+                                self.log(f"✓ Quiz submission updated with brochure contact info", "INFO")
+                            else:
+                                self.log(f"⚠️  Quiz submission not updated with contact info", "WARN")
+                else:
+                    self.log(f"❌ FAILED - Expected PDF, got {content_type}", "FAIL")
+                    self.failed_tests.append({
+                        "name": "Personalized brochure with quiz link",
+                        "error": f"Wrong content type: {content_type}",
+                        "endpoint": "packages/standard/brochure"
+                    })
+            else:
+                self.log(f"❌ FAILED - Expected 200, got {response.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Personalized brochure with quiz link",
+                    "expected": 200,
+                    "actual": response.status_code,
+                    "endpoint": "packages/standard/brochure"
+                })
+            
+            return success, None
+            
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Personalized brochure with quiz link",
+                "error": str(e),
+                "endpoint": "packages/standard/brochure"
+            })
+            return False, None
+
+    def test_delete_quiz_submission(self, submission_id):
+        """Test DELETE /api/quiz-submissions/{id} (requires admin auth)"""
+        success, response = self.run_test(
+            f"Delete quiz submission: {submission_id}",
+            "DELETE",
+            f"quiz-submissions/{submission_id}",
+            200
+        )
+        if success:
+            self.log(f"✓ Quiz submission deleted successfully", "INFO")
+        return success, response
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("=" * 60, "INFO")
-        self.log("ConstructONS Backend API Test Suite", "INFO")
+        self.log("ConstructONS Backend API Test Suite - Phase 5", "INFO")
         self.log("=" * 60, "INFO")
         
         # Public endpoints
@@ -433,6 +643,10 @@ class ConstructONSAPITester:
         self.test_package_brochure("basic")
         self.test_package_brochure("premium")
         self.test_package_brochure_404()
+        
+        # PHASE 5: Test quiz recommendation (public)
+        self.log("\n--- PHASE 5: Testing Quiz Insights (Public) ---", "INFO")
+        _, submission_id = self.test_recommend_package()
         
         # Create lead (public)
         self.log("\n--- Testing Lead Creation (Public) ---", "INFO")
@@ -461,6 +675,32 @@ class ConstructONSAPITester:
             
             self.test_update_site_settings()
             self.test_create_and_delete_faq()
+            
+            # PHASE 5: Test quiz submissions admin endpoints
+            self.log("\n--- PHASE 5: Testing Quiz Submissions (Admin) ---", "INFO")
+            self.test_list_quiz_submissions()
+            
+            if submission_id:
+                self.test_get_quiz_submission(submission_id)
+                self.test_update_quiz_submission(submission_id)
+            
+            # PHASE 5: Test quiz submission linking
+            self.log("\n--- PHASE 5: Testing Quiz Submission Linking ---", "INFO")
+            # Create a new quiz submission for linking tests
+            _, link_submission_id = self.test_recommend_package()
+            
+            if link_submission_id:
+                # Test lead creation with quiz_submission_id
+                self.test_lead_with_quiz_submission(link_submission_id)
+                
+                # Create another submission for brochure test
+                _, brochure_submission_id = self.test_recommend_package()
+                if brochure_submission_id:
+                    self.test_brochure_with_quiz_submission(brochure_submission_id)
+            
+            # PHASE 5: Test delete quiz submission
+            if submission_id:
+                self.test_delete_quiz_submission(submission_id)
         
         # Print summary
         self.log("\n" + "=" * 60, "INFO")

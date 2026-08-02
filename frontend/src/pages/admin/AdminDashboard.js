@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { Link } from "react-router-dom";
-import { Home, Package, Star, Newspaper, Inbox, ArrowRight } from "lucide-react";
+import { Home, Package, Star, Newspaper, Inbox, ArrowRight, ClipboardList } from "lucide-react";
 
 const QUICK = [
   { label: "Homes", icon: Home, path: "homes" },
@@ -16,10 +16,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     (async () => {
-      const [homes, packages, blogs, testimonials, leadsList] = await Promise.all([
-        adminApi.list("homes"), adminApi.list("packages"), adminApi.list("blogs"), adminApi.list("testimonials"), adminApi.listLeads(),
+      const [homes, packages, blogs, testimonials, leadsList, quizList] = await Promise.all([
+        adminApi.list("homes"), adminApi.list("packages"), adminApi.list("blogs"), adminApi.list("testimonials"), adminApi.listLeads(), adminApi.listQuizSubmissions(),
       ]);
-      setCounts({ homes: homes.length, packages: packages.length, blogs: blogs.length, testimonials: testimonials.length, leads: leadsList.length });
+      setCounts({ homes: homes.length, packages: packages.length, blogs: blogs.length, testimonials: testimonials.length, leads: leadsList.length, quizzes: quizList.length });
       setLeads(leadsList.slice(0, 5));
     })();
   }, []);
@@ -34,13 +34,14 @@ export default function AdminDashboard() {
         <Link to="/" className="text-sm text-brand-navy/60 hover:text-brand-orange">View public site →</Link>
       </div>
 
-      <div className="mt-6 grid md:grid-cols-5 gap-4">
+      <div className="mt-6 grid md:grid-cols-6 gap-4">
         {[
           { label: "Homes", value: counts.homes, path: "homes", icon: Home },
           { label: "Packages", value: counts.packages, path: "packages", icon: Package },
           { label: "Blogs", value: counts.blogs, path: "blogs", icon: Newspaper },
           { label: "Testimonials", value: counts.testimonials, path: "testimonials", icon: Star },
           { label: "Leads", value: counts.leads, path: "leads", icon: Inbox },
+          { label: "Quiz Submissions", value: counts.quizzes, path: "quiz-submissions", icon: ClipboardList },
         ].map((s) => (
           <Link to={`/admin/${s.path}`} key={s.label} className="rounded-2xl bg-white border border-black/5 shadow-soft p-4 hover:shadow-premium transition">
             <s.icon className="w-5 h-5 text-brand-orange" />

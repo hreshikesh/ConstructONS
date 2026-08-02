@@ -31,6 +31,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
         interested_home: context.home || undefined,
         interested_package: context.package || undefined,
         source: context.source || "consultation",
+        quiz_submission_id: context.quiz_submission_id || undefined,
       });
       toast.success(res.message || "Thanks! Our team will call you shortly.");
       setForm({ name: "", phone: "", email: "", city: "", message: "" });

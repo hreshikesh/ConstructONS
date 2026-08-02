@@ -4,7 +4,7 @@ import { X, Download, User, Phone, Mail, MapPin, ShieldCheck, Loader2, CheckCirc
 import { publicApi } from "@/lib/api";
 import { toast } from "sonner";
 
-export default function BrochureModal({ isOpen, onClose, slug, packageName }) {
+export default function BrochureModal({ isOpen, onClose, slug, packageName, ctx = {} }) {
   const [form, setForm] = useState({ name: "", phone: "", email: "", city: "" });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(null); // { quoteRef, filename }
@@ -26,6 +26,7 @@ export default function BrochureModal({ isOpen, onClose, slug, packageName }) {
         phone: form.phone,
         email: form.email || undefined,
         city: form.city || undefined,
+        quiz_submission_id: ctx.quiz_submission_id || undefined,
       });
       // Trigger download
       const url = window.URL.createObjectURL(res.blob);

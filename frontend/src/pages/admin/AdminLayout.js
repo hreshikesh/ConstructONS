@@ -3,11 +3,12 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { adminApi } from "@/lib/api";
 import LogoMark from "@/components/site/LogoMark";
 import BrandLockup from "@/components/site/BrandLockup";
-import { Home, Package, MessageSquare, HelpCircle, Newspaper, ShoppingBag, Landmark, Users, Sparkles, Route, ImageIcon, LayoutDashboard, Settings, LogOut, Star, Inbox, GitCompareArrows, BarChart3 } from "lucide-react";
+import { Home, Package, MessageSquare, HelpCircle, Newspaper, ShoppingBag, Landmark, Users, Sparkles, Route, ImageIcon, LayoutDashboard, Settings, LogOut, Star, Inbox, GitCompareArrows, BarChart3, ClipboardList } from "lucide-react";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard, end: true },
   { label: "Leads Inbox", to: "/admin/leads", icon: Inbox },
+  { label: "Quiz Submissions", to: "/admin/quiz-submissions", icon: ClipboardList },
   { label: "Homes", to: "/admin/homes", icon: Home },
   { label: "Packages", to: "/admin/packages", icon: Package },
   { label: "AI Modules", to: "/admin/ai-modules", icon: Sparkles },

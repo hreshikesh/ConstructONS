@@ -4,10 +4,10 @@ import BrochureModal from "@/components/site/BrochureModal";
 const BrochureModalContext = createContext({ open: () => {} });
 
 export function BrochureModalProvider({ children }) {
-  const [state, setState] = useState({ isOpen: false, slug: null, packageName: "" });
+  const [state, setState] = useState({ isOpen: false, slug: null, packageName: "", ctx: {} });
 
-  const open = useCallback((slug, packageName = "") => {
-    setState({ isOpen: true, slug, packageName });
+  const open = useCallback((slug, packageName = "", ctx = {}) => {
+    setState({ isOpen: true, slug, packageName, ctx });
   }, []);
 
   const close = useCallback(() => setState((s) => ({ ...s, isOpen: false })), []);
@@ -22,6 +22,7 @@ export function BrochureModalProvider({ children }) {
         onClose={close}
         slug={state.slug}
         packageName={state.packageName}
+        ctx={state.ctx}
       />
     </BrochureModalContext.Provider>
   );

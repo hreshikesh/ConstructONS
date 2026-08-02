@@ -158,7 +158,7 @@ export default function PackageDetailPage() {
       </section>
 
       {/* Tabs */}
-      <div className="sticky top-16 z-30 bg-white/90 backdrop-blur-xl border-b border-black/5">
+      <div className="sticky top-[68px] md:top-16 z-30 bg-white/95 backdrop-blur-xl border-b border-black/5">
         <div className="container-wide overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1 py-2 min-w-max">
             {TABS.map((t) => (
@@ -166,7 +166,7 @@ export default function PackageDetailPage() {
                 key={t.key}
                 onClick={() => setActiveTab(t.key)}
                 data-testid={`pkg-tab-${t.key}`}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                className={`px-3 md:px-4 py-2 rounded-full text-xs md:text-sm font-medium whitespace-nowrap transition ${
                   activeTab === t.key
                     ? "bg-brand-navy text-white"
                     : "text-brand-navy/70 hover:bg-brand-navy/5"
@@ -298,8 +298,8 @@ function SpecsTab({ pkg, expanded, setExpanded }) {
                     className="overflow-hidden"
                   >
                     <div className="px-4 pb-4">
-                      <div className="rounded-xl border border-black/5 overflow-hidden">
-                        <table className="w-full text-sm">
+                      <div className="rounded-xl border border-black/5 overflow-hidden overflow-x-auto">
+                        <table className="w-full text-sm min-w-[600px]">
                           <thead className="bg-brand-navy text-white">
                             <tr>
                               <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest">Item</th>

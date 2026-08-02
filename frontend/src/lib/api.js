@@ -51,6 +51,12 @@ export const adminApi = {
   updateLead: (id, body) => api.put(`/leads/${id}`, body).then((r) => r.data),
   removeLead: (id) => api.delete(`/leads/${id}`).then((r) => r.data),
   updateSiteSettings: (body) => api.put("/site-settings", body).then((r) => r.data),
+  // Quiz submissions
+  listQuizSubmissions: (status) =>
+    api.get(`/quiz-submissions${status ? `?status=${status}` : ""}`).then((r) => r.data),
+  getQuizSubmission: (id) => api.get(`/quiz-submissions/${id}`).then((r) => r.data),
+  updateQuizSubmission: (id, body) => api.put(`/quiz-submissions/${id}`, body).then((r) => r.data),
+  removeQuizSubmission: (id) => api.delete(`/quiz-submissions/${id}`).then((r) => r.data),
 };
 
 export default api;

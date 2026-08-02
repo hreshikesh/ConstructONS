@@ -14,7 +14,10 @@ body {
   background: #FFFFFF;
   color: #0B1220;
   overflow-x: hidden;
+  overflow-y: auto;
 }
+
+html { overflow-x: hidden; }
 
 * { box-sizing: border-box; }
 
@@ -56,7 +59,7 @@ body {
 }
 
 /* Utility classes */
-.container-wide { @apply max-w-[1360px] mx-auto px-5 md:px-8; }
+.container-wide { @apply max-w-[1360px] mx-auto px-4 md:px-8; }
 
 .text-gradient-orange {
   background: linear-gradient(90deg, #FF5A00 0%, #FF9040 60%, #FFB05C 100%);
@@ -86,15 +89,17 @@ body {
   @apply text-xs font-semibold tracking-[0.2em] uppercase text-brand-orange;
 }
 
-.btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-orange text-white font-semibold px-6 py-3 shadow-glow transition-all;
-}
-.btn-primary:hover { background: #E64F00; transform: translateY(-1px); }
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-orange text-white font-semibold px-6 py-3 shadow-glow transition-all;
+  }
+  .btn-primary:hover { background: #E64F00; transform: translateY(-1px); }
 
-.btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-full bg-white text-brand-navy font-semibold px-6 py-3 border border-black/10 transition-all;
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-white text-brand-navy font-semibold px-6 py-3 border border-black/10 transition-all;
+  }
+  .btn-ghost:hover { border-color: #0B1220; transform: translateY(-1px); }
 }
-.btn-ghost:hover { border-color: #0B1220; transform: translateY(-1px); }
 
 .divider-dot { display:inline-block; width:6px; height:6px; border-radius:9999px; background:#0B1220; opacity:.25; }
 

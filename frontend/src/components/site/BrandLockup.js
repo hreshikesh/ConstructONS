@@ -11,7 +11,7 @@ import LogoMark from "@/components/site/LogoMark";
  * @param {"light"|"dark"} tone  — light = for white surfaces, dark = for dark surfaces
  * @param {string} size          — 'sm' | 'md' | 'lg'
  */
-export default function BrandLockup({ tone = "light", size = "md", className = "" }) {
+export default function BrandLockup({ tone = "light", size = "md", className = "", responsive = false }) {
   const isDark = tone === "dark";
 
   const sizes = {
@@ -21,9 +21,9 @@ export default function BrandLockup({ tone = "light", size = "md", className = "
   }[size] || {};
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <LogoMark className={sizes.mark} />
-      <div className="leading-none">
+    <div className={`flex items-center gap-2.5 min-w-0 ${className}`}>
+      <div className="shrink-0"><LogoMark className={sizes.mark} /></div>
+      <div className="leading-none min-w-0 truncate">
         <div className="flex items-start">
           <span
             className={`font-extrabold tracking-tight ${sizes.word} ${
@@ -43,7 +43,9 @@ export default function BrandLockup({ tone = "light", size = "md", className = "
           </span>
         </div>
         <div
-          className={`mt-1 font-semibold uppercase ${sizes.tag} ${
+          className={`mt-1 font-semibold uppercase truncate ${sizes.tag} ${
+            responsive ? "hidden sm:block" : ""
+          } ${
             isDark ? "text-white/60" : "text-brand-navy/55"
           }`}
           style={{ letterSpacing: "0.14em" }}

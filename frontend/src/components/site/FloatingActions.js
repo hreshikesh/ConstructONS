@@ -4,7 +4,7 @@ import { Phone, MessageCircle } from "lucide-react";
 export default function FloatingActions({ phone, whatsapp }) {
   const wa = (whatsapp || "").replace(/\D/g, "");
   return (
-    <div className="fixed right-4 md:right-5 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
+    <div className="fixed right-3 md:right-5 bottom-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 z-40 flex flex-col gap-2">
       {phone && (
         <a href={`tel:${phone}`} data-testid="float-call" aria-label="Call" className="w-11 h-11 rounded-full bg-white shadow-premium border border-black/5 grid place-items-center text-brand-orange hover:bg-brand-orange hover:text-white transition">
           <Phone className="w-5 h-5" />

@@ -40,14 +40,14 @@ export default function Header() {
     >
       <div className="container-wide">
         <div
-          className={`flex items-center justify-between rounded-full px-4 md:px-5 transition-all ${
+          className={`flex items-center justify-between gap-2 rounded-full px-3 md:px-5 transition-all ${
             scrolled
               ? "bg-white/85 backdrop-blur-xl border border-black/5 shadow-soft py-2"
               : "bg-white/60 backdrop-blur-md border border-white/50 py-2"
           }`}
         >
-          <Link to="/" className="flex items-center shrink-0" data-testid="header-logo">
-            <BrandLockup tone="light" size="md" />
+          <Link to="/" className="flex items-center shrink-0 min-w-0" data-testid="header-logo">
+            <BrandLockup tone="light" size="md" responsive />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -56,7 +56,7 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => openLead({ source: "header" })}
               data-testid="header-cta"
@@ -66,8 +66,9 @@ export default function Header() {
             </button>
             <button
               onClick={() => setOpen((s) => !s)}
-              className="lg:hidden w-10 h-10 rounded-full grid place-items-center border border-black/10 bg-white"
+              className="lg:hidden w-10 h-10 shrink-0 rounded-full grid place-items-center border border-black/10 bg-white"
               aria-label="Menu"
+              data-testid="mobile-menu-button"
             >
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

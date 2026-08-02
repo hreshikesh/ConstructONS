@@ -8,7 +8,7 @@ from models import (
     Home, Package, Testimonial, FAQ, Blog, MarketplaceCategory,
     FinancialService, TeamMember, AIPlatformModule, JourneyStep,
     HeroSection, MediaItem, ComparisonRow, StatItem, SiteSettings,
-    Lead, LeadCreate, now_iso, new_id
+    Lead, LeadCreate, QuizSubmission, now_iso, new_id
 )
 
 router = APIRouter(prefix="/api")
@@ -161,6 +161,7 @@ class PersonalizedBrochureRequest(BaseModel):
     city: Optional[str] = None
     message: Optional[str] = None
     save_lead: bool = True
+    quiz_submission_id: Optional[str] = None
 
 
 @router.post("/packages/{slug}/brochure")
@@ -174,7 +175,6 @@ async def personalized_brochure(slug: str, body: PersonalizedBrochureRequest):
         raise HTTPException(status_code=404, detail="Package not found")
     settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
 
-    # Generate a stable-ish quote reference: CONS-YY-TIER-XXXX (from lead counter)
     from models import Lead
     year = datetime.now(timezone.utc).strftime("%y")
     lead_count = await db.leads.count_documents({})
@@ -182,7 +182,7 @@ async def personalized_brochure(slug: str, body: PersonalizedBrochureRequest):
     tier_code = (pkg.get("tier") or pkg.get("slug", "pkg"))[:4].upper()
     quote_ref = f"CONS-{year}-{tier_code}-{seq}"
 
-    # Save lead if allowed
+    lead_id = None
     if body.save_lead:
         lead = Lead(
             name=body.name,
@@ -192,10 +192,27 @@ async def personalized_brochure(slug: str, body: PersonalizedBrochureRequest):
             message=body.message or f"Requested personalised brochure ({pkg.get('name')})",
             interested_package=pkg.get("name"),
             source="brochure_download",
+            quote_ref=quote_ref,
+            quiz_submission_id=body.quiz_submission_id,
         )
         lead_doc = lead.model_dump()
-        lead_doc["quote_ref"] = quote_ref
         await db.leads.insert_one(lead_doc)
+        lead_id = lead.id
+
+    # Link quiz submission
+    if body.quiz_submission_id:
+        await db.quiz_submissions.update_one(
+            {"id": body.quiz_submission_id},
+            {"$set": {
+                "converted_to_lead_id": lead_id,
+                "contact_name": body.name,
+                "contact_phone": body.phone,
+                "contact_email": body.email,
+                "contact_city": body.city,
+                "status": "converted" if lead_id else "contact_captured",
+                "updated_at": now_iso(),
+            }},
+        )
 
     personalization = {
         "customer_name": body.name,
@@ -286,12 +303,72 @@ async def recommend_package(body: RecommendRequest):
         shortlist = [h for h in homes if (h.get("bedrooms") or 0) >= needed_bhk]
     shortlist = shortlist[:3]
 
+    # Persist submission for the sales team
+    submission = QuizSubmission(
+        budget=body.budget,
+        family_size=body.family_size,
+        style=body.style,
+        smart_home=body.smart_home,
+        recommended_package_slug=best.get("slug"),
+        recommended_package_name=best.get("name"),
+        shortlisted_home_slugs=[h.get("slug") for h in shortlist if h.get("slug")],
+        shortlisted_home_names=[h.get("name") for h in shortlist if h.get("name")],
+        score=scored[0][0],
+        source="quiz",
+    )
+    await db.quiz_submissions.insert_one(submission.model_dump())
+
     return {
         "recommended_package": best,
         "shortlisted_homes": shortlist,
         "score": scored[0][0],
         "alternatives": [s[1] for s in scored[1:3]],
+        "submission_id": submission.id,
     }
+
+
+# ----------------------- Quiz Submissions -----------------------
+class QuizSubmissionUpdate(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_city: Optional[str] = None
+
+
+@router.get("/quiz-submissions", dependencies=[Depends(require_admin)])
+async def list_quiz_submissions(status: Optional[str] = None):
+    q = {}
+    if status:
+        q["status"] = status
+    docs = await db.quiz_submissions.find(q, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return docs
+
+
+@router.get("/quiz-submissions/{id}", dependencies=[Depends(require_admin)])
+async def get_quiz_submission(id: str):
+    doc = await db.quiz_submissions.find_one({"id": id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Not found")
+    return doc
+
+
+@router.put("/quiz-submissions/{id}", dependencies=[Depends(require_admin)])
+async def update_quiz_submission(id: str, body: QuizSubmissionUpdate):
+    update = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not update:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    update["updated_at"] = now_iso()
+    result = await db.quiz_submissions.update_one({"id": id}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"success": True}
+
+
+@router.delete("/quiz-submissions/{id}", dependencies=[Depends(require_admin)])
+async def del_quiz_submission(id: str):
+    return await delete_doc("quiz_submissions", id)
 
 
 # ----------------------- Generic factory for simpler collections -----------------------
@@ -358,6 +435,20 @@ async def create_lead(body: LeadCreate):
     lead = Lead(**body.model_dump())
     doc = lead.model_dump()
     await db.leads.insert_one(doc)
+    # Link the quiz submission if provided
+    if body.quiz_submission_id:
+        await db.quiz_submissions.update_one(
+            {"id": body.quiz_submission_id},
+            {"$set": {
+                "converted_to_lead_id": lead.id,
+                "contact_name": body.name,
+                "contact_phone": body.phone,
+                "contact_email": body.email,
+                "contact_city": body.city,
+                "status": "converted",
+                "updated_at": now_iso(),
+            }},
+        )
     return {"success": True, "id": lead.id, "message": "Thank you! Our team will reach out shortly."}
 
 @router.get("/leads", dependencies=[Depends(require_admin)])

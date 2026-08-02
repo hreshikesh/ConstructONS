@@ -183,8 +183,16 @@ export default function FindMyPackagePage() {
                   key="result"
                   result={result}
                   onReset={reset}
-                  onDownload={(slug, name) => openBrochure(slug, name)}
-                  onConsult={(pkgName) => openLead({ package: pkgName, source: "quiz" })}
+                  onDownload={(slug, name) =>
+                    openBrochure(slug, name, { quiz_submission_id: result.submission_id })
+                  }
+                  onConsult={(pkgName) =>
+                    openLead({
+                      package: pkgName,
+                      source: "quiz",
+                      quiz_submission_id: result.submission_id,
+                    })
+                  }
                 />
               )}
             </AnimatePresence>

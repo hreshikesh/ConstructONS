@@ -260,6 +260,7 @@ class LeadCreate(BaseModel):
     interested_package: Optional[str] = None
     message: Optional[str] = None
     source: str = "website"  # 'hero','contact','home_detail','packages'
+    quiz_submission_id: Optional[str] = None
 
 class Lead(BaseDoc):
     name: str
@@ -271,3 +272,26 @@ class Lead(BaseDoc):
     message: Optional[str] = None
     source: str = "website"
     status: str = "new"  # 'new','contacted','closed'
+    quote_ref: Optional[str] = None
+    quiz_submission_id: Optional[str] = None
+
+
+# ---------- Quiz Submissions ----------
+class QuizSubmission(BaseDoc):
+    budget: str  # 'value'|'balanced'|'premium'|'luxury'
+    family_size: str  # '1-2'|'3-4'|'5+'
+    style: Optional[str] = None
+    smart_home: str = "no"
+    recommended_package_slug: Optional[str] = None
+    recommended_package_name: Optional[str] = None
+    shortlisted_home_slugs: List[str] = Field(default_factory=list)
+    shortlisted_home_names: List[str] = Field(default_factory=list)
+    score: Optional[int] = None
+    contact_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_city: Optional[str] = None
+    converted_to_lead_id: Optional[str] = None
+    status: str = "new"  # 'new' | 'contact_captured' | 'converted' | 'closed'
+    notes: Optional[str] = None
+    source: str = "website"
