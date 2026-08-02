@@ -63,6 +63,26 @@ async def admin_me(user=Depends(require_admin)):
     return user
 
 
+@router.post("/admin/reseed", dependencies=[Depends(require_admin)])
+async def admin_reseed():
+    """Force-reseed all collections from `seed.py`. Useful when a fresh
+    deployment lands on an empty (or partially-empty) database and the
+    startup auto-seed didn't catch it — the admin can call this once to
+    restore the full content baseline without a redeploy.
+    """
+    from seed import seed_all
+    await seed_all()
+    counts = {}
+    for coll in [
+        "homes", "packages", "hero_sections", "site_settings",
+        "financial_services", "marketplace_categories", "ai_modules",
+        "comparison", "stats", "journey_steps", "testimonials",
+        "faqs", "blogs", "team_members", "media",
+    ]:
+        counts[coll] = await db[coll].count_documents({})
+    return {"success": True, "counts": counts}
+
+
 # ----------------------- Homes -----------------------
 @router.get("/homes")
 async def list_homes():

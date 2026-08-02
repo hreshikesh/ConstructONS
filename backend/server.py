@@ -30,14 +30,34 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    # Auto-seed if empty
+    # Auto-seed if any critical collection is empty. This is self-healing so
+    # that a fresh production deploy (which starts with an empty DB) always
+    # comes up with a complete content baseline.
     from db import db
     from seed import seed_all
-    homes_count = await db.homes.count_documents({})
-    if homes_count == 0:
-        logger.info("Empty database detected. Seeding sample data...")
+
+    critical_collections = [
+        "homes",
+        "packages",
+        "hero_sections",
+        "site_settings",
+        "financial_services",
+        "marketplace_categories",
+    ]
+    needs_seed = False
+    for coll in critical_collections:
+        count = await db[coll].count_documents({})
+        if count == 0:
+            logger.info(f"Collection '{coll}' is empty — will trigger seed.")
+            needs_seed = True
+            break
+
+    if needs_seed:
+        logger.info("Seeding sample data...")
         await seed_all()
         logger.info("Seeding complete.")
+    else:
+        logger.info("All critical collections populated — skipping seed.")
 
 
 @app.on_event("shutdown")
