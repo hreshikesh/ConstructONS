@@ -34,7 +34,7 @@ export default function AdminDashboard() {
         <Link to="/" className="text-sm text-brand-navy/60 hover:text-brand-orange">View public site →</Link>
       </div>
 
-      <div className="mt-6 grid md:grid-cols-6 gap-4">
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {[
           { label: "Homes", value: counts.homes, path: "homes", icon: Home },
           { label: "Packages", value: counts.packages, path: "packages", icon: Package },

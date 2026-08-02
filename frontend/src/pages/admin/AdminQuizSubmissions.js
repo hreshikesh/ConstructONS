@@ -73,7 +73,7 @@ export default function AdminQuizSubmissions() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { key: "", label: "Total", count: items.length },
           { key: "new", label: "New", count: items.filter(i => i.status === "new").length },
@@ -87,57 +87,59 @@ export default function AdminQuizSubmissions() {
         ))}
       </div>
 
-      <div className="mt-6 rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden">
-        <div className="grid grid-cols-[1.4fr_1fr_1fr_1.2fr_120px_80px] gap-3 px-4 py-3 text-xs uppercase tracking-widest text-brand-navy/50 border-b border-black/5">
-          <div>Answers</div>
-          <div>Recommended</div>
-          <div>Contact</div>
-          <div>Homes shortlisted</div>
-          <div>Status</div>
-          <div className="text-right">Actions</div>
+      <div className="mt-6 rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden overflow-x-auto">
+        <div className="min-w-[900px]">
+          <div className="grid grid-cols-[1.4fr_1fr_1fr_1.2fr_120px_80px] gap-3 px-4 py-3 text-xs uppercase tracking-widest text-brand-navy/50 border-b border-black/5">
+            <div>Answers</div>
+            <div>Recommended</div>
+            <div>Contact</div>
+            <div>Homes shortlisted</div>
+            <div>Status</div>
+            <div className="text-right">Actions</div>
+          </div>
+          {loading ? (
+            <div className="p-6 text-sm text-brand-navy/60">Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-6 text-sm text-brand-navy/60">No quiz submissions yet.</div>
+          ) : (
+            filtered.map((it) => (
+              <div key={it.id} className="grid grid-cols-[1.4fr_1fr_1fr_1.2fr_120px_80px] gap-3 px-4 py-3 items-center border-b border-black/5 last:border-0 text-sm hover:bg-brand-bg/40 cursor-pointer" onClick={() => setSelected(it)} data-testid={`quiz-row-${it.id}`}>
+                <div className="text-xs text-brand-navy/80 space-y-0.5">
+                  <div className="inline-flex items-center gap-1"><Wallet className="w-3 h-3 text-brand-orange" /> {BUDGET_LABELS[it.budget] || it.budget}</div>
+                  <span className="mx-1 text-brand-navy/30">·</span>
+                  <span><Users className="inline w-3 h-3 text-brand-orange" /> {FAMILY_LABELS[it.family_size] || it.family_size}</span>
+                  <span className="mx-1 text-brand-navy/30">·</span>
+                  <span><HomeIcon className="inline w-3 h-3 text-brand-orange" /> {it.style || "—"}</span>
+                  <span className="mx-1 text-brand-navy/30">·</span>
+                  <span><Cpu className="inline w-3 h-3 text-brand-orange" /> {SMART_LABELS[it.smart_home] || it.smart_home}</span>
+                </div>
+                <div>
+                  <div className="font-semibold text-brand-navy">{it.recommended_package_name || "—"}</div>
+                  <div className="text-[10px] text-brand-navy/50">score {it.score ?? "—"}</div>
+                </div>
+                <div className="text-xs text-brand-navy/80">
+                  {it.contact_name ? (
+                    <div>
+                      <div className="font-semibold">{it.contact_name}</div>
+                      <div className="text-[10px] text-brand-navy/50">{it.contact_phone}</div>
+                    </div>
+                  ) : <span className="text-brand-navy/40">anonymous</span>}
+                </div>
+                <div className="text-[11px] text-brand-navy/70 truncate">
+                  {(it.shortlisted_home_names || []).join(", ") || "—"}
+                </div>
+                <div>
+                  <span className={`inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${STATUS_COLORS[it.status] || STATUS_COLORS.new}`}>
+                    {STATUS_LABELS[it.status] || it.status}
+                  </span>
+                </div>
+                <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={() => remove(it.id)} className="w-8 h-8 rounded-full hover:bg-red-50 text-red-500 grid place-items-center"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-        {loading ? (
-          <div className="p-6 text-sm text-brand-navy/60">Loading…</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-6 text-sm text-brand-navy/60">No quiz submissions yet.</div>
-        ) : (
-          filtered.map((it) => (
-            <div key={it.id} className="grid grid-cols-[1.4fr_1fr_1fr_1.2fr_120px_80px] gap-3 px-4 py-3 items-center border-b border-black/5 last:border-0 text-sm hover:bg-brand-bg/40 cursor-pointer" onClick={() => setSelected(it)} data-testid={`quiz-row-${it.id}`}>
-              <div className="text-xs text-brand-navy/80 space-y-0.5">
-                <div className="inline-flex items-center gap-1"><Wallet className="w-3 h-3 text-brand-orange" /> {BUDGET_LABELS[it.budget] || it.budget}</div>
-                <span className="mx-1 text-brand-navy/30">·</span>
-                <span><Users className="inline w-3 h-3 text-brand-orange" /> {FAMILY_LABELS[it.family_size] || it.family_size}</span>
-                <span className="mx-1 text-brand-navy/30">·</span>
-                <span><HomeIcon className="inline w-3 h-3 text-brand-orange" /> {it.style || "—"}</span>
-                <span className="mx-1 text-brand-navy/30">·</span>
-                <span><Cpu className="inline w-3 h-3 text-brand-orange" /> {SMART_LABELS[it.smart_home] || it.smart_home}</span>
-              </div>
-              <div>
-                <div className="font-semibold text-brand-navy">{it.recommended_package_name || "—"}</div>
-                <div className="text-[10px] text-brand-navy/50">score {it.score ?? "—"}</div>
-              </div>
-              <div className="text-xs text-brand-navy/80">
-                {it.contact_name ? (
-                  <div>
-                    <div className="font-semibold">{it.contact_name}</div>
-                    <div className="text-[10px] text-brand-navy/50">{it.contact_phone}</div>
-                  </div>
-                ) : <span className="text-brand-navy/40">anonymous</span>}
-              </div>
-              <div className="text-[11px] text-brand-navy/70 truncate">
-                {(it.shortlisted_home_names || []).join(", ") || "—"}
-              </div>
-              <div>
-                <span className={`inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${STATUS_COLORS[it.status] || STATUS_COLORS.new}`}>
-                  {STATUS_LABELS[it.status] || it.status}
-                </span>
-              </div>
-              <div className="text-right" onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => remove(it.id)} className="w-8 h-8 rounded-full hover:bg-red-50 text-red-500 grid place-items-center"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            </div>
-          ))
-        )}
       </div>
 
       <AnimatePresence>
