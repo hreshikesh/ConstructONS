@@ -5,10 +5,12 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
+import { useBrochureModal } from "@/components/site/BrochureModalProvider";
 
 export default function PackagesComparePage() {
   const [data, setData] = useState(null);
   const [settings, setSettings] = useState(null);
+  const { open: openBrochure } = useBrochureModal();
 
   useEffect(() => {
     publicApi.comparePackages().then(setData);
@@ -132,16 +134,14 @@ export default function PackagesComparePage() {
                           >
                             View details <ArrowRight className="w-3 h-3" />
                           </Link>
-                          <a
-                            href={publicApi.brochureUrl(p.slug)}
-                            target="_blank"
-                            rel="noreferrer"
+                          <button
+                            onClick={() => openBrochure(p.slug, p.name)}
                             className={`text-xs font-semibold inline-flex items-center gap-1 ${
                               p.is_most_popular ? "text-brand-orangeLight" : "text-brand-navy/70"
                             } hover:underline`}
                           >
                             <Download className="w-3 h-3" /> Brochure
-                          </a>
+                          </button>
                         </div>
                       </th>
                     ))}

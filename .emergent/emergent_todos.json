@@ -1,34 +1,30 @@
 [
   {
-    "content": "Phase 3: Extend Package model with deep spec categories, scope, exclusions, addons, payment schedule, package FAQs, timeline/warranty",
+    "content": "Phase 4: Backend - personalised brochure endpoint (accept name/phone/email, generate quote ref, create lead, return PDF)",
     "status": "completed"
   },
   {
-    "content": "Phase 3: Rewrite seed with REAL Indian brand data (UltraTech, TATA Tiscon, Jaquar, Kajaria, Asian Paints, Havells, Polycab, etc.) across 4 tiers",
+    "content": "Phase 4: Update brochure.py to render 'Prepared for' + 'Quote Ref' + 'Date' on cover when provided",
     "status": "completed"
   },
   {
-    "content": "Phase 3: Backend - /api/packages/compare endpoint + /api/packages/{slug}/brochure.pdf with reportlab",
+    "content": "Phase 4: Frontend - BrochureModal that collects name/phone and downloads personalised PDF",
     "status": "completed"
   },
   {
-    "content": "Phase 3: Frontend - /packages/:slug detail page (banner, specs, scope, exclusions, addons, schedule, FAQs, calculator, brochure download)",
+    "content": "Phase 4: Frontend - wire BrochureModal to all Download Brochure buttons (homepage cards, detail page, compare page)",
     "status": "completed"
   },
   {
-    "content": "Phase 3: Frontend - /packages/compare route with side-by-side spec table",
+    "content": "Phase 4: Frontend - PackageChooser (4-question quiz) component with animated flow + result screen",
     "status": "completed"
   },
   {
-    "content": "Phase 3: Update homepage Packages section \"View Details\" to link to detail page",
+    "content": "Phase 4: Frontend - dedicated /find-my-package route + homepage entry point + CTA in Hero/Packages",
     "status": "completed"
   },
   {
-    "content": "Phase 3: Admin editor upgrades for new package fields (JSON editors + templates)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 3: End-to-end testing",
-    "status": "completed"
+    "content": "Phase 4: End-to-end testing via testing_agent_v3",
+    "status": "in_progress"
   }
 ]

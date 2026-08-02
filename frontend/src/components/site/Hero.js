@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Activity, Sparkles, Timer, Award, PlayCircle } from "lucide-react";
+import { ArrowRight, Activity, Sparkles, Timer, Award, PlayCircle, Compass } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 
 export default function Hero({ hero }) {
@@ -65,6 +66,13 @@ export default function Hero({ hero }) {
                 <PlayCircle className="w-4 h-4" />
                 {hero.secondary_cta_label}
               </button>
+              <Link
+                to="/find-my-package"
+                data-testid="hero-quiz-cta"
+                className="inline-flex items-center gap-2 rounded-full text-white/85 hover:text-white text-sm font-semibold px-3 py-2 transition"
+              >
+                <Compass className="w-4 h-4" /> Find my perfect package <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
             {hero.stats?.length > 0 && (

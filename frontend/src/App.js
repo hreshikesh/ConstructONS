@@ -3,12 +3,14 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { LeadModalProvider } from "@/components/site/LeadModalProvider";
+import { BrochureModalProvider } from "@/components/site/BrochureModalProvider";
 
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const HomeDetailPage = lazy(() => import("@/pages/HomeDetailPage"));
 const PackagesPage = lazy(() => import("@/pages/PackagesPage"));
 const PackageDetailPage = lazy(() => import("@/pages/PackageDetailPage"));
 const PackagesComparePage = lazy(() => import("@/pages/PackagesComparePage"));
+const FindMyPackagePage = lazy(() => import("@/pages/FindMyPackagePage"));
 const AboutPage = lazy(() => import("@/pages/AboutPage"));
 const BlogListPage = lazy(() => import("@/pages/BlogListPage"));
 const BlogDetailPage = lazy(() => import("@/pages/BlogDetailPage"));
@@ -33,27 +35,30 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <LeadModalProvider>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/homes/:slug" element={<HomeDetailPage />} />
-              <Route path="/packages" element={<PackagesPage />} />
-              <Route path="/packages/compare" element={<PackagesComparePage />} />
-              <Route path="/packages/:slug" element={<PackageDetailPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/blog" element={<BlogListPage />} />
-              <Route path="/blog/:slug" element={<BlogDetailPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="leads" element={<AdminLeads />} />
-                <Route path="site-settings" element={<AdminSiteSettings />} />
-                <Route path=":entity" element={<AdminEntity />} />
-              </Route>
-            </Routes>
-          </Suspense>
-          <Toaster position="top-right" richColors closeButton />
+          <BrochureModalProvider>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/homes/:slug" element={<HomeDetailPage />} />
+                <Route path="/packages" element={<PackagesPage />} />
+                <Route path="/packages/compare" element={<PackagesComparePage />} />
+                <Route path="/packages/:slug" element={<PackageDetailPage />} />
+                <Route path="/find-my-package" element={<FindMyPackagePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/blog" element={<BlogListPage />} />
+                <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="leads" element={<AdminLeads />} />
+                  <Route path="site-settings" element={<AdminSiteSettings />} />
+                  <Route path=":entity" element={<AdminEntity />} />
+                </Route>
+              </Routes>
+            </Suspense>
+            <Toaster position="top-right" richColors closeButton />
+          </BrochureModalProvider>
         </LeadModalProvider>
       </BrowserRouter>
     </div>

@@ -19,6 +19,15 @@ export const publicApi = {
   getPackage: (idOrSlug) => api.get(`/packages/${idOrSlug}`).then((r) => r.data),
   comparePackages: () => api.get("/packages-compare").then((r) => r.data),
   brochureUrl: (slug) => `${API_BASE}/packages/${slug}/brochure.pdf`,
+  personalizedBrochure: (slug, payload) =>
+    api.post(`/packages/${slug}/brochure`, payload, { responseType: "blob" }).then((r) => ({
+      blob: r.data,
+      quoteRef: r.headers["x-quote-ref"] || r.headers["X-Quote-Ref"],
+      filename:
+        (r.headers["content-disposition"] || "").split("filename=")[1]?.replace(/"/g, "") ||
+        `ConstructONS-${slug}.pdf`,
+    })),
+  recommendPackage: (payload) => api.post("/recommend", payload).then((r) => r.data),
   getBlogs: () => api.get("/blogs").then((r) => r.data),
   getBlog: (idOrSlug) => api.get(`/blogs/${idOrSlug}`).then((r) => r.data),
   getFaqs: () => api.get("/faqs").then((r) => r.data),

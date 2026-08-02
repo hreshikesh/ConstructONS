@@ -122,7 +122,7 @@ def _cover_page(canvas_obj, doc):
     canvas_obj.drawRightString(W - 20 * mm, H - 32 * mm, "BUILD PACKAGE BROCHURE")
 
 
-def _cover_content(pkg, styles):
+def _cover_content(pkg, styles, personalization=None):
     story = []
     story.append(Spacer(1, 20 * mm))
     story.append(Paragraph(f"<font color='#FF5A00'>{pkg.get('name','Package').upper()}</font>", styles["eyebrow"]))
@@ -132,13 +132,45 @@ def _cover_content(pkg, styles):
     story.append(Paragraph(pkg.get("tagline", ""), styles["cover_sub"]))
     story.append(Spacer(1, 6))
     story.append(Paragraph(pkg.get("description", ""), styles["cover_sub"]))
-    story.append(Spacer(1, 24))
+    story.append(Spacer(1, 20))
+
+    # Personalisation card
+    if personalization and (personalization.get("customer_name") or personalization.get("quote_ref")):
+        prep_rows = []
+        if personalization.get("customer_name"):
+            prep_rows.append(["PREPARED FOR", personalization["customer_name"].upper()])
+        if personalization.get("quote_ref"):
+            prep_rows.append(["QUOTE REFERENCE", personalization["quote_ref"]])
+        if personalization.get("customer_city"):
+            prep_rows.append(["CITY", personalization["customer_city"]])
+        prep_rows.append(["DATE", datetime.now().strftime("%d %b %Y")])
+        prep_rows.append(["VALIDITY", "30 days from date of issue"])
+
+        prep_table = Table(prep_rows, colWidths=[40 * mm, 90 * mm], hAlign="LEFT")
+        prep_table.setStyle(TableStyle([
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (0, -1), 7.5),
+            ("TEXTCOLOR", (0, 0), (0, -1), ORANGE),
+            ("FONTNAME", (1, 0), (1, -1), "Helvetica-Bold"),
+            ("FONTSIZE", (1, 0), (1, -1), 10),
+            ("TEXTCOLOR", (1, 0), (1, -1), WHITE),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 12),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#111A2E")),
+            ("LINEBELOW", (0, 0), (-1, -2), 0.3, colors.HexColor("#2A3441")),
+            ("BOX", (0, 0), (-1, -1), 1.4, ORANGE),
+            ("ROUNDEDCORNERS", [6, 6, 6, 6]),
+        ]))
+        story.append(prep_table)
+        story.append(Spacer(1, 14))
 
     # Price + key stats
     unit = pkg.get("price_unit") or ""
     price_html = f"<font color='#FF5A00'><b>{pkg.get('price_display','—')}</b></font><font color='#C4C9D3' size='12'> {unit}</font>"
     story.append(Paragraph(price_html, styles["price"]))
-    story.append(Spacer(1, 18))
+    story.append(Spacer(1, 16))
 
     stats = [
         ["Timeline", pkg.get("timeline_months") or "8–10 months"],
@@ -271,8 +303,15 @@ def _payment_schedule_table(schedule):
     return tbl
 
 
-def generate_brochure(package: dict, settings: dict = None) -> bytes:
-    """Generate a full PDF brochure for a package. Returns raw PDF bytes."""
+def generate_brochure(package: dict, settings: dict = None, personalization: dict = None) -> bytes:
+    """Generate a full PDF brochure for a package. Returns raw PDF bytes.
+
+    personalization = {
+        'customer_name': 'Ramesh Kumar',
+        'quote_ref': 'CONS-2026-BASIC-042',
+        'customer_city': 'Bangalore',
+    }
+    """
     settings = settings or {}
     buf = BytesIO()
     styles = _styles()
@@ -289,7 +328,7 @@ def generate_brochure(package: dict, settings: dict = None) -> bytes:
     story = []
 
     # ---------- Cover ----------
-    story.extend(_cover_content(package, styles))
+    story.extend(_cover_content(package, styles, personalization=personalization))
     story.append(PageBreak())
 
     # ---------- Overview ----------

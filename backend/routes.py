@@ -154,6 +154,146 @@ async def download_brochure(slug: str):
     )
 
 
+class PersonalizedBrochureRequest(BaseModel):
+    name: str
+    phone: str
+    email: Optional[str] = None
+    city: Optional[str] = None
+    message: Optional[str] = None
+    save_lead: bool = True
+
+
+@router.post("/packages/{slug}/brochure")
+async def personalized_brochure(slug: str, body: PersonalizedBrochureRequest):
+    """Public endpoint — creates a lead + generates PERSONALIZED PDF brochure.
+    Returns the PDF bytes directly."""
+    pkg = await db.packages.find_one({"slug": slug}, {"_id": 0})
+    if not pkg:
+        pkg = await db.packages.find_one({"id": slug}, {"_id": 0})
+    if not pkg:
+        raise HTTPException(status_code=404, detail="Package not found")
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+
+    # Generate a stable-ish quote reference: CONS-YY-TIER-XXXX (from lead counter)
+    from models import Lead
+    year = datetime.now(timezone.utc).strftime("%y")
+    lead_count = await db.leads.count_documents({})
+    seq = str(lead_count + 1).zfill(4)
+    tier_code = (pkg.get("tier") or pkg.get("slug", "pkg"))[:4].upper()
+    quote_ref = f"CONS-{year}-{tier_code}-{seq}"
+
+    # Save lead if allowed
+    if body.save_lead:
+        lead = Lead(
+            name=body.name,
+            phone=body.phone,
+            email=body.email,
+            city=body.city,
+            message=body.message or f"Requested personalised brochure ({pkg.get('name')})",
+            interested_package=pkg.get("name"),
+            source="brochure_download",
+        )
+        lead_doc = lead.model_dump()
+        lead_doc["quote_ref"] = quote_ref
+        await db.leads.insert_one(lead_doc)
+
+    personalization = {
+        "customer_name": body.name,
+        "quote_ref": quote_ref,
+        "customer_city": body.city,
+    }
+
+    from brochure import generate_brochure
+    pdf_bytes = generate_brochure(pkg, settings, personalization=personalization)
+    filename = f"ConstructONS-{pkg.get('slug','package')}-{quote_ref}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Quote-Ref": quote_ref,
+            "Access-Control-Expose-Headers": "X-Quote-Ref, Content-Disposition",
+        },
+    )
+
+
+# ----------------------- Package Recommender -----------------------
+class RecommendRequest(BaseModel):
+    budget: str  # 'value' | 'balanced' | 'premium' | 'luxury'
+    family_size: str  # '1-2' | '3-4' | '5+' 
+    style: Optional[str] = None  # 'modern' | 'classic' | 'villa' | 'duplex' | 'any'
+    smart_home: str = "no"  # 'no' | 'basic' | 'full'
+
+
+@router.post("/recommend")
+async def recommend_package(body: RecommendRequest):
+    """Score all packages against user preferences and return recommendation + shortlisted homes."""
+    packages = await db.packages.find({"is_published": True}, {"_id": 0}).sort("sort_order", 1).to_list(20)
+    homes = await db.homes.find({"is_published": True}, {"_id": 0}).sort("sort_order", 1).to_list(50)
+
+    budget_map = {
+        "value": "basic",
+        "balanced": "essential",
+        "premium": "standard",
+        "luxury": "premium",
+    }
+    smart_map = {"no": "basic", "basic": "standard", "full": "premium"}
+    ideal_by_budget = budget_map.get(body.budget, "essential")
+    ideal_by_smart = smart_map.get(body.smart_home, "essential")
+
+    # Score
+    tier_order = {"basic": 1, "essential": 2, "standard": 3, "premium": 4}
+    ideal_score = max(tier_order.get(ideal_by_budget, 2), tier_order.get(ideal_by_smart, 2))
+
+    scored = []
+    for p in packages:
+        tier = p.get("tier", "basic")
+        tscore = tier_order.get(tier, 1)
+        # closer to ideal_score is better; equal is best, 1-away ok, 2+ penalised
+        diff = abs(tscore - ideal_score)
+        base = 100 - diff * 30
+        # Prefer tiers matching budget over smart_home
+        if tier == ideal_by_budget:
+            base += 10
+        scored.append((base, p))
+
+    scored.sort(key=lambda x: -x[0])
+    best = scored[0][1]
+
+    # Filter homes: package compatibility + family size + style
+    def bhk_min(fs):
+        if fs == "1-2": return 2
+        if fs == "3-4": return 3
+        if fs == "5+": return 4
+        return 2
+
+    needed_bhk = bhk_min(body.family_size)
+
+    def home_matches(h):
+        pkg_names = [pc.lower() for pc in (h.get("package_compatibility") or [])]
+        if best.get("tier") and best["tier"] not in pkg_names and best.get("name", "").split()[0].lower() not in pkg_names:
+            return False
+        if (h.get("bedrooms") or 0) < needed_bhk:
+            return False
+        if body.style and body.style != "any":
+            if (h.get("style") or "").lower() != body.style.lower():
+                return False
+        return True
+
+    shortlist = [h for h in homes if home_matches(h)]
+    if not shortlist:
+        # Relax the style filter
+        shortlist = [h for h in homes if (h.get("bedrooms") or 0) >= needed_bhk]
+    shortlist = shortlist[:3]
+
+    return {
+        "recommended_package": best,
+        "shortlisted_homes": shortlist,
+        "score": scored[0][0],
+        "alternatives": [s[1] for s in scored[1:3]],
+    }
+
+
 # ----------------------- Generic factory for simpler collections -----------------------
 def make_crud(path: str, collection: str, ModelCls):
     @router.get(f"/{path}")

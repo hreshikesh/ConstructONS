@@ -10,6 +10,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi, API_BASE } from "@/lib/api";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import { useBrochureModal } from "@/components/site/BrochureModalProvider";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
 
 const TABS = [
@@ -30,6 +31,7 @@ export default function PackageDetailPage() {
   const [expandedCat, setExpandedCat] = useState(null);
   const [area, setArea] = useState(1500);
   const { open } = useLeadModal();
+  const { open: openBrochure } = useBrochureModal();
 
   useEffect(() => {
     publicApi.getPackage(slug).then((p) => {
@@ -46,8 +48,7 @@ export default function PackageDetailPage() {
   }, [pkg, area]);
 
   if (!pkg) return <div className="min-h-screen grid place-items-center"><div className="w-8 h-8 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" /></div>;
-  if (!pkg.id) return (
-    <>
+  if (!pkg.id) return (<>
       <Header />
       <div className="min-h-[70vh] grid place-items-center text-center">
         <div>
@@ -59,8 +60,6 @@ export default function PackageDetailPage() {
       <Footer settings={settings} />
     </>
   );
-
-  const brochureUrl = publicApi.brochureUrl(pkg.slug);
 
   return (
     <>
@@ -99,15 +98,13 @@ export default function PackageDetailPage() {
                 <button onClick={() => open({ package: pkg.name, source: "package_detail" })} data-testid="pkg-cta-consult" className="btn-primary">
                   Get Free Consultation <ArrowRight className="w-4 h-4" />
                 </button>
-                <a
-                  href={brochureUrl}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  onClick={() => openBrochure(pkg.slug, pkg.name)}
                   data-testid="pkg-cta-brochure"
                   className="inline-flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-semibold px-6 py-3 transition"
                 >
                   <Download className="w-4 h-4" /> Download PDF Brochure
-                </a>
+                </button>
                 <Link to="/packages/compare" className="inline-flex items-center gap-2 rounded-full text-white/70 hover:text-white text-sm font-medium px-3 py-2 transition">
                   Compare packages →
                 </Link>
@@ -205,9 +202,9 @@ export default function PackageDetailPage() {
             <button onClick={() => open({ package: pkg.name, source: "package_footer" })} className="btn-primary">
               Get Free Consultation <ArrowRight className="w-4 h-4" />
             </button>
-            <a href={brochureUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 px-6 py-3 font-semibold">
+            <button onClick={() => openBrochure(pkg.slug, pkg.name)} className="inline-flex items-center justify-center gap-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 px-6 py-3 font-semibold">
               <Download className="w-4 h-4" /> Download Brochure
-            </a>
+            </button>
           </div>
         </div>
       </section>

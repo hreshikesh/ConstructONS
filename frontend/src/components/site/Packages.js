@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, ArrowRight, Sparkles, ChevronDown, Download, Scale } from "lucide-react";
+import { Check, ArrowRight, Sparkles, ChevronDown, Download, Scale, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
-import { publicApi } from "@/lib/api";
+import { useBrochureModal } from "@/components/site/BrochureModalProvider";
 
 export default function Packages({ packages = [] }) {
   const { open: openLead } = useLeadModal();
+  const { open: openBrochure } = useBrochureModal();
 
   return (
     <section id="packages" data-testid="packages-section" className="py-24 md:py-32 bg-brand-bg">
@@ -22,6 +23,13 @@ export default function Packages({ packages = [] }) {
               No hidden costs. No surprises. Just quality construction with clear pricing.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
+              <Link
+                to="/find-my-package"
+                data-testid="packages-quiz-link"
+                className="inline-flex items-center gap-2 rounded-full bg-brand-navy text-white font-semibold text-sm px-4 py-2 hover:bg-brand-navySoft transition"
+              >
+                <Compass className="w-4 h-4" /> Find My Perfect Package
+              </Link>
               <Link
                 to="/packages/compare"
                 data-testid="packages-compare-link"
@@ -40,6 +48,7 @@ export default function Packages({ packages = [] }) {
               pkg={p}
               index={i}
               onQuote={() => openLead({ package: p.name, source: "packages" })}
+              onBrochure={() => openBrochure(p.slug, p.name)}
             />
           ))}
         </div>
@@ -48,11 +57,10 @@ export default function Packages({ packages = [] }) {
   );
 }
 
-function PackageCard({ pkg, onQuote, index }) {
+function PackageCard({ pkg, onQuote, onBrochure, index }) {
   const [expanded, setExpanded] = useState(false);
   const isPopular = pkg.is_most_popular;
   const isPremium = pkg.tier === "premium";
-  const brochureUrl = publicApi.brochureUrl(pkg.slug);
 
   return (
     <motion.div
@@ -149,9 +157,8 @@ function PackageCard({ pkg, onQuote, index }) {
             <ChevronDown className={`w-3 h-3 transition ${expanded ? "rotate-180" : ""}`} />
           </button>
           <a
-            href={brochureUrl}
-            target="_blank"
-            rel="noreferrer"
+            href="#"
+            onClick={(e) => { e.preventDefault(); onBrochure(); }}
             data-testid={`package-brochure-${pkg.slug}`}
             className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold inline-flex items-center justify-center gap-1 ${
               isPopular ? "text-brand-orangeLight hover:bg-white/5" : "text-brand-orange hover:bg-brand-orange/10"
