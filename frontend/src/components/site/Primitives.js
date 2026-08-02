@@ -38,9 +38,11 @@ export const stagItem = {
 };
 
 export function SectionLabel({ number, eyebrow }) {
+  // Page numbers intentionally hidden per brand guidelines.
+  // Keeping the "number" prop for backward compatibility.
+  void number;
   return (
-    <div className="flex items-center gap-3">
-      {number != null && <span className="num-label">{String(number).padStart(2, "0")}</span>}
+    <div className="flex items-center gap-3" data-testid="section-label">
       <span className="h-px w-6 bg-brand-navy/20" />
       <span className="section-eyebrow">{eyebrow}</span>
     </div>

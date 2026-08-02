@@ -1,22 +1,22 @@
 [
   {
-    "content": "Phase 6: Backend - /api/notifications/pending endpoint",
+    "content": "Remove page numbers (02, 03, 09 etc.) from SectionLabel component",
     "status": "completed"
   },
   {
-    "content": "Phase 6: Frontend - notifications helper (Web Audio chime, Notification API)",
+    "content": "Fix Testimonials layout - stop marquee cards from overlapping the 4.9/5 rating badge",
     "status": "completed"
   },
   {
-    "content": "Phase 6: Frontend - useAdminNotifications polling hook + last-seen state",
+    "content": "Replace Home Collection thumbnails with typical Indian house front-elevation images",
     "status": "completed"
   },
   {
-    "content": "Phase 6: Frontend - Bell icon + badge + dropdown in AdminLayout (mobile & desktop)",
+    "content": "Set all packages to 10 Year Warranty (highlights + warranty_years) and update running DB",
     "status": "completed"
   },
   {
-    "content": "Phase 6: End-to-end testing via testing_agent_v3",
-    "status": "in_progress"
+    "content": "Verify changes via screenshots",
+    "status": "completed"
   }
 ]

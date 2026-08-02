@@ -14,36 +14,37 @@ from models import (
 IMG_HERO_VILLA = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2000&q=80"
 
 HOME_IMAGES = {
+    # Verified pool-free front elevations. Admins can override any of these via
+    # Admin Panel → Homes → Edit → Cover Image URL / Gallery.
     "modern_aura": [
-        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1600&q=80",
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=1600&q=80",
     ],
     "classic_elite": [
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=80",
     ],
     "urban_nest": [
+        "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=1600&q=80",
         "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600585152220-90363fe7e115?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80",
     ],
     "sky_villa": [
-        "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600566753086-00f18fe6ba68?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1600585153490-76fb20a32601?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1600&q=80",
     ],
     "luxury_duplex": [
-        "https://images.unsplash.com/photo-1600585153490-76fb20a32601?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600566753151-384129cf4e3e?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=80",
     ],
     "premium_villa": [
-        "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1600585153490-76fb20a32601?auto=format&fit=crop&w=1600&q=80",
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80",
-        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=80",
+        "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=1600&q=80",
     ],
 }
 
@@ -345,7 +346,7 @@ async def seed_all():
                 "Standard Quality Materials",
                 "Standard Finishes",
                 "Project Supervision",
-                "1 Year Warranty",
+                "10 Year Warranty",
             ],
             sections=common_sections("Basic"),
             is_most_popular=False, accent_color="#22C55E", sort_order=1,
@@ -361,7 +362,7 @@ async def seed_all():
                 "Better Quality Materials",
                 "Premium Finishes",
                 "Live Project Tracking",
-                "2 Year Warranty",
+                "10 Year Warranty",
             ],
             sections=common_sections("Essential"),
             is_most_popular=True, accent_color="#0B1220", sort_order=2,
@@ -377,7 +378,7 @@ async def seed_all():
                 "Premium Quality Materials",
                 "Designer Finishes",
                 "Dedicated PM",
-                "3 Year Warranty",
+                "10 Year Warranty",
             ],
             sections=common_sections("Standard"),
             is_most_popular=False, accent_color="#FF5A00", sort_order=3,
@@ -393,7 +394,7 @@ async def seed_all():
                 "Custom Design & Planning",
                 "Luxury Materials",
                 "Smart Home Integration",
-                "Up to 10 Year Warranty",
+                "10 Year Warranty",
             ],
             sections=common_sections("Premium"),
             is_most_popular=False, accent_color="#7C3AED",
@@ -456,7 +457,7 @@ async def seed_all():
         {"feature": "Quality Monitoring", "traditional": "Manual updates", "constructons": "Real-time updates", "traditional_positive": False, "constructons_positive": True},
         {"feature": "Customer Dashboard", "traditional": "No dashboard", "constructons": "On-time delivery guarantee", "traditional_positive": False, "constructons_positive": True},
         {"feature": "Live Progress", "traditional": "Delays & cost overrun", "constructons": "Live milestone tracking", "traditional_positive": False, "constructons_positive": True},
-        {"feature": "Warranty", "traditional": "Limited after-sales", "constructons": "Up to 10 year warranty", "traditional_positive": False, "constructons_positive": True},
+        {"feature": "Warranty", "traditional": "Limited after-sales", "constructons": "10 year warranty", "traditional_positive": False, "constructons_positive": True},
         {"feature": "Technology", "traditional": "None", "constructons": "AI + IoT + Cloud", "traditional_positive": False, "constructons_positive": True},
     ]
     for i, r in enumerate(rows):
@@ -507,7 +508,7 @@ async def seed_all():
     # -------- FAQs --------
     await _reset("faqs")
     faqs = [
-        {"question": "How is ConstructONS different from a traditional contractor?", "answer": "We offer standardized packages with transparent per-sqft pricing, AI-powered live tracking, digital documents, and up to 10-year warranty — no hidden costs, no delays."},
+        {"question": "How is ConstructONS different from a traditional contractor?", "answer": "We offer standardized packages with transparent per-sqft pricing, AI-powered live tracking, digital documents, and a 10-year warranty on every package — no hidden costs, no delays."},
         {"question": "What is included in the price per Sq.ft?", "answer": "Structure, materials, labor, standard finishes as per the package, project management, and access to the AI Platform. Land, permits, and premium upgrades are additional."},
         {"question": "How long does construction take?", "answer": "Typically 8–10 months depending on the home model, package, and site conditions. You'll get live milestone tracking throughout."},
         {"question": "Can I customize the home design?", "answer": "Yes — Essential and above packages allow layout and finish customizations. Premium is fully bespoke."},
