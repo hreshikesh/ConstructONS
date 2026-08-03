@@ -192,7 +192,7 @@ function StringListEditor({ items, onChange, placeholder, testId }) {
         <div className="text-xs text-brand-navy/50 italic">No items yet. Click "Add row" to start.</div>
       )}
       {list.map((val, i) => (
-        <div key={`row-${i}-${(val || "").slice(0, 24)}`} className="flex items-center gap-2">
+        <div key={i} className="flex items-center gap-2">
           <GripVertical className="w-3.5 h-3.5 text-brand-navy/30 shrink-0" />
           <input
             value={val}
@@ -243,7 +243,7 @@ function SpecCategoryEditor({ categories, onChange }) {
         <div className="text-xs text-brand-navy/50 italic">No spec categories yet.</div>
       )}
       {list.map((cat, ci) => (
-        <div key={`cat-${ci}-${cat.name || ""}`} className="rounded-2xl border border-black/10 bg-white overflow-hidden">
+        <div key={ci} className="rounded-2xl border border-black/10 bg-white overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2 bg-brand-bg/60">
             <button
               onClick={() => setOpenIdx(openIdx === ci ? -1 : ci)}
@@ -279,7 +279,7 @@ function SpecCategoryEditor({ categories, onChange }) {
                 <div className="text-xs text-brand-navy/50 italic">No spec rows yet.</div>
               )}
               {(cat.items || []).map((it, ii) => (
-                <div key={`row-${ci}-${ii}-${(it.spec || "").slice(0, 24)}`} className="grid grid-cols-1 md:grid-cols-[minmax(120px,1fr)_minmax(160px,1.5fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_36px] gap-2 items-start">
+                <div key={ii} className="grid grid-cols-1 md:grid-cols-[minmax(120px,1fr)_minmax(160px,1.5fr)_minmax(120px,1fr)_minmax(120px,1fr)_minmax(120px,1fr)_36px] gap-2 items-start">
                   <input
                     value={it.spec || ""}
                     onChange={(e) => setItemAt(ci, ii, { spec: e.target.value })}
@@ -346,7 +346,7 @@ function AddonsEditor({ addons, onChange }) {
     <div className="space-y-3" data-testid="addons-editor">
       {list.length === 0 && <div className="text-xs text-brand-navy/50 italic">No add-ons yet.</div>}
       {list.map((a, i) => (
-        <div key={`addon-${i}-${(a.name || "").slice(0, 24)}`} className="rounded-2xl border border-black/10 bg-white p-3 space-y-2">
+        <div key={i} className="rounded-2xl border border-black/10 bg-white p-3 space-y-2">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_100px_36px] gap-2">
             <input
               value={a.name || ""}
@@ -409,7 +409,7 @@ function ScheduleEditor({ schedule, onChange }) {
   return (
     <div className="space-y-2" data-testid="schedule-editor">
       {list.map((s, i) => (
-        <div key={`sched-${i}-${(s.milestone || "").slice(0, 24)}`} className="grid grid-cols-1 md:grid-cols-[minmax(160px,1fr)_100px_2fr_36px] gap-2 items-start">
+        <div key={i} className="grid grid-cols-1 md:grid-cols-[minmax(160px,1fr)_100px_2fr_36px] gap-2 items-start">
           <input
             value={s.milestone || ""}
             onChange={(e) => setAt(i, { milestone: e.target.value })}
@@ -462,7 +462,7 @@ function FaqEditor({ faqs, onChange }) {
   return (
     <div className="space-y-2" data-testid="faq-editor">
       {list.map((f, i) => (
-        <div key={`faq-${i}-${(f.question || "").slice(0, 24)}`} className="rounded-2xl border border-black/10 bg-white p-3 space-y-2">
+        <div key={i} className="rounded-2xl border border-black/10 bg-white p-3 space-y-2">
           <div className="flex items-start gap-2">
             <input
               value={f.question || ""}
