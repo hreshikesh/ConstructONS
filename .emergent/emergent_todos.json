@@ -1,26 +1,30 @@
 [
   {
-    "content": "Critical: Fix undefined 'content'/'content_type' variables in routes.py media download",
+    "content": "Backend: Update auth.py require_admin to read from cookie first, header fallback",
     "status": "completed"
   },
   {
-    "content": "Critical: Re-verify BlogDetailPage XSS uses DOMPurify - CONFIRMED already sanitized",
+    "content": "Backend: Update /admin/login to set httpOnly cookie + add /admin/logout endpoint",
     "status": "completed"
   },
   {
-    "content": "Critical: Audit hook dependencies - all flagged instances are false positives (stable state setters + module imports correctly omitted)",
+    "content": "Frontend: axios withCredentials + strip localStorage token injection",
     "status": "completed"
   },
   {
-    "content": "Fix array-index keys in AdminPackages.js and PackageEditorHelpers.js and AboutPage.js",
+    "content": "Frontend: Update AdminLoginPage & AdminLayout to use /admin/me instead of localStorage",
     "status": "completed"
   },
   {
-    "content": "Log errors from empty catch blocks in AdminPackages/PackageEditorHelpers/PackageDetailPage/HomePage",
+    "content": "Frontend: Global 401 interceptor to redirect to login",
     "status": "completed"
   },
   {
-    "content": "Run testing_agent_v3 to verify all fixes - 100% pass (4/4 fixes verified, 95.2% backend, 100% frontend, 0 critical bugs)",
+    "content": "Frontend: Update logout button to hit /admin/logout endpoint",
     "status": "completed"
+  },
+  {
+    "content": "Run testing_agent_v3 to verify no auth regressions",
+    "status": "in_progress"
   }
 ]

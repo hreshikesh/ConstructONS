@@ -16,8 +16,11 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await adminApi.login(email, password);
-      localStorage.setItem("cons_admin_token", res.token);
+      await adminApi.login(email, password);
+      // Session is now carried by an httpOnly cookie set by the backend.
+      // We deliberately do NOT persist the JWT in localStorage anymore so
+      // an XSS-injected script can't scrape it. `/admin/me` will validate
+      // the cookie on the next page load.
       toast.success("Welcome back!");
       navigate("/admin");
     } catch (err) {

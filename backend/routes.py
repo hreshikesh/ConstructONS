@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form, Response, Header
+from fastapi.responses import Response as FastAPIResponse
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from db import db, serialize_doc
-from auth import require_admin, verify_admin_credentials, create_admin_token
+from auth import (
+    require_admin, verify_admin_credentials, create_admin_token,
+    set_admin_cookie, clear_admin_cookie, COOKIE_NAME,
+)
 from models import (
     Home, Package, Testimonial, FAQ, Blog, MarketplaceCategory,
     FinancialService, TeamMember, AIPlatformModule, JourneyStep,
@@ -52,11 +56,23 @@ class AdminLoginReq(BaseModel):
     password: str
 
 @router.post("/admin/login")
-async def admin_login(body: AdminLoginReq):
+async def admin_login(body: AdminLoginReq, response: FastAPIResponse):
     if not verify_admin_credentials(body.email, body.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_admin_token(body.email)
+    # httpOnly cookie is the primary carrier for the JWT. We still return
+    # the raw token in the JSON body so `curl`-based / non-browser callers
+    # can keep using the `Authorization: Bearer <jwt>` header if needed.
+    set_admin_cookie(response, token)
     return {"token": token, "email": body.email, "role": "admin"}
+
+
+@router.post("/admin/logout")
+async def admin_logout(response: FastAPIResponse):
+    """Clear the httpOnly admin cookie. Safe to call even if not logged in."""
+    clear_admin_cookie(response)
+    return {"success": True}
+
 
 @router.get("/admin/me")
 async def admin_me(user=Depends(require_admin)):
@@ -152,7 +168,7 @@ async def packages_compare():
     return {"packages": pkgs, "category_order": cat_order}
 
 
-from fastapi.responses import Response as FastAPIResponse  # noqa: E402
+from fastapi.responses import Response as FastAPIResponse  # noqa: E402,F811
 
 
 @router.get("/packages/{slug}/brochure.pdf")

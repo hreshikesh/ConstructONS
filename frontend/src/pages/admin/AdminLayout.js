@@ -50,15 +50,13 @@ export default function AdminLayout() {
     useAdminNotifications({ enabled: !!me });
 
   useEffect(() => {
-    const token = localStorage.getItem("cons_admin_token");
-    if (!token) {
-      navigate("/admin/login");
-      return;
-    }
-    adminApi.me().then(setMe).catch(() => {
-      localStorage.removeItem("cons_admin_token");
-      navigate("/admin/login");
-    }).finally(() => setLoading(false));
+    // Cookie-only auth — no more localStorage token to inspect.
+    // If /admin/me returns 200 → we're authenticated.
+    // If it returns 401 → the httpOnly cookie is missing/expired; bounce to login.
+    adminApi.me()
+      .then(setMe)
+      .catch(() => navigate("/admin/login"))
+      .finally(() => setLoading(false));
   }, [navigate]);
 
   // Close drawer on navigation
@@ -74,8 +72,10 @@ export default function AdminLayout() {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
-  const logout = () => {
-    localStorage.removeItem("cons_admin_token");
+  const logout = async () => {
+    try {
+      await adminApi.logout();
+    } catch (_) { /* best-effort — server may already have cleared */ }
     navigate("/admin/login");
   };
 
