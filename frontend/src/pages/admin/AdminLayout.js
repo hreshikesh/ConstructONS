@@ -9,13 +9,14 @@ import { requestNotificationPermission } from "@/lib/notifications";
 import {
   Home, Package, HelpCircle, Newspaper, ShoppingBag, Landmark, Users, Sparkles,
   Route, ImageIcon, LayoutDashboard, Settings, LogOut, Star, Inbox, GitCompareArrows,
-  BarChart3, ClipboardList, Menu, X, Bell, CheckCheck
+  BarChart3, ClipboardList, Menu, X, Bell, CheckCheck, FileText
 } from "lucide-react";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard, end: true },
   { label: "Leads Inbox", to: "/admin/leads", icon: Inbox },
   { label: "Quiz Submissions", to: "/admin/quiz-submissions", icon: ClipboardList },
+  { label: "Client Proposals", to: "/admin/proposals", icon: FileText },
   { label: "Homes", to: "/admin/homes", icon: Home },
   { label: "Packages", to: "/admin/packages", icon: Package },
   { label: "AI Modules", to: "/admin/ai-modules", icon: Sparkles },

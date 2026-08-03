@@ -1,26 +1,26 @@
 [
   {
-    "content": "Backend: Extend Package model with optional heading override fields",
-    "status": "completed"
-  },
-  {
-    "content": "Frontend public: Use heading overrides with sensible fallbacks in PackageDetailPage",
-    "status": "completed"
-  },
-  {
-    "content": "Admin: Add heading editors inline at the top of each tab",
-    "status": "completed"
-  },
-  {
-    "content": "Admin: Add missing 'image' field to Add-ons editor rows",
-    "status": "completed"
-  },
-  {
-    "content": "Backend: Ensure PDF brochure honors the overrides too",
-    "status": "completed"
-  },
-  {
-    "content": "Verify end-to-end + hand to testing_agent",
+    "content": "Backend: Proposal model + CRUD routes + auto ref number",
     "status": "in_progress"
+  },
+  {
+    "content": "Backend: PDF generation for proposal (reuse brochure.py styling)",
+    "status": "pending"
+  },
+  {
+    "content": "Frontend: AdminProposals page - list + editor drawer",
+    "status": "pending"
+  },
+  {
+    "content": "Frontend: Route registration + sidebar link",
+    "status": "pending"
+  },
+  {
+    "content": "Frontend: WhatsApp send button",
+    "status": "pending"
+  },
+  {
+    "content": "Testing agent verification",
+    "status": "pending"
   }
 ]

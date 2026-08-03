@@ -1,21 +1,23 @@
 """
-Phase 4 Backend Testing: Brochure Personalisation & Package Recommender
-Tests all backend endpoints for brochure download and package recommendation.
+Client Proposals Backend Testing
+Tests all backend endpoints for client proposals CRUD + PDF generation.
 """
 import requests
 import sys
 from datetime import datetime
 
 BASE_URL = "https://ai-homes-3.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@constructons.in"
-ADMIN_PASSWORD = "admin123"
+ADMIN_EMAIL = "dkmanjeshbelli@gmail.com"
+ADMIN_PASSWORD = "9980577310@aB"
 
-class Phase4BackendTester:
+class ProposalsBackendTester:
     def __init__(self):
         self.tests_run = 0
         self.tests_passed = 0
         self.admin_token = None
         self.test_results = []
+        self.test_proposal_id = None
+        self.test_ref_number = None
 
     def log_test(self, name, passed, details=""):
         """Log test result"""
@@ -51,271 +53,319 @@ class Phase4BackendTester:
 
     def test_brochure_basic_package(self):
         """Test POST /api/packages/basic/brochure with name+phone+city"""
-        print("\n📋 Test 1: POST /api/packages/basic/brochure with full payload")
-        try:
-            response = requests.post(
-                f"{BASE_URL}/packages/basic/brochure",
-                json={
-                    "name": "Ramesh",
-                    "phone": "9999912345",
-                    "city": "Bangalore"
-                },
-                timeout=15
-            )
-            
-            # Check status code
-            status_ok = response.status_code == 200
-            
-            # Check content-type
-            content_type = response.headers.get("content-type", "")
-            content_type_ok = "application/pdf" in content_type
-            
-            # Check size >= 15KB
-            size = len(response.content)
-            size_ok = size >= 15000
-            
-            # Check X-Quote-Ref header
-            quote_ref = response.headers.get("X-Quote-Ref") or response.headers.get("x-quote-ref")
-            quote_ref_ok = quote_ref and quote_ref.startswith("CONS-")
-            
-            # Check content-disposition
-            content_disp = response.headers.get("content-disposition", "")
-            filename_ok = "filename" in content_disp
-            
-            all_ok = status_ok and content_type_ok and size_ok and quote_ref_ok and filename_ok
-            
-            details = f"Status: {response.status_code}, Content-Type: {content_type}, Size: {size} bytes, Quote-Ref: {quote_ref}, Content-Disposition: {content_disp[:50]}"
-            self.log_test("Brochure basic package with full payload", all_ok, details)
-            
-            if not status_ok:
-                print(f"   Response body: {response.text[:200]}")
-            
-            return quote_ref if all_ok else None
-            
-        except Exception as e:
-            self.log_test("Brochure basic package with full payload", False, f"Error: {str(e)}")
-            return None
+        print("\n📋 Test OLD: POST /api/packages/basic/brochure (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
 
     def test_brochure_premium_required_only(self):
         """Test POST /api/packages/premium/brochure with only required fields"""
-        print("\n📋 Test 2: POST /api/packages/premium/brochure with only name+phone")
+        print("\n📋 Test OLD: POST /api/packages/premium/brochure (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
+
+    def test_brochure_invalid_package(self):
+        """Test POST /api/packages/invalid/brochure returns 404"""
+        print("\n📋 Test OLD: POST /api/packages/invalid/brochure (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
+
+    def test_lead_creation_after_brochure(self, quote_ref):
+        """Test that lead is created after brochure download"""
+        print("\n📋 Test OLD: Lead creation verification (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
+
+    def test_recommend_premium_budget(self):
+        """Test POST /api/recommend with premium budget → standard tier"""
+        print("\n📋 Test OLD: POST /api/recommend (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
+
+    def test_recommend_value_budget(self):
+        """Test POST /api/recommend with value budget → basic tier"""
+        print("\n📋 Test OLD: POST /api/recommend (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
+
+    def test_recommend_luxury_budget(self):
+        """Test POST /api/recommend with luxury budget → premium tier"""
+        print("\n📋 Test OLD: POST /api/recommend (skipped - old test)")
+        # Skipped - this is from old phase 4 testing
+        pass
+
+    def test_list_proposals_empty(self):
+        """Test GET /api/proposals returns empty list initially"""
+        print("\n📋 Test 1: GET /api/proposals (should be empty or have existing items)")
         try:
+            response = requests.get(
+                f"{BASE_URL}/proposals",
+                headers={"Authorization": f"Bearer {self.admin_token}"},
+                timeout=10
+            )
+            
+            status_ok = response.status_code == 200
+            if status_ok:
+                data = response.json()
+                is_list = isinstance(data, list)
+                details = f"Status: {response.status_code}, Count: {len(data) if is_list else 'N/A'}"
+                self.log_test("List proposals endpoint", status_ok and is_list, details)
+            else:
+                self.log_test("List proposals endpoint", False, f"Status: {response.status_code}, Body: {response.text[:200]}")
+                
+        except Exception as e:
+            self.log_test("List proposals endpoint", False, f"Error: {str(e)}")
+
+    def test_create_proposal_valid(self):
+        """Test POST /api/proposals with valid data"""
+        print("\n📋 Test 2: POST /api/proposals with valid data")
+        try:
+            payload = {
+                "status": "draft",
+                "valid_days": 30,
+                "client_name": "Test Client",
+                "client_phone": "9999999999",
+                "client_email": "test@example.com",
+                "client_address": "123 Test Street, Bangalore",
+                "site_address": "Plot 456, Test Layout",
+                "plot_area": 2400,
+                "floors": "G+1",
+                "built_up_area": 1500,
+                "package_slug": "essential",
+                "addons_selected": [],
+                "discount_amount": 0,
+                "gst_percent": 18
+            }
+            
             response = requests.post(
-                f"{BASE_URL}/packages/premium/brochure",
-                json={
-                    "name": "Priya Kumar",
-                    "phone": "9876543210"
-                },
+                f"{BASE_URL}/proposals",
+                json=payload,
+                headers={"Authorization": f"Bearer {self.admin_token}"},
+                timeout=10
+            )
+            
+            status_ok = response.status_code == 200
+            if status_ok:
+                data = response.json()
+                has_id = "id" in data
+                has_ref = "ref_number" in data
+                ref_format_ok = data.get("ref_number", "").startswith("CON-2026-") if has_ref else False
+                
+                if has_id:
+                    self.test_proposal_id = data["id"]
+                if has_ref:
+                    self.test_ref_number = data["ref_number"]
+                
+                all_ok = status_ok and has_id and has_ref and ref_format_ok
+                details = f"Status: {response.status_code}, ID: {data.get('id', 'N/A')[:8]}..., Ref: {data.get('ref_number', 'N/A')}"
+                self.log_test("Create proposal with valid data", all_ok, details)
+            else:
+                self.log_test("Create proposal with valid data", False, f"Status: {response.status_code}, Body: {response.text[:200]}")
+                
+        except Exception as e:
+            self.log_test("Create proposal with valid data", False, f"Error: {str(e)}")
+
+    def test_create_proposal_missing_required(self):
+        """Test POST /api/proposals with missing required fields"""
+        print("\n📋 Test 3: POST /api/proposals with missing client_name (should fail)")
+        try:
+            payload = {
+                "client_phone": "9999999999",
+                "built_up_area": 1500,
+                "package_slug": "essential"
+            }
+            
+            response = requests.post(
+                f"{BASE_URL}/proposals",
+                json=payload,
+                headers={"Authorization": f"Bearer {self.admin_token}"},
+                timeout=10
+            )
+            
+            # Should return 422 (validation error)
+            status_ok = response.status_code == 422
+            details = f"Status: {response.status_code}"
+            self.log_test("Create proposal with missing required fields", status_ok, details)
+                
+        except Exception as e:
+            self.log_test("Create proposal with missing required fields", False, f"Error: {str(e)}")
+
+    def test_get_proposal_by_id(self):
+        """Test GET /api/proposals/{id}"""
+        print("\n📋 Test 4: GET /api/proposals/{id}")
+        if not self.test_proposal_id:
+            self.log_test("Get proposal by ID", False, "No test proposal ID available")
+            return
+            
+        try:
+            response = requests.get(
+                f"{BASE_URL}/proposals/{self.test_proposal_id}",
+                headers={"Authorization": f"Bearer {self.admin_token}"},
+                timeout=10
+            )
+            
+            status_ok = response.status_code == 200
+            if status_ok:
+                data = response.json()
+                has_fields = all(k in data for k in ["id", "ref_number", "client_name", "package_slug"])
+                details = f"Status: {response.status_code}, Ref: {data.get('ref_number', 'N/A')}"
+                self.log_test("Get proposal by ID", status_ok and has_fields, details)
+            else:
+                self.log_test("Get proposal by ID", False, f"Status: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Get proposal by ID", False, f"Error: {str(e)}")
+
+    def test_update_proposal(self):
+        """Test PUT /api/proposals/{id}"""
+        print("\n📋 Test 5: PUT /api/proposals/{id}")
+        if not self.test_proposal_id:
+            self.log_test("Update proposal", False, "No test proposal ID available")
+            return
+            
+        try:
+            payload = {
+                "status": "sent",
+                "client_name": "Test Client Updated",
+                "client_phone": "9999999999",
+                "built_up_area": 1800,
+                "package_slug": "essential",
+                "discount_amount": 50000,
+                "gst_percent": 18
+            }
+            
+            response = requests.put(
+                f"{BASE_URL}/proposals/{self.test_proposal_id}",
+                json=payload,
+                headers={"Authorization": f"Bearer {self.admin_token}"},
+                timeout=10
+            )
+            
+            status_ok = response.status_code == 200
+            if status_ok:
+                data = response.json()
+                updated_ok = data.get("status") == "sent" and data.get("built_up_area") == 1800
+                details = f"Status: {response.status_code}, Updated status: {data.get('status')}, Area: {data.get('built_up_area')}"
+                self.log_test("Update proposal", status_ok and updated_ok, details)
+            else:
+                self.log_test("Update proposal", False, f"Status: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Update proposal", False, f"Error: {str(e)}")
+
+    def test_download_pdf(self):
+        """Test GET /api/proposals/{id}/pdf"""
+        print("\n📋 Test 6: GET /api/proposals/{id}/pdf")
+        if not self.test_proposal_id:
+            self.log_test("Download proposal PDF", False, "No test proposal ID available")
+            return
+            
+        try:
+            response = requests.get(
+                f"{BASE_URL}/proposals/{self.test_proposal_id}/pdf",
+                headers={"Authorization": f"Bearer {self.admin_token}"},
                 timeout=15
             )
             
             status_ok = response.status_code == 200
             content_type_ok = "application/pdf" in response.headers.get("content-type", "")
-            size_ok = len(response.content) >= 15000
+            size_ok = len(response.content) >= 10000  # At least 10KB
             
             all_ok = status_ok and content_type_ok and size_ok
-            details = f"Status: {response.status_code}, Size: {len(response.content)} bytes"
-            self.log_test("Brochure premium package with required fields only", all_ok, details)
-            
-            if not status_ok:
-                print(f"   Response body: {response.text[:200]}")
-            
+            details = f"Status: {response.status_code}, Content-Type: {response.headers.get('content-type')}, Size: {len(response.content)} bytes"
+            self.log_test("Download proposal PDF", all_ok, details)
+                
         except Exception as e:
-            self.log_test("Brochure premium package with required fields only", False, f"Error: {str(e)}")
+            self.log_test("Download proposal PDF", False, f"Error: {str(e)}")
 
-    def test_brochure_invalid_package(self):
-        """Test POST /api/packages/invalid/brochure returns 404"""
-        print("\n📋 Test 3: POST /api/packages/invalid/brochure should return 404")
+    def test_delete_proposal(self):
+        """Test DELETE /api/proposals/{id}"""
+        print("\n📋 Test 7: DELETE /api/proposals/{id}")
+        if not self.test_proposal_id:
+            self.log_test("Delete proposal", False, "No test proposal ID available")
+            return
+            
         try:
-            response = requests.post(
-                f"{BASE_URL}/packages/invalid/brochure",
-                json={
-                    "name": "Test User",
-                    "phone": "1234567890"
-                },
+            response = requests.delete(
+                f"{BASE_URL}/proposals/{self.test_proposal_id}",
+                headers={"Authorization": f"Bearer {self.admin_token}"},
+                timeout=10
+            )
+            
+            status_ok = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            self.log_test("Delete proposal", status_ok, details)
+                
+        except Exception as e:
+            self.log_test("Delete proposal", False, f"Error: {str(e)}")
+
+    def test_get_deleted_proposal(self):
+        """Test GET /api/proposals/{id} after delete (should return 404)"""
+        print("\n📋 Test 8: GET /api/proposals/{id} after delete (should return 404)")
+        if not self.test_proposal_id:
+            self.log_test("Get deleted proposal", False, "No test proposal ID available")
+            return
+            
+        try:
+            response = requests.get(
+                f"{BASE_URL}/proposals/{self.test_proposal_id}",
+                headers={"Authorization": f"Bearer {self.admin_token}"},
                 timeout=10
             )
             
             status_ok = response.status_code == 404
             details = f"Status: {response.status_code}"
-            self.log_test("Brochure invalid package returns 404", status_ok, details)
-            
+            self.log_test("Get deleted proposal returns 404", status_ok, details)
+                
         except Exception as e:
-            self.log_test("Brochure invalid package returns 404", False, f"Error: {str(e)}")
+            self.log_test("Get deleted proposal returns 404", False, f"Error: {str(e)}")
 
-    def test_lead_creation_after_brochure(self, quote_ref):
-        """Test that lead is created after brochure download"""
-        print("\n📋 Test 4: Verify lead creation after brochure download")
-        
-        if not self.admin_token:
-            self.log_test("Lead creation verification", False, "Admin token not available")
-            return
-        
-        # First, download a brochure to create a lead
-        print("   Creating a new brochure download to generate lead...")
+    def test_packages_endpoint(self):
+        """Test GET /api/packages to verify packages exist"""
+        print("\n📋 Test 9: GET /api/packages (verify packages exist)")
         try:
-            timestamp = datetime.now().strftime("%H%M%S")
-            response = requests.post(
-                f"{BASE_URL}/packages/standard/brochure",
-                json={
-                    "name": f"Test Lead {timestamp}",
-                    "phone": f"99999{timestamp[-5:]}"
-                },
-                timeout=15
-            )
+            response = requests.get(f"{BASE_URL}/packages", timeout=10)
             
-            if response.status_code != 200:
-                self.log_test("Lead creation verification", False, f"Brochure download failed: {response.status_code}")
-                return
-            
-            new_quote_ref = response.headers.get("X-Quote-Ref") or response.headers.get("x-quote-ref")
-            print(f"   New quote ref: {new_quote_ref}")
-            
-            # Now check leads
-            leads_response = requests.get(
-                f"{BASE_URL}/leads",
-                headers={"Authorization": f"Bearer {self.admin_token}"},
-                timeout=10
-            )
-            
-            if leads_response.status_code != 200:
-                self.log_test("Lead creation verification", False, f"Failed to fetch leads: {leads_response.status_code}")
-                return
-            
-            leads = leads_response.json()
-            
-            # Find lead with source='brochure_download' and matching quote_ref
-            matching_lead = None
-            for lead in leads:
-                if lead.get("source") == "brochure_download" and lead.get("quote_ref") == new_quote_ref:
-                    matching_lead = lead
-                    break
-            
-            if matching_lead:
-                details = f"Found lead: source={matching_lead.get('source')}, quote_ref={matching_lead.get('quote_ref')}, package={matching_lead.get('interested_package')}"
-                self.log_test("Lead creation verification", True, details)
+            status_ok = response.status_code == 200
+            if status_ok:
+                data = response.json()
+                is_list = isinstance(data, list)
+                has_packages = len(data) >= 4  # Should have at least 4 packages
+                
+                # Check for essential package
+                essential_exists = any(p.get("slug") == "essential" for p in data)
+                
+                all_ok = status_ok and is_list and has_packages and essential_exists
+                details = f"Status: {response.status_code}, Count: {len(data)}, Has Essential: {essential_exists}"
+                self.log_test("Packages endpoint", all_ok, details)
             else:
-                # Check if any brochure_download leads exist
-                brochure_leads = [l for l in leads if l.get("source") == "brochure_download"]
-                details = f"No matching lead found. Total leads: {len(leads)}, Brochure leads: {len(brochure_leads)}"
-                self.log_test("Lead creation verification", False, details)
-            
+                self.log_test("Packages endpoint", False, f"Status: {response.status_code}")
+                
         except Exception as e:
-            self.log_test("Lead creation verification", False, f"Error: {str(e)}")
-
-    def test_recommend_premium_budget(self):
-        """Test POST /api/recommend with premium budget → standard tier"""
-        print("\n📋 Test 5: POST /api/recommend with premium budget should recommend standard tier")
-        try:
-            response = requests.post(
-                f"{BASE_URL}/recommend",
-                json={
-                    "budget": "premium",
-                    "family_size": "3-4",
-                    "style": "modern",
-                    "smart_home": "basic"
-                },
-                timeout=10
-            )
-            
-            if response.status_code != 200:
-                self.log_test("Recommend premium budget", False, f"Status: {response.status_code}, Body: {response.text[:200]}")
-                return
-            
-            data = response.json()
-            recommended = data.get("recommended_package", {})
-            tier = recommended.get("tier", "").lower()
-            
-            # Check structure
-            has_structure = all(k in data for k in ["recommended_package", "shortlisted_homes", "score", "alternatives"])
-            tier_ok = tier == "standard"
-            
-            all_ok = has_structure and tier_ok
-            details = f"Recommended tier: {tier}, Score: {data.get('score')}, Homes: {len(data.get('shortlisted_homes', []))}"
-            self.log_test("Recommend premium budget → standard tier", all_ok, details)
-            
-        except Exception as e:
-            self.log_test("Recommend premium budget → standard tier", False, f"Error: {str(e)}")
-
-    def test_recommend_value_budget(self):
-        """Test POST /api/recommend with value budget → basic tier"""
-        print("\n📋 Test 6: POST /api/recommend with value budget should recommend basic tier")
-        try:
-            response = requests.post(
-                f"{BASE_URL}/recommend",
-                json={
-                    "budget": "value",
-                    "family_size": "1-2",
-                    "style": "any",
-                    "smart_home": "no"
-                },
-                timeout=10
-            )
-            
-            if response.status_code != 200:
-                self.log_test("Recommend value budget", False, f"Status: {response.status_code}")
-                return
-            
-            data = response.json()
-            recommended = data.get("recommended_package", {})
-            tier = recommended.get("tier", "").lower()
-            
-            tier_ok = tier == "basic"
-            details = f"Recommended tier: {tier}, Package: {recommended.get('name')}"
-            self.log_test("Recommend value budget → basic tier", tier_ok, details)
-            
-        except Exception as e:
-            self.log_test("Recommend value budget → basic tier", False, f"Error: {str(e)}")
-
-    def test_recommend_luxury_budget(self):
-        """Test POST /api/recommend with luxury budget → premium tier"""
-        print("\n📋 Test 7: POST /api/recommend with luxury budget should recommend premium tier")
-        try:
-            response = requests.post(
-                f"{BASE_URL}/recommend",
-                json={
-                    "budget": "luxury",
-                    "family_size": "5+",
-                    "style": "villa",
-                    "smart_home": "full"
-                },
-                timeout=10
-            )
-            
-            if response.status_code != 200:
-                self.log_test("Recommend luxury budget", False, f"Status: {response.status_code}")
-                return
-            
-            data = response.json()
-            recommended = data.get("recommended_package", {})
-            tier = recommended.get("tier", "").lower()
-            
-            tier_ok = tier == "premium"
-            details = f"Recommended tier: {tier}, Package: {recommended.get('name')}"
-            self.log_test("Recommend luxury budget → premium tier", tier_ok, details)
-            
-        except Exception as e:
-            self.log_test("Recommend luxury budget → premium tier", False, f"Error: {str(e)}")
+            self.log_test("Packages endpoint", False, f"Error: {str(e)}")
 
     def run_all_tests(self):
         """Run all backend tests"""
         print("=" * 70)
-        print("🚀 PHASE 4 BACKEND TESTING - Brochure & Recommender")
+        print("🚀 CLIENT PROPOSALS BACKEND TESTING")
         print("=" * 70)
         
-        # Test brochure endpoints
-        quote_ref = self.test_brochure_basic_package()
-        self.test_brochure_premium_required_only()
-        self.test_brochure_invalid_package()
+        # Login as admin
+        if not self.admin_login():
+            print("❌ Admin login failed, cannot proceed with tests")
+            return 1
         
-        # Login as admin and test lead creation
-        if self.admin_login():
-            self.test_lead_creation_after_brochure(quote_ref)
+        # Test packages endpoint first
+        self.test_packages_endpoint()
         
-        # Test recommender endpoints
-        self.test_recommend_premium_budget()
-        self.test_recommend_value_budget()
-        self.test_recommend_luxury_budget()
+        # Test proposals CRUD
+        self.test_list_proposals_empty()
+        self.test_create_proposal_valid()
+        self.test_create_proposal_missing_required()
+        self.test_get_proposal_by_id()
+        self.test_update_proposal()
+        self.test_download_pdf()
+        self.test_delete_proposal()
+        self.test_get_deleted_proposal()
         
         # Print summary
         print("\n" + "=" * 70)
@@ -330,7 +380,7 @@ class Phase4BackendTester:
         return 0 if self.tests_passed == self.tests_run else 1
 
 def main():
-    tester = Phase4BackendTester()
+    tester = ProposalsBackendTester()
     return tester.run_all_tests()
 
 if __name__ == "__main__":

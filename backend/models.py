@@ -320,3 +320,58 @@ class QuizSubmission(BaseDoc):
     status: str = "new"  # 'new' | 'contact_captured' | 'converted' | 'closed'
     notes: Optional[str] = None
     source: str = "website"
+
+
+# ---------- Client Proposals ----------
+class ProposalAddon(BaseModel):
+    name: str
+    price: float = 0
+    unit: Optional[str] = None
+    description: Optional[str] = None
+
+
+class Proposal(BaseDoc):
+    # Reference & workflow
+    ref_number: Optional[str] = None            # auto-generated CON-YYYY-NNNN on create
+    status: str = "draft"                       # draft | sent | accepted | rejected
+    valid_days: int = 30
+
+    # Client
+    client_name: str
+    client_phone: str
+    client_email: Optional[str] = None
+    client_address: Optional[str] = None
+
+    # Site / project
+    site_address: Optional[str] = None
+    plot_area: Optional[float] = None           # in sq.ft
+    floors: Optional[str] = None                # "G+1", "G+2", etc
+    built_up_area: float = 1000                 # in sq.ft — used for price calculations
+    expected_start: Optional[str] = None
+    expected_completion: Optional[str] = None
+
+    # Package snapshot
+    package_slug: str
+    package_name: Optional[str] = None
+    package_price_per_sqft: Optional[float] = None
+    package_timeline: Optional[str] = None
+    package_warranty_years: Optional[int] = None
+
+    # Add-ons picked from the package's addons list (or custom)
+    addons_selected: List[ProposalAddon] = Field(default_factory=list)
+
+    # Pricing overrides / adjustments
+    discount_label: Optional[str] = None        # e.g. "Diwali offer"
+    discount_amount: float = 0                  # flat rupees off
+    gst_percent: float = 18
+
+    # Editable content — pre-filled from the selected package but overridable per proposal
+    intro_note: Optional[str] = None
+    scope_of_work: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+    payment_schedule: List[Dict[str, Any]] = Field(default_factory=list)  # {milestone,percentage,description}
+    terms: Optional[str] = None
+
+    # Linkage
+    lead_id: Optional[str] = None
+    prepared_by: Optional[str] = None

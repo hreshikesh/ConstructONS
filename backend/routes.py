@@ -12,7 +12,7 @@ from models import (
     Home, Package, Testimonial, FAQ, Blog, MarketplaceCategory,
     FinancialService, TeamMember, AIPlatformModule, JourneyStep,
     HeroSection, MediaItem, ComparisonRow, StatItem, SiteSettings,
-    Lead, LeadCreate, QuizSubmission, now_iso, new_id
+    Lead, LeadCreate, QuizSubmission, Proposal, now_iso, new_id
 )
 
 router = APIRouter(prefix="/api")
@@ -609,6 +609,122 @@ async def bootstrap():
 @router.get("/")
 async def root():
     return {"service": "ConstructONS CMS API", "status": "ok"}
+
+
+# ============================================================================
+# Client Proposals — CRUD + PDF generation + auto reference number
+# ============================================================================
+
+async def _generate_ref_number() -> str:
+    """Generate a sequential proposal reference like CON-2026-0001."""
+    year = datetime.now(timezone.utc).year
+    prefix = f"CON-{year}-"
+    # Count existing proposals for this year to get next sequence
+    latest = await db.proposals.find(
+        {"ref_number": {"$regex": f"^{prefix}"}}, {"ref_number": 1}
+    ).sort("ref_number", -1).limit(1).to_list(1)
+    seq = 1
+    if latest:
+        try:
+            seq = int(latest[0]["ref_number"].split("-")[-1]) + 1
+        except Exception:
+            seq = 1
+    return f"{prefix}{seq:04d}"
+
+
+async def _hydrate_from_package(proposal_data: dict) -> dict:
+    """Fill scope/exclusions/payment_schedule/package meta from the linked package
+    if the admin left those fields empty."""
+    pkg = await db.packages.find_one({"slug": proposal_data.get("package_slug")}, {"_id": 0})
+    if not pkg:
+        return proposal_data
+    # Use "or" so we override None (Pydantic default) as well as missing keys.
+    if not proposal_data.get("package_name"):
+        proposal_data["package_name"] = pkg.get("name")
+    if not proposal_data.get("package_price_per_sqft"):
+        proposal_data["package_price_per_sqft"] = pkg.get("price_per_sqft")
+    if not proposal_data.get("package_timeline"):
+        proposal_data["package_timeline"] = pkg.get("timeline_months")
+    if not proposal_data.get("package_warranty_years"):
+        proposal_data["package_warranty_years"] = pkg.get("warranty_years")
+    if not proposal_data.get("scope_of_work"):
+        proposal_data["scope_of_work"] = pkg.get("scope_of_work", []) or []
+    if not proposal_data.get("exclusions"):
+        proposal_data["exclusions"] = pkg.get("exclusions", []) or []
+    if not proposal_data.get("payment_schedule"):
+        proposal_data["payment_schedule"] = pkg.get("payment_schedule", []) or []
+    return proposal_data
+
+
+@router.get("/proposals", dependencies=[Depends(require_admin)])
+async def list_proposals(status: Optional[str] = None):
+    q: Dict[str, Any] = {}
+    if status:
+        q["status"] = status
+    cursor = db.proposals.find(q, {"_id": 0}).sort("created_at", -1).limit(200)
+    return await cursor.to_list(200)
+
+
+@router.get("/proposals/{proposal_id}", dependencies=[Depends(require_admin)])
+async def get_proposal(proposal_id: str):
+    doc = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    return doc
+
+
+@router.post("/proposals", dependencies=[Depends(require_admin)])
+async def create_proposal(body: Proposal):
+    data = body.model_dump()
+    data["id"] = data.get("id") or new_id()
+    data["ref_number"] = data.get("ref_number") or (await _generate_ref_number())
+    data["created_at"] = now_iso()
+    data["updated_at"] = now_iso()
+    data = await _hydrate_from_package(data)
+    await db.proposals.insert_one(data)
+    data.pop("_id", None)
+    return data
+
+
+@router.put("/proposals/{proposal_id}", dependencies=[Depends(require_admin)])
+async def update_proposal(proposal_id: str, body: Proposal):
+    data = body.model_dump()
+    data["id"] = proposal_id
+    data["updated_at"] = now_iso()
+    data = await _hydrate_from_package(data)
+    await db.proposals.update_one({"id": proposal_id}, {"$set": data}, upsert=True)
+    doc = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    return doc
+
+
+@router.delete("/proposals/{proposal_id}", dependencies=[Depends(require_admin)])
+async def delete_proposal(proposal_id: str):
+    res = await db.proposals.delete_one({"id": proposal_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    return {"success": True}
+
+
+@router.get("/proposals/{proposal_id}/pdf", dependencies=[Depends(require_admin)])
+async def download_proposal_pdf(proposal_id: str):
+    prop = await db.proposals.find_one({"id": proposal_id}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    # Load package for specs used inside the PDF
+    pkg = await db.packages.find_one({"slug": prop.get("package_slug")}, {"_id": 0}) or {}
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+
+    from proposal_pdf import generate_proposal_pdf
+    pdf_bytes = generate_proposal_pdf(prop, pkg, settings)
+    filename = f"{(prop.get('ref_number') or 'proposal').replace('/', '_')}.pdf"
+    return FastAPIResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 # ============================================================================
