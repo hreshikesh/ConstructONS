@@ -22,6 +22,7 @@ const AdminLeads = lazy(() => import("@/pages/admin/AdminLeads"));
 const AdminEntity = lazy(() => import("@/pages/admin/AdminEntity"));
 const AdminSiteSettings = lazy(() => import("@/pages/admin/AdminSiteSettings"));
 const AdminQuizSubmissions = lazy(() => import("@/pages/admin/AdminQuizSubmissions"));
+const AdminPackages = lazy(() => import("@/pages/admin/AdminPackages"));
 
 function PageFallback() {
   return (
@@ -55,6 +56,7 @@ function App() {
                   <Route path="leads" element={<AdminLeads />} />
                   <Route path="quiz-submissions" element={<AdminQuizSubmissions />} />
                   <Route path="site-settings" element={<AdminSiteSettings />} />
+                  <Route path="packages" element={<AdminPackages />} />
                   <Route path=":entity" element={<AdminEntity />} />
                 </Route>
               </Routes>

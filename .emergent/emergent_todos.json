@@ -1,30 +1,18 @@
 [
   {
-    "content": "#1 XSS - Sanitize dangerouslySetInnerHTML in BlogDetailPage with DOMPurify",
+    "content": "Build AdminPackages.js - deep structured editor for all Package fields",
     "status": "completed"
   },
   {
-    "content": "#2 Fix genuine hook dependency issues (duplicate useEffect, useCallback wrap for load)",
+    "content": "Register /admin/packages route to use new AdminPackages component instead of generic AdminEntity",
     "status": "completed"
   },
   {
-    "content": "#3 Move hardcoded credentials in backend_test.py to env vars",
+    "content": "Verify PDF brochure reflects edits (DB-driven) — CONFIRMED via pypdf extraction",
     "status": "completed"
   },
   {
-    "content": "#6 Replace array-index keys with stable IDs across PackageDetailPage/HomeDetailPage/Testimonials/Packages",
-    "status": "completed"
-  },
-  {
-    "content": "#7 'is' comparison anti-patterns - FALSE POSITIVE (all instances are PEP-8 compliant None-checks)",
-    "status": "completed"
-  },
-  {
-    "content": "#9 Log errors from previously-empty catch blocks in notifications & useAdminNotifications",
-    "status": "completed"
-  },
-  {
-    "content": "Verify build + screenshot after all fixes",
+    "content": "Screenshot verify end-to-end — Admin card + Public page + PDF all reflect edits",
     "status": "completed"
   }
 ]
