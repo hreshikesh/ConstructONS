@@ -17,8 +17,9 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Trash2, Save, X, ChevronDown, ChevronRight, Pencil, RefreshCw,
-  ImageOff, FileDown, ExternalLink, GripVertical,
+  ImageOff, FileDown, ExternalLink, GripVertical, Eye, History,
 } from "lucide-react";
+import { ImageUploader, AIAssistButton, VersionsPanel, PreviewModal } from "@/pages/admin/PackageEditorHelpers";
 
 const TIER_OPTIONS = ["basic", "essential", "standard", "premium"];
 
@@ -30,6 +31,7 @@ const SECTION_TABS = [
   { key: "addons", label: "Add-ons" },
   { key: "schedule", label: "Payment Schedule" },
   { key: "faqs", label: "FAQs" },
+  { key: "history", label: "Version History" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -419,6 +421,7 @@ export default function AdminPackages() {
   const [editing, setEditing] = useState(null);
   const [tab, setTab] = useState("basics");
   const [saving, setSaving] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -733,7 +736,28 @@ export default function AdminPackages() {
                     <FaqEditor faqs={editing.package_faqs} onChange={(v) => setField({ package_faqs: v })} />
                   </div>
                 )}
+                {tab === "history" && (
+                  editing.__isNew || !editing.id ? (
+                    <div className="text-sm text-brand-navy/60 italic">Save the package first — version history starts from your very first save.</div>
+                  ) : (
+                    <VersionsPanel
+                      packageId={editing.id}
+                      onRestored={async () => {
+                        await load();
+                        const fresh = await adminApi.get("packages", editing.id).catch(() => null);
+                        if (fresh) setEditing({ ...editing, ...fresh });
+                      }}
+                    />
+                  )
+                )}
               </div>
+
+              {/* Preview modal */}
+              <PreviewModal
+                open={previewing}
+                onClose={() => setPreviewing(false)}
+                pkg={editing}
+              />
 
               {/* Footer */}
               <div className="p-4 border-t border-black/5 flex items-center justify-between shrink-0 bg-white">
@@ -744,6 +768,15 @@ export default function AdminPackages() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={close} className="btn-ghost text-sm py-2 px-4">Cancel</button>
+                  <button
+                    onClick={() => setPreviewing(true)}
+                    disabled={!editing?.slug}
+                    className="btn-ghost text-sm py-2 px-4 disabled:opacity-50"
+                    data-testid="pkg-preview-btn"
+                    title="Preview unsaved edits"
+                  >
+                    <Eye className="w-4 h-4" /> Preview
+                  </button>
                   <button
                     onClick={save}
                     disabled={saving}
@@ -791,11 +824,27 @@ function BasicsTab({ editing, setField }) {
         </select>
       </div>
       <div>
-        <Label>Tagline</Label>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-[11px] uppercase tracking-widest text-brand-navy/50">Tagline</div>
+          <AIAssistButton
+            text={editing.tagline}
+            purpose="tagline"
+            onPick={(v) => setField({ tagline: v })}
+            testId="ai-tagline"
+          />
+        </div>
         <TextInput value={editing.tagline} onChange={(v) => setField({ tagline: v })} testId="pkg-field-tagline" placeholder="e.g. Perfect Balance" />
       </div>
       <div className="md:col-span-2">
-        <Label>Description</Label>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-[11px] uppercase tracking-widest text-brand-navy/50">Description</div>
+          <AIAssistButton
+            text={editing.description}
+            purpose="description"
+            onPick={(v) => setField({ description: v })}
+            testId="ai-description"
+          />
+        </div>
         <TextArea value={editing.description} onChange={(v) => setField({ description: v })} testId="pkg-field-description" placeholder="Short pitch shown on the card & hero." />
       </div>
 
@@ -825,8 +874,13 @@ function BasicsTab({ editing, setField }) {
       </div>
 
       <div className="md:col-span-2">
-        <Label>Hero image URL</Label>
-        <ImageInput value={editing.hero_image} onChange={(v) => setField({ hero_image: v })} testId="pkg-field-hero-image" />
+        <Label>Hero image</Label>
+        <ImageUploader
+          value={editing.hero_image}
+          onChange={(v) => setField({ hero_image: v })}
+          category="packages"
+          testId="pkg-hero-uploader"
+        />
       </div>
 
       <div>

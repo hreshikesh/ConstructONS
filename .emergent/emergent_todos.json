@@ -1,18 +1,38 @@
 [
   {
-    "content": "Build AdminPackages.js - deep structured editor for all Package fields",
+    "content": "Backend: media_service.py + /api/media/upload endpoint using Emergent Object Storage",
     "status": "completed"
   },
   {
-    "content": "Register /admin/packages route to use new AdminPackages component instead of generic AdminEntity",
+    "content": "Backend: /api/media/{path} download proxy + soft-delete DB tracking",
     "status": "completed"
   },
   {
-    "content": "Verify PDF brochure reflects edits (DB-driven) — CONFIRMED via pypdf extraction",
+    "content": "Backend: Package version snapshots on save + list/restore endpoints",
     "status": "completed"
   },
   {
-    "content": "Screenshot verify end-to-end — Admin card + Public page + PDF all reflect edits",
+    "content": "Backend: /api/ai/rewrite endpoint using EMERGENT_LLM_KEY + GPT-5",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: ImageUploader component (drag-drop + preview) wired into ImageInput",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: Version History panel in package editor (list + restore)",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: Preview Before Publish modal showing current unsaved changes",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: AI Copy Assist button next to tagline/description/FAQ fields",
+    "status": "completed"
+  },
+  {
+    "content": "Verify all 4 features end-to-end",
     "status": "completed"
   }
 ]

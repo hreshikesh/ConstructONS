@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form, Response, Header
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -122,12 +122,16 @@ async def create_package(body: Package):
 
 @router.put("/packages/{id}", dependencies=[Depends(require_admin)])
 async def update_package(id: str, body: Package):
+    # Snapshot current state BEFORE writing the update so the admin can undo.
+    await _snapshot_package(id, note="edit")
     data = body.model_dump()
     data["id"] = id
     return await upsert_doc("packages", data)
 
 @router.delete("/packages/{id}", dependencies=[Depends(require_admin)])
 async def del_package(id: str):
+    # Snapshot before delete too — restores can bring the package back.
+    await _snapshot_package(id, note="pre-delete")
     return await delete_doc("packages", id)
 
 
@@ -148,7 +152,7 @@ async def packages_compare():
     return {"packages": pkgs, "category_order": cat_order}
 
 
-from fastapi.responses import Response  # noqa: E402
+from fastapi.responses import Response as FastAPIResponse  # noqa: E402
 
 
 @router.get("/packages/{slug}/brochure.pdf")
@@ -164,7 +168,7 @@ async def download_brochure(slug: str):
     from brochure import generate_brochure
     pdf_bytes = generate_brochure(pkg, settings)
     filename = f"ConstructONS-{pkg.get('slug','package')}-brochure.pdf"
-    return Response(
+    return FastAPIResponse(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
@@ -243,7 +247,7 @@ async def personalized_brochure(slug: str, body: PersonalizedBrochureRequest):
     from brochure import generate_brochure
     pdf_bytes = generate_brochure(pkg, settings, personalization=personalization)
     filename = f"ConstructONS-{pkg.get('slug','package')}-{quote_ref}.pdf"
-    return Response(
+    return FastAPIResponse(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
@@ -589,3 +593,194 @@ async def bootstrap():
 @router.get("/")
 async def root():
     return {"service": "ConstructONS CMS API", "status": "ok"}
+
+
+# ============================================================================
+# Media (Image Upload Studio) — Emergent Object Storage
+# ============================================================================
+
+@router.post("/media/upload", dependencies=[Depends(require_admin)])
+async def upload_media(file: UploadFile = File(...), category: str = Form("general")):
+    """Upload a single image to Emergent Object Storage.
+
+    Returns { "url": "/api/media/<path>", "storage_path": "<path>", ... } so
+    the frontend can immediately preview / paste the URL into a package field.
+    """
+    from media_service import (
+        put_object, build_storage_path,
+        ALLOWED_MIME_PREFIXES, MAX_UPLOAD_BYTES,
+    )
+
+    ct = (file.content_type or "").lower()
+    if not any(ct.startswith(p) for p in ALLOWED_MIME_PREFIXES):
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ct}")
+
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        mb = MAX_UPLOAD_BYTES // (1024 * 1024)
+        raise HTTPException(status_code=413, detail=f"File exceeds {mb} MB limit")
+    if len(data) == 0:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    path = build_storage_path(category, file.filename or "image", ct)
+    try:
+        result = put_object(path, data, ct)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Storage upload failed: {e}")
+
+    stored_path = result.get("path") or path
+    record = {
+        "id": new_id(),
+        "storage_path": stored_path,
+        "original_filename": file.filename,
+        "content_type": ct,
+        "size": len(data),
+        "category": category,
+        "is_deleted": False,
+        "created_at": now_iso(),
+    }
+    await db.media_uploads.insert_one(record)
+    return {
+        "id": record["id"],
+        "storage_path": stored_path,
+        "url": f"/api/media/{stored_path}",
+        "size": len(data),
+        "content_type": ct,
+        "original_filename": file.filename,
+    }
+
+
+@router.get("/media/{path:path}")
+async def download_media(path: str):
+    """Public read of any image uploaded through /media/upload."""
+    from media_service import get_object
+
+    record = await db.media_uploads.find_one({"storage_path": path, "is_deleted": False})
+    if not record:
+        raise HTTPException(status_code=404, detail="File not found")
+    try:
+        content, content_type = get_object(path)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Storage read failed: {e}")
+    return FastAPIResponse(
+        content=content,
+        media_type=record.get("content_type") or content_type,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@router.delete("/media/{media_id}", dependencies=[Depends(require_admin)])
+async def delete_media(media_id: str):
+    res = await db.media_uploads.update_one(
+        {"id": media_id},
+        {"$set": {"is_deleted": True, "deleted_at": now_iso()}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Media not found")
+    return {"success": True}
+
+
+@router.get("/media", dependencies=[Depends(require_admin)])
+async def list_media(category: Optional[str] = None, limit: int = 50):
+    q: Dict[str, Any] = {"is_deleted": False}
+    if category:
+        q["category"] = category
+    cursor = db.media_uploads.find(q, {"_id": 0}).sort("created_at", -1).limit(limit)
+    items = await cursor.to_list(limit)
+    for it in items:
+        it["url"] = f"/api/media/{it['storage_path']}"
+    return items
+
+
+# ============================================================================
+# Package Version History
+# ============================================================================
+# Snapshots are stored in `package_versions`. We keep the newest 20 snapshots
+# per package (older ones auto-pruned) so admins can roll back in one click.
+# Snapshots are captured on every PUT /api/packages/{id} and on DELETE.
+
+MAX_VERSIONS_PER_PACKAGE = 20
+
+
+async def _snapshot_package(package_id: str, note: str = "edit"):
+    current = await db.packages.find_one({"id": package_id}, {"_id": 0})
+    if not current:
+        return
+    snap = {
+        "id": new_id(),
+        "package_id": package_id,
+        "package_slug": current.get("slug"),
+        "note": note,
+        "snapshot_at": now_iso(),
+        "data": current,
+    }
+    await db.package_versions.insert_one(snap)
+    # Prune older snapshots keeping the newest MAX_VERSIONS_PER_PACKAGE
+    older_ids_cursor = (
+        db.package_versions.find({"package_id": package_id}, {"_id": 1})
+        .sort("snapshot_at", -1)
+        .skip(MAX_VERSIONS_PER_PACKAGE)
+    )
+    old_ids = [d["_id"] async for d in older_ids_cursor]
+    if old_ids:
+        await db.package_versions.delete_many({"_id": {"$in": old_ids}})
+
+
+@router.get("/packages/{package_id}/versions", dependencies=[Depends(require_admin)])
+async def list_package_versions(package_id: str):
+    cursor = (
+        db.package_versions.find({"package_id": package_id}, {"_id": 0, "data": 0})
+        .sort("snapshot_at", -1)
+        .limit(MAX_VERSIONS_PER_PACKAGE)
+    )
+    return await cursor.to_list(MAX_VERSIONS_PER_PACKAGE)
+
+
+@router.get("/packages/{package_id}/versions/{version_id}", dependencies=[Depends(require_admin)])
+async def get_package_version(package_id: str, version_id: str):
+    snap = await db.package_versions.find_one(
+        {"id": version_id, "package_id": package_id}, {"_id": 0}
+    )
+    if not snap:
+        raise HTTPException(status_code=404, detail="Version not found")
+    return snap
+
+
+@router.post("/packages/{package_id}/versions/{version_id}/restore", dependencies=[Depends(require_admin)])
+async def restore_package_version(package_id: str, version_id: str):
+    snap = await db.package_versions.find_one(
+        {"id": version_id, "package_id": package_id}, {"_id": 0}
+    )
+    if not snap:
+        raise HTTPException(status_code=404, detail="Version not found")
+    data = snap.get("data") or {}
+    # Snapshot current state as a safety net BEFORE restoring
+    await _snapshot_package(package_id, note=f"pre-restore from {version_id[:8]}")
+
+    data["updated_at"] = now_iso()
+    data.pop("_id", None)
+    await db.packages.update_one({"id": package_id}, {"$set": data})
+    return {"success": True, "restored_from": version_id}
+
+
+# ============================================================================
+# AI Copy Assist — GPT-5 rewrite suggestions
+# ============================================================================
+
+class RewriteRequest(BaseModel):
+    text: str
+    purpose: Optional[str] = "copy"  # 'tagline' | 'description' | 'faq' | 'copy'
+    tone: Optional[str] = "on-brand"
+
+
+@router.post("/ai/rewrite", dependencies=[Depends(require_admin)])
+async def ai_rewrite(body: RewriteRequest):
+    if not body.text or not body.text.strip():
+        raise HTTPException(status_code=400, detail="Empty text")
+    if len(body.text) > 4000:
+        raise HTTPException(status_code=413, detail="Text too long (max 4000 chars)")
+    from ai_service import rewrite_copy
+    suggestions = await rewrite_copy(body.text, body.purpose or "copy", body.tone or "on-brand")
+    if not suggestions:
+        raise HTTPException(status_code=502, detail="AI could not generate suggestions right now. Please try again.")
+    return {"suggestions": suggestions}

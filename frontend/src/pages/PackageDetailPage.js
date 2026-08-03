@@ -34,6 +34,21 @@ export default function PackageDetailPage() {
   const { open: openBrochure } = useBrochureModal();
 
   useEffect(() => {
+    // Preview mode — admin editor stashes unsaved package into sessionStorage.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("preview") === "1") {
+      try {
+        const raw = sessionStorage.getItem(`cons_pkg_preview_${slug}`);
+        if (raw) {
+          const previewPkg = JSON.parse(raw);
+          setPkg(previewPkg);
+          setExpandedCat(previewPkg.spec_categories?.[0]?.name || null);
+          publicApi.getSiteSettings().then(setSettings);
+          window.scrollTo(0, 0);
+          return;
+        }
+      } catch (_) { /* fall through to normal load */ }
+    }
     publicApi.getPackage(slug).then((p) => {
       setPkg(p);
       setExpandedCat(p.spec_categories?.[0]?.name || null);

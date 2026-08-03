@@ -59,6 +59,13 @@ async def startup_event():
     else:
         logger.info("All critical collections populated — skipping seed.")
 
+    # Initialise Emergent Object Storage session key once at startup.
+    try:
+        from media_service import init_storage
+        init_storage()
+    except Exception as e:
+        logger.warning(f"Object storage init deferred: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

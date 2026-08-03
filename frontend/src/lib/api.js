@@ -57,6 +57,39 @@ export const adminApi = {
   getQuizSubmission: (id) => api.get(`/quiz-submissions/${id}`).then((r) => r.data),
   updateQuizSubmission: (id, body) => api.put(`/quiz-submissions/${id}`, body).then((r) => r.data),
   removeQuizSubmission: (id) => api.delete(`/quiz-submissions/${id}`).then((r) => r.data),
+
+  // Media (Image Upload Studio)
+  uploadImage: (file, category = "general", onProgress) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("category", category);
+    return api
+      .post("/media/upload", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (evt) => {
+          if (onProgress && evt.total) onProgress(Math.round((evt.loaded / evt.total) * 100));
+        },
+      })
+      .then((r) => ({
+        ...r.data,
+        // Absolute URL so <img src> works from any origin
+        absoluteUrl: `${BACKEND_URL}${r.data.url}`,
+      }));
+  },
+  listMedia: (category) =>
+    api.get(`/media${category ? `?category=${category}` : ""}`).then((r) => r.data),
+
+  // Package version history
+  listPackageVersions: (packageId) =>
+    api.get(`/packages/${packageId}/versions`).then((r) => r.data),
+  getPackageVersion: (packageId, versionId) =>
+    api.get(`/packages/${packageId}/versions/${versionId}`).then((r) => r.data),
+  restorePackageVersion: (packageId, versionId) =>
+    api.post(`/packages/${packageId}/versions/${versionId}/restore`).then((r) => r.data),
+
+  // AI Copy Assist
+  rewriteCopy: (text, purpose = "copy", tone = "on-brand") =>
+    api.post("/ai/rewrite", { text, purpose, tone }).then((r) => r.data),
 };
 
 export default api;
