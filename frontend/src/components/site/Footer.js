@@ -103,7 +103,17 @@ export default function Footer({ settings }) {
 
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <div>© {new Date().getFullYear()} ConstructONS. All rights reserved.</div>
-          <div>{s.footer_note || "Made with love in India"}</div>
+          <div className="flex items-center gap-4">
+            <span>{s.footer_note || "Made with love in India"}</span>
+            <span className="text-white/25">·</span>
+            <Link
+              to="/admin/login"
+              data-testid="footer-admin-link"
+              className="text-white/50 hover:text-brand-orange transition"
+            >
+              Admin Panel
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

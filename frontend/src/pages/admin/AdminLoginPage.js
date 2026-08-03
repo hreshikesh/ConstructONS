@@ -7,8 +7,8 @@ import BrandLockup from "@/components/site/BrandLockup";
 import { Loader2, Lock, User } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("admin@constructons.in");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -68,9 +68,6 @@ export default function AdminLoginPage() {
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           {loading ? "Signing in..." : "Sign in"}
         </button>
-        <div className="mt-4 text-xs text-brand-navy/60 text-center">
-          Default: admin@constructons.in / admin123 <span className="opacity-60">(dev)</span>
-        </div>
       </form>
     </div>
   );

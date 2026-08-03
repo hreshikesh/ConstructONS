@@ -77,8 +77,7 @@ def clear_admin_cookie(response: Response) -> None:
 
 
 def _decode_and_check(token: str) -> dict:
-    if token == DEV_BYPASS_TOKEN:
-        return {"email": "dev@constructons.in", "role": "admin", "bypass": True}
+    # DEV bypass token is disabled in production. Only real JWTs are accepted.
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
     except jwt.ExpiredSignatureError:
