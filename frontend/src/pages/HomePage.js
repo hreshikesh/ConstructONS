@@ -46,8 +46,9 @@ export default function HomePage() {
       if ("caches" in window) {
         caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
       }
-    } catch (_) {
-      /* best-effort */
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("[HomePage] cache bust failed (non-fatal)", err);
     }
     // Cache-bust reload
     const url = new URL(window.location.href);

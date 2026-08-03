@@ -1,38 +1,26 @@
 [
   {
-    "content": "Backend: media_service.py + /api/media/upload endpoint using Emergent Object Storage",
+    "content": "Critical: Fix undefined 'content'/'content_type' variables in routes.py media download",
     "status": "completed"
   },
   {
-    "content": "Backend: /api/media/{path} download proxy + soft-delete DB tracking",
+    "content": "Critical: Re-verify BlogDetailPage XSS uses DOMPurify - CONFIRMED already sanitized",
     "status": "completed"
   },
   {
-    "content": "Backend: Package version snapshots on save + list/restore endpoints",
+    "content": "Critical: Audit hook dependencies - all flagged instances are false positives (stable state setters + module imports correctly omitted)",
     "status": "completed"
   },
   {
-    "content": "Backend: /api/ai/rewrite endpoint using EMERGENT_LLM_KEY + GPT-5",
+    "content": "Fix array-index keys in AdminPackages.js and PackageEditorHelpers.js and AboutPage.js",
     "status": "completed"
   },
   {
-    "content": "Frontend: ImageUploader component (drag-drop + preview) wired into ImageInput",
+    "content": "Log errors from empty catch blocks in AdminPackages/PackageEditorHelpers/PackageDetailPage/HomePage",
     "status": "completed"
   },
   {
-    "content": "Frontend: Version History panel in package editor (list + restore)",
-    "status": "completed"
-  },
-  {
-    "content": "Frontend: Preview Before Publish modal showing current unsaved changes",
-    "status": "completed"
-  },
-  {
-    "content": "Frontend: AI Copy Assist button next to tagline/description/FAQ fields",
-    "status": "completed"
-  },
-  {
-    "content": "Verify all 4 features end-to-end",
-    "status": "completed"
+    "content": "Run testing_agent_v3 to verify all fixes",
+    "status": "in_progress"
   }
 ]

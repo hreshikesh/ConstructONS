@@ -43,6 +43,8 @@ export function ImageUploader({ value, onChange, category = "packages", testId =
         onChange(result.absoluteUrl);
         toast.success("Image uploaded");
       } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[ImageUploader] upload failed", e);
         toast.error(e?.response?.data?.detail || "Upload failed");
       }
       setUploading(false);
@@ -141,6 +143,8 @@ export function AIAssistButton({ text, purpose = "copy", onPick, testId = "ai-as
       const res = await adminApi.rewriteCopy(text, purpose);
       setSuggestions(res.suggestions || []);
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("[AIAssistButton] rewrite failed", e);
       toast.error(e?.response?.data?.detail || "AI is taking a break");
     }
     setLoading(false);
@@ -181,7 +185,7 @@ export function AIAssistButton({ text, purpose = "copy", onPick, testId = "ai-as
                 <div className="space-y-1.5">
                   {suggestions.map((s, i) => (
                     <button
-                      key={i}
+                      key={`${s.slice(0, 32)}-${i}`}
                       type="button"
                       onClick={() => {
                         onPick(s);
@@ -236,6 +240,8 @@ export function VersionsPanel({ packageId, onRestored, testId = "versions-panel"
       const list = await adminApi.listPackageVersions(packageId);
       setVersions(list);
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("[VersionsPanel] list failed", e);
       toast.error("Couldn't load versions");
     }
     setLoading(false);
@@ -253,6 +259,8 @@ export function VersionsPanel({ packageId, onRestored, testId = "versions-panel"
       toast.success("Restored. Reloading editor…");
       onRestored?.();
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("[VersionsPanel] restore failed", e);
       toast.error("Restore failed");
     }
     setRestoring(null);
@@ -320,7 +328,10 @@ export function PreviewModal({ open, onClose, pkg, testId = "preview-modal" }) {
     return () => {
       try {
         if (pkg?.slug) sessionStorage.removeItem(`cons_pkg_preview_${pkg.slug}`);
-      } catch (_) { /* noop */ }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[preview] failed to clear payload", err);
+      }
     };
   }, [open, pkg]);
 

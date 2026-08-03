@@ -37,7 +37,7 @@ export default function AboutPage() {
               { icon: ShieldCheck, k: "98%", v: "On-time delivery" },
               { icon: Users, k: "50+", v: "Expert professionals" },
             ].map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="rounded-2xl bg-white border border-black/5 shadow-soft p-5">
+              <motion.div key={s.v} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="rounded-2xl bg-white border border-black/5 shadow-soft p-5">
                 <s.icon className="w-5 h-5 text-brand-orange" />
                 <div className="mt-2 text-2xl font-bold text-brand-navy">{s.k}</div>
                 <div className="text-xs text-brand-navy/60">{s.v}</div>

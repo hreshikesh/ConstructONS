@@ -47,12 +47,20 @@ export default function PackageDetailPage() {
           window.scrollTo(0, 0);
           return;
         }
-      } catch (_) { /* fall through to normal load */ }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[PackageDetailPage] preview payload unreadable", err);
+        /* fall through to normal load */
+      }
     }
     publicApi.getPackage(slug).then((p) => {
       setPkg(p);
       setExpandedCat(p.spec_categories?.[0]?.name || null);
-    }).catch(() => setPkg({}));
+    }).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error("[PackageDetailPage] load failed", err);
+      setPkg({});
+    });
     publicApi.getSiteSettings().then(setSettings);
     window.scrollTo(0, 0);
   }, [slug]);

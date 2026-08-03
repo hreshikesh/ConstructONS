@@ -918,6 +918,154 @@ class ConstructONSAPITester:
             })
             return False, None
 
+    # ----------------------- CODE REVIEW TESTS -----------------------
+    def test_media_upload_download(self):
+        """Test POST /api/media/upload and GET /api/media/{path} - code review fix verification"""
+        import io
+        self.tests_run += 1
+        self.log(f"Testing media upload and download (code review fix)...")
+        
+        try:
+            # Create a small test image (1x1 PNG)
+            png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+            
+            # Upload
+            url = f"{self.base_url}/media/upload"
+            headers = {'Authorization': f'Bearer {self.token}'}
+            files = {'file': ('test.png', io.BytesIO(png_data), 'image/png')}
+            data = {'category': 'test'}
+            
+            upload_resp = requests.post(url, headers=headers, files=files, data=data, timeout=10)
+            
+            if upload_resp.status_code != 200:
+                self.log(f"❌ FAILED - Upload failed: {upload_resp.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Media upload/download",
+                    "error": f"Upload failed: {upload_resp.status_code}",
+                    "endpoint": "media/upload"
+                })
+                return False, None
+            
+            upload_result = upload_resp.json()
+            media_url = upload_result.get('url')
+            storage_path = upload_result.get('storage_path')
+            
+            if not media_url or not storage_path:
+                self.log(f"❌ FAILED - Upload response missing url or storage_path", "FAIL")
+                self.failed_tests.append({
+                    "name": "Media upload/download",
+                    "error": "Upload response missing url or storage_path",
+                    "endpoint": "media/upload"
+                })
+                return False, None
+            
+            self.log(f"✓ Image uploaded: {storage_path}", "INFO")
+            
+            # Download - this tests the code review fix for undefined content/content_type
+            download_url = f"{self.base_url.replace('/api', '')}{media_url}"
+            download_resp = requests.get(download_url, timeout=10)
+            
+            if download_resp.status_code != 200:
+                self.log(f"❌ FAILED - Download failed: {download_resp.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Media upload/download",
+                    "error": f"Download failed: {download_resp.status_code}",
+                    "endpoint": media_url
+                })
+                return False, None
+            
+            # Verify content type
+            content_type = download_resp.headers.get('Content-Type', '')
+            if 'image' not in content_type:
+                self.log(f"⚠️  Content-Type is {content_type}, expected image/*", "WARN")
+            
+            # Verify content matches
+            if download_resp.content == png_data:
+                self.log(f"✓ Downloaded image matches uploaded image", "INFO")
+            else:
+                self.log(f"⚠️  Downloaded image differs from uploaded (size: {len(download_resp.content)} vs {len(png_data)})", "WARN")
+            
+            self.tests_passed += 1
+            self.log(f"✅ PASSED - Media upload/download working (code review fix verified)", "PASS")
+            return True, storage_path
+            
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Media upload/download",
+                "error": str(e),
+                "endpoint": "media/upload"
+            })
+            return False, None
+
+    def test_ai_rewrite(self):
+        """Test POST /api/ai/rewrite - AI Copy Assist feature"""
+        url = f"{self.base_url}/ai/rewrite"
+        headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        data = {
+            "text": "Build your dream home with us",
+            "purpose": "tagline",
+            "tone": "on-brand"
+        }
+        
+        self.tests_run += 1
+        self.log(f"Testing AI rewrite (Copy Assist)...")
+        
+        try:
+            # AI calls need longer timeout
+            response = requests.post(url, json=data, headers=headers, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - AI rewrite (Copy Assist) - Status: {response.status_code}", "PASS")
+                result = response.json()
+                suggestions = result.get('suggestions', [])
+                if len(suggestions) >= 2:
+                    self.log(f"✓ AI returned {len(suggestions)} suggestions", "INFO")
+                    self.log(f"  - Sample: {suggestions[0][:60]}...", "INFO")
+                else:
+                    self.log(f"⚠️  AI returned only {len(suggestions)} suggestions (expected 3)", "WARN")
+                return True, result
+            else:
+                self.log(f"❌ FAILED - Expected 200, got {response.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "AI rewrite (Copy Assist)",
+                    "expected": 200,
+                    "actual": response.status_code,
+                    "endpoint": "ai/rewrite"
+                })
+                return False, {}
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "AI rewrite (Copy Assist)",
+                "error": str(e),
+                "endpoint": "ai/rewrite"
+            })
+            return False, {}
+
+    def test_package_versions(self, package_id):
+        """Test GET /api/packages/{id}/versions - Version History feature"""
+        success, response = self.run_test(
+            f"List package versions: {package_id}",
+            "GET",
+            f"packages/{package_id}/versions",
+            200
+        )
+        if success and isinstance(response, list):
+            self.log(f"✓ Found {len(response)} version snapshots", "INFO")
+            if len(response) > 0:
+                first = response[0]
+                required = ['id', 'package_id', 'snapshot_at', 'note']
+                missing = [k for k in required if k not in first]
+                if missing:
+                    self.log(f"⚠️  Version snapshot missing fields: {missing}", "WARN")
+                else:
+                    self.log(f"✓ Version snapshot has all required fields", "INFO")
+                    self.log(f"  - Latest note: {first.get('note')}", "INFO")
+        return success, response
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("=" * 60, "INFO")
@@ -1013,6 +1161,22 @@ class ConstructONSAPITester:
             self.test_notifications_pending_future_since()
             self.test_notifications_with_new_lead()
             self.test_notifications_with_new_quiz()
+            
+            # CODE REVIEW: Test media upload/download fix
+            self.log("\n--- CODE REVIEW: Testing Media Upload/Download Fix ---", "INFO")
+            self.test_media_upload_download()
+            
+            # CODE REVIEW: Test AI rewrite
+            self.log("\n--- CODE REVIEW: Testing AI Copy Assist ---", "INFO")
+            self.test_ai_rewrite()
+            
+            # CODE REVIEW: Test package version history
+            self.log("\n--- CODE REVIEW: Testing Package Version History ---", "INFO")
+            _, packages = self.test_packages_list()
+            if packages and len(packages) > 0:
+                package_id = packages[0].get('id')
+                if package_id:
+                    self.test_package_versions(package_id)
         
         # Print summary
         self.log("\n" + "=" * 60, "INFO")

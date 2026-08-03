@@ -658,13 +658,17 @@ async def download_media(path: str):
     record = await db.media_uploads.find_one({"storage_path": path, "is_deleted": False})
     if not record:
         raise HTTPException(status_code=404, detail="File not found")
+
+    content: bytes = b""
+    fetched_content_type: str = "application/octet-stream"
     try:
-        content, content_type = get_object(path)
+        content, fetched_content_type = get_object(path)
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Storage read failed: {e}")
+
     return FastAPIResponse(
         content=content,
-        media_type=record.get("content_type") or content_type,
+        media_type=record.get("content_type") or fetched_content_type,
         headers={"Cache-Control": "public, max-age=86400"},
     )
 
