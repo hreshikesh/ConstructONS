@@ -1,30 +1,26 @@
 [
   {
-    "content": "Backend: Update auth.py require_admin to read from cookie first, header fallback",
+    "content": "Backend: Extend Package model with optional heading override fields",
     "status": "completed"
   },
   {
-    "content": "Backend: Update /admin/login to set httpOnly cookie + add /admin/logout endpoint",
+    "content": "Frontend public: Use heading overrides with sensible fallbacks in PackageDetailPage",
     "status": "completed"
   },
   {
-    "content": "Frontend: axios withCredentials + strip localStorage token injection",
+    "content": "Admin: Add heading editors inline at the top of each tab",
     "status": "completed"
   },
   {
-    "content": "Frontend: Update AdminLoginPage & AdminLayout to use /admin/me instead of localStorage",
+    "content": "Admin: Add missing 'image' field to Add-ons editor rows",
     "status": "completed"
   },
   {
-    "content": "Frontend: Global 401 interceptor to redirect to login",
+    "content": "Backend: Ensure PDF brochure honors the overrides too",
     "status": "completed"
   },
   {
-    "content": "Frontend: Update logout button to hit /admin/logout endpoint",
-    "status": "completed"
-  },
-  {
-    "content": "Run testing_agent_v3 to verify no auth regressions",
+    "content": "Verify end-to-end + hand to testing_agent",
     "status": "in_progress"
   }
 ]

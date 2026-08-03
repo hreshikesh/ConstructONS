@@ -251,13 +251,13 @@ function MiniStat({ icon: Icon, label, value }) {
 function OverviewTab({ pkg }) {
   return (
     <FadeIn>
-      <SectionLabel eyebrow="Overview" />
-      <h2 className="mt-2 text-brand-navy">Why choose {pkg.name}?</h2>
+      <SectionLabel eyebrow={pkg.overview_eyebrow || "Overview"} />
+      <h2 className="mt-2 text-brand-navy">{pkg.overview_title || `Why choose ${pkg.name}?`}</h2>
       <p className="mt-4 text-brand-navy/70 leading-relaxed max-w-3xl">{pkg.description}</p>
 
       <div className="mt-8 grid md:grid-cols-2 gap-4">
         <div className="rounded-3xl bg-white p-6 border border-black/5 shadow-soft">
-          <div className="section-eyebrow">Key Highlights</div>
+          <div className="section-eyebrow">{pkg.highlights_eyebrow || "Key Highlights"}</div>
           <ul className="mt-3 space-y-2">
             {(pkg.highlights || []).map((h, i) => (
               <li key={`hl-${h}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
@@ -267,7 +267,7 @@ function OverviewTab({ pkg }) {
           </ul>
         </div>
         <div className="rounded-3xl bg-white p-6 border border-black/5 shadow-soft">
-          <div className="section-eyebrow">What’s covered</div>
+          <div className="section-eyebrow">{pkg.covered_eyebrow || "What's covered"}</div>
           <ul className="mt-3 grid grid-cols-2 gap-2">
             {(pkg.spec_categories || []).slice(0, 12).map((c) => (
               <li key={c.name} className="flex items-center gap-2 text-xs text-brand-navy/80">
@@ -286,9 +286,9 @@ function SpecsTab({ pkg, expanded, setExpanded }) {
   const cats = pkg.spec_categories || [];
   return (
     <FadeIn>
-      <SectionLabel eyebrow="Deep Specifications" />
-      <h2 className="mt-2 text-brand-navy">Every material, brand & spec</h2>
-      <p className="mt-3 text-brand-navy/60 max-w-2xl">Full transparency — exact brands and grades of every material used in your home.</p>
+      <SectionLabel eyebrow={pkg.specs_eyebrow || "Deep Specifications"} />
+      <h2 className="mt-2 text-brand-navy">{pkg.specs_title || "Every material, brand & spec"}</h2>
+      <p className="mt-3 text-brand-navy/60 max-w-2xl">{pkg.specs_subtitle || "Full transparency — exact brands and grades of every material used in your home."}</p>
 
       <div className="mt-8 space-y-3" data-testid="pkg-specs">
         {cats.map((cat) => {
@@ -360,8 +360,8 @@ function ScopeTab({ pkg }) {
     <FadeIn>
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-3xl bg-white p-6 border border-black/5 shadow-soft">
-          <div className="section-eyebrow">Scope of Work</div>
-          <h3 className="mt-2 text-brand-navy">What’s included</h3>
+          <div className="section-eyebrow">{pkg.scope_eyebrow || "Scope of Work"}</div>
+          <h3 className="mt-2 text-brand-navy">{pkg.scope_title || "What's included"}</h3>
           <ul className="mt-4 space-y-2">
             {(pkg.scope_of_work || []).map((s, i) => (
               <li key={`scope-${s}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
@@ -371,8 +371,8 @@ function ScopeTab({ pkg }) {
           </ul>
         </div>
         <div className="rounded-3xl bg-white p-6 border border-black/5 shadow-soft">
-          <div className="section-eyebrow text-red-500">Exclusions</div>
-          <h3 className="mt-2 text-brand-navy">Not included</h3>
+          <div className="section-eyebrow text-red-500">{pkg.exclusions_eyebrow || "Exclusions"}</div>
+          <h3 className="mt-2 text-brand-navy">{pkg.exclusions_title || "Not included"}</h3>
           <ul className="mt-4 space-y-2">
             {(pkg.exclusions || []).map((s, i) => (
               <li key={`excl-${s}-${i}`} className="flex items-start gap-2 text-sm text-brand-navy/85">
@@ -391,8 +391,8 @@ function AddonsTab({ pkg, onEnquire }) {
   if (!addons.length) return <div className="text-brand-navy/60">No add-ons available.</div>;
   return (
     <FadeIn>
-      <SectionLabel eyebrow="Add-ons & Upgrades" />
-      <h2 className="mt-2 text-brand-navy">Personalise your home</h2>
+      <SectionLabel eyebrow={pkg.addons_eyebrow || "Add-ons & Upgrades"} />
+      <h2 className="mt-2 text-brand-navy">{pkg.addons_title || "Personalise your home"}</h2>
       <div className="mt-8 grid md:grid-cols-2 xl:grid-cols-3 gap-4">
         {addons.map((a, i) => (
           <div key={a.slug || a.name || `addon-${i}`} data-testid={`pkg-addon-${i}`} className="rounded-2xl bg-white p-5 border border-black/5 shadow-soft hover:shadow-premium hover:-translate-y-0.5 transition-all">
@@ -425,8 +425,8 @@ function ScheduleTab({ pkg }) {
   }, []);
   return (
     <FadeIn>
-      <SectionLabel eyebrow="Payment Schedule" />
-      <h2 className="mt-2 text-brand-navy">Pay as your home is built</h2>
+      <SectionLabel eyebrow={pkg.schedule_eyebrow || "Payment Schedule"} />
+      <h2 className="mt-2 text-brand-navy">{pkg.schedule_title || "Pay as your home is built"}</h2>
       <p className="mt-3 text-brand-navy/60 max-w-2xl">Payments are strictly milestone-based. Each stage is verified & signed off before the next.</p>
 
       <div className="mt-8 rounded-3xl bg-white border border-black/5 shadow-soft overflow-hidden">
@@ -460,8 +460,8 @@ function FaqsTab({ pkg }) {
   const faqs = pkg.package_faqs || [];
   return (
     <FadeIn>
-      <SectionLabel eyebrow="Package FAQs" />
-      <h2 className="mt-2 text-brand-navy">Frequently asked questions</h2>
+      <SectionLabel eyebrow={pkg.faqs_eyebrow || "Package FAQs"} />
+      <h2 className="mt-2 text-brand-navy">{pkg.faqs_title || "Frequently asked questions"}</h2>
       <div className="mt-8 space-y-3">
         {faqs.map((f, i) => (
           <div key={f.question || `faq-${i}`} className="rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden">

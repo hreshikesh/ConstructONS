@@ -332,14 +332,14 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     story.append(PageBreak())
 
     # ---------- Overview ----------
-    story.extend(_section_title("Package Overview", styles))
+    story.extend(_section_title(package.get("overview_title") or "Package Overview", styles))
     story.append(Paragraph(f"<b>{package.get('name','')}</b> — {package.get('tagline','')}", styles["h2"]))
     story.append(Spacer(1, 4))
     story.append(Paragraph(package.get("description", ""), styles["body"]))
     story.append(Spacer(1, 10))
 
     # Highlights
-    story.append(Paragraph("Key Highlights", styles["h3"]))
+    story.append(Paragraph(package.get("highlights_eyebrow") or "Key Highlights", styles["h3"]))
     story.extend(_bullet_list(package.get("highlights", []), styles))
     story.append(Spacer(1, 8))
 
@@ -347,10 +347,12 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     spec_cats = package.get("spec_categories", [])
     if spec_cats:
         story.append(PageBreak())
-        story.extend(_section_title("Detailed Specifications", styles))
+        story.extend(_section_title(package.get("specs_title") or "Detailed Specifications", styles))
         story.append(Paragraph(
-            "Every material, brand and quality standard used in your home is documented below. "
-            "Actual delivered brand may vary within the same or higher tier as per availability.",
+            package.get("specs_subtitle") or (
+                "Every material, brand and quality standard used in your home is documented below. "
+                "Actual delivered brand may vary within the same or higher tier as per availability."
+            ),
             styles["small"],
         ))
         story.append(Spacer(1, 10))
@@ -362,7 +364,7 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     # ---------- Scope of Work ----------
     if package.get("scope_of_work"):
         story.append(PageBreak())
-        story.extend(_section_title("Scope of Work", styles))
+        story.extend(_section_title(package.get("scope_title") or "Scope of Work", styles))
         story.append(Paragraph("What's included in this package (turnkey unless noted):", styles["small"]))
         story.append(Spacer(1, 6))
         story.extend(_bullet_list(package["scope_of_work"], styles))
@@ -370,7 +372,7 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     # ---------- Exclusions ----------
     if package.get("exclusions"):
         story.append(Spacer(1, 12))
-        story.extend(_section_title("Exclusions", styles))
+        story.extend(_section_title(package.get("exclusions_title") or "Exclusions", styles))
         story.append(Paragraph(
             "The following are <b>not</b> included in the package price and are quoted separately:",
             styles["small"],
@@ -381,7 +383,7 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     # ---------- Add-ons ----------
     if package.get("addons"):
         story.append(PageBreak())
-        story.extend(_section_title("Available Add-ons & Upgrades", styles))
+        story.extend(_section_title(package.get("addons_title") or "Available Add-ons & Upgrades", styles))
         story.append(Paragraph(
             "Personalise your home with these popular upgrades. Prices are indicative.",
             styles["small"],
@@ -392,7 +394,7 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     # ---------- Payment schedule ----------
     if package.get("payment_schedule"):
         story.append(Spacer(1, 14))
-        story.extend(_section_title("Payment Schedule", styles))
+        story.extend(_section_title(package.get("schedule_title") or "Payment Schedule", styles))
         story.append(Paragraph(
             "Payments are milestone-based. You only pay after each stage is verified & signed off.",
             styles["small"],
@@ -403,7 +405,7 @@ def generate_brochure(package: dict, settings: dict = None, personalization: dic
     # ---------- FAQs ----------
     if package.get("package_faqs"):
         story.append(PageBreak())
-        story.extend(_section_title("Frequently Asked Questions", styles))
+        story.extend(_section_title(package.get("faqs_title") or "Frequently Asked Questions", styles))
         for f in package["package_faqs"]:
             story.append(Paragraph(f"<b>{f.get('question','')}</b>", styles["h3"]))
             story.append(Paragraph(f.get("answer", ""), styles["body"]))

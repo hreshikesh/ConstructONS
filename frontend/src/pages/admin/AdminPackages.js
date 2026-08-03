@@ -86,6 +86,83 @@ function BoolSwitch({ value, onChange, label, testId }) {
   );
 }
 
+/**
+ * HeadingsBlock — compact editor for the eyebrow / title / subtitle strings
+ * a section shows on the public page. Every field is optional so admins can
+ * leave a placeholder for the built-in default, and can hit "Reset" per field
+ * to blank it out. AI Rewrite pill is available on title-ish fields.
+ */
+function HeadingsBlock({ title, fields, editing, setField }) {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <div className="rounded-2xl border border-brand-orange/25 bg-brand-orange/5 p-3" data-testid="headings-block">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-brand-orange font-bold">Headings</span>
+          <span className="text-sm text-brand-navy font-semibold">{title}</span>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-brand-navy/50 transition ${expanded ? "rotate-180" : ""}`} />
+      </button>
+      {expanded && (
+        <div className="mt-3 grid md:grid-cols-2 gap-3">
+          {fields.map((f) => (
+            <div key={f.key}>
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[10px] uppercase tracking-widest text-brand-navy/50">{f.label}</div>
+                <div className="flex items-center gap-1.5">
+                  {editing[f.key] && (
+                    <button
+                      type="button"
+                      onClick={() => setField({ [f.key]: null })}
+                      className="text-[10px] text-brand-navy/50 hover:text-red-500"
+                      title="Reset to default"
+                    >
+                      reset
+                    </button>
+                  )}
+                  {f.ai && (
+                    <AIAssistButton
+                      text={editing[f.key] || f.placeholder}
+                      purpose={f.purpose || "copy"}
+                      onPick={(v) => setField({ [f.key]: v })}
+                      testId={`ai-${f.key}`}
+                    />
+                  )}
+                </div>
+              </div>
+              {f.multiline ? (
+                <textarea
+                  value={editing[f.key] ?? ""}
+                  onChange={(e) => setField({ [f.key]: e.target.value })}
+                  placeholder={f.placeholder}
+                  rows={2}
+                  data-testid={`headings-${f.key}`}
+                  className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 outline-none focus:border-brand-orange text-sm resize-y"
+                />
+              ) : (
+                <input
+                  value={editing[f.key] ?? ""}
+                  onChange={(e) => setField({ [f.key]: e.target.value })}
+                  placeholder={f.placeholder}
+                  data-testid={`headings-${f.key}`}
+                  className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 outline-none focus:border-brand-orange text-sm"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="mt-2 text-[10px] text-brand-navy/40 italic">
+        Leave blank to use the built-in default text.
+      </div>
+    </div>
+  );
+}
+
 function ImageInput({ value, onChange, testId }) {
   return (
     <div className="flex items-center gap-3">
@@ -303,6 +380,12 @@ function AddonsEditor({ addons, onChange }) {
             rows={2}
             placeholder="Short description"
             className="w-full rounded-lg border border-black/10 bg-white px-2.5 py-1.5 outline-none focus:border-brand-orange text-xs resize-y"
+          />
+          <ImageUploader
+            value={a.image}
+            onChange={(v) => setAt(i, { image: v })}
+            category="addons"
+            testId={`addon-image-${i}`}
           />
         </div>
       ))}
@@ -683,8 +766,19 @@ export default function AdminPackages() {
               <div className="flex-1 overflow-y-auto p-5 space-y-5">
                 {tab === "basics" && <BasicsTab editing={editing} setField={setField} />}
                 {tab === "highlights" && (
-                  <div>
-                    <Label>Highlights (shown as bullet list on the package card & PDF)</Label>
+                  <div className="space-y-4">
+                    <HeadingsBlock
+                      title="Overview section headings"
+                      fields={[
+                        { key: "overview_eyebrow", label: "Eyebrow label", placeholder: "Overview", ai: false },
+                        { key: "overview_title", label: "Section title", placeholder: `Why choose ${editing.name || "…"}?`, ai: true, purpose: "tagline" },
+                        { key: "highlights_eyebrow", label: "Highlights card eyebrow", placeholder: "Key Highlights" },
+                        { key: "covered_eyebrow", label: "\"What's covered\" eyebrow", placeholder: "What's covered" },
+                      ]}
+                      editing={editing}
+                      setField={setField}
+                    />
+                    <Label>Highlights (bullet list on the package card, Overview tab & PDF)</Label>
                     <StringListEditor
                       items={editing.highlights}
                       onChange={(v) => setField({ highlights: v })}
@@ -694,7 +788,17 @@ export default function AdminPackages() {
                   </div>
                 )}
                 {tab === "specs" && (
-                  <div>
+                  <div className="space-y-4">
+                    <HeadingsBlock
+                      title="Specifications section headings"
+                      fields={[
+                        { key: "specs_eyebrow", label: "Eyebrow label", placeholder: "Deep Specifications" },
+                        { key: "specs_title", label: "Section title", placeholder: "Every material, brand & spec", ai: true, purpose: "tagline" },
+                        { key: "specs_subtitle", label: "Section subtitle", placeholder: "Full transparency — exact brands and grades of every material used in your home.", multiline: true, ai: true, purpose: "description" },
+                      ]}
+                      editing={editing}
+                      setField={setField}
+                    />
                     <Label>Deep Specifications</Label>
                     <p className="text-xs text-brand-navy/50 mb-3">
                       Each category (e.g. "Structure & Foundation") holds rows for individual specs — cement brand, warranty, etc. These populate the "Specifications" tab of the package page AND the PDF brochure.
@@ -706,7 +810,19 @@ export default function AdminPackages() {
                   </div>
                 )}
                 {tab === "scope" && (
-                  <div className="grid md:grid-cols-2 gap-5">
+                  <div className="space-y-4">
+                    <HeadingsBlock
+                      title="Scope & Exclusions headings"
+                      fields={[
+                        { key: "scope_eyebrow", label: "Scope eyebrow", placeholder: "Scope of Work" },
+                        { key: "scope_title", label: "Scope title", placeholder: "What's included", ai: true, purpose: "tagline" },
+                        { key: "exclusions_eyebrow", label: "Exclusions eyebrow", placeholder: "Exclusions" },
+                        { key: "exclusions_title", label: "Exclusions title", placeholder: "Not included", ai: true, purpose: "tagline" },
+                      ]}
+                      editing={editing}
+                      setField={setField}
+                    />
+                    <div className="grid md:grid-cols-2 gap-5">
                     <div>
                       <Label>Scope of Work (what's included)</Label>
                       <StringListEditor
@@ -726,21 +842,49 @@ export default function AdminPackages() {
                       />
                     </div>
                   </div>
+                  </div>
                 )}
                 {tab === "addons" && (
-                  <div>
+                  <div className="space-y-4">
+                    <HeadingsBlock
+                      title="Add-ons section headings"
+                      fields={[
+                        { key: "addons_eyebrow", label: "Eyebrow label", placeholder: "Add-ons & Upgrades" },
+                        { key: "addons_title", label: "Section title", placeholder: "Personalise your home", ai: true, purpose: "tagline" },
+                      ]}
+                      editing={editing}
+                      setField={setField}
+                    />
                     <Label>Add-ons & Upgrades</Label>
                     <AddonsEditor addons={editing.addons} onChange={(v) => setField({ addons: v })} />
                   </div>
                 )}
                 {tab === "schedule" && (
-                  <div>
+                  <div className="space-y-4">
+                    <HeadingsBlock
+                      title="Payment Schedule headings"
+                      fields={[
+                        { key: "schedule_eyebrow", label: "Eyebrow label", placeholder: "Payment Schedule" },
+                        { key: "schedule_title", label: "Section title", placeholder: "Pay as your home is built", ai: true, purpose: "tagline" },
+                      ]}
+                      editing={editing}
+                      setField={setField}
+                    />
                     <Label>Milestone-based Payment Schedule</Label>
                     <ScheduleEditor schedule={editing.payment_schedule} onChange={(v) => setField({ payment_schedule: v })} />
                   </div>
                 )}
                 {tab === "faqs" && (
-                  <div>
+                  <div className="space-y-4">
+                    <HeadingsBlock
+                      title="FAQs section headings"
+                      fields={[
+                        { key: "faqs_eyebrow", label: "Eyebrow label", placeholder: "Package FAQs" },
+                        { key: "faqs_title", label: "Section title", placeholder: "Frequently asked questions", ai: true, purpose: "tagline" },
+                      ]}
+                      editing={editing}
+                      setField={setField}
+                    />
                     <Label>Package FAQs</Label>
                     <FaqEditor faqs={editing.package_faqs} onChange={(v) => setField({ package_faqs: v })} />
                   </div>

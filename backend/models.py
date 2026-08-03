@@ -116,6 +116,31 @@ class Package(BaseDoc):
     accent_color: str = "#FF5A00"
     cta_label: str = "View Details"
 
+    # ------------------------------------------------------------------
+    # Optional per-section heading overrides.
+    # If None, the public page + PDF brochure fall back to the built-in
+    # defaults shown next to each field. All are FULLY EDITABLE from the
+    # admin panel so admins can rebrand the copy of any package without
+    # touching code.
+    # ------------------------------------------------------------------
+    overview_eyebrow: Optional[str] = None       # default: "Overview"
+    overview_title: Optional[str] = None         # default: "Why choose <name>?"
+    highlights_eyebrow: Optional[str] = None     # default: "Key Highlights"
+    covered_eyebrow: Optional[str] = None        # default: "What's covered"
+    specs_eyebrow: Optional[str] = None          # default: "Deep Specifications"
+    specs_title: Optional[str] = None            # default: "Every material, brand & spec"
+    specs_subtitle: Optional[str] = None         # default: "Full transparency..."
+    scope_eyebrow: Optional[str] = None          # default: "Scope of Work"
+    scope_title: Optional[str] = None            # default: "What's included"
+    exclusions_eyebrow: Optional[str] = None     # default: "Exclusions"
+    exclusions_title: Optional[str] = None       # default: "Not included"
+    addons_eyebrow: Optional[str] = None         # default: "Add-ons & Upgrades"
+    addons_title: Optional[str] = None           # default: "Personalise your home"
+    schedule_eyebrow: Optional[str] = None       # default: "Payment Schedule"
+    schedule_title: Optional[str] = None         # default: "Milestone-based billing"
+    faqs_eyebrow: Optional[str] = None           # default: "Frequently Asked"
+    faqs_title: Optional[str] = None             # default: "Questions & answers"
+
 
 # ---------- Testimonials ----------
 class Testimonial(BaseDoc):
