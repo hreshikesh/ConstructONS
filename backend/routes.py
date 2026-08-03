@@ -57,12 +57,9 @@ class AdminLoginReq(BaseModel):
 
 @router.post("/admin/login")
 async def admin_login(body: AdminLoginReq, response: FastAPIResponse):
-    if not verify_admin_credentials(body.email, body.password):
+    if not await verify_admin_credentials(body.email, body.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_admin_token(body.email)
-    # httpOnly cookie is the primary carrier for the JWT. We still return
-    # the raw token in the JSON body so `curl`-based / non-browser callers
-    # can keep using the `Authorization: Bearer <jwt>` header if needed.
     set_admin_cookie(response, token)
     return {"token": token, "email": body.email, "role": "admin"}
 

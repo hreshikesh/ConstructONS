@@ -66,6 +66,17 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Object storage init deferred: {e}")
 
+    # Seed the first admin user in the DB if the admin_users collection is empty.
+    # This is what makes credentials survive future re-deploys — after the first
+    # boot, credentials live in Mongo, not in the .env file. Users can rotate
+    # them anytime via a future "change password" screen without touching env.
+    try:
+        from auth import ensure_admin_seeded
+        await ensure_admin_seeded()
+        logger.info("Admin user seed check complete.")
+    except Exception as e:
+        logger.error(f"Admin seed failed: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

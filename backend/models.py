@@ -322,6 +322,15 @@ class QuizSubmission(BaseDoc):
     source: str = "website"
 
 
+# ---------- Admin Users (DB-backed authentication) ----------
+class AdminUser(BaseDoc):
+    email: str
+    password_hash: str
+    role: str = "admin"
+    name: Optional[str] = None
+    is_active: bool = True
+
+
 # ---------- Client Proposals ----------
 class ProposalAddon(BaseModel):
     name: str
