@@ -72,7 +72,7 @@ export default function PackagesComparePage() {
             See exactly what you get in each tier — materials, brands and finishes across every category.
           </p>
 
-          <FadeIn className="mt-10">
+          <div className="mt-10">
             <div className="rounded-3xl bg-white border border-black/5 shadow-soft overflow-hidden overflow-x-auto">
               <table
                 className="w-full border-collapse text-sm min-w-[900px]"
@@ -199,7 +199,7 @@ export default function PackagesComparePage() {
                 </tbody>
               </table>
             </div>
-          </FadeIn>
+          </div>
 
           <div className="mt-10 rounded-3xl bg-brand-navy p-6 md:p-8 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
