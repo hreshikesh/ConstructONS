@@ -453,3 +453,27 @@ class CustomQuote(BaseDoc):
     prepared_by: Optional[str] = None
     ai_notes: Optional[str] = None              # last AI rationale / summary
     ai_mode: Optional[str] = None               # 'recommend' | 'scratch'
+
+    # Client Portal — shareable public link
+    public_token: Optional[str] = None          # generated on first share
+    client_action: Optional[str] = None         # 'accepted' | 'rejected' | None
+    client_action_at: Optional[str] = None
+    comments: List[Dict[str, Any]] = Field(default_factory=list)  # {author, message, source, created_at}
+
+
+# ---------- Quote Templates ----------
+class QuoteTemplate(BaseDoc):
+    name: str
+    description: str = ""
+    price_per_sqft: float = 0
+    warranty_years: Optional[int] = 10
+    spec_categories: List[SpecCategory] = Field(default_factory=list)
+    addons: List[CustomQuoteAddon] = Field(default_factory=list)
+    line_items: List[CustomLineItem] = Field(default_factory=list)
+    scope_of_work: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+    payment_schedule: List[Dict[str, Any]] = Field(default_factory=list)
+    terms: Optional[str] = None
+    intro_note: Optional[str] = None
+    gst_percent: float = 18
+    tags: List[str] = Field(default_factory=list)

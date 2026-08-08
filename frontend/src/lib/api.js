@@ -134,7 +134,40 @@ export const adminApi = {
     aiSuggestStatus: (jobId) =>
       api.get(`/custom-quotes/ai-suggest/${jobId}`).then((r) => r.data),
     pdfUrl: (id) => `${API_BASE}/custom-quotes/${id}/pdf`,
+    getPublicLink: (id) => api.post(`/custom-quotes/${id}/public-link`).then((r) => r.data),
+    saveAsTemplate: (id, body) =>
+      api.post(`/custom-quotes/${id}/save-as-template`, body).then((r) => r.data),
+    fromTemplate: (body) =>
+      api.post("/custom-quotes/from-template", body).then((r) => r.data),
   },
+
+  // ---------------- Quote Templates ----------------
+  quoteTemplates: {
+    list: () => api.get("/quote-templates").then((r) => r.data),
+    get: (id) => api.get(`/quote-templates/${id}`).then((r) => r.data),
+    create: (body) => api.post("/quote-templates", body).then((r) => r.data),
+    update: (id, body) => api.put(`/quote-templates/${id}`, body).then((r) => r.data),
+    remove: (id) => api.delete(`/quote-templates/${id}`).then((r) => r.data),
+  },
+
+  // ---------------- CSV Exports ----------------
+  exports: {
+    leadsUrl: (status) =>
+      `${API_BASE}/exports/leads.csv${status ? `?status=${status}` : ""}`,
+    quizUrl: (status) =>
+      `${API_BASE}/exports/quiz-submissions.csv${status ? `?status=${status}` : ""}`,
+  },
+};
+
+// Public (no-auth) API for the client quote portal
+export const publicQuoteApi = {
+  get: (token) =>
+    axios.get(`${API_BASE}/public/quote/${token}`, { withCredentials: false }).then((r) => r.data),
+  pdfUrl: (token) => `${API_BASE}/public/quote/${token}/pdf`,
+  comment: (token, body) =>
+    axios.post(`${API_BASE}/public/quote/${token}/comment`, body, { withCredentials: false }).then((r) => r.data),
+  action: (token, body) =>
+    axios.post(`${API_BASE}/public/quote/${token}/action`, body, { withCredentials: false }).then((r) => r.data),
 };
 
 export default api;

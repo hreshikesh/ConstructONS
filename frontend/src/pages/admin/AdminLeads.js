@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
-import { Trash2, RefreshCw } from "lucide-react";
+import { Trash2, RefreshCw, FileDown } from "lucide-react";
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
@@ -42,6 +42,15 @@ export default function AdminLeads() {
           <h1 className="mt-2 text-brand-navy font-bold">Leads Inbox</h1>
         </div>
         <button onClick={load} className="btn-ghost text-sm py-2 px-4"><RefreshCw className="w-4 h-4" /> Refresh</button>
+        <a
+          href={adminApi.exports.leadsUrl()}
+          target="_blank"
+          rel="noreferrer"
+          data-testid="leads-export-csv"
+          className="btn-ghost text-sm py-2 px-4"
+        >
+          <FileDown className="w-4 h-4" /> Export CSV
+        </a>
       </div>
 
       <div className="mt-6 rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden overflow-x-auto">

@@ -4,10 +4,11 @@ import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Pencil, Trash2, X, Save, ImageOff } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 /**
  * Entity config: fields declared per entity for the admin form.
- * type: string | text | number | bool | image | tags | json | select
+ * type: string | text | richtext | number | bool | image | tags | json | select
  */
 const ENTITY_CONFIG = {
   homes: {
@@ -151,7 +152,7 @@ const ENTITY_CONFIG = {
       { name: "author_avatar", type: "image" },
       { name: "read_minutes", type: "number" },
       { name: "tags", type: "tags" },
-      { name: "content_html", type: "text" },
+      { name: "content_html", type: "richtext" },
       { name: "sort_order", type: "number" },
       { name: "is_published", type: "bool" },
     ],
@@ -418,6 +419,22 @@ function FieldEditor({ field, value, onChange }) {
       <label className="block">{label}
         <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 outline-none focus:border-brand-orange text-sm resize-y" />
       </label>
+    );
+  }
+  if (field.type === "richtext") {
+    return (
+      <div className="block">
+        <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
+          {field.name.replaceAll("_", " ")}
+        </div>
+        <RichTextEditor
+          value={value || ""}
+          onChange={onChange}
+          placeholder={field.placeholder || "Write with rich formatting…"}
+          minHeight={280}
+          data-testid={`rte-${field.name}`}
+        />
+      </div>
     );
   }
   if (field.type === "tags") {

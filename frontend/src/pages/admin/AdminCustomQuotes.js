@@ -16,10 +16,11 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { adminApi, publicApi, API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import {
   Plus, Trash2, Save, X, Pencil, RefreshCw, FileDown, Send, Sparkles,
   Wand2, IndianRupee, Mail, MessageCircle, Copy, Loader2, ChevronDown,
-  ChevronUp,
+  ChevronUp, BookOpen, Link as LinkIcon, MessageSquare,
 } from "lucide-react";
 
 const rupees = (n) =>
@@ -323,7 +324,17 @@ function StatusBadge({ status }) {
 function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }) {
   const [aiMode, setAiMode] = useState(editing.ai_mode || "recommend");
   const [aiLoading, setAiLoading] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [publicLink, setPublicLink] = useState(editing.public_token || null);
+  const [savingTpl, setSavingTpl] = useState(false);
+  const [showTplModal, setShowTplModal] = useState(false);
+  const [tplName, setTplName] = useState("");
+  const [tplDesc, setTplDesc] = useState("");
   const set = (patch) => setEditing((prev) => ({ ...prev, ...patch }));
+
+  useEffect(() => {
+    adminApi.quoteTemplates.list().then(setTemplates).catch(() => setTemplates([]));
+  }, []);
 
   // Pricing calculations (live)
   const pricing = useMemo(() => {
@@ -510,6 +521,81 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
     }
   };
 
+  const generatePublicLink = async () => {
+    if (!editing.id) {
+      toast.error("Save the quote first");
+      return;
+    }
+    try {
+      const data = await adminApi.customQuotes.getPublicLink(editing.id);
+      setPublicLink(data.public_token);
+      set({ public_token: data.public_token });
+      toast.success("Public link ready");
+    } catch {
+      toast.error("Failed to generate public link");
+    }
+  };
+
+  const copyPublicLink = async () => {
+    if (!publicLink) return;
+    const link = `${window.location.origin}/quote/${publicLink}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Public link copied — send to client");
+    } catch {
+      toast.error("Copy failed — link: " + link);
+    }
+  };
+
+  const loadTemplate = (tplId) => {
+    if (!tplId) return;
+    const tpl = templates.find((t) => t.id === tplId);
+    if (!tpl) return;
+    if (!window.confirm(`Load "${tpl.name}"? This will replace specs, pricing, scope, exclusions, schedule and terms.`)) return;
+    set({
+      price_per_sqft: tpl.price_per_sqft || editing.price_per_sqft,
+      spec_categories: JSON.parse(JSON.stringify(tpl.spec_categories || [])),
+      addons: JSON.parse(JSON.stringify(tpl.addons || [])),
+      line_items: JSON.parse(JSON.stringify(tpl.line_items || [])),
+      scope_of_work: [...(tpl.scope_of_work || [])],
+      exclusions: [...(tpl.exclusions || [])],
+      payment_schedule: JSON.parse(JSON.stringify(tpl.payment_schedule || [])),
+      terms: tpl.terms || editing.terms,
+      intro_note: tpl.intro_note || editing.intro_note,
+      warranty_years: tpl.warranty_years || editing.warranty_years,
+      gst_percent: tpl.gst_percent ?? editing.gst_percent,
+    });
+    toast.success(`Loaded template "${tpl.name}"`);
+  };
+
+  const saveAsTemplate = async () => {
+    if (!editing.id) {
+      toast.error("Save the quote first");
+      return;
+    }
+    if (!tplName.trim()) {
+      toast.error("Template name is required");
+      return;
+    }
+    setSavingTpl(true);
+    try {
+      await adminApi.customQuotes.saveAsTemplate(editing.id, {
+        name: tplName.trim(),
+        description: tplDesc.trim(),
+        tags: [],
+      });
+      toast.success("Saved as template");
+      setShowTplModal(false);
+      setTplName("");
+      setTplDesc("");
+      adminApi.quoteTemplates.list().then(setTemplates).catch(() => {});
+    } catch {
+      toast.error("Failed to save template");
+    } finally {
+      setSavingTpl(false);
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -595,6 +681,13 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
               >
                 <Copy className="w-3.5 h-3.5" /> Copy Link
               </button>
+              <button
+                onClick={() => setShowTplModal(true)}
+                data-testid="cq-save-as-template"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
+              >
+                <BookOpen className="w-3.5 h-3.5" /> Save as Template
+              </button>
               <div className="ml-auto flex items-center gap-2">
                 <label className="text-xs text-brand-navy/60">Status</label>
                 <select
@@ -609,6 +702,81 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
                   <option value="rejected">Rejected</option>
                 </select>
               </div>
+            </div>
+          )}
+
+          {/* Public Client Portal Link */}
+          {editing.id && (
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 p-5" data-testid="cq-public-link-section">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 grid place-items-center shrink-0">
+                  <LinkIcon className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs uppercase tracking-widest text-emerald-700 font-semibold">Client Portal</div>
+                  <div className="font-bold text-brand-navy mt-0.5">
+                    Shareable link — client can view, comment, accept or decline
+                  </div>
+                  {publicLink ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <code className="text-xs bg-white border border-black/10 rounded-lg px-3 py-1.5 text-brand-navy/80 break-all">
+                        {`${window.location.origin}/quote/${publicLink}`}
+                      </code>
+                      <button
+                        onClick={copyPublicLink}
+                        data-testid="cq-copy-public-link"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Copy Link
+                      </button>
+                      <a
+                        href={`/quote/${publicLink}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
+                      >
+                        Open Preview
+                      </a>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={generatePublicLink}
+                      data-testid="cq-generate-public-link"
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold hover:brightness-110"
+                    >
+                      <LinkIcon className="w-3.5 h-3.5" /> Generate Client Link
+                    </button>
+                  )}
+                  {editing.client_action && (
+                    <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                      editing.client_action === "accepted"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      Client {editing.client_action} on {new Date(editing.client_action_at).toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Load Template */}
+          {templates.length > 0 && !editing.id && (
+            <div className="rounded-2xl bg-white border border-black/5 p-4 flex flex-wrap items-center gap-2" data-testid="cq-template-loader">
+              <BookOpen className="w-4 h-4 text-brand-orange" />
+              <div className="text-sm font-semibold text-brand-navy">Start from template:</div>
+              <select
+                onChange={(e) => { loadTemplate(e.target.value); e.target.value = ""; }}
+                data-testid="cq-load-template"
+                className="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm"
+                defaultValue=""
+              >
+                <option value="">— Pick a template —</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name} · {rupees(t.price_per_sqft)}/sqft</option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -962,27 +1130,51 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
             />
           </Section>
 
+          {/* Client Comments */}
+          {editing.id && (editing.comments || []).length > 0 && (
+            <Section title={`Client Comments (${editing.comments.length})`} testId="cq-section-comments" defaultOpen>
+              <div className="space-y-3">
+                {editing.comments.map((c, i) => (
+                  <div key={c.id || i} className={`p-3 rounded-xl border ${c.source === "client" ? "bg-emerald-50 border-emerald-100" : "bg-brand-bg/50 border-black/5"}`}>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="font-semibold text-brand-navy text-sm inline-flex items-center gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                        {c.author || "Client"}
+                      </div>
+                      <div className="text-[10px] text-brand-navy/50">{new Date(c.created_at).toLocaleString()}</div>
+                    </div>
+                    <div className="text-sm text-brand-navy/80 whitespace-pre-wrap">{c.message}</div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
           {/* Notes & Terms */}
           <Section title="Notes & Terms" testId="cq-section-notes">
-            <Field label="Intro Note (top of PDF)" testId="cq-field-intro">
-              <textarea
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
+                Intro Note (top of PDF)
+              </div>
+              <RichTextEditor
                 value={editing.intro_note || ""}
-                onChange={(e) => set({ intro_note: e.target.value })}
-                rows={3}
-                className={inputCls}
+                onChange={(html) => set({ intro_note: html })}
                 placeholder="Personal note that appears on page 2 of the PDF"
+                minHeight={140}
+                data-testid="cq-field-intro-rte"
               />
-            </Field>
+            </div>
             <div className="mt-4">
-              <Field label="Terms & Conditions (leave blank for default)" testId="cq-field-terms">
-                <textarea
-                  value={editing.terms || ""}
-                  onChange={(e) => set({ terms: e.target.value })}
-                  rows={5}
-                  className={inputCls}
-                  placeholder="Override the default terms if needed"
-                />
-              </Field>
+              <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
+                Terms &amp; Conditions (leave blank for default)
+              </div>
+              <RichTextEditor
+                value={editing.terms || ""}
+                onChange={(html) => set({ terms: html })}
+                placeholder="Override the default terms if needed"
+                minHeight={200}
+                data-testid="cq-field-terms-rte"
+              />
             </div>
           </Section>
 
@@ -1004,6 +1196,56 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
             </button>
           </div>
         </div>
+
+        {/* Save-as-Template modal */}
+        {showTplModal && (
+          <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm z-[60] grid place-items-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md p-6" data-testid="cq-template-modal">
+              <div className="font-bold text-brand-navy text-lg inline-flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-brand-orange" /> Save as Template
+              </div>
+              <p className="text-sm text-brand-navy/60 mt-1">
+                Snapshot this quote's specs, pricing, scope, exclusions, schedule and terms for reuse.
+              </p>
+              <label className="block mt-4">
+                <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">Template Name *</div>
+                <input
+                  value={tplName}
+                  onChange={(e) => setTplName(e.target.value)}
+                  className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+                  placeholder="e.g. 3BHK Modern G+1 Premium"
+                  data-testid="cq-tpl-name-input"
+                />
+              </label>
+              <label className="block mt-3">
+                <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">Description</div>
+                <textarea
+                  value={tplDesc}
+                  onChange={(e) => setTplDesc(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm resize-y"
+                  placeholder="What this template is best for"
+                />
+              </label>
+              <div className="mt-5 flex items-center gap-2 justify-end">
+                <button
+                  onClick={() => { setShowTplModal(false); setTplName(""); setTplDesc(""); }}
+                  className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-brand-navy"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveAsTemplate}
+                  disabled={savingTpl}
+                  data-testid="cq-tpl-save-confirm"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-5 py-2 text-sm font-semibold"
+                >
+                  {savingTpl ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Template
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </motion.div>
     </>
   );

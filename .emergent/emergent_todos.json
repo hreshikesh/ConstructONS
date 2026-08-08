@@ -1,38 +1,46 @@
 [
   {
-    "content": "Backend: Add CustomQuote model to models.py",
+    "content": "Backend: extend models (QuoteTemplate, QuoteComment, public_token, client_action, comments on CustomQuote)",
     "status": "completed"
   },
   {
-    "content": "Backend: Add AI suggestion function to ai_service.py (Mode A & B)",
+    "content": "Backend: add CSV export endpoints for leads + quiz submissions",
     "status": "completed"
   },
   {
-    "content": "Backend: Create custom_quote_pdf.py PDF generator",
+    "content": "Backend: add Quote Templates CRUD + save-as-template + from-template routes",
     "status": "completed"
   },
   {
-    "content": "Backend: Add /api/custom-quotes CRUD + AI + PDF routes to routes.py",
+    "content": "Backend: add Public Portal routes (GET by token, POST comment, POST action) + lazy token migration",
     "status": "completed"
   },
   {
-    "content": "Backend: Convert AI to async job pattern (avoid ingress timeout)",
+    "content": "Frontend: install TipTap + build reusable RichTextEditor component",
     "status": "completed"
   },
   {
-    "content": "Frontend: Add customQuotes helpers + nav + route",
+    "content": "Frontend: wire RichTextEditor into Custom Quote intro_note & terms, Blogs",
     "status": "completed"
   },
   {
-    "content": "Frontend: Build AdminCustomQuotes.js (list + editor + AI panel + share)",
+    "content": "Frontend: add Export CSV buttons to Leads + Quiz Submissions pages",
     "status": "completed"
   },
   {
-    "content": "Frontend: Poll AI job status with progress messaging",
+    "content": "Frontend: add Quote Templates admin page + nav + Save-as-Template/Load Template in Custom Quote editor",
     "status": "completed"
   },
   {
-    "content": "End-to-end verified: create, AI suggest, edit, PDF download, WhatsApp/Email share",
+    "content": "Frontend: build public /quote/:token page (view, comment, accept/reject)",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: add public link + comments panel in Custom Quote admin editor",
+    "status": "completed"
+  },
+  {
+    "content": "End-to-end verified: Template save/apply, Public accept/comment, CSV download, WYSIWYG editor",
     "status": "completed"
   }
 ]

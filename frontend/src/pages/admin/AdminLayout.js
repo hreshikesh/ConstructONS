@@ -9,7 +9,7 @@ import { requestNotificationPermission } from "@/lib/notifications";
 import {
   Home, Package, HelpCircle, Newspaper, ShoppingBag, Landmark, Users, Sparkles,
   Route, ImageIcon, LayoutDashboard, Settings, LogOut, Star, Inbox, GitCompareArrows,
-  BarChart3, ClipboardList, Menu, X, Bell, CheckCheck, FileText, Calculator
+  BarChart3, ClipboardList, Menu, X, Bell, CheckCheck, FileText, Calculator, BookOpen
 } from "lucide-react";
 
 const NAV = [
@@ -18,6 +18,7 @@ const NAV = [
   { label: "Quiz Submissions", to: "/admin/quiz-submissions", icon: ClipboardList },
   { label: "Client Proposals", to: "/admin/proposals", icon: FileText },
   { label: "Custom Quotes", to: "/admin/custom-quotes", icon: Calculator },
+  { label: "Quote Templates", to: "/admin/quote-templates", icon: BookOpen },
   { label: "Homes", to: "/admin/homes", icon: Home },
   { label: "Packages", to: "/admin/packages", icon: Package },
   { label: "AI Modules", to: "/admin/ai-modules", icon: Sparkles },

@@ -117,3 +117,72 @@ html { overflow-x: hidden; }
 .num-label {
   @apply text-xs font-semibold tracking-widest uppercase text-brand-navy/50;
 }
+
+
+/* ---------------- TipTap Rich Text Editor ---------------- */
+.ProseMirror { outline: none; }
+.ProseMirror p { margin: 0 0 0.75rem; }
+.ProseMirror h1 { font-size: 1.6rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #0B1B32; }
+.ProseMirror h2 { font-size: 1.3rem; font-weight: 700; margin: 0.9rem 0 0.4rem; color: #0B1B32; }
+.ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.35rem; color: #0B1B32; }
+.ProseMirror ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.ProseMirror ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+.ProseMirror li { margin: 0.25rem 0; }
+.ProseMirror li > p { margin: 0; }
+.ProseMirror blockquote {
+  border-left: 3px solid #FF5A00;
+  padding-left: 0.75rem;
+  margin: 0.75rem 0;
+  color: #4b5563;
+  font-style: italic;
+}
+.ProseMirror code {
+  background: rgba(11, 27, 50, 0.06);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: 'Source Code Pro', ui-monospace, monospace;
+}
+.ProseMirror pre {
+  background: #0B1B32;
+  color: #F5F5F0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+.ProseMirror pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+.ProseMirror hr {
+  border: 0;
+  border-top: 1px solid rgba(11, 27, 50, 0.12);
+  margin: 1rem 0;
+}
+.ProseMirror a { color: #FF5A00; text-decoration: underline; text-underline-offset: 3px; }
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: rgba(11, 27, 50, 0.35);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+/* Rendered HTML from the editor on public/admin views */
+.rich-html h1 { font-size: 1.75rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: #0B1B32; }
+.rich-html h2 { font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #0B1B32; }
+.rich-html h3 { font-size: 1.15rem; font-weight: 600; margin: 0.9rem 0 0.4rem; color: #0B1B32; }
+.rich-html p { margin: 0 0 0.9rem; line-height: 1.6; }
+.rich-html ul { list-style: disc; padding-left: 1.4rem; margin: 0.5rem 0; }
+.rich-html ol { list-style: decimal; padding-left: 1.4rem; margin: 0.5rem 0; }
+.rich-html li { margin: 0.25rem 0; }
+.rich-html blockquote {
+  border-left: 3px solid #FF5A00;
+  padding-left: 0.9rem;
+  margin: 0.9rem 0;
+  color: #4b5563;
+  font-style: italic;
+}
+.rich-html a { color: #FF5A00; text-decoration: underline; }

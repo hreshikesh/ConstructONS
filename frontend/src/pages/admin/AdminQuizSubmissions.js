@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Trash2, X, Wallet, Users, Home as HomeIcon, Cpu, Sparkles, User, Phone, Mail, MapPin, Link as LinkIcon, StickyNote } from "lucide-react";
+import { RefreshCcw, Trash2, X, Wallet, Users, Home as HomeIcon, Cpu, Sparkles, User, Phone, Mail, MapPin, Link as LinkIcon, StickyNote, FileDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const BUDGET_LABELS = { value: "Value", balanced: "Balanced", premium: "Premium", luxury: "Luxury" };
@@ -70,6 +70,15 @@ export default function AdminQuizSubmissions() {
             <option value="closed">Closed</option>
           </select>
           <button onClick={load} className="btn-ghost text-sm py-2 px-4"><RefreshCcw className="w-4 h-4" /> Refresh</button>
+          <a
+            href={adminApi.exports.quizUrl()}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="quiz-export-csv"
+            className="btn-ghost text-sm py-2 px-4"
+          >
+            <FileDown className="w-4 h-4" /> Export CSV
+          </a>
         </div>
       </div>
 

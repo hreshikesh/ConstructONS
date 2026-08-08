@@ -1,18 +1,22 @@
 # plan.md — ConstructONS Premium CMS-Driven Website (Updated)
 
 ## 1) Objectives
-- Ship a premium, Apple/Tesla/Stripe/Linear/OpenAI/Airbnb-feel marketing website for **ConstructONS** with pixel-perfect UI, luxury spacing, **Poppins** typography, and **Framer Motion** micro-interactions.
+- Ship a premium, Apple/Tesla/Stripe/Linear-level marketing + sales platform for **ConstructONS** with luxury UI, **Poppins** typography, and **Framer Motion** micro-interactions.
 - Maintain a **fully CMS-driven architecture**: all public pages/sections + detail pages consume **FastAPI + MongoDB** APIs (no hardcoded content).
 - Provide a **production-grade Admin Panel** (cookie-based auth) for CRUD on all content types and advanced sales workflows.
-- Deliver **lead capture** (Get Free Consultation / Contact) persisted to MongoDB with admin visibility and lead status workflow.
-- Provide a **sales enablement ecosystem**:
+- Deliver **lead capture** (Get Free Consultation / Contact) persisted to MongoDB with admin visibility + status workflow.
+- Provide a complete **sales enablement ecosystem**:
   - Standardized build packages with deep material specs
   - Package comparison
-  - Brochure/proposal PDFs
-  - **Custom Quotes**: generate tailored quotations per client requirements, with AI-assisted recommendations and fully editable spec/pricing.
-- Keep data safe and editable without code changes: **Homes, Packages, FAQs, Leads, Quiz Submissions, Proposals, Custom Quotes, Site Settings**.
+  - Brochure PDFs
+  - Client proposal PDFs + WhatsApp workflow
+  - **Custom Quotes**: AI-assisted, fully editable, PDF-exportable bespoke quotations
+  - **Quote Templates**: reusable quote baselines to speed up sales
+  - **Client Portal**: shareable public quote link for accept/reject + comments
+  - **CSV Export**: one-click exports for leads and quiz submissions
+- Keep data safe and editable without code changes: **Homes, Packages, FAQs, Leads, Quiz Submissions, Proposals, Custom Quotes, Quote Templates, Site Settings**.
 
-**Current status:** Phase 2 is complete and stable. Multiple advanced features have been delivered beyond the original MVP (deep package editor, AI copy assist, PDF systems, secure cookie auth). Phase 3 is in progress with a new major admin feature: **Custom Quotes**.
+**Current status:** Phases 1–2.5 are complete and stable. Phase 3 (Custom Quotes) is now **COMPLETE** and verified end-to-end in preview. Next work is Phase 4: WYSIWYG editing, exports, templates, and client portal.
 
 ---
 
@@ -94,132 +98,163 @@ Bug fixes ✅
 
 ---
 
-### Phase 3 — Sales Workflows: Custom Quotes (NEW) 🚧 IN PROGRESS
+### Phase 3 — Sales Workflows: Custom Quotes ✅ COMPLETED
 **Goal:** Add a new Admin section **Custom Quotes** that lets ConstructONS generate tailored quotations per client requirements, with AI-assisted suggestions, full editability, and share-ready PDF.
 
-#### User stories (Phase 3)
-1. Admin creates a Custom Quote with client details + requirements (plot size, floors, built-up area, budget, timeline, style).
-2. Admin chooses AI mode:
-   - **Mode A:** Recommend best-fit base package + specific upgrades/downgrades to meet budget.
-   - **Mode B:** Generate a full custom spec sheet from scratch.
-   - **Mode C (selected):** Admin can choose A or B per quote.
-3. Admin receives an AI-generated draft including:
-   - Suggested base package + rationale
-   - Spec deltas vs selected base package
-   - Suggested addons
-   - Pricing breakdown + assumptions
-4. Admin can edit **everything** before finalizing:
-   - Client info, requirements, base package
-   - Deep spec categories and every spec row
-   - Addons, custom line items
-   - Pricing breakdown (base, addons, discounts, GST, grand total)
-   - Terms/notes, exclusions, payment schedule, timeline
-5. Admin downloads a branded PDF with client name/details.
-6. Admin shares via:
-   - WhatsApp message with link/attachment workflow (existing pattern)
-   - Email (mailto link + attachment download)
+Delivered ✅
+- New admin section **/admin/custom-quotes** with:
+  - Client details + requirements (plot, floors, BHK, budget, start/end)
+  - Base package optional loading (deep spec sheet snapshot)
+  - Fully editable: deep specs, add-ons, custom line items, pricing, scope, exclusions, schedule, terms
+  - Actions: Save, Download PDF, WhatsApp share, Email share, Copy link, Status updates
+- **AI Quote Assistant (GPT-5)** supports:
+  - Mode A: Recommend + tune (package anchored)
+  - Mode B: Build from scratch
+- **Async AI job pattern** (job_id + polling) to bypass ingress timeouts.
+- PDF generator **custom_quote_pdf.py** and backend CRUD + PDF routes.
 
-#### Backend (Phase 3)
-- **models.py**
-  - Add `CustomQuote` model (snapshot-based, immutable reference number, editable fields).
-- **ai_service.py**
-  - Add `suggest_custom_quote()`:
-    - Inputs: requirements + mode + optionally base package
-    - Output: normalized JSON payload compatible with the editor (spec_categories, addons_selected, pricing fields, notes).
-- **custom_quote_pdf.py** (NEW)
-  - High-end multi-page PDF generator (ReportLab), aligned with proposal_pdf styling.
-  - Includes:
-    - Cover page (client + ref)
-    - Requirements summary
-    - Package comparison summary (base vs suggested custom)
-    - Detailed specs table by category
-    - Addons + pricing table
-    - Terms, exclusions, payment schedule
-- **routes.py**
-  - CRUD: `GET/POST/PUT/DELETE /api/custom-quotes` (admin protected)
-  - PDF: `GET /api/custom-quotes/{id}/pdf`
-  - AI suggest: `POST /api/custom-quotes/suggest` or `POST /api/ai/custom-quote-suggest`
-  - Ensure safe updates (avoid partial PUT wipes; prefer full object saves from UI).
-- Optional: attach quote reference back to lead (`leads.quote_ref`).
-
-#### Frontend (Phase 3)
-- **api.js**
-  - Add `adminApi.customQuotes.*` helpers:
-    - list/create/update/delete
-    - suggest
-    - pdf download URL
-- **AdminLayout.js**
-  - Add new nav entry: **Custom Quotes**.
-- **App.js**
-  - Add route: `/admin/custom-quotes`.
-- **AdminCustomQuotes.js** (NEW)
-  - Premium workflow UI:
-    - Left: quote form + deep editable spec editor (reuse PackageEditorHelpers patterns)
-    - Right: AI suggestion panel (mode switch A/B) with “Apply to draft” and diff preview
-    - Pricing calculator panel (auto totals + manual overrides)
-    - Actions: Save draft, Download PDF, WhatsApp share, Email share
-
-#### Testing (Phase 3)
-- Add a dedicated test pass:
-  - CRUD create/update/delete custom quote
-  - AI suggest returns valid JSON payload
-  - PDF endpoint returns bytes and correct headers
-  - UI renders, edits persist, download/share actions work
-- Run `testing_agent_v3` after implementation.
+Verification ✅
+- UI renders and editor drawer works
+- Quote CRUD works with sequential refs `CQ-YYYY-0001`
+- AI job completes successfully (60–120s typical)
+- PDF endpoint returns valid PDF bytes
 
 ---
 
-### Phase 4 — Polish Pass + Production-Readiness (Next)
-**Goal:** Make it feel world-class at production standards (motion, performance, accessibility, reliability) and harden CMS behavior.
+### Phase 4 — Sales Operations Upgrade (Now) 🚧 IN PROGRESS
+**Goal:** Finish the "sales operating system" layer requested:
+1) Rich Text Editor (WYSIWYG) 
+2) CSV export for sales team
+3) Quote templates
+4) Client portal public quote link with accept/reject + comments
+
+#### 4.1 Rich Text Editor (TipTap) — Admin WYSIWYG
+**Goal:** Replace plain textareas / basic HTML input where rich formatting is needed.
+
+Scope
+- Install TipTap: `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-link`, (optional) `@tiptap/extension-image`
+- Create reusable component `RichTextEditor.js` with:
+  - Toolbar: Bold, Italic, H1/H2/H3, Bullet list, Numbered list, Quote, Link
+  - HTML output compatible with existing `content_html` fields
+  - DOMPurify on render (already used in project)
+
+Targets (highest value first)
+- Admin Blogs: `content_html`
+- Packages: `description` (and optional: section descriptions if present)
+- Custom Quotes: `intro_note` and `terms`
+
+Success criteria
+- Admin can format content visually without writing HTML.
+- Saved HTML renders correctly on public pages/PDFs.
+
+
+#### 4.2 CSV Export — Leads + Quiz Submissions
+**Goal:** One-click downloads for the sales team.
 
 Backend
-- Stronger validation/constraints (slug uniqueness, required fields).
-- Pagination + filters for large lists (blogs/leads/quiz submissions).
-- Split `routes.py` into smaller routers (recommended refactor due to 900+ lines).
+- Add admin-protected CSV endpoints:
+  - `GET /api/leads/export.csv` (filters: optional `status`, date range)
+  - `GET /api/quiz-submissions/export.csv` (filters: optional `status`, date range)
+- Ensure correct headers:
+  - `Content-Type: text/csv`
+  - `Content-Disposition: attachment; filename="..."`
 
 Frontend
-- Public UI polish: skeleton loaders, lazy loading, reduced motion.
-- Admin UX hardening: grouped tabs, better validation messaging, confirmations.
-- Add richer WYSIWYG editor for Blogs/Pages (P1).
+- Add buttons:
+  - AdminLeads: "Export CSV"
+  - AdminQuizSubmissions: "Export CSV"
+- Implementation: open URL in new tab (cookie auth will attach automatically).
 
-Testing
-- Re-run `testing_agent_v3` for regressions.
+Success criteria
+- Sales can download and open in Excel/Google Sheets with correct columns.
+
+
+#### 4.3 Quote Templates — Reuse quote baselines
+**Goal:** Save any completed quote as a template and reuse it for new clients.
+
+Backend
+- Add model `QuoteTemplate` in `models.py`.
+- Collection: `quote_templates`.
+- Endpoints (admin):
+  - CRUD: `GET/POST/PUT/DELETE /api/quote-templates`
+  - `POST /api/custom-quotes/{id}/save-as-template` (creates template from quote snapshot)
+  - `POST /api/custom-quotes/from-template/{template_id}` (creates new draft quote prefilled)
+
+Frontend
+- New admin page: `AdminQuoteTemplates.js`
+- Admin nav entry: "Quote Templates"
+- In `AdminCustomQuotes`:
+  - "Save as Template" button
+  - Template picker dropdown to prefill specs/pricing/scope
+
+Success criteria
+- Admin creates a quote template once and can generate new draft quotes in 1 click.
+
+
+#### 4.4 Client Portal Link — Public quote view with actions + comments
+**Goal:** Send a link to the client where they can view the quote, comment, and accept/reject without logging in.
+
+Backend
+- Extend `CustomQuote`:
+  - `public_token` (random, unguessable)
+  - `client_action` (none | accepted | rejected)
+  - `client_action_at`
+  - `comments`: list of `QuoteComment` (author_name, message, created_at)
+- Lazy migration:
+  - If a quote is requested without `public_token`, generate and persist one.
+- Public endpoints (no admin auth):
+  - `GET /api/public/quote/{token}` (returns safe subset of quote)
+  - `POST /api/public/quote/{token}/comment`
+  - `POST /api/public/quote/{token}/action` (accept/reject)
+- Admin endpoints:
+  - Admin can view comments and client_action in `/admin/custom-quotes` editor.
+
+Frontend
+- Public page route: `/quote/:token` → `PublicQuotePage.js`
+  - Premium client UI: header, requirements, pricing summary, downloadable PDF link, spec highlights
+  - Comment box + timeline
+  - Accept / Reject actions with confirmation
+- Admin quote editor updates:
+  - Show Public Link with Copy
+  - Show comments panel and client action status
+
+Success criteria
+- Client can open link, read quote, leave comments, accept/reject.
+- Admin sees updates in real-time on next refresh (and optionally via notifications later).
 
 ---
 
 ## 3) Next Actions
 
-**Immediate (Phase 3 build) — Custom Quotes**
-1. Add backend `CustomQuote` model + Mongo collection.
-2. Add CRUD endpoints + PDF endpoint.
-3. Add AI suggestion endpoint supporting Mode A and Mode B.
-4. Build AdminCustomQuotes page:
-   - Requirements intake
-   - AI panel + apply
-   - Deep editable specs
-   - Pricing breakdown
-   - Download PDF + WhatsApp + Email
-5. Run `testing_agent_v3` and visually verify the admin flow.
-
-**After Custom Quotes**
-6. Add Rich Text Editor for blogs/pages (WYSIWYG).
-7. Add CSV export for leads and quiz submissions.
-8. Add password reset / email flow (optional).
+### Immediate — Phase 4 (Build 4 major features in one pass)
+1. Add TipTap WYSIWYG editor component and wire into:
+   - Blogs `content_html`
+   - Packages `description`
+   - Custom Quotes `intro_note` + `terms`
+2. Add CSV export endpoints + admin buttons for:
+   - Leads
+   - Quiz Submissions
+3. Add Quote Templates:
+   - Backend model + endpoints
+   - Admin section + template picker
+4. Add Client Portal:
+   - Tokenised public quote page
+   - Accept/reject + comments
+   - Admin view of comments + action state
+5. Run `testing_agent_v3` + visual checks:
+   - WYSIWYG save/render
+   - CSV downloads
+   - Template create/apply
+   - Client portal workflow end-to-end
 
 ---
 
 ## 4) Success Criteria
-- Phase 2 (met)
-  - 100% CMS-driven pages and sections editable via Admin.
-  - Premium UI.
-  - Homes + packages fully functional.
-  - Leads persist to MongoDB.
-
-- Phase 3 (target)
-  - Admin can generate a **custom quote** in <5 minutes:
-    - AI-assisted recommendations (Mode A/B)
-    - Full editability of specs + pricing
-    - PDF export with client name/details
-    - WhatsApp + Email sharing workflow
-  - No regressions in existing proposals/packages workflows.
+- Existing phases remain stable (no regressions).
+- Phase 3: Custom Quotes continues to work end-to-end.
+- Phase 4:
+  - Admin has WYSIWYG editor for key content.
+  - Sales can export CSV in one click.
+  - Quote templates reduce quote creation time dramatically.
+  - Client portal enables accept/reject + comments without login.
   - `testing_agent_v3` passes with no material gaps.

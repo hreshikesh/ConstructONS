@@ -12,7 +12,7 @@ from models import (
     Home, Package, Testimonial, FAQ, Blog, MarketplaceCategory,
     FinancialService, TeamMember, AIPlatformModule, JourneyStep,
     HeroSection, MediaItem, ComparisonRow, StatItem, SiteSettings,
-    Lead, LeadCreate, QuizSubmission, Proposal, CustomQuote,
+    Lead, LeadCreate, QuizSubmission, Proposal, CustomQuote, QuoteTemplate,
     now_iso, new_id
 )
 
@@ -903,6 +903,341 @@ async def download_custom_quote_pdf(quote_id: str):
             "Cache-Control": "no-store",
         },
     )
+
+
+# ============================================================================
+# Quote Templates — reusable quote baselines
+# ============================================================================
+
+_TEMPLATE_COPY_FIELDS = [
+    "price_per_sqft", "spec_categories", "addons", "line_items",
+    "scope_of_work", "exclusions", "payment_schedule", "terms",
+    "intro_note", "gst_percent", "warranty_years",
+]
+
+
+@router.get("/quote-templates", dependencies=[Depends(require_admin)])
+async def list_quote_templates():
+    cursor = db.quote_templates.find({}, {"_id": 0}).sort("created_at", -1).limit(200)
+    return await cursor.to_list(200)
+
+
+@router.get("/quote-templates/{template_id}", dependencies=[Depends(require_admin)])
+async def get_quote_template(template_id: str):
+    doc = await db.quote_templates.find_one({"id": template_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return doc
+
+
+@router.post("/quote-templates", dependencies=[Depends(require_admin)])
+async def create_quote_template(body: QuoteTemplate):
+    data = body.model_dump()
+    data["id"] = data.get("id") or new_id()
+    data["created_at"] = now_iso()
+    data["updated_at"] = now_iso()
+    await db.quote_templates.insert_one(data)
+    data.pop("_id", None)
+    return data
+
+
+@router.put("/quote-templates/{template_id}", dependencies=[Depends(require_admin)])
+async def update_quote_template(template_id: str, body: QuoteTemplate):
+    data = body.model_dump()
+    data["id"] = template_id
+    data["updated_at"] = now_iso()
+    await db.quote_templates.update_one({"id": template_id}, {"$set": data}, upsert=True)
+    return await db.quote_templates.find_one({"id": template_id}, {"_id": 0})
+
+
+@router.delete("/quote-templates/{template_id}", dependencies=[Depends(require_admin)])
+async def delete_quote_template(template_id: str):
+    res = await db.quote_templates.delete_one({"id": template_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return {"success": True}
+
+
+class SaveAsTemplateBody(BaseModel):
+    name: str
+    description: str = ""
+    tags: List[str] = []
+
+
+@router.post("/custom-quotes/{quote_id}/save-as-template", dependencies=[Depends(require_admin)])
+async def save_quote_as_template(quote_id: str, body: SaveAsTemplateBody):
+    quote = await db.custom_quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Custom quote not found")
+    tpl = {
+        "id": new_id(),
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "sort_order": 0,
+        "is_published": True,
+        "name": body.name.strip() or f"Template from {quote.get('ref_number')}",
+        "description": body.description,
+        "tags": body.tags or [],
+    }
+    for f in _TEMPLATE_COPY_FIELDS:
+        tpl[f] = quote.get(f)
+    # Clean None -> default
+    if tpl.get("warranty_years") is None:
+        tpl["warranty_years"] = 10
+    if tpl.get("gst_percent") is None:
+        tpl["gst_percent"] = 18
+    if tpl.get("price_per_sqft") is None:
+        tpl["price_per_sqft"] = 0
+    await db.quote_templates.insert_one(tpl)
+    tpl.pop("_id", None)
+    return tpl
+
+
+class FromTemplateBody(BaseModel):
+    template_id: str
+    client_name: str = ""
+    client_phone: str = ""
+    client_email: Optional[str] = None
+    built_up_area: Optional[float] = None
+    floors: Optional[str] = None
+
+
+@router.post("/custom-quotes/from-template", dependencies=[Depends(require_admin)])
+async def create_quote_from_template(body: FromTemplateBody):
+    tpl = await db.quote_templates.find_one({"id": body.template_id}, {"_id": 0})
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Template not found")
+    ref = await _generate_cq_ref_number()
+    quote = {
+        "id": new_id(),
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "sort_order": 0,
+        "is_published": True,
+        "ref_number": ref,
+        "status": "draft",
+        "valid_days": 30,
+        "client_name": body.client_name or "New Client",
+        "client_phone": body.client_phone or "",
+        "client_email": body.client_email,
+        "built_up_area": body.built_up_area or 1200,
+        "floors": body.floors or "G+1",
+        "bhk": "3 BHK",
+        "style_pref": "Modern",
+        "package_slug": None,
+        "package_name": None,
+        "discount_label": None,
+        "discount_amount": 0,
+        "addons": tpl.get("addons") or [],
+        "line_items": tpl.get("line_items") or [],
+        "spec_categories": tpl.get("spec_categories") or [],
+        "scope_of_work": tpl.get("scope_of_work") or [],
+        "exclusions": tpl.get("exclusions") or [],
+        "payment_schedule": tpl.get("payment_schedule") or [],
+        "price_per_sqft": tpl.get("price_per_sqft") or 0,
+        "gst_percent": tpl.get("gst_percent") if tpl.get("gst_percent") is not None else 18,
+        "warranty_years": tpl.get("warranty_years") or 10,
+        "terms": tpl.get("terms"),
+        "intro_note": tpl.get("intro_note"),
+        "comments": [],
+    }
+    await db.custom_quotes.insert_one(quote)
+    quote.pop("_id", None)
+    return quote
+
+
+# ============================================================================
+# Client Portal — public quote view + comments + accept/reject
+# ============================================================================
+
+def _sanitize_quote_for_public(q: dict) -> dict:
+    """Strip fields the client shouldn't see (internal notes, ai debug etc)."""
+    hidden = {"_id", "prepared_by", "ai_notes", "ai_mode", "quiz_submission_id", "lead_id"}
+    return {k: v for k, v in q.items() if k not in hidden}
+
+
+async def _ensure_public_token(quote_id: str) -> str:
+    """Generate a public_token for a quote if it doesn't have one yet."""
+    import secrets
+    token = secrets.token_urlsafe(24)
+    await db.custom_quotes.update_one(
+        {"id": quote_id, "$or": [{"public_token": {"$exists": False}}, {"public_token": None}, {"public_token": ""}]},
+        {"$set": {"public_token": token, "updated_at": now_iso()}},
+    )
+    doc = await db.custom_quotes.find_one({"id": quote_id}, {"public_token": 1})
+    return (doc or {}).get("public_token") or token
+
+
+@router.post("/custom-quotes/{quote_id}/public-link", dependencies=[Depends(require_admin)])
+async def get_or_create_public_link(quote_id: str):
+    quote = await db.custom_quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Custom quote not found")
+    token = quote.get("public_token") or (await _ensure_public_token(quote_id))
+    return {"public_token": token, "public_url": f"/quote/{token}"}
+
+
+@router.get("/public/quote/{token}")
+async def public_get_quote(token: str):
+    q = await db.custom_quotes.find_one({"public_token": token}, {"_id": 0})
+    if not q:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+    return {"quote": _sanitize_quote_for_public(q), "settings": settings}
+
+
+@router.get("/public/quote/{token}/pdf")
+async def public_quote_pdf(token: str):
+    quote = await db.custom_quotes.find_one({"public_token": token}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+    from custom_quote_pdf import generate_custom_quote_pdf
+    pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    filename = f"{(quote.get('ref_number') or 'quote').replace('/', '_')}.pdf"
+    return FastAPIResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+class PublicCommentBody(BaseModel):
+    author: Optional[str] = None
+    message: str
+
+
+@router.post("/public/quote/{token}/comment")
+async def public_post_comment(token: str, body: PublicCommentBody):
+    if not body.message or not body.message.strip():
+        raise HTTPException(status_code=400, detail="Message is required")
+    if len(body.message) > 2000:
+        raise HTTPException(status_code=400, detail="Message too long")
+    q = await db.custom_quotes.find_one({"public_token": token}, {"id": 1, "client_name": 1})
+    if not q:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    comment = {
+        "id": new_id(),
+        "author": (body.author or q.get("client_name") or "Client").strip()[:80],
+        "message": body.message.strip()[:2000],
+        "source": "client",
+        "created_at": now_iso(),
+    }
+    await db.custom_quotes.update_one(
+        {"id": q["id"]},
+        {"$push": {"comments": comment}, "$set": {"updated_at": now_iso()}},
+    )
+    return {"success": True, "comment": comment}
+
+
+class PublicActionBody(BaseModel):
+    action: str  # 'accepted' | 'rejected'
+    author: Optional[str] = None
+    note: Optional[str] = None
+
+
+@router.post("/public/quote/{token}/action")
+async def public_post_action(token: str, body: PublicActionBody):
+    action = (body.action or "").strip().lower()
+    if action not in ("accepted", "rejected"):
+        raise HTTPException(status_code=400, detail="Invalid action")
+    q = await db.custom_quotes.find_one({"public_token": token}, {"id": 1, "client_name": 1})
+    if not q:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    updates = {
+        "client_action": action,
+        "client_action_at": now_iso(),
+        "status": "accepted" if action == "accepted" else "rejected",
+        "updated_at": now_iso(),
+    }
+    push = None
+    if body.note and body.note.strip():
+        push = {
+            "id": new_id(),
+            "author": (body.author or q.get("client_name") or "Client").strip()[:80],
+            "message": f"[{action.upper()}] {body.note.strip()[:1500]}",
+            "source": "client",
+            "created_at": now_iso(),
+        }
+    op = {"$set": updates}
+    if push:
+        op["$push"] = {"comments": push}
+    await db.custom_quotes.update_one({"id": q["id"]}, op)
+    return {"success": True, "action": action}
+
+
+# ============================================================================
+# CSV Exports — Leads + Quiz Submissions
+# ============================================================================
+
+def _csv_response(rows: List[List[Any]], filename: str) -> FastAPIResponse:
+    import csv
+    import io
+    buf = io.StringIO()
+    writer = csv.writer(buf, quoting=csv.QUOTE_MINIMAL)
+    for r in rows:
+        writer.writerow(["" if v is None else str(v) for v in r])
+    return FastAPIResponse(
+        content=buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.get("/exports/leads.csv", dependencies=[Depends(require_admin)])
+async def export_leads_csv(status: Optional[str] = None):
+    q: Dict[str, Any] = {}
+    if status:
+        q["status"] = status
+    docs = await db.leads.find(q, {"_id": 0}).sort("created_at", -1).limit(10000).to_list(10000)
+    rows = [[
+        "Created At", "Name", "Phone", "Email", "City",
+        "Interested Home", "Interested Package", "Message",
+        "Source", "Status", "Quote Ref",
+    ]]
+    for d in docs:
+        rows.append([
+            d.get("created_at"), d.get("name"), d.get("phone"), d.get("email"),
+            d.get("city"), d.get("interested_home"), d.get("interested_package"),
+            (d.get("message") or "").replace("\n", " "),
+            d.get("source"), d.get("status"), d.get("quote_ref"),
+        ])
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+    return _csv_response(rows, f"constructons-leads-{ts}.csv")
+
+
+@router.get("/exports/quiz-submissions.csv", dependencies=[Depends(require_admin)])
+async def export_quiz_csv(status: Optional[str] = None):
+    q: Dict[str, Any] = {}
+    if status:
+        q["status"] = status
+    docs = await db.quiz_submissions.find(q, {"_id": 0}).sort("created_at", -1).limit(10000).to_list(10000)
+    rows = [[
+        "Created At", "Contact Name", "Phone", "Email", "City",
+        "Budget", "Family Size", "Style", "Smart Home",
+        "Recommended Package", "Score", "Shortlisted Homes",
+        "Status", "Source", "Notes",
+    ]]
+    for d in docs:
+        rows.append([
+            d.get("created_at"), d.get("contact_name"), d.get("contact_phone"),
+            d.get("contact_email"), d.get("contact_city"),
+            d.get("budget"), d.get("family_size"), d.get("style"), d.get("smart_home"),
+            d.get("recommended_package_name") or d.get("recommended_package_slug"),
+            d.get("score"),
+            ", ".join(d.get("shortlisted_home_names") or []),
+            d.get("status"), d.get("source"),
+            (d.get("notes") or "").replace("\n", " "),
+        ])
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+    return _csv_response(rows, f"constructons-quiz-submissions-{ts}.csv")
 
 
 # ============================================================================
