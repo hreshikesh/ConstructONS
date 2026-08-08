@@ -1,26 +1,38 @@
 [
   {
-    "content": "Backend: Proposal model + CRUD routes + auto ref number",
-    "status": "in_progress"
+    "content": "Backend: Add CustomQuote model to models.py",
+    "status": "completed"
   },
   {
-    "content": "Backend: PDF generation for proposal (reuse brochure.py styling)",
-    "status": "pending"
+    "content": "Backend: Add AI suggestion function to ai_service.py (Mode A & B)",
+    "status": "completed"
   },
   {
-    "content": "Frontend: AdminProposals page - list + editor drawer",
-    "status": "pending"
+    "content": "Backend: Create custom_quote_pdf.py PDF generator",
+    "status": "completed"
   },
   {
-    "content": "Frontend: Route registration + sidebar link",
-    "status": "pending"
+    "content": "Backend: Add /api/custom-quotes CRUD + AI + PDF routes to routes.py",
+    "status": "completed"
   },
   {
-    "content": "Frontend: WhatsApp send button",
-    "status": "pending"
+    "content": "Backend: Convert AI to async job pattern (avoid ingress timeout)",
+    "status": "completed"
   },
   {
-    "content": "Testing agent verification",
-    "status": "pending"
+    "content": "Frontend: Add customQuotes helpers + nav + route",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: Build AdminCustomQuotes.js (list + editor + AI panel + share)",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: Poll AI job status with progress messaging",
+    "status": "completed"
+  },
+  {
+    "content": "End-to-end verified: create, AI suggest, edit, PDF download, WhatsApp/Email share",
+    "status": "completed"
   }
 ]

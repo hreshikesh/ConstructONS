@@ -2,21 +2,26 @@
 
 ## 1) Objectives
 - Ship a premium, Apple/Tesla/Stripe/Linear/OpenAI/Airbnb-feel marketing website for **ConstructONS** with pixel-perfect UI, luxury spacing, **Poppins** typography, and **Framer Motion** micro-interactions.
-- Build a **fully CMS-driven architecture**: all public pages/sections + detail pages consume **FastAPI + MongoDB** APIs (no hardcoded content).
-- Provide a **simple Admin Panel** (JWT-protected; dev bypass token supported) for CRUD on all content types.
+- Maintain a **fully CMS-driven architecture**: all public pages/sections + detail pages consume **FastAPI + MongoDB** APIs (no hardcoded content).
+- Provide a **production-grade Admin Panel** (cookie-based auth) for CRUD on all content types and advanced sales workflows.
 - Deliver **lead capture** (Get Free Consultation / Contact) persisted to MongoDB with admin visibility and lead status workflow.
-- Seed the DB with high-quality **sample content + curated Unsplash images** so the site is production-like from day one.
+- Provide a **sales enablement ecosystem**:
+  - Standardized build packages with deep material specs
+  - Package comparison
+  - Brochure/proposal PDFs
+  - **Custom Quotes**: generate tailored quotations per client requirements, with AI-assisted recommendations and fully editable spec/pricing.
+- Keep data safe and editable without code changes: **Homes, Packages, FAQs, Leads, Quiz Submissions, Proposals, Custom Quotes, Site Settings**.
 
-**Current status:** Phase 2 (V1 Website + Admin Panel MVP) is **complete and verified** end-to-end.
+**Current status:** Phase 2 is complete and stable. Multiple advanced features have been delivered beyond the original MVP (deep package editor, AI copy assist, PDF systems, secure cookie auth). Phase 3 is in progress with a new major admin feature: **Custom Quotes**.
 
 ---
 
 ## 2) Implementation Steps
 
-### Phase 1 — Core CMS Data Flow (No POC needed; build directly) ✅ COMPLETED
+### Phase 1 — Core CMS Data Flow ✅ COMPLETED
 **Goal:** Prove end-to-end dynamic rendering for the most business-critical flow.
 
-User stories (Phase 1)
+User stories ✅
 1. Visitor loads homepage and sees hero + home cards from DB.
 2. Visitor opens a Home Collection detail page and sees full specs + gallery.
 3. Visitor submits “Get Free Consultation” and lead is saved.
@@ -31,183 +36,190 @@ Backend ✅
 Frontend ✅
 - Tailwind theme tokens (brand orange/navy, premium shadows/radii) + Poppins.
 - API client established.
-- Home page skeleton wired to API + lead modal.
+- Homepage wired to API + lead modal.
 - Animation primitives via Framer Motion.
 
 Checkpoint ✅
-- Verified: seed → API → homepage + detail → lead saved → admin edit reflects.
+- Verified end-to-end: seed → API → render → lead saved → admin edit reflects.
 
 ---
 
-### Phase 2 — V1 Website + Admin Panel (MVP complete) ✅ COMPLETED
+### Phase 2 — V1 Website + Admin Panel ✅ COMPLETED
 **Goal:** Implement all required sections CMS-driven + admin CRUD.
 
-User stories (Phase 2)
-1. Visitor browses Build Packages and expands to see specs/warranty/timeline/AI features.
-2. Visitor explores Marketplace + Financial Services; “Coming Soon” supported.
-3. Visitor reads FAQs + Blogs populated from CMS.
+User stories ✅
+1. Visitor browses Build Packages and explores rich specs.
+2. Visitor explores Marketplace + Financial Services.
+3. Visitor reads FAQs + Blogs from CMS.
 4. Admin manages packages/pricing/specs and updates reflect on site.
 5. Admin manages all key marketing content without code changes.
 
 Backend ✅
-- Implemented CRUD APIs for **15+ CMS content types** with clean schemas:
-  - `homes`
-  - `packages` (spec sections embedded as structured arrays)
-  - `testimonials`
-  - `faqs`
-  - `blogs`
-  - `marketplace_categories`
-  - `financial_services`
-  - `team_members`
-  - `ai_modules`
-  - `journey_steps`
-  - `hero_sections`
-  - `comparison`
-  - `stats`
-  - `media`
-  - `site_settings` (singleton)
-  - `leads` (capture + admin list/update/delete)
-- Admin auth:
-  - JWT login endpoint
-  - Dev bypass token for local/testing
-  - Admin guards on protected routes
-- **Aggregate endpoint**: `GET /api/bootstrap` to power homepage in one call.
-- **Auto-seeding** on backend startup if DB is empty.
-
-Seed data ✅
-- Populated premium sample dataset:
-  - 6 homes, 4 packages, 7 AI modules, 8 marketplace categories, 4 financial services
-  - 8 journey steps, 5 testimonials, 3 blogs, 6 FAQs, 4 team members
-  - comparison rows + stats + hero + site settings + media
+- Implemented CRUD APIs for **15+ CMS content types**.
+- Aggregate endpoint `GET /api/bootstrap`.
+- Auto-seeding on startup.
+- Leads workflow.
 
 Frontend (Public) ✅
-- Premium CMS-driven homepage sections:
-  - Sticky Header + CTA
-  - Hero w/ floating AI dashboard cards
-  - Home Collection carousel/grid
-  - Packages pricing cards w/ expand
-  - AI Platform modules + dashboard preview
-  - Marketplace categories
-  - Financial Services
-  - Why ConstructONS comparison + stat band
-  - Customer Journey animated timeline
-  - Testimonials marquee
-  - Contact section (call/whatsapp/email/map + CTA)
-  - Footer
-- Routes implemented:
-  - `/homes/:slug` home detail page (gallery, specs, floor plan areas)
-  - `/packages`, `/about`, `/blog`, `/blog/:slug`, `/contact`
-- Global Lead Modal wired to `/api/leads`.
+- Premium homepage sections + detailed Home pages.
+- Packages route + package detail.
+- Lead modal wired to `/api/leads`.
 
 Frontend (Admin) ✅
-- Admin panel:
-  - `/admin/login` (JWT stored in localStorage)
-  - `/admin` dashboard with counts + recent leads
-  - `/admin/leads` inbox with status updates (new/contacted/closed)
-  - Generic CRUD: `/admin/:entity` for 15 CMS entities with side-drawer editor
-  - `/admin/site-settings` editor
+- Admin login + dashboard.
+- Leads inbox.
+- Generic CRUD drawer editor.
 
 Testing ✅
-- End-to-end verified via `testing_agent_v3`:
-  - Backend: **100%**
-  - Public frontend: **100%**
-  - Admin frontend: **95%**
-  - Overall: **98%**
-- Fixed bug: Lead form optional email now submits empty email as `undefined` to satisfy backend validation.
+- End-to-end verified via `testing_agent_v3` (high pass rate) + iterative fixes.
 
 ---
 
-### Phase 3 — Polish Pass + Production Hardening (Next)
+### Phase 2.5 — Major Enhancements & Production Hardening ✅ COMPLETED
+**Goal:** Upgrade from MVP to a premium construction operating system feel.
+
+Delivered ✅
+- **Auth security**: migrated from localStorage JWT to **httpOnly secure cookies**, admin credentials stored in MongoDB with **bcrypt**.
+- **Deep Package Editor**: full control over spec categories, scope, exclusions, addons, headings.
+- **AI Copy Assist** (GPT-5 via Emergent LLM): rewrite taglines/descriptions safely.
+- **Image Upload Studio**: Emergent Object Storage integration.
+- **PDF Systems**:
+  - Public package brochure generator
+  - Personalized client proposal generator (7-page) with WhatsApp sharing
+- **Realtime admin notifications** integrated.
+- Security: DOMPurify added to reduce XSS risk.
+
+Bug fixes ✅
+- **Packages Comparison page blank** fixed and visually verified (table renders with full spec matrix).
+
+---
+
+### Phase 3 — Sales Workflows: Custom Quotes (NEW) 🚧 IN PROGRESS
+**Goal:** Add a new Admin section **Custom Quotes** that lets ConstructONS generate tailored quotations per client requirements, with AI-assisted suggestions, full editability, and share-ready PDF.
+
+#### User stories (Phase 3)
+1. Admin creates a Custom Quote with client details + requirements (plot size, floors, built-up area, budget, timeline, style).
+2. Admin chooses AI mode:
+   - **Mode A:** Recommend best-fit base package + specific upgrades/downgrades to meet budget.
+   - **Mode B:** Generate a full custom spec sheet from scratch.
+   - **Mode C (selected):** Admin can choose A or B per quote.
+3. Admin receives an AI-generated draft including:
+   - Suggested base package + rationale
+   - Spec deltas vs selected base package
+   - Suggested addons
+   - Pricing breakdown + assumptions
+4. Admin can edit **everything** before finalizing:
+   - Client info, requirements, base package
+   - Deep spec categories and every spec row
+   - Addons, custom line items
+   - Pricing breakdown (base, addons, discounts, GST, grand total)
+   - Terms/notes, exclusions, payment schedule, timeline
+5. Admin downloads a branded PDF with client name/details.
+6. Admin shares via:
+   - WhatsApp message with link/attachment workflow (existing pattern)
+   - Email (mailto link + attachment download)
+
+#### Backend (Phase 3)
+- **models.py**
+  - Add `CustomQuote` model (snapshot-based, immutable reference number, editable fields).
+- **ai_service.py**
+  - Add `suggest_custom_quote()`:
+    - Inputs: requirements + mode + optionally base package
+    - Output: normalized JSON payload compatible with the editor (spec_categories, addons_selected, pricing fields, notes).
+- **custom_quote_pdf.py** (NEW)
+  - High-end multi-page PDF generator (ReportLab), aligned with proposal_pdf styling.
+  - Includes:
+    - Cover page (client + ref)
+    - Requirements summary
+    - Package comparison summary (base vs suggested custom)
+    - Detailed specs table by category
+    - Addons + pricing table
+    - Terms, exclusions, payment schedule
+- **routes.py**
+  - CRUD: `GET/POST/PUT/DELETE /api/custom-quotes` (admin protected)
+  - PDF: `GET /api/custom-quotes/{id}/pdf`
+  - AI suggest: `POST /api/custom-quotes/suggest` or `POST /api/ai/custom-quote-suggest`
+  - Ensure safe updates (avoid partial PUT wipes; prefer full object saves from UI).
+- Optional: attach quote reference back to lead (`leads.quote_ref`).
+
+#### Frontend (Phase 3)
+- **api.js**
+  - Add `adminApi.customQuotes.*` helpers:
+    - list/create/update/delete
+    - suggest
+    - pdf download URL
+- **AdminLayout.js**
+  - Add new nav entry: **Custom Quotes**.
+- **App.js**
+  - Add route: `/admin/custom-quotes`.
+- **AdminCustomQuotes.js** (NEW)
+  - Premium workflow UI:
+    - Left: quote form + deep editable spec editor (reuse PackageEditorHelpers patterns)
+    - Right: AI suggestion panel (mode switch A/B) with “Apply to draft” and diff preview
+    - Pricing calculator panel (auto totals + manual overrides)
+    - Actions: Save draft, Download PDF, WhatsApp share, Email share
+
+#### Testing (Phase 3)
+- Add a dedicated test pass:
+  - CRUD create/update/delete custom quote
+  - AI suggest returns valid JSON payload
+  - PDF endpoint returns bytes and correct headers
+  - UI renders, edits persist, download/share actions work
+- Run `testing_agent_v3` after implementation.
+
+---
+
+### Phase 4 — Polish Pass + Production-Readiness (Next)
 **Goal:** Make it feel world-class at production standards (motion, performance, accessibility, reliability) and harden CMS behavior.
 
-User stories (Phase 3)
-1. Visitor experiences faster perceived performance (no layout shifts, smooth transitions).
-2. Mobile UI remains premium and touch-friendly across all sections.
-3. Admin edits feel safe: inline validation errors, clearer field hints, and stronger guardrails.
-4. Visitor sees only published content; ordering is consistent.
-5. Large collections (blogs/leads/homes) remain fast with pagination + search.
+Backend
+- Stronger validation/constraints (slug uniqueness, required fields).
+- Pagination + filters for large lists (blogs/leads/quiz submissions).
+- Split `routes.py` into smaller routers (recommended refactor due to 900+ lines).
 
-Backend (Phase 3)
-- Add stronger validation/constraints:
-  - Slug uniqueness (homes/blogs/packages)
-  - Required fields enforcement + friendly error messages
-- Add CMS publishing controls:
-  - `is_published` + `sort_order` consistency across all entities (already present; enforce in queries)
-  - Optional `visibility` states (draft/published) if needed
-- Add pagination + filters:
-  - Blogs: `page`, `page_size`, `tag`, `search`
-  - Leads: `status`, `page`, `search`, date range
-  - Homes: `style`, `bedrooms`, `budget` (optional)
+Frontend
+- Public UI polish: skeleton loaders, lazy loading, reduced motion.
+- Admin UX hardening: grouped tabs, better validation messaging, confirmations.
+- Add richer WYSIWYG editor for Blogs/Pages (P1).
 
-Frontend (Phase 3)
-- UI/UX polish:
-  - Add skeleton loaders on key sections
-  - Add lazy loading + blur-up for images
-  - Add scroll-reveal consistency across all sections
-  - Improve hover states, focus rings, reduced motion support
-- Admin UX hardening:
-  - Better field grouping per entity (tabs/sections)
-  - Validation + JSON editor assistance for `json` fields
-  - Confirmation modals for destructive actions
-- Accessibility:
-  - ARIA attributes for modal, navigation, accordions
-  - Keyboard navigation checks and focus trapping
-
-Testing (Phase 3)
-- Run `testing_agent_v3` again:
-  - CRUD regression
-  - Mobile responsiveness
-  - Broken links/routes
-  - Form validation + error handling
-
----
-
-### Phase 4 — Auth/Permissions + Optional Enhancements (post-approval)
-**Goal:** Tighten security + add advanced CMS capabilities.
-
-User stories (Phase 4)
-1. Admin roles (owner/editor) and permissions.
-2. Image uploads (instead of URL-only), with media library.
-3. Drafts + previews + scheduled publishing.
-4. Export leads as CSV and basic analytics.
-5. Audit log of admin content changes.
-
-Items (optional)
-- Replace dev bypass with stricter auth:
-  - refresh tokens, expiry handling, secure storage approach
-- Role-based permissions + RBAC.
-- Media upload support (S3-compatible or local dev storage).
-- Content revisions/drafts.
-- CSV export for leads.
+Testing
+- Re-run `testing_agent_v3` for regressions.
 
 ---
 
 ## 3) Next Actions
-**Immediate (Phase 3 kickoff)**
-1. Add pagination + search on backend list endpoints for blogs/leads/homes.
-2. Implement consistent `is_published` enforcement + ordering behavior.
-3. Add skeleton loaders + lazy/blur-up images on public site.
-4. Improve admin form UX: grouped fields, validations, JSON assistance.
-5. Re-run `testing_agent_v3` to confirm no regressions.
 
-**Optional (Phase 4)**
-6. Add image uploads + media library.
-7. Add roles + remove dev bypass for production.
+**Immediate (Phase 3 build) — Custom Quotes**
+1. Add backend `CustomQuote` model + Mongo collection.
+2. Add CRUD endpoints + PDF endpoint.
+3. Add AI suggestion endpoint supporting Mode A and Mode B.
+4. Build AdminCustomQuotes page:
+   - Requirements intake
+   - AI panel + apply
+   - Deep editable specs
+   - Pricing breakdown
+   - Download PDF + WhatsApp + Email
+5. Run `testing_agent_v3` and visually verify the admin flow.
+
+**After Custom Quotes**
+6. Add Rich Text Editor for blogs/pages (WYSIWYG).
+7. Add CSV export for leads and quiz submissions.
+8. Add password reset / email flow (optional).
 
 ---
 
 ## 4) Success Criteria
-- **Phase 2 (met):**
-  - 100% CMS-driven pages and sections (no hardcoding), editable via Admin.
-  - Premium UI that matches the reference feel.
-  - Home Collection list + detail pages fully functional with gallery/specs/floor plan areas.
-  - Packages show correct ₹/Sq.ft pricing and expandable CMS specs.
-  - Leads persist to MongoDB and appear in Admin leads inbox.
-  - End-to-end testing passes (achieved overall 98%).
+- Phase 2 (met)
+  - 100% CMS-driven pages and sections editable via Admin.
+  - Premium UI.
+  - Homes + packages fully functional.
+  - Leads persist to MongoDB.
 
-- **Phase 3 (target):**
-  - Noticeably improved perceived performance (skeletons, lazy loading, no layout shift).
-  - Stronger validation and safer admin editing.
-  - Pagination/search for large collections.
-  - Accessibility improvements verified.
-  - `testing_agent_v3` passes with no material gaps (aim 100% across public + admin).
+- Phase 3 (target)
+  - Admin can generate a **custom quote** in <5 minutes:
+    - AI-assisted recommendations (Mode A/B)
+    - Full editability of specs + pricing
+    - PDF export with client name/details
+    - WhatsApp + Email sharing workflow
+  - No regressions in existing proposals/packages workflows.
+  - `testing_agent_v3` passes with no material gaps.

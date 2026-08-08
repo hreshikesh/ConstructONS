@@ -1,0 +1,1381 @@
+/**
+ * AdminCustomQuotes — Bespoke quotation builder.
+ *
+ * Left column: quote list.
+ * Right column: full editor with:
+ *   - Client info
+ *   - Requirements (plot size, floors, BHK, budget, timeline)
+ *   - AI panel (Mode A: recommend base + upgrades | Mode B: from scratch)
+ *   - Base package picker + deep editable spec categories
+ *   - Add-ons + custom line items
+ *   - Live pricing breakdown (auto totals, editable overrides)
+ *   - Scope / Exclusions / Payment schedule / Terms
+ *   - Actions: Save, Download PDF, WhatsApp share, Email share
+ */
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { adminApi, publicApi, API_BASE } from "@/lib/api";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus, Trash2, Save, X, Pencil, RefreshCw, FileDown, Send, Sparkles,
+  Wand2, IndianRupee, Mail, MessageCircle, Copy, Loader2, ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+
+const rupees = (n) =>
+  `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
+
+const emptyQuote = () => ({
+  status: "draft",
+  valid_days: 30,
+  client_name: "",
+  client_phone: "",
+  client_email: "",
+  client_address: "",
+  site_address: "",
+  plot_area: "",
+  floors: "G+1",
+  built_up_area: 1200,
+  bhk: "3 BHK",
+  budget: "",
+  style_pref: "Modern",
+  expected_start: "",
+  expected_completion: "",
+  package_slug: "",
+  package_name: "",
+  price_per_sqft: 1799,
+  addons: [],
+  line_items: [],
+  discount_label: "",
+  discount_amount: 0,
+  gst_percent: 18,
+  spec_categories: [],
+  scope_of_work: [],
+  exclusions: [],
+  payment_schedule: [],
+  intro_note: "",
+  terms: "",
+  warranty_years: 10,
+  ai_notes: "",
+  ai_mode: "recommend",
+});
+
+export default function AdminCustomQuotes() {
+  const [items, setItems] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [list, pkgs] = await Promise.all([
+        adminApi.customQuotes.list(),
+        publicApi.getPackages(),
+      ]);
+      setItems(list);
+      setPackages(pkgs);
+    } catch (e) {
+      toast.error("Failed to load custom quotes");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const startNew = () => setEditing(emptyQuote());
+  const startEdit = (row) => setEditing({ ...emptyQuote(), ...row });
+  const cancelEdit = () => setEditing(null);
+
+  const remove = async (row) => {
+    if (!window.confirm(`Delete quote ${row.ref_number || ""}?`)) return;
+    try {
+      await adminApi.customQuotes.remove(row.id);
+      toast.success("Quote deleted");
+      load();
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.client_name?.trim()) {
+      toast.error("Client name is required");
+      return;
+    }
+    setSaving(true);
+    try {
+      // Coerce numerics
+      const payload = {
+        ...editing,
+        plot_area: editing.plot_area === "" ? null : Number(editing.plot_area) || null,
+        built_up_area: Number(editing.built_up_area) || 0,
+        budget: editing.budget === "" ? null : Number(editing.budget) || null,
+        price_per_sqft: Number(editing.price_per_sqft) || 0,
+        discount_amount: Number(editing.discount_amount) || 0,
+        gst_percent: Number(editing.gst_percent) || 0,
+        warranty_years: Number(editing.warranty_years) || 10,
+      };
+      const saved = editing.id
+        ? await adminApi.customQuotes.update(editing.id, payload)
+        : await adminApi.customQuotes.create(payload);
+      setEditing(saved);
+      toast.success(editing.id ? "Quote updated" : "Quote created");
+      load();
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid place-items-center py-24">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-orange" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto" data-testid="admin-custom-quotes">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div>
+          <div className="section-eyebrow">Sales · AI-Powered</div>
+          <h1 className="text-2xl md:text-3xl font-bold text-brand-navy mt-1">Custom Quotes</h1>
+          <p className="text-sm text-brand-navy/60 mt-1">
+            Generate bespoke, AI-assisted quotations tailored to each client's requirements.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={load}
+            data-testid="cq-refresh-btn"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-2 text-sm font-medium text-brand-navy hover:bg-brand-bg transition"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button
+            onClick={startNew}
+            data-testid="cq-new-btn"
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-4 py-2 text-sm font-semibold hover:brightness-95 transition shadow-soft"
+          >
+            <Plus className="w-4 h-4" /> New Custom Quote
+          </button>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden">
+        {items.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="w-14 h-14 mx-auto rounded-full bg-brand-orange/10 grid place-items-center">
+              <Sparkles className="w-7 h-7 text-brand-orange" />
+            </div>
+            <div className="mt-4 font-semibold text-brand-navy">No custom quotes yet</div>
+            <p className="text-sm text-brand-navy/60 mt-1 max-w-md mx-auto">
+              Click "New Custom Quote" to build your first AI-assisted bespoke quotation
+              with editable specs and PDF export.
+            </p>
+          </div>
+        ) : (
+          <table className="w-full text-sm" data-testid="cq-list-table">
+            <thead className="bg-brand-bg/60 text-brand-navy/60 text-xs uppercase tracking-wider">
+              <tr>
+                <th className="text-left px-4 py-3">Ref</th>
+                <th className="text-left px-4 py-3">Client</th>
+                <th className="text-left px-4 py-3">Build</th>
+                <th className="text-left px-4 py-3">Rate</th>
+                <th className="text-left px-4 py-3">Grand Total</th>
+                <th className="text-left px-4 py-3">Status</th>
+                <th className="text-right px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((row) => {
+                const grand = computeGrand(row);
+                return (
+                  <tr
+                    key={row.id}
+                    className="border-t border-black/5 hover:bg-brand-bg/40 transition"
+                    data-testid={`cq-row-${row.id}`}
+                  >
+                    <td className="px-4 py-3 font-mono text-xs text-brand-navy/80">
+                      {row.ref_number || "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-brand-navy">{row.client_name}</div>
+                      <div className="text-xs text-brand-navy/50">
+                        {row.client_phone || "—"} · {row.client_email || "no email"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-brand-navy/80">
+                      {row.built_up_area || 0} sq.ft · {row.floors}
+                    </td>
+                    <td className="px-4 py-3 text-brand-navy/80">
+                      {rupees(row.price_per_sqft)}/sqft
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-brand-navy">
+                      {rupees(grand)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={row.status} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <a
+                          href={adminApi.customQuotes.pdfUrl(row.id)}
+                          target="_blank"
+                          rel="noreferrer"
+                          data-testid={`cq-pdf-${row.id}`}
+                          className="w-8 h-8 rounded-full grid place-items-center hover:bg-brand-bg text-brand-navy/70"
+                          title="Download PDF"
+                        >
+                          <FileDown className="w-4 h-4" />
+                        </a>
+                        <button
+                          onClick={() => startEdit(row)}
+                          data-testid={`cq-edit-${row.id}`}
+                          className="w-8 h-8 rounded-full grid place-items-center hover:bg-brand-bg text-brand-navy/70"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => remove(row)}
+                          data-testid={`cq-del-${row.id}`}
+                          className="w-8 h-8 rounded-full grid place-items-center hover:bg-red-50 text-red-500"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Editor drawer */}
+      <AnimatePresence>
+        {editing && (
+          <QuoteEditor
+            editing={editing}
+            setEditing={setEditing}
+            packages={packages}
+            saving={saving}
+            onSave={save}
+            onCancel={cancelEdit}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ---------------------- Helpers ----------------------
+
+function computeGrand(q) {
+  const area = Number(q.built_up_area) || 0;
+  const rate = Number(q.price_per_sqft) || 0;
+  const base = area * rate;
+  const addonTotal = (q.addons || []).reduce(
+    (s, a) => s + (Number(a.price) || 0),
+    0
+  );
+  const lineTotal = (q.line_items || []).reduce(
+    (s, l) => s + (Number(l.amount) || 0),
+    0
+  );
+  const subtotal = base + addonTotal + lineTotal;
+  const discount = Number(q.discount_amount) || 0;
+  const net = Math.max(0, subtotal - discount);
+  const gst = (net * (Number(q.gst_percent) || 0)) / 100;
+  return net + gst;
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    draft: "bg-brand-navy/10 text-brand-navy",
+    sent: "bg-amber-100 text-amber-800",
+    accepted: "bg-emerald-100 text-emerald-800",
+    rejected: "bg-red-100 text-red-700",
+  };
+  const cls = map[status] || map.draft;
+  return (
+    <span className={`inline-flex items-center rounded-full text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 ${cls}`}>
+      {status || "draft"}
+    </span>
+  );
+}
+
+// ---------------------- Editor ----------------------
+
+function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }) {
+  const [aiMode, setAiMode] = useState(editing.ai_mode || "recommend");
+  const [aiLoading, setAiLoading] = useState(false);
+  const set = (patch) => setEditing((prev) => ({ ...prev, ...patch }));
+
+  // Pricing calculations (live)
+  const pricing = useMemo(() => {
+    const area = Number(editing.built_up_area) || 0;
+    const rate = Number(editing.price_per_sqft) || 0;
+    const base = area * rate;
+    const addonTotal = (editing.addons || []).reduce(
+      (s, a) => s + (Number(a.price) || 0),
+      0
+    );
+    const lineTotal = (editing.line_items || []).reduce(
+      (s, l) => s + (Number(l.amount) || 0),
+      0
+    );
+    const subtotal = base + addonTotal + lineTotal;
+    const discount = Number(editing.discount_amount) || 0;
+    const net = Math.max(0, subtotal - discount);
+    const gstPct = Number(editing.gst_percent) || 0;
+    const gstAmt = (net * gstPct) / 100;
+    const grand = net + gstAmt;
+    const budget = Number(editing.budget) || 0;
+    const budgetDelta = budget > 0 ? grand - budget : null;
+    return { base, addonTotal, lineTotal, subtotal, discount, net, gstAmt, grand, budgetDelta };
+  }, [editing]);
+
+  const runAI = async () => {
+    setAiLoading(true);
+    try {
+      // 1. Start job
+      const start = await adminApi.customQuotes.aiSuggest({
+        mode: aiMode,
+        built_up_area: Number(editing.built_up_area) || 1200,
+        plot_area: Number(editing.plot_area) || null,
+        floors: editing.floors,
+        bhk: editing.bhk,
+        budget: Number(editing.budget) || null,
+        style_pref: editing.style_pref,
+        package_slug: editing.package_slug || null,
+        client_name: editing.client_name || null,
+      });
+      const jobId = start?.job_id;
+      if (!jobId) throw new Error("Failed to start AI job");
+
+      // 2. Poll until done or timeout (~3 min max)
+      const started = Date.now();
+      const MAX_MS = 3 * 60 * 1000;
+      let suggestion = null;
+      // small helper
+      const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+      while (Date.now() - started < MAX_MS) {
+        await sleep(2500);
+        const status = await adminApi.customQuotes.aiSuggestStatus(jobId);
+        if (status?.status === "done") {
+          suggestion = status.result;
+          break;
+        }
+        if (status?.status === "error") {
+          throw new Error(status.error || "AI job failed");
+        }
+      }
+
+      if (!suggestion) {
+        throw new Error("AI is taking longer than expected. Please try again.");
+      }
+
+      // 3. Merge into editing state without wiping user-entered client info
+      setEditing((prev) => ({
+        ...prev,
+        package_name: suggestion.package_name || prev.package_name,
+        price_per_sqft: suggestion.price_per_sqft || prev.price_per_sqft,
+        spec_categories: suggestion.spec_categories?.length
+          ? suggestion.spec_categories
+          : prev.spec_categories,
+        addons: suggestion.addons || prev.addons,
+        line_items: suggestion.line_items || prev.line_items,
+        scope_of_work: suggestion.scope_of_work?.length
+          ? suggestion.scope_of_work
+          : prev.scope_of_work,
+        exclusions: suggestion.exclusions?.length
+          ? suggestion.exclusions
+          : prev.exclusions,
+        payment_schedule: suggestion.payment_schedule?.length
+          ? suggestion.payment_schedule
+          : prev.payment_schedule,
+        warranty_years: suggestion.warranty_years || prev.warranty_years,
+        ai_notes: suggestion.ai_notes || "",
+        ai_mode: aiMode,
+      }));
+      toast.success("AI draft applied — review & edit anything below.");
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || "AI suggestion failed";
+      toast.error(typeof msg === "string" ? msg : "AI suggestion failed");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyBasePackage = (slug) => {
+    const pkg = packages.find((p) => p.slug === slug);
+    if (!pkg) {
+      set({ package_slug: "", package_name: "" });
+      return;
+    }
+    // Copy over baseline spec/scope/exclusions/schedule from package (deep clone)
+    set({
+      package_slug: pkg.slug,
+      package_name: pkg.name,
+      price_per_sqft: pkg.price_per_sqft || editing.price_per_sqft,
+      spec_categories: JSON.parse(JSON.stringify(pkg.spec_categories || [])),
+      scope_of_work: [...(pkg.scope_of_work || [])],
+      exclusions: [...(pkg.exclusions || [])],
+      payment_schedule: JSON.parse(JSON.stringify(pkg.payment_schedule || [])),
+      warranty_years: pkg.warranty_years || editing.warranty_years,
+    });
+    toast.success(`Loaded baseline from ${pkg.name}`);
+  };
+
+  const whatsappShare = () => {
+    if (!editing.id) {
+      toast.error("Save the quote first to generate a shareable link");
+      return;
+    }
+    if (!editing.client_phone) {
+      toast.error("Add client phone number first");
+      return;
+    }
+    const digits = editing.client_phone.replace(/\D/g, "");
+    if (!digits) {
+      toast.error("Invalid phone number");
+      return;
+    }
+    const pdfUrl = adminApi.customQuotes.pdfUrl(editing.id);
+    const msg = encodeURIComponent(
+      `Hi ${editing.client_name || "there"},\n\n` +
+        `Please find your customised home construction quotation from ConstructONS below:\n\n` +
+        `Reference: ${editing.ref_number || ""}\n` +
+        `Package: ${editing.package_name || "Custom Home"}\n` +
+        `Built-up: ${editing.built_up_area} sq.ft\n` +
+        `Total: ${rupees(pricing.grand)}\n\n` +
+        `Full PDF: ${pdfUrl}\n\n` +
+        `Feel free to reply with any questions. — ConstructONS`
+    );
+    window.open(`https://wa.me/${digits}?text=${msg}`, "_blank");
+  };
+
+  const emailShare = () => {
+    if (!editing.id) {
+      toast.error("Save the quote first to generate a shareable link");
+      return;
+    }
+    if (!editing.client_email) {
+      toast.error("Add client email first");
+      return;
+    }
+    const pdfUrl = adminApi.customQuotes.pdfUrl(editing.id);
+    const subject = encodeURIComponent(
+      `Your ConstructONS Customised Quotation — ${editing.ref_number || ""}`
+    );
+    const body = encodeURIComponent(
+      `Hi ${editing.client_name || "there"},\n\n` +
+        `Please find your customised home construction quotation attached / linked below.\n\n` +
+        `Reference: ${editing.ref_number || ""}\n` +
+        `Package: ${editing.package_name || "Custom Home"}\n` +
+        `Built-up: ${editing.built_up_area} sq.ft\n` +
+        `Total: ${rupees(pricing.grand)}\n\n` +
+        `Download PDF: ${pdfUrl}\n\n` +
+        `Warm regards,\nConstructONS Sales Team`
+    );
+    window.location.href = `mailto:${editing.client_email}?subject=${subject}&body=${body}`;
+  };
+
+  const copyPdfLink = async () => {
+    if (!editing.id) {
+      toast.error("Save the quote first to generate a link");
+      return;
+    }
+    const link = adminApi.customQuotes.pdfUrl(editing.id);
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("PDF link copied to clipboard");
+    } catch {
+      toast.error("Copy failed — link: " + link);
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onCancel}
+        className="fixed inset-0 bg-brand-navy/50 backdrop-blur-sm z-40"
+      />
+      {/* Drawer */}
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "tween", duration: 0.3 }}
+        className="fixed inset-y-0 right-0 w-full max-w-4xl bg-brand-bg z-50 overflow-y-auto shadow-2xl"
+        data-testid="cq-editor-drawer"
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-black/5 px-5 md:px-8 py-4 flex items-center justify-between shadow-sm">
+          <div className="min-w-0">
+            <div className="section-eyebrow">
+              {editing.id ? `Editing ${editing.ref_number || "Quote"}` : "New Custom Quote"}
+            </div>
+            <div className="font-bold text-brand-navy truncate">
+              {editing.client_name || "Untitled Quote"}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onSave}
+              disabled={saving}
+              data-testid="cq-save-btn"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-4 py-2 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save
+            </button>
+            <button
+              onClick={onCancel}
+              className="w-9 h-9 rounded-full grid place-items-center hover:bg-brand-bg text-brand-navy"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 md:px-8 py-6 space-y-6">
+          {/* Actions row for saved quotes */}
+          {editing.id && (
+            <div className="rounded-2xl bg-white border border-black/5 p-4 flex flex-wrap items-center gap-2">
+              <div className="text-xs text-brand-navy/60 mr-2 font-medium">Share this quote:</div>
+              <a
+                href={adminApi.customQuotes.pdfUrl(editing.id)}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="cq-download-pdf"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+              >
+                <FileDown className="w-3.5 h-3.5" /> Download PDF
+              </a>
+              <button
+                onClick={whatsappShare}
+                data-testid="cq-share-whatsapp"
+                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+              >
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              </button>
+              <button
+                onClick={emailShare}
+                data-testid="cq-share-email"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+              >
+                <Mail className="w-3.5 h-3.5" /> Email
+              </button>
+              <button
+                onClick={copyPdfLink}
+                data-testid="cq-copy-link"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
+              >
+                <Copy className="w-3.5 h-3.5" /> Copy Link
+              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <label className="text-xs text-brand-navy/60">Status</label>
+                <select
+                  value={editing.status || "draft"}
+                  onChange={(e) => set({ status: e.target.value })}
+                  data-testid="cq-status-select"
+                  className="rounded-lg border border-black/10 bg-white px-2 py-1 text-xs"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Client Info */}
+          <Section title="Client Details" testId="cq-section-client">
+            <Grid>
+              <Field label="Client Name *" testId="cq-field-name">
+                <input
+                  value={editing.client_name || ""}
+                  onChange={(e) => set({ client_name: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. Rajesh Kumar"
+                />
+              </Field>
+              <Field label="Phone" testId="cq-field-phone">
+                <input
+                  value={editing.client_phone || ""}
+                  onChange={(e) => set({ client_phone: e.target.value })}
+                  className={inputCls}
+                  placeholder="+91 98765 43210"
+                />
+              </Field>
+              <Field label="Email" testId="cq-field-email">
+                <input
+                  value={editing.client_email || ""}
+                  onChange={(e) => set({ client_email: e.target.value })}
+                  className={inputCls}
+                  placeholder="rajesh@example.com"
+                />
+              </Field>
+              <Field label="Client Address" testId="cq-field-address">
+                <input
+                  value={editing.client_address || ""}
+                  onChange={(e) => set({ client_address: e.target.value })}
+                  className={inputCls}
+                  placeholder="Home / office address"
+                />
+              </Field>
+            </Grid>
+          </Section>
+
+          {/* Requirements */}
+          <Section title="Client Requirements" testId="cq-section-req">
+            <Grid>
+              <Field label="Site Address" testId="cq-field-site">
+                <input
+                  value={editing.site_address || ""}
+                  onChange={(e) => set({ site_address: e.target.value })}
+                  className={inputCls}
+                  placeholder="Plot address"
+                />
+              </Field>
+              <Field label="Plot Area (sq.ft)" testId="cq-field-plot">
+                <input
+                  type="number"
+                  value={editing.plot_area || ""}
+                  onChange={(e) => set({ plot_area: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. 2400"
+                />
+              </Field>
+              <Field label="Built-up Area (sq.ft)" testId="cq-field-builtup">
+                <input
+                  type="number"
+                  value={editing.built_up_area || ""}
+                  onChange={(e) => set({ built_up_area: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. 1800"
+                />
+              </Field>
+              <Field label="Floors" testId="cq-field-floors">
+                <select
+                  value={editing.floors || "G+1"}
+                  onChange={(e) => set({ floors: e.target.value })}
+                  className={inputCls}
+                >
+                  {["G", "G+1", "G+2", "G+3", "G+4"].map((f) => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="BHK" testId="cq-field-bhk">
+                <select
+                  value={editing.bhk || "3 BHK"}
+                  onChange={(e) => set({ bhk: e.target.value })}
+                  className={inputCls}
+                >
+                  {["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5 BHK", "Duplex", "Villa"].map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Budget (₹)" testId="cq-field-budget">
+                <input
+                  type="number"
+                  value={editing.budget || ""}
+                  onChange={(e) => set({ budget: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. 3500000"
+                />
+              </Field>
+              <Field label="Style" testId="cq-field-style">
+                <select
+                  value={editing.style_pref || "Modern"}
+                  onChange={(e) => set({ style_pref: e.target.value })}
+                  className={inputCls}
+                >
+                  {["Modern", "Classic", "Contemporary", "Duplex", "Villa", "Farmhouse", "Traditional"].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Expected Start" testId="cq-field-start">
+                <input
+                  value={editing.expected_start || ""}
+                  onChange={(e) => set({ expected_start: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. Jan 2026"
+                />
+              </Field>
+              <Field label="Expected Completion" testId="cq-field-end">
+                <input
+                  value={editing.expected_completion || ""}
+                  onChange={(e) => set({ expected_completion: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. Nov 2026"
+                />
+              </Field>
+            </Grid>
+          </Section>
+
+          {/* AI Panel */}
+          <div className="rounded-2xl bg-gradient-to-br from-brand-navy to-[#152847] text-white p-5 md:p-6 shadow-lg" data-testid="cq-ai-panel">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-orange/20 grid place-items-center shrink-0">
+                <Wand2 className="w-5 h-5 text-brand-orangeLight" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs uppercase tracking-widest text-brand-orangeLight">
+                  AI Quote Assistant · GPT-5
+                </div>
+                <div className="font-bold text-lg mt-1">Generate a draft based on requirements</div>
+                <p className="text-sm text-white/70 mt-1">
+                  Pick a mode — the AI will draft specs, addons, pricing, scope & payment schedule.
+                  Everything is editable before download.
+                </p>
+
+                {/* Mode toggle */}
+                <div className="mt-4 inline-flex rounded-full bg-white/10 p-1">
+                  <button
+                    onClick={() => setAiMode("recommend")}
+                    data-testid="cq-ai-mode-recommend"
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                      aiMode === "recommend" ? "bg-brand-orange text-white" : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    Recommend + tune
+                  </button>
+                  <button
+                    onClick={() => setAiMode("scratch")}
+                    data-testid="cq-ai-mode-scratch"
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                      aiMode === "scratch" ? "bg-brand-orange text-white" : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    Build from scratch
+                  </button>
+                </div>
+
+                <div className="mt-3 text-xs text-white/60">
+                  {aiMode === "recommend"
+                    ? "Anchors on the selected base package below and proposes upgrades/downgrades to fit the budget."
+                    : "Ignores base packages and drafts a fully bespoke spec sheet from client requirements."}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={runAI}
+                    disabled={aiLoading}
+                    data-testid="cq-ai-generate"
+                    className="inline-flex items-center gap-2 rounded-full bg-brand-orange text-white px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
+                  >
+                    {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {aiLoading ? "Drafting... (60-120s)" : "Generate AI Draft"}
+                  </button>
+                  {aiLoading && (
+                    <div className="text-xs text-white/60">
+                      GPT-5 is analysing requirements & drafting full specs. Hang tight — this takes about a minute.
+                    </div>
+                  )}
+                  {editing.ai_notes && (
+                    <div className="text-xs text-white/60 max-w-xl">
+                      <span className="text-brand-orangeLight font-semibold">AI notes:</span> {editing.ai_notes}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Base package + spec editor */}
+          <Section title="Base Package & Specs" testId="cq-section-specs" defaultOpen>
+            <div className="mb-4">
+              <Field label="Base Package (optional)" testId="cq-field-pkg">
+                <select
+                  value={editing.package_slug || ""}
+                  onChange={(e) => applyBasePackage(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">— Custom, no base package —</option>
+                  {packages.map((p) => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.name} · ₹{p.price_per_sqft || "custom"}/sqft
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <div className="text-xs text-brand-navy/50 mt-1">
+                Loads that package's baseline specs, scope, exclusions & payment schedule (fully editable below).
+              </div>
+            </div>
+
+            <SpecCategoryEditor
+              categories={editing.spec_categories || []}
+              onChange={(specs) => set({ spec_categories: specs })}
+            />
+          </Section>
+
+          {/* Add-ons */}
+          <Section title="Add-ons" testId="cq-section-addons">
+            <AddOnEditor
+              items={editing.addons || []}
+              onChange={(addons) => set({ addons })}
+            />
+          </Section>
+
+          {/* Custom line items */}
+          <Section title="Custom Line Items" testId="cq-section-lines">
+            <LineItemEditor
+              items={editing.line_items || []}
+              onChange={(line_items) => set({ line_items })}
+            />
+          </Section>
+
+          {/* Pricing */}
+          <Section title="Pricing" testId="cq-section-pricing" defaultOpen>
+            <Grid>
+              <Field label="Rate per sq.ft (₹)" testId="cq-field-rate">
+                <input
+                  type="number"
+                  value={editing.price_per_sqft || 0}
+                  onChange={(e) => set({ price_per_sqft: e.target.value })}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Discount Label" testId="cq-field-disc-label">
+                <input
+                  value={editing.discount_label || ""}
+                  onChange={(e) => set({ discount_label: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. Diwali offer"
+                />
+              </Field>
+              <Field label="Discount Amount (₹)" testId="cq-field-disc-amt">
+                <input
+                  type="number"
+                  value={editing.discount_amount || 0}
+                  onChange={(e) => set({ discount_amount: e.target.value })}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="GST %" testId="cq-field-gst">
+                <input
+                  type="number"
+                  value={editing.gst_percent || 0}
+                  onChange={(e) => set({ gst_percent: e.target.value })}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Warranty (years)" testId="cq-field-warranty">
+                <input
+                  type="number"
+                  value={editing.warranty_years || 10}
+                  onChange={(e) => set({ warranty_years: e.target.value })}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Valid For (days)" testId="cq-field-valid">
+                <input
+                  type="number"
+                  value={editing.valid_days || 30}
+                  onChange={(e) => set({ valid_days: e.target.value })}
+                  className={inputCls}
+                />
+              </Field>
+            </Grid>
+
+            {/* Live pricing preview */}
+            <div className="mt-4 rounded-xl bg-brand-navy text-white p-4">
+              <div className="text-xs uppercase tracking-widest text-brand-orangeLight">Live Pricing</div>
+              <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                <PriceLine label="Base build" value={pricing.base} />
+                <PriceLine label="Add-ons" value={pricing.addonTotal} />
+                <PriceLine label="Line items" value={pricing.lineTotal} />
+                <PriceLine label="Subtotal" value={pricing.subtotal} bold />
+                {pricing.discount > 0 && (
+                  <PriceLine label="Discount" value={-pricing.discount} negative />
+                )}
+                <PriceLine label={`GST @ ${editing.gst_percent || 0}%`} value={pricing.gstAmt} />
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/15 flex items-center justify-between">
+                <div className="text-sm text-white/70">Grand Total</div>
+                <div className="text-2xl font-bold text-brand-orangeLight" data-testid="cq-grand-total">
+                  {rupees(pricing.grand)}
+                </div>
+              </div>
+              {pricing.budgetDelta !== null && (
+                <div className="mt-2 text-xs text-white/60">
+                  Client budget {rupees(editing.budget)} —{" "}
+                  <span className={pricing.budgetDelta > 0 ? "text-red-300" : "text-emerald-300"}>
+                    {pricing.budgetDelta > 0 ? "over" : "under"} by {rupees(Math.abs(pricing.budgetDelta))}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Section>
+
+          {/* Scope of Work */}
+          <Section title="Scope of Work" testId="cq-section-scope">
+            <ListEditor
+              items={editing.scope_of_work || []}
+              onChange={(scope_of_work) => set({ scope_of_work })}
+              placeholder="e.g. Structural design & drawings"
+            />
+          </Section>
+
+          {/* Exclusions */}
+          <Section title="Exclusions" testId="cq-section-excl">
+            <ListEditor
+              items={editing.exclusions || []}
+              onChange={(exclusions) => set({ exclusions })}
+              placeholder="e.g. Government approvals & fees"
+            />
+          </Section>
+
+          {/* Payment Schedule */}
+          <Section title="Payment Schedule" testId="cq-section-schedule">
+            <ScheduleEditor
+              items={editing.payment_schedule || []}
+              onChange={(payment_schedule) => set({ payment_schedule })}
+            />
+          </Section>
+
+          {/* Notes & Terms */}
+          <Section title="Notes & Terms" testId="cq-section-notes">
+            <Field label="Intro Note (top of PDF)" testId="cq-field-intro">
+              <textarea
+                value={editing.intro_note || ""}
+                onChange={(e) => set({ intro_note: e.target.value })}
+                rows={3}
+                className={inputCls}
+                placeholder="Personal note that appears on page 2 of the PDF"
+              />
+            </Field>
+            <div className="mt-4">
+              <Field label="Terms & Conditions (leave blank for default)" testId="cq-field-terms">
+                <textarea
+                  value={editing.terms || ""}
+                  onChange={(e) => set({ terms: e.target.value })}
+                  rows={5}
+                  className={inputCls}
+                  placeholder="Override the default terms if needed"
+                />
+              </Field>
+            </div>
+          </Section>
+
+          <div className="pt-2 flex items-center gap-3 sticky bottom-0 bg-brand-bg py-4">
+            <button
+              onClick={onSave}
+              disabled={saving}
+              data-testid="cq-save-btn-bottom"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Quote
+            </button>
+            <button
+              onClick={onCancel}
+              className="rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm font-semibold text-brand-navy hover:bg-brand-bg"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ---------------------- Reusable UI ----------------------
+const inputCls =
+  "w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition";
+
+function Grid({ children }) {
+  return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>;
+}
+
+function Field({ label, testId, children }) {
+  return (
+    <label className="block" data-testid={testId}>
+      <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
+        {label}
+      </div>
+      {children}
+    </label>
+  );
+}
+
+function Section({ title, testId, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl bg-white border border-black/5 shadow-soft overflow-hidden" data-testid={testId}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-brand-bg/50 transition"
+      >
+        <div className="font-semibold text-brand-navy">{title}</div>
+        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+      {open && <div className="px-5 pb-5">{children}</div>}
+    </div>
+  );
+}
+
+function PriceLine({ label, value, bold, negative }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-widest text-white/50">{label}</div>
+      <div className={`${bold ? "text-lg font-bold" : "text-base"} ${negative ? "text-red-300" : ""}`}>
+        {rupees(value)}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Sub-editors ----------
+
+function SpecCategoryEditor({ categories, onChange }) {
+  const addCat = () =>
+    onChange([...(categories || []), { name: "New Category", icon: null, items: [] }]);
+
+  const updateCat = (idx, patch) => {
+    const next = categories.map((c, i) => (i === idx ? { ...c, ...patch } : c));
+    onChange(next);
+  };
+
+  const removeCat = (idx) => onChange(categories.filter((_, i) => i !== idx));
+
+  const addItem = (idx) => {
+    const cat = categories[idx];
+    const items = [...(cat.items || []), { spec: "", value: "", brand: "", warranty: "", notes: "" }];
+    updateCat(idx, { items });
+  };
+
+  const updateItem = (catIdx, itemIdx, patch) => {
+    const cat = categories[catIdx];
+    const items = (cat.items || []).map((it, i) => (i === itemIdx ? { ...it, ...patch } : it));
+    updateCat(catIdx, { items });
+  };
+
+  const removeItem = (catIdx, itemIdx) => {
+    const cat = categories[catIdx];
+    updateCat(catIdx, { items: (cat.items || []).filter((_, i) => i !== itemIdx) });
+  };
+
+  if ((categories || []).length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-black/15 p-6 text-center">
+        <div className="text-sm text-brand-navy/60">
+          No spec categories yet. Pick a base package above or click below to add one manually.
+        </div>
+        <button
+          onClick={addCat}
+          data-testid="cq-add-cat-empty"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add Spec Category
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {categories.map((cat, ci) => (
+        <div key={ci} className="rounded-xl border border-black/10 bg-brand-bg/30 overflow-hidden">
+          <div className="flex items-center gap-2 p-3 bg-white border-b border-black/5">
+            <input
+              value={cat.name || ""}
+              onChange={(e) => updateCat(ci, { name: e.target.value })}
+              className="flex-1 font-semibold text-brand-navy bg-transparent focus:outline-none"
+              placeholder="Category name (e.g. Structure & Foundation)"
+              data-testid={`cq-cat-${ci}-name`}
+            />
+            <input
+              value={cat.icon || ""}
+              onChange={(e) => updateCat(ci, { icon: e.target.value })}
+              className="w-32 text-xs px-2 py-1 rounded border border-black/10 bg-white"
+              placeholder="lucide icon"
+            />
+            <button
+              onClick={() => addItem(ci)}
+              data-testid={`cq-cat-${ci}-add-item`}
+              className="text-xs inline-flex items-center gap-1 text-brand-orange hover:underline"
+            >
+              <Plus className="w-3 h-3" /> Add spec
+            </button>
+            <button
+              onClick={() => removeCat(ci)}
+              className="w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500"
+              title="Remove category"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="divide-y divide-black/5">
+            {(cat.items || []).length === 0 ? (
+              <div className="p-4 text-xs text-brand-navy/50 text-center">
+                No specs yet — click "Add spec" above.
+              </div>
+            ) : (
+              cat.items.map((it, ii) => (
+                <div key={ii} className="p-3 grid grid-cols-12 gap-2 items-center">
+                  <input
+                    value={it.spec || ""}
+                    onChange={(e) => updateItem(ci, ii, { spec: e.target.value })}
+                    className="col-span-3 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                    placeholder="Spec (e.g. Cement)"
+                  />
+                  <input
+                    value={it.value || ""}
+                    onChange={(e) => updateItem(ci, ii, { value: e.target.value })}
+                    className="col-span-4 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                    placeholder="Value (e.g. PPC 53 Grade)"
+                  />
+                  <input
+                    value={it.brand || ""}
+                    onChange={(e) => updateItem(ci, ii, { brand: e.target.value })}
+                    className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                    placeholder="Brand"
+                  />
+                  <input
+                    value={it.warranty || ""}
+                    onChange={(e) => updateItem(ci, ii, { warranty: e.target.value })}
+                    className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                    placeholder="Warranty"
+                  />
+                  <button
+                    onClick={() => removeItem(ci, ii)}
+                    className="col-span-1 w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
+                    aria-label="Remove spec"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ))}
+      <button
+        onClick={addCat}
+        data-testid="cq-add-cat-btn"
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add Category
+      </button>
+    </div>
+  );
+}
+
+function AddOnEditor({ items, onChange }) {
+  const add = () => onChange([...(items || []), { name: "", description: "", price: 0, unit: "" }]);
+  const update = (i, patch) => onChange(items.map((it, ii) => (ii === i ? { ...it, ...patch } : it)));
+  const remove = (i) => onChange(items.filter((_, ii) => ii !== i));
+
+  return (
+    <div className="space-y-2">
+      {(items || []).map((it, i) => (
+        <div key={i} className="grid grid-cols-12 gap-2 items-center">
+          <input
+            value={it.name || ""}
+            onChange={(e) => update(i, { name: e.target.value })}
+            className="col-span-3 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Add-on name"
+          />
+          <input
+            value={it.description || ""}
+            onChange={(e) => update(i, { description: e.target.value })}
+            className="col-span-5 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Description"
+          />
+          <input
+            type="number"
+            value={it.price || 0}
+            onChange={(e) => update(i, { price: e.target.value })}
+            className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Price (₹)"
+          />
+          <input
+            value={it.unit || ""}
+            onChange={(e) => update(i, { unit: e.target.value })}
+            className="col-span-1 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Unit"
+          />
+          <button
+            onClick={() => remove(i)}
+            className="col-span-1 w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={add}
+        data-testid="cq-add-addon"
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add Add-on
+      </button>
+    </div>
+  );
+}
+
+function LineItemEditor({ items, onChange }) {
+  const add = () => onChange([...(items || []), { name: "", description: "", amount: 0 }]);
+  const update = (i, patch) => onChange(items.map((it, ii) => (ii === i ? { ...it, ...patch } : it)));
+  const remove = (i) => onChange(items.filter((_, ii) => ii !== i));
+
+  return (
+    <div className="space-y-2">
+      {(items || []).map((it, i) => (
+        <div key={i} className="grid grid-cols-12 gap-2 items-center">
+          <input
+            value={it.name || ""}
+            onChange={(e) => update(i, { name: e.target.value })}
+            className="col-span-3 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Item name"
+          />
+          <input
+            value={it.description || ""}
+            onChange={(e) => update(i, { description: e.target.value })}
+            className="col-span-6 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Description"
+          />
+          <input
+            type="number"
+            value={it.amount || 0}
+            onChange={(e) => update(i, { amount: e.target.value })}
+            className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Amount (₹)"
+          />
+          <button
+            onClick={() => remove(i)}
+            className="col-span-1 w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={add}
+        data-testid="cq-add-line"
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add Line Item
+      </button>
+    </div>
+  );
+}
+
+function ListEditor({ items, onChange, placeholder }) {
+  const add = () => onChange([...(items || []), ""]);
+  const update = (i, v) => onChange(items.map((it, ii) => (ii === i ? v : it)));
+  const remove = (i) => onChange(items.filter((_, ii) => ii !== i));
+
+  return (
+    <div className="space-y-2">
+      {(items || []).map((it, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <input
+            value={it}
+            onChange={(e) => update(i, e.target.value)}
+            className="flex-1 rounded border border-black/10 bg-white px-2 py-1.5 text-sm"
+            placeholder={placeholder}
+          />
+          <button
+            onClick={() => remove(i)}
+            className="w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add
+      </button>
+    </div>
+  );
+}
+
+function ScheduleEditor({ items, onChange }) {
+  const add = () =>
+    onChange([...(items || []), { milestone: "", percentage: 0, description: "" }]);
+  const update = (i, patch) => onChange(items.map((it, ii) => (ii === i ? { ...it, ...patch } : it)));
+  const remove = (i) => onChange(items.filter((_, ii) => ii !== i));
+
+  const total = (items || []).reduce((s, i) => s + (Number(i.percentage) || 0), 0);
+
+  return (
+    <div className="space-y-2">
+      {(items || []).map((it, i) => (
+        <div key={i} className="grid grid-cols-12 gap-2 items-center">
+          <input
+            value={it.milestone || ""}
+            onChange={(e) => update(i, { milestone: e.target.value })}
+            className="col-span-4 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Milestone (e.g. Foundation)"
+          />
+          <input
+            type="number"
+            value={it.percentage || 0}
+            onChange={(e) => update(i, { percentage: e.target.value })}
+            className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="%"
+          />
+          <input
+            value={it.description || ""}
+            onChange={(e) => update(i, { description: e.target.value })}
+            className="col-span-5 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+            placeholder="Description"
+          />
+          <button
+            onClick={() => remove(i)}
+            className="col-span-1 w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      <div className="flex items-center justify-between text-xs text-brand-navy/60 pt-1">
+        <span>Milestone total: {total.toFixed(0)}%</span>
+        {Math.abs(total - 100) > 0.5 && total > 0 && (
+          <span className="text-amber-600">Should sum to 100%</span>
+        )}
+      </div>
+      <button
+        onClick={add}
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add Milestone
+      </button>
+    </div>
+  );
+}

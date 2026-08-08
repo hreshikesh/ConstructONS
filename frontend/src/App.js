@@ -24,6 +24,7 @@ const AdminSiteSettings = lazy(() => import("@/pages/admin/AdminSiteSettings"));
 const AdminQuizSubmissions = lazy(() => import("@/pages/admin/AdminQuizSubmissions"));
 const AdminPackages = lazy(() => import("@/pages/admin/AdminPackages"));
 const AdminProposals = lazy(() => import("@/pages/admin/AdminProposals"));
+const AdminCustomQuotes = lazy(() => import("@/pages/admin/AdminCustomQuotes"));
 
 function PageFallback() {
   return (
@@ -59,6 +60,7 @@ function App() {
                   <Route path="site-settings" element={<AdminSiteSettings />} />
                   <Route path="packages" element={<AdminPackages />} />
                   <Route path="proposals" element={<AdminProposals />} />
+                  <Route path="custom-quotes" element={<AdminCustomQuotes />} />
                   <Route path=":entity" element={<AdminEntity />} />
                 </Route>
               </Routes>

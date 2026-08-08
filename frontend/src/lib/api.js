@@ -120,6 +120,21 @@ export const adminApi = {
   // AI Copy Assist
   rewriteCopy: (text, purpose = "copy", tone = "on-brand") =>
     api.post("/ai/rewrite", { text, purpose, tone }).then((r) => r.data),
+
+  // ---------------- Custom Quotes ----------------
+  customQuotes: {
+    list: (status) =>
+      api.get(`/custom-quotes${status ? `?status=${status}` : ""}`).then((r) => r.data),
+    get: (id) => api.get(`/custom-quotes/${id}`).then((r) => r.data),
+    create: (body) => api.post("/custom-quotes", body).then((r) => r.data),
+    update: (id, body) => api.put(`/custom-quotes/${id}`, body).then((r) => r.data),
+    remove: (id) => api.delete(`/custom-quotes/${id}`).then((r) => r.data),
+    aiSuggest: (payload) =>
+      api.post("/custom-quotes/ai-suggest", payload).then((r) => r.data),
+    aiSuggestStatus: (jobId) =>
+      api.get(`/custom-quotes/ai-suggest/${jobId}`).then((r) => r.data),
+    pdfUrl: (id) => `${API_BASE}/custom-quotes/${id}/pdf`,
+  },
 };
 
 export default api;

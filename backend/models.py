@@ -384,3 +384,72 @@ class Proposal(BaseDoc):
     # Linkage
     lead_id: Optional[str] = None
     prepared_by: Optional[str] = None
+
+
+
+# ---------- Custom Quotes ----------
+class CustomLineItem(BaseModel):
+    name: str
+    description: str = ""
+    amount: float = 0
+
+
+class CustomQuoteAddon(BaseModel):
+    name: str
+    description: str = ""
+    price: float = 0
+    unit: Optional[str] = None
+
+
+class CustomQuote(BaseDoc):
+    # Reference & workflow
+    ref_number: Optional[str] = None            # auto-generated CQ-YYYY-NNNN on create
+    status: str = "draft"                       # draft | sent | accepted | rejected
+    valid_days: int = 30
+
+    # Client
+    client_name: str
+    client_phone: str = ""
+    client_email: Optional[str] = None
+    client_address: Optional[str] = None
+
+    # Site & requirements (what the client asked for)
+    site_address: Optional[str] = None
+    plot_area: Optional[float] = None           # sq.ft
+    floors: Optional[str] = "G+1"               # 'G', 'G+1', 'G+2', etc
+    built_up_area: float = 1200                 # sq.ft — main driver for base pricing
+    bhk: Optional[str] = None                   # e.g. '3 BHK'
+    budget: Optional[float] = None              # rupees
+    style_pref: Optional[str] = None            # 'Modern', 'Classic', 'Villa', ...
+    expected_start: Optional[str] = None
+    expected_completion: Optional[str] = None
+
+    # Base package reference (optional — a quote may be built entirely from scratch)
+    package_slug: Optional[str] = None
+    package_name: Optional[str] = None
+
+    # Pricing snapshot (all editable, snapshot at save time)
+    price_per_sqft: float = 0                   # main build rate
+    addons: List[CustomQuoteAddon] = Field(default_factory=list)
+    line_items: List[CustomLineItem] = Field(default_factory=list)  # freeform extras (e.g. compound wall, gate)
+    discount_label: Optional[str] = None
+    discount_amount: float = 0
+    gst_percent: float = 18
+
+    # Deep spec sheet — fully editable snapshot per quote
+    spec_categories: List[SpecCategory] = Field(default_factory=list)
+
+    # Scope, exclusions, payment schedule, terms — editable per quote
+    scope_of_work: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+    payment_schedule: List[Dict[str, Any]] = Field(default_factory=list)  # {milestone,percentage,description}
+    intro_note: Optional[str] = None
+    terms: Optional[str] = None
+    warranty_years: Optional[int] = 10
+
+    # Linkage
+    lead_id: Optional[str] = None
+    quiz_submission_id: Optional[str] = None
+    prepared_by: Optional[str] = None
+    ai_notes: Optional[str] = None              # last AI rationale / summary
+    ai_mode: Optional[str] = None               # 'recommend' | 'scratch'

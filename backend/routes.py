@@ -12,7 +12,8 @@ from models import (
     Home, Package, Testimonial, FAQ, Blog, MarketplaceCategory,
     FinancialService, TeamMember, AIPlatformModule, JourneyStep,
     HeroSection, MediaItem, ComparisonRow, StatItem, SiteSettings,
-    Lead, LeadCreate, QuizSubmission, Proposal, now_iso, new_id
+    Lead, LeadCreate, QuizSubmission, Proposal, CustomQuote,
+    now_iso, new_id
 )
 
 router = APIRouter(prefix="/api")
@@ -714,6 +715,186 @@ async def download_proposal_pdf(proposal_id: str):
     from proposal_pdf import generate_proposal_pdf
     pdf_bytes = generate_proposal_pdf(prop, pkg, settings)
     filename = f"{(prop.get('ref_number') or 'proposal').replace('/', '_')}.pdf"
+    return FastAPIResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+# ============================================================================
+# Custom Quotes — bespoke quotation builder with AI + full-editable PDF
+# ============================================================================
+
+async def _generate_cq_ref_number() -> str:
+    """Generate a sequential custom-quote reference like CQ-2026-0001."""
+    year = datetime.now(timezone.utc).year
+    prefix = f"CQ-{year}-"
+    latest = await db.custom_quotes.find(
+        {"ref_number": {"$regex": f"^{prefix}"}}, {"ref_number": 1}
+    ).sort("ref_number", -1).limit(1).to_list(1)
+    seq = 1
+    if latest:
+        try:
+            seq = int(latest[0]["ref_number"].split("-")[-1]) + 1
+        except Exception:
+            seq = 1
+    return f"{prefix}{seq:04d}"
+
+
+@router.get("/custom-quotes", dependencies=[Depends(require_admin)])
+async def list_custom_quotes(status: Optional[str] = None):
+    q: Dict[str, Any] = {}
+    if status:
+        q["status"] = status
+    cursor = db.custom_quotes.find(q, {"_id": 0}).sort("created_at", -1).limit(200)
+    return await cursor.to_list(200)
+
+
+@router.get("/custom-quotes/{quote_id}", dependencies=[Depends(require_admin)])
+async def get_custom_quote(quote_id: str):
+    doc = await db.custom_quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Custom quote not found")
+    return doc
+
+
+@router.post("/custom-quotes", dependencies=[Depends(require_admin)])
+async def create_custom_quote(body: CustomQuote):
+    data = body.model_dump()
+    data["id"] = data.get("id") or new_id()
+    data["ref_number"] = data.get("ref_number") or (await _generate_cq_ref_number())
+    data["created_at"] = now_iso()
+    data["updated_at"] = now_iso()
+    await db.custom_quotes.insert_one(data)
+    data.pop("_id", None)
+    return data
+
+
+@router.put("/custom-quotes/{quote_id}", dependencies=[Depends(require_admin)])
+async def update_custom_quote(quote_id: str, body: CustomQuote):
+    data = body.model_dump()
+    data["id"] = quote_id
+    data["updated_at"] = now_iso()
+    # Ensure ref_number is preserved if the payload omitted it
+    if not data.get("ref_number"):
+        existing = await db.custom_quotes.find_one({"id": quote_id}, {"ref_number": 1})
+        if existing and existing.get("ref_number"):
+            data["ref_number"] = existing["ref_number"]
+        else:
+            data["ref_number"] = await _generate_cq_ref_number()
+    await db.custom_quotes.update_one({"id": quote_id}, {"$set": data}, upsert=True)
+    doc = await db.custom_quotes.find_one({"id": quote_id}, {"_id": 0})
+    return doc
+
+
+@router.delete("/custom-quotes/{quote_id}", dependencies=[Depends(require_admin)])
+async def delete_custom_quote(quote_id: str):
+    res = await db.custom_quotes.delete_one({"id": quote_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Custom quote not found")
+    return {"success": True}
+
+
+class CustomQuoteAISuggestBody(BaseModel):
+    mode: str = "recommend"  # 'recommend' | 'scratch'
+    built_up_area: Optional[float] = None
+    plot_area: Optional[float] = None
+    floors: Optional[str] = None
+    bhk: Optional[str] = None
+    budget: Optional[float] = None
+    style_pref: Optional[str] = None
+    package_slug: Optional[str] = None
+    client_name: Optional[str] = None
+
+
+async def _run_ai_suggest_job(job_id: str, payload: dict):
+    """Background worker — runs the LLM call and writes result to db.ai_jobs."""
+    from ai_service import suggest_custom_quote
+    try:
+        result = await suggest_custom_quote(payload)
+        if not result:
+            await db.ai_jobs.update_one(
+                {"id": job_id},
+                {"$set": {
+                    "status": "error",
+                    "error": "AI service returned an empty response. Please try again.",
+                    "updated_at": now_iso(),
+                }},
+            )
+            return
+        await db.ai_jobs.update_one(
+            {"id": job_id},
+            {"$set": {
+                "status": "done",
+                "result": result,
+                "updated_at": now_iso(),
+            }},
+        )
+    except Exception as e:
+        await db.ai_jobs.update_one(
+            {"id": job_id},
+            {"$set": {
+                "status": "error",
+                "error": str(e)[:500],
+                "updated_at": now_iso(),
+            }},
+        )
+
+
+@router.post("/custom-quotes/ai-suggest", dependencies=[Depends(require_admin)])
+async def custom_quote_ai_suggest(body: CustomQuoteAISuggestBody):
+    """Kick off an AI suggestion job. Returns {job_id} immediately.
+
+    Client should poll GET /custom-quotes/ai-suggest/{job_id} every 2s until
+    status is 'done' or 'error'. Sync call is impossible here because GPT-5
+    with a structured output frequently takes 60-120s which exceeds ingress
+    timeouts on many hosting platforms.
+    """
+    import asyncio
+    base_pkg = None
+    if body.package_slug:
+        base_pkg = await db.packages.find_one({"slug": body.package_slug}, {"_id": 0})
+
+    payload = body.model_dump()
+    payload["base_package"] = base_pkg or None
+
+    job_id = new_id()
+    await db.ai_jobs.insert_one({
+        "id": job_id,
+        "kind": "custom_quote_suggest",
+        "status": "pending",
+        "result": None,
+        "error": None,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    })
+    # Fire-and-forget the background task
+    asyncio.create_task(_run_ai_suggest_job(job_id, payload))
+    return {"job_id": job_id, "status": "pending"}
+
+
+@router.get("/custom-quotes/ai-suggest/{job_id}", dependencies=[Depends(require_admin)])
+async def custom_quote_ai_suggest_status(job_id: str):
+    job = await db.ai_jobs.find_one({"id": job_id}, {"_id": 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.get("/custom-quotes/{quote_id}/pdf", dependencies=[Depends(require_admin)])
+async def download_custom_quote_pdf(quote_id: str):
+    quote = await db.custom_quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Custom quote not found")
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+
+    from custom_quote_pdf import generate_custom_quote_pdf
+    pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    filename = f"{(quote.get('ref_number') or 'quote').replace('/', '_')}.pdf"
     return FastAPIResponse(
         content=pdf_bytes,
         media_type="application/pdf",
