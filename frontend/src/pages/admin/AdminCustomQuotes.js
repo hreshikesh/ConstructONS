@@ -49,8 +49,13 @@ const emptyQuote = () => ({
   line_items: [],
   discount_label: "",
   discount_amount: 0,
-  gst_percent: 18,
+  service_charge_percent: 15,
+  gst_percent: 0,
   spec_categories: [],
+  interiors: [],
+  floor_plans: [],
+  elevations: [],
+  visual_boards: [],
   scope_of_work: [],
   exclusions: [],
   payment_schedule: [],
@@ -297,11 +302,19 @@ function computeGrand(q) {
     (s, l) => s + (Number(l.amount) || 0),
     0
   );
-  const subtotal = base + addonTotal + lineTotal;
+  const interiorsTotal = (q.interiors || []).reduce((s, cat) => {
+    return s + (cat.items || []).reduce((ss, it) => {
+      if (!it.include_in_total) return ss;
+      const qty = Number(it.quantity) || 1;
+      return ss + (Number(it.rate) || 0) * qty;
+    }, 0);
+  }, 0);
+  const subtotal = base + addonTotal + lineTotal + interiorsTotal;
   const discount = Number(q.discount_amount) || 0;
   const net = Math.max(0, subtotal - discount);
-  const gst = (net * (Number(q.gst_percent) || 0)) / 100;
-  return net + gst;
+  const svcPct = q.service_charge_percent != null ? Number(q.service_charge_percent) : 15;
+  const svc = (net * svcPct) / 100;
+  return net + svc;
 }
 
 function StatusBadge({ status }) {
@@ -349,15 +362,22 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
       (s, l) => s + (Number(l.amount) || 0),
       0
     );
-    const subtotal = base + addonTotal + lineTotal;
+    const interiorsTotal = (editing.interiors || []).reduce((s, cat) => {
+      return s + (cat.items || []).reduce((ss, it) => {
+        if (!it.include_in_total) return ss;
+        const qty = Number(it.quantity) || 1;
+        return ss + (Number(it.rate) || 0) * qty;
+      }, 0);
+    }, 0);
+    const subtotal = base + addonTotal + lineTotal + interiorsTotal;
     const discount = Number(editing.discount_amount) || 0;
     const net = Math.max(0, subtotal - discount);
-    const gstPct = Number(editing.gst_percent) || 0;
-    const gstAmt = (net * gstPct) / 100;
-    const grand = net + gstAmt;
+    const svcPct = editing.service_charge_percent != null ? Number(editing.service_charge_percent) : 15;
+    const svcAmt = (net * svcPct) / 100;
+    const grand = net + svcAmt;
     const budget = Number(editing.budget) || 0;
     const budgetDelta = budget > 0 ? grand - budget : null;
-    return { base, addonTotal, lineTotal, subtotal, discount, net, gstAmt, grand, budgetDelta };
+    return { base, addonTotal, lineTotal, interiorsTotal, subtotal, discount, net, svcAmt, svcPct, grand, budgetDelta };
   }, [editing]);
 
   const runAI = async () => {
@@ -409,6 +429,9 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
         spec_categories: suggestion.spec_categories?.length
           ? suggestion.spec_categories
           : prev.spec_categories,
+        interiors: suggestion.interiors?.length
+          ? suggestion.interiors
+          : prev.interiors,
         addons: suggestion.addons || prev.addons,
         line_items: suggestion.line_items || prev.line_items,
         scope_of_work: suggestion.scope_of_work?.length
@@ -421,6 +444,8 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
           ? suggestion.payment_schedule
           : prev.payment_schedule,
         warranty_years: suggestion.warranty_years || prev.warranty_years,
+        service_charge_percent: suggestion.service_charge_percent ?? 15,
+        gst_percent: 0,
         ai_notes: suggestion.ai_notes || "",
         ai_mode: aiMode,
       }));
@@ -1013,6 +1038,53 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
             />
           </Section>
 
+          {/* Interiors */}
+          <Section title="Interior Fit-Out" testId="cq-section-interiors" defaultOpen>
+            <div className="text-xs text-brand-navy/60 mb-2">
+              Add interior items (kitchen, wardrobes, lighting, bath, furnishings). Tick "Bill" on any item to include its rate × qty in the grand total. Notes and rates appear on the PDF.
+            </div>
+            <SpecCategoryEditor
+              categories={editing.interiors || []}
+              onChange={(interiors) => set({ interiors })}
+              isInterior
+            />
+          </Section>
+
+          {/* Floor Plans */}
+          <Section title="Floor Plans" testId="cq-section-floor-plans">
+            <div className="text-xs text-brand-navy/60 mb-3">
+              Upload one floor plan image per sheet. Fill the CAD title block (units, scale, drawn by, north). Each sheet renders as a full A4 page in the PDF.
+            </div>
+            <DrawingSheetsEditor
+              sheets={editing.floor_plans || []}
+              onChange={(floor_plans) => set({ floor_plans })}
+              kind="floor-plan"
+            />
+          </Section>
+
+          {/* Elevations */}
+          <Section title="Elevations" testId="cq-section-elevations">
+            <div className="text-xs text-brand-navy/60 mb-3">
+              Upload elevation drawings (north/south/east/west or perspective).
+            </div>
+            <DrawingSheetsEditor
+              sheets={editing.elevations || []}
+              onChange={(elevations) => set({ elevations })}
+              kind="elevation"
+            />
+          </Section>
+
+          {/* Visual Boards */}
+          <Section title="Visual Boards & AI Renders" testId="cq-section-visuals">
+            <div className="text-xs text-brand-navy/60 mb-3">
+              Add mood boards, photos of finishes, or generate AI reference images (Gemini Nano Banana). These render in the PDF as image galleries.
+            </div>
+            <VisualBoardsEditor
+              boards={editing.visual_boards || []}
+              onChange={(visual_boards) => set({ visual_boards })}
+            />
+          </Section>
+
           {/* Custom line items */}
           <Section title="Custom Line Items" testId="cq-section-lines">
             <LineItemEditor
@@ -1048,12 +1120,23 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
                   className={inputCls}
                 />
               </Field>
-              <Field label="GST %" testId="cq-field-gst">
+              <Field label="GST % (deprecated)" testId="cq-field-gst">
                 <input
                   type="number"
                   value={editing.gst_percent || 0}
                   onChange={(e) => set({ gst_percent: e.target.value })}
                   className={inputCls}
+                  disabled
+                  placeholder="0 — replaced by service charge"
+                />
+              </Field>
+              <Field label="Service Charge % (contractor fee)" testId="cq-field-service">
+                <input
+                  type="number"
+                  value={editing.service_charge_percent ?? 15}
+                  onChange={(e) => set({ service_charge_percent: e.target.value })}
+                  className={inputCls}
+                  placeholder="15"
                 />
               </Field>
               <Field label="Warranty (years)" testId="cq-field-warranty">
@@ -1300,7 +1383,7 @@ function PriceLine({ label, value, bold, negative }) {
 
 // ---------- Sub-editors ----------
 
-function SpecCategoryEditor({ categories, onChange }) {
+function SpecCategoryEditor({ categories, onChange, isInterior = false }) {
   const addCat = () =>
     onChange([...(categories || []), { name: "New Category", icon: null, items: [] }]);
 
@@ -1313,8 +1396,10 @@ function SpecCategoryEditor({ categories, onChange }) {
 
   const addItem = (idx) => {
     const cat = categories[idx];
-    const items = [...(cat.items || []), { spec: "", value: "", brand: "", warranty: "", notes: "" }];
-    updateCat(idx, { items });
+    const emptyItem = isInterior
+      ? { spec: "", value: "", brand: "", rate: 0, rate_unit: "per unit", quantity: 1, include_in_total: true, notes: "" }
+      : { spec: "", value: "", brand: "", warranty: "", rate: 0, rate_unit: "", notes: "", include_in_total: false };
+    updateCat(idx, { items: [...(cat.items || []), emptyItem] });
   };
 
   const updateItem = (catIdx, itemIdx, patch) => {
@@ -1332,14 +1417,16 @@ function SpecCategoryEditor({ categories, onChange }) {
     return (
       <div className="rounded-xl border border-dashed border-black/15 p-6 text-center">
         <div className="text-sm text-brand-navy/60">
-          No spec categories yet. Pick a base package above or click below to add one manually.
+          {isInterior
+            ? "No interior categories yet. Add categories like Kitchen, Wardrobes, Lighting, Bathroom accessories, Furnishings."
+            : "No spec categories yet. Pick a base package above or click below to add one manually."}
         </div>
         <button
           onClick={addCat}
-          data-testid="cq-add-cat-empty"
+          data-testid={`cq-add-cat-empty-${isInterior ? "int" : "spec"}`}
           className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
         >
-          <Plus className="w-3.5 h-3.5" /> Add Spec Category
+          <Plus className="w-3.5 h-3.5" /> Add {isInterior ? "Interior" : "Spec"} Category
         </button>
       </div>
     );
@@ -1354,21 +1441,15 @@ function SpecCategoryEditor({ categories, onChange }) {
               value={cat.name || ""}
               onChange={(e) => updateCat(ci, { name: e.target.value })}
               className="flex-1 font-semibold text-brand-navy bg-transparent focus:outline-none"
-              placeholder="Category name (e.g. Structure & Foundation)"
-              data-testid={`cq-cat-${ci}-name`}
-            />
-            <input
-              value={cat.icon || ""}
-              onChange={(e) => updateCat(ci, { icon: e.target.value })}
-              className="w-32 text-xs px-2 py-1 rounded border border-black/10 bg-white"
-              placeholder="lucide icon"
+              placeholder="Category name"
+              data-testid={`cq-cat-${isInterior ? "int" : "spec"}-${ci}-name`}
             />
             <button
               onClick={() => addItem(ci)}
-              data-testid={`cq-cat-${ci}-add-item`}
+              data-testid={`cq-cat-${isInterior ? "int" : "spec"}-${ci}-add-item`}
               className="text-xs inline-flex items-center gap-1 text-brand-orange hover:underline"
             >
-              <Plus className="w-3 h-3" /> Add spec
+              <Plus className="w-3 h-3" /> Add item
             </button>
             <button
               onClick={() => removeCat(ci)}
@@ -1381,42 +1462,88 @@ function SpecCategoryEditor({ categories, onChange }) {
           <div className="divide-y divide-black/5">
             {(cat.items || []).length === 0 ? (
               <div className="p-4 text-xs text-brand-navy/50 text-center">
-                No specs yet — click "Add spec" above.
+                No items yet — click "Add item" above.
               </div>
             ) : (
               cat.items.map((it, ii) => (
-                <div key={ii} className="p-3 grid grid-cols-12 gap-2 items-center">
-                  <input
-                    value={it.spec || ""}
-                    onChange={(e) => updateItem(ci, ii, { spec: e.target.value })}
-                    className="col-span-3 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
-                    placeholder="Spec (e.g. Cement)"
-                  />
-                  <input
-                    value={it.value || ""}
-                    onChange={(e) => updateItem(ci, ii, { value: e.target.value })}
-                    className="col-span-4 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
-                    placeholder="Value (e.g. PPC 53 Grade)"
-                  />
-                  <input
-                    value={it.brand || ""}
-                    onChange={(e) => updateItem(ci, ii, { brand: e.target.value })}
-                    className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
-                    placeholder="Brand"
-                  />
-                  <input
-                    value={it.warranty || ""}
-                    onChange={(e) => updateItem(ci, ii, { warranty: e.target.value })}
-                    className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
-                    placeholder="Warranty"
-                  />
-                  <button
-                    onClick={() => removeItem(ci, ii)}
-                    className="col-span-1 w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
-                    aria-label="Remove spec"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                <div key={ii} className="p-3 bg-white">
+                  <div className="grid grid-cols-12 gap-2 items-center">
+                    <input
+                      value={it.spec || ""}
+                      onChange={(e) => updateItem(ci, ii, { spec: e.target.value })}
+                      className="col-span-3 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                      placeholder="Spec / Item name"
+                    />
+                    <input
+                      value={it.value || ""}
+                      onChange={(e) => updateItem(ci, ii, { value: e.target.value })}
+                      className="col-span-4 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                      placeholder="Description"
+                    />
+                    <input
+                      value={it.brand || ""}
+                      onChange={(e) => updateItem(ci, ii, { brand: e.target.value })}
+                      className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                      placeholder="Brand"
+                    />
+                    {!isInterior && (
+                      <input
+                        value={it.warranty || ""}
+                        onChange={(e) => updateItem(ci, ii, { warranty: e.target.value })}
+                        className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                        placeholder="Warranty"
+                      />
+                    )}
+                    {isInterior && (
+                      <input
+                        type="number"
+                        value={it.quantity || 1}
+                        onChange={(e) => updateItem(ci, ii, { quantity: Number(e.target.value) || 0 })}
+                        className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                        placeholder="Qty"
+                      />
+                    )}
+                    <button
+                      onClick={() => removeItem(ci, ii)}
+                      className="col-span-1 w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
+                      aria-label="Remove item"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-12 gap-2 items-center mt-2">
+                    <div className="col-span-3 flex items-center gap-1">
+                      <span className="text-[10px] text-brand-navy/50">₹</span>
+                      <input
+                        type="number"
+                        value={it.rate || 0}
+                        onChange={(e) => updateItem(ci, ii, { rate: Number(e.target.value) || 0 })}
+                        className="flex-1 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                        placeholder="Rate"
+                      />
+                    </div>
+                    <input
+                      value={it.rate_unit || ""}
+                      onChange={(e) => updateItem(ci, ii, { rate_unit: e.target.value })}
+                      className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                      placeholder="per sqft/unit/bag"
+                    />
+                    <input
+                      value={it.notes || ""}
+                      onChange={(e) => updateItem(ci, ii, { notes: e.target.value })}
+                      className="col-span-6 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                      placeholder="Notes (visible on PDF)"
+                    />
+                    <label className="col-span-1 flex items-center justify-center gap-1 text-[10px] text-brand-navy/60 cursor-pointer" title="Include this item's rate × qty in the total">
+                      <input
+                        type="checkbox"
+                        checked={!!it.include_in_total}
+                        onChange={(e) => updateItem(ci, ii, { include_in_total: e.target.checked })}
+                        className="accent-brand-orange"
+                      />
+                      Bill
+                    </label>
+                  </div>
                 </div>
               ))
             )}
@@ -1425,7 +1552,7 @@ function SpecCategoryEditor({ categories, onChange }) {
       ))}
       <button
         onClick={addCat}
-        data-testid="cq-add-cat-btn"
+        data-testid={`cq-add-cat-btn-${isInterior ? "int" : "spec"}`}
         className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
       >
         <Plus className="w-3.5 h-3.5" /> Add Category
@@ -1617,6 +1744,224 @@ function ScheduleEditor({ items, onChange }) {
         className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold"
       >
         <Plus className="w-3.5 h-3.5" /> Add Milestone
+      </button>
+    </div>
+  );
+}
+
+
+// ---------- Drawing Sheets Editor (Floor Plans / Elevations) ----------
+function DrawingSheetsEditor({ sheets, onChange, kind }) {
+  const [uploading, setUploading] = useState(null);
+  const addSheet = () =>
+    onChange([...(sheets || []), {
+      id: crypto.randomUUID?.() || String(Date.now()),
+      title: kind === "floor-plan" ? `Floor Plan ${(sheets || []).length + 1}` : `Elevation ${(sheets || []).length + 1}`,
+      image_url: "",
+      sheet_number: (sheets || []).length + 1,
+      units: "mm",
+      scale: "1:100",
+      drawn_by: "ConstructONS",
+      north_direction: "N",
+      notes: "",
+    }]);
+  const updateSheet = (i, patch) => onChange(sheets.map((s, ii) => (ii === i ? { ...s, ...patch } : s)));
+  const removeSheet = (i) => onChange(sheets.filter((_, ii) => ii !== i));
+
+  const upload = async (i, file) => {
+    if (!file) return;
+    setUploading(i);
+    try {
+      const res = await adminApi.uploadImage(file, `quote-${kind}`);
+      updateSheet(i, { image_url: res.url });
+      toast.success("Uploaded");
+    } catch (e) {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {(sheets || []).map((s, i) => (
+        <div key={s.id || i} className="rounded-xl border border-black/10 bg-white overflow-hidden" data-testid={`cq-${kind}-${i}`}>
+          <div className="grid grid-cols-12 gap-3 p-3 items-start">
+            {/* Image preview / upload */}
+            <div className="col-span-4">
+              {s.image_url ? (
+                <div className="relative">
+                  <img src={s.image_url.startsWith("http") ? s.image_url : `${window.location.origin}${s.image_url}`} alt={s.title} className="w-full h-40 object-contain bg-brand-bg rounded-lg" />
+                  <button
+                    onClick={() => updateSheet(i, { image_url: "" })}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 grid place-items-center text-red-500 hover:bg-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="w-full h-40 rounded-lg border-2 border-dashed border-black/15 grid place-items-center cursor-pointer hover:border-brand-orange text-brand-navy/50 text-xs bg-brand-bg/30">
+                  {uploading === i ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-brand-orange" />
+                  ) : (
+                    <span>Click to upload drawing</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => upload(i, e.target.files?.[0])}
+                  />
+                </label>
+              )}
+            </div>
+            {/* Fields */}
+            <div className="col-span-8 grid grid-cols-2 gap-2">
+              <input value={s.title || ""} onChange={(e) => updateSheet(i, { title: e.target.value })} className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-sm font-semibold" placeholder="Sheet title" />
+              <input value={s.sheet_number || ""} onChange={(e) => updateSheet(i, { sheet_number: e.target.value })} className="rounded border border-black/10 bg-white px-2 py-1.5 text-xs" placeholder="Sheet No." />
+              <input value={s.scale || ""} onChange={(e) => updateSheet(i, { scale: e.target.value })} className="rounded border border-black/10 bg-white px-2 py-1.5 text-xs" placeholder="Scale (e.g. 1:100)" />
+              <input value={s.units || ""} onChange={(e) => updateSheet(i, { units: e.target.value })} className="rounded border border-black/10 bg-white px-2 py-1.5 text-xs" placeholder="Units (mm/ft/inches)" />
+              <input value={s.drawn_by || ""} onChange={(e) => updateSheet(i, { drawn_by: e.target.value })} className="rounded border border-black/10 bg-white px-2 py-1.5 text-xs" placeholder="Drawn by" />
+              <input value={s.north_direction || ""} onChange={(e) => updateSheet(i, { north_direction: e.target.value })} className="rounded border border-black/10 bg-white px-2 py-1.5 text-xs" placeholder="North direction" />
+              <button onClick={() => removeSheet(i)} className="text-xs text-red-500 hover:underline text-left">Remove sheet</button>
+              <textarea value={s.notes || ""} onChange={(e) => updateSheet(i, { notes: e.target.value })} rows={2} className="col-span-2 rounded border border-black/10 bg-white px-2 py-1.5 text-xs resize-y" placeholder="Notes / revision info" />
+            </div>
+          </div>
+        </div>
+      ))}
+      <button onClick={addSheet} data-testid={`cq-add-${kind}-btn`} className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold">
+        <Plus className="w-3.5 h-3.5" /> Add {kind === "floor-plan" ? "Floor Plan" : "Elevation"} Sheet
+      </button>
+    </div>
+  );
+}
+
+
+// ---------- Visual Boards Editor ----------
+function VisualBoardsEditor({ boards, onChange }) {
+  const [uploading, setUploading] = useState(null);
+  const [generating, setGenerating] = useState(null);
+  const [prompts, setPrompts] = useState({});
+
+  const addBoard = () =>
+    onChange([...(boards || []), {
+      id: crypto.randomUUID?.() || String(Date.now()),
+      title: `Visual Board ${(boards || []).length + 1}`,
+      description: "",
+      images: [],
+    }]);
+  const updateBoard = (i, patch) => onChange(boards.map((b, ii) => (ii === i ? { ...b, ...patch } : b)));
+  const removeBoard = (i) => onChange(boards.filter((_, ii) => ii !== i));
+
+  const addImageFromUpload = async (bi, file) => {
+    if (!file) return;
+    setUploading(`${bi}`);
+    try {
+      const res = await adminApi.uploadImage(file, "quote-visuals");
+      updateBoard(bi, {
+        images: [...(boards[bi].images || []), {
+          id: crypto.randomUUID?.() || String(Date.now()),
+          url: res.url,
+          caption: "",
+        }],
+      });
+      toast.success("Uploaded");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const generateAiImage = async (bi) => {
+    const p = (prompts[bi] || "").trim();
+    if (!p) {
+      toast.error("Enter a prompt first");
+      return;
+    }
+    setGenerating(`${bi}`);
+    try {
+      const res = await adminApi.generateImage(p);
+      updateBoard(bi, {
+        images: [...(boards[bi].images || []), {
+          id: crypto.randomUUID?.() || String(Date.now()),
+          url: res.url,
+          caption: p.slice(0, 80),
+          ai_prompt: p,
+        }],
+      });
+      setPrompts({ ...prompts, [bi]: "" });
+      toast.success("Image generated");
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Generation failed");
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const removeImage = (bi, ii) => {
+    updateBoard(bi, { images: (boards[bi].images || []).filter((_, i) => i !== ii) });
+  };
+  const updateCaption = (bi, ii, caption) => {
+    updateBoard(bi, {
+      images: boards[bi].images.map((img, i) => (i === ii ? { ...img, caption } : img)),
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {(boards || []).map((b, bi) => (
+        <div key={b.id || bi} className="rounded-xl border border-black/10 bg-white overflow-hidden" data-testid={`cq-visual-board-${bi}`}>
+          <div className="p-3 border-b border-black/5 flex items-center gap-2">
+            <input value={b.title || ""} onChange={(e) => updateBoard(bi, { title: e.target.value })} className="flex-1 font-semibold text-brand-navy bg-transparent focus:outline-none" placeholder="Board title" />
+            <button onClick={() => removeBoard(bi)} className="w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+          </div>
+          <div className="p-3 space-y-3">
+            <textarea value={b.description || ""} onChange={(e) => updateBoard(bi, { description: e.target.value })} rows={2} className="w-full rounded border border-black/10 bg-white px-2 py-1.5 text-xs resize-y" placeholder="What is this board about?" />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-3.5 py-1.5 text-xs font-semibold cursor-pointer hover:brightness-110">
+                {uploading === `${bi}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                Upload image
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => addImageFromUpload(bi, e.target.files?.[0])} />
+              </label>
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                <input
+                  value={prompts[bi] || ""}
+                  onChange={(e) => setPrompts({ ...prompts, [bi]: e.target.value })}
+                  className="flex-1 min-w-0 rounded border border-black/10 bg-white px-2 py-1.5 text-xs"
+                  placeholder="AI prompt (e.g. modern 3BHK living room with warm lighting)"
+                />
+                <button
+                  onClick={() => generateAiImage(bi)}
+                  disabled={generating === `${bi}`}
+                  data-testid={`cq-vb-generate-${bi}`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-95 disabled:opacity-60 whitespace-nowrap"
+                >
+                  {generating === `${bi}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                  {generating === `${bi}` ? "Generating..." : "AI Generate"}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {(b.images || []).map((img, ii) => (
+                <div key={img.id || ii} className="relative group">
+                  <img src={img.url.startsWith("http") ? img.url : `${window.location.origin}${img.url}`} alt={img.caption || ""} className="w-full h-28 object-cover rounded-lg" />
+                  <button onClick={() => removeImage(bi, ii)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 grid place-items-center text-red-500"><X className="w-3.5 h-3.5" /></button>
+                  <input value={img.caption || ""} onChange={(e) => updateCaption(bi, ii, e.target.value)} className="w-full mt-1 rounded border border-black/10 bg-white px-2 py-1 text-[10px]" placeholder="Caption" />
+                </div>
+              ))}
+              {(b.images || []).length === 0 && (
+                <div className="col-span-full text-xs text-brand-navy/50 italic p-3">No images yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+      <button onClick={addBoard} data-testid="cq-add-visual-board-btn" className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold">
+        <Plus className="w-3.5 h-3.5" /> Add Visual Board
       </button>
     </div>
   );

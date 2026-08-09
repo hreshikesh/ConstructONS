@@ -59,12 +59,17 @@ export default function PublicQuotePage() {
     const base = area * rate;
     const addonTotal = (q.addons || []).reduce((s, a) => s + (Number(a.price) || 0), 0);
     const lineTotal = (q.line_items || []).reduce((s, l) => s + (Number(l.amount) || 0), 0);
-    const subtotal = base + addonTotal + lineTotal;
+    const interiorsTotal = (q.interiors || []).reduce((s, cat) =>
+      s + (cat.items || []).reduce((ss, it) => {
+        if (!it.include_in_total) return ss;
+        return ss + (Number(it.rate) || 0) * (Number(it.quantity) || 1);
+      }, 0), 0);
+    const subtotal = base + addonTotal + lineTotal + interiorsTotal;
     const discount = Number(q.discount_amount) || 0;
     const net = Math.max(0, subtotal - discount);
-    const gstPct = Number(q.gst_percent) || 0;
-    const gstAmt = (net * gstPct) / 100;
-    return { base, addonTotal, lineTotal, subtotal, discount, net, gstAmt, grand: net + gstAmt, gstPct };
+    const svcPct = q.service_charge_percent != null ? Number(q.service_charge_percent) : 15;
+    const svcAmt = (net * svcPct) / 100;
+    return { base, addonTotal, lineTotal, interiorsTotal, subtotal, discount, net, svcAmt, grand: net + svcAmt, svcPct };
   }, [data]);
 
   const submitComment = async () => {
@@ -221,9 +226,10 @@ export default function PublicQuotePage() {
             <div className="space-y-1 text-sm">
               <PriceRow label="Base build" value={pricing.base} />
               <PriceRow label="Add-ons" value={pricing.addonTotal} />
+              {pricing.interiorsTotal > 0 && <PriceRow label="Interiors" value={pricing.interiorsTotal} />}
               {pricing.lineTotal > 0 && <PriceRow label="Line items" value={pricing.lineTotal} />}
               {pricing.discount > 0 && <PriceRow label="Discount" value={-pricing.discount} />}
-              <PriceRow label={`GST @ ${pricing.gstPct}%`} value={pricing.gstAmt} />
+              <PriceRow label={`Service charge @ ${pricing.svcPct}%`} value={pricing.svcAmt} />
             </div>
           </div>
         </section>
@@ -290,6 +296,107 @@ export default function PublicQuotePage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Interior Fit-Out */}
+        {(q.interiors || []).length > 0 && (
+          <section className="rounded-3xl bg-white border border-black/5 shadow-soft p-6 md:p-8">
+            <h2 className="text-xl font-bold text-brand-navy mb-4">Interior Fit-Out</h2>
+            <div className="space-y-6">
+              {q.interiors.map((cat, ci) => (
+                <div key={ci}>
+                  <div className="font-semibold text-brand-navy mb-2">{cat.name}</div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="text-left text-xs uppercase tracking-wider text-brand-navy/50">
+                          <th className="px-3 py-2 border-b border-black/10">Item</th>
+                          <th className="px-3 py-2 border-b border-black/10">Description</th>
+                          <th className="px-3 py-2 border-b border-black/10 w-32">Brand</th>
+                          <th className="px-3 py-2 border-b border-black/10 w-32">Rate</th>
+                          <th className="px-3 py-2 border-b border-black/10 w-16">Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(cat.items || []).map((it, ii) => (
+                          <tr key={ii} className="border-b border-black/5">
+                            <td className="px-3 py-2 font-medium text-brand-navy/85">{it.spec}</td>
+                            <td className="px-3 py-2 text-brand-navy">{it.value}</td>
+                            <td className="px-3 py-2 text-brand-navy/60">{it.brand || "—"}</td>
+                            <td className="px-3 py-2 text-brand-navy/80">{it.rate ? rupees(it.rate) : "—"} {it.rate_unit || ""}</td>
+                            <td className="px-3 py-2 text-brand-navy/60">{it.quantity || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Floor Plans */}
+        {(q.floor_plans || []).length > 0 && (
+          <section className="rounded-3xl bg-white border border-black/5 shadow-soft p-6 md:p-8">
+            <h2 className="text-xl font-bold text-brand-navy mb-4">Floor Plans</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {q.floor_plans.map((s, i) => (
+                <div key={s.id || i} className="rounded-xl overflow-hidden border border-black/10">
+                  {s.image_url && (
+                    <img src={s.image_url.startsWith("http") ? s.image_url : s.image_url} alt={s.title} className="w-full h-56 object-contain bg-brand-bg" />
+                  )}
+                  <div className="p-3 bg-brand-navy text-white text-xs grid grid-cols-4 gap-2">
+                    <div><div className="text-brand-orangeLight text-[9px] uppercase">Sheet</div><div className="font-semibold">{s.sheet_number || i + 1}</div></div>
+                    <div><div className="text-brand-orangeLight text-[9px] uppercase">Scale</div><div className="font-semibold">{s.scale || "1:100"}</div></div>
+                    <div><div className="text-brand-orangeLight text-[9px] uppercase">Units</div><div className="font-semibold">{s.units || "mm"}</div></div>
+                    <div><div className="text-brand-orangeLight text-[9px] uppercase">North</div><div className="font-semibold">{s.north_direction || "N"}</div></div>
+                  </div>
+                  <div className="p-2 text-xs text-brand-navy/70 bg-brand-bg">{s.title} · drawn by {s.drawn_by || "ConstructONS"}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Elevations */}
+        {(q.elevations || []).length > 0 && (
+          <section className="rounded-3xl bg-white border border-black/5 shadow-soft p-6 md:p-8">
+            <h2 className="text-xl font-bold text-brand-navy mb-4">Elevations</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {q.elevations.map((s, i) => (
+                <div key={s.id || i} className="rounded-xl overflow-hidden border border-black/10">
+                  {s.image_url && (
+                    <img src={s.image_url} alt={s.title} className="w-full h-56 object-contain bg-brand-bg" />
+                  )}
+                  <div className="p-2 text-xs text-brand-navy/70 bg-brand-bg">{s.title} · scale {s.scale || "1:100"}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Visual Boards */}
+        {(q.visual_boards || []).length > 0 && (
+          <section className="rounded-3xl bg-white border border-black/5 shadow-soft p-6 md:p-8">
+            <h2 className="text-xl font-bold text-brand-navy mb-4">Visual Reference</h2>
+            <div className="space-y-6">
+              {q.visual_boards.map((board, bi) => (
+                <div key={board.id || bi}>
+                  <div className="font-semibold text-brand-navy">{board.title}</div>
+                  {board.description && <div className="text-sm text-brand-navy/60 mb-3">{board.description}</div>}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {(board.images || []).map((img, ii) => (
+                      <div key={img.id || ii} className="relative">
+                        <img src={img.url} alt={img.caption || ""} className="w-full h-32 object-cover rounded-lg" />
+                        {img.caption && <div className="text-[10px] text-brand-navy/60 mt-1">{img.caption}</div>}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}

@@ -1241,6 +1241,64 @@ async def export_quiz_csv(status: Optional[str] = None):
 
 
 # ============================================================================
+# AI Image Generation — Gemini Nano Banana + Object Storage
+# ============================================================================
+
+class AiImageBody(BaseModel):
+    prompt: str
+    category: str = "quote-visuals"
+
+
+@router.post("/ai/generate-image", dependencies=[Depends(require_admin)])
+async def ai_generate_image(body: AiImageBody):
+    """Generate an image with Gemini Nano Banana and store it in Object Storage.
+
+    Returns the same shape as /media/upload so the frontend can use identical
+    handling for uploaded and AI-generated images.
+    """
+    from ai_service import generate_image_nanobanana
+    from media_service import put_object, build_storage_path
+
+    prompt = (body.prompt or "").strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt is required")
+    if len(prompt) > 1000:
+        raise HTTPException(status_code=400, detail="Prompt too long")
+
+    img_bytes = await generate_image_nanobanana(prompt)
+    if not img_bytes:
+        raise HTTPException(status_code=502, detail="Image generation failed. Try a different prompt.")
+
+    ct = "image/png"
+    path = build_storage_path(body.category or "quote-visuals", "ai-gen.png", ct)
+    try:
+        put_object(path, img_bytes, ct)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Storage upload failed: {e}")
+
+    record = {
+        "id": new_id(),
+        "storage_path": path,
+        "original_filename": "ai-generated.png",
+        "content_type": ct,
+        "size": len(img_bytes),
+        "category": body.category or "quote-visuals",
+        "is_deleted": False,
+        "created_at": now_iso(),
+        "ai_prompt": prompt[:800],
+    }
+    await db.media_uploads.insert_one(record)
+    return {
+        "id": record["id"],
+        "storage_path": path,
+        "url": f"/api/media/{path}",
+        "content_type": ct,
+        "size": len(img_bytes),
+        "ai_prompt": prompt[:800],
+    }
+
+
+# ============================================================================
 # Media (Image Upload Studio) — Emergent Object Storage
 # ============================================================================
 

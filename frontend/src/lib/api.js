@@ -23,7 +23,7 @@ try {
 // Global 401 handler — if any admin call ever sees an unauthorised response,
 // bounce the user to the login page. Skipped for the public-facing endpoints
 // so the homepage doesn't redirect when a leads/subscribe call rate-limits.
-const ADMIN_PATH_RE = /^\/(admin|leads$|quiz-submissions|media\/upload|ai\/rewrite|packages\/[^/]+\/versions)/;
+const ADMIN_PATH_RE = /^\/(admin|leads$|quiz-submissions|media\/upload|ai\/rewrite|ai\/generate-image|packages\/[^/]+\/versions|custom-quotes|quote-templates|exports)/;
 api.interceptors.response.use(
   (r) => r,
   (error) => {
@@ -120,6 +120,10 @@ export const adminApi = {
   // AI Copy Assist
   rewriteCopy: (text, purpose = "copy", tone = "on-brand") =>
     api.post("/ai/rewrite", { text, purpose, tone }).then((r) => r.data),
+
+  // AI Image Generation (Gemini Nano Banana)
+  generateImage: (prompt, category = "quote-visuals") =>
+    api.post("/ai/generate-image", { prompt, category }, { timeout: 120000 }).then((r) => r.data),
 
   // ---------------- Custom Quotes ----------------
   customQuotes: {

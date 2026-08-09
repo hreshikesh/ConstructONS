@@ -61,6 +61,10 @@ class SpecItem(BaseModel):
     brand: Optional[str] = None  # 'UltraTech'
     warranty: Optional[str] = None  # '10 Years'
     notes: Optional[str] = None
+    rate: Optional[float] = 0            # numeric rate (per unit / per sqft / lumpsum)
+    rate_unit: Optional[str] = None      # e.g. 'per sqft', 'per bag', 'lumpsum'
+    quantity: Optional[float] = None     # optional qty when computing item totals
+    include_in_total: bool = False       # if True this item's rate*qty (or rate) adds to interior/spec total
 
 
 class SpecCategory(BaseModel):
@@ -434,10 +438,25 @@ class CustomQuote(BaseDoc):
     line_items: List[CustomLineItem] = Field(default_factory=list)  # freeform extras (e.g. compound wall, gate)
     discount_label: Optional[str] = None
     discount_amount: float = 0
-    gst_percent: float = 18
+    # Service charge (contractor fee) — 15% by default, applied to net subtotal.
+    # `gst_percent` kept for legacy quotes but ignored in new pricing math.
+    service_charge_percent: float = 15
+    gst_percent: float = 0
 
     # Deep spec sheet — fully editable snapshot per quote
     spec_categories: List[SpecCategory] = Field(default_factory=list)
+
+    # Interior fit-out sheet — same shape as specs, editable per quote.
+    interiors: List[SpecCategory] = Field(default_factory=list)
+
+    # Drawings — floor plans + elevations. Each entry is a printable sheet
+    # with a CAD-style title block (units, scale, drawn_by, north).
+    floor_plans: List[Dict[str, Any]] = Field(default_factory=list)
+    elevations: List[Dict[str, Any]] = Field(default_factory=list)
+
+    # Visual references / mood boards. Each board has multiple images
+    # (uploaded or AI-generated) with captions.
+    visual_boards: List[Dict[str, Any]] = Field(default_factory=list)
 
     # Scope, exclusions, payment schedule, terms — editable per quote
     scope_of_work: List[str] = Field(default_factory=list)
@@ -475,5 +494,7 @@ class QuoteTemplate(BaseDoc):
     payment_schedule: List[Dict[str, Any]] = Field(default_factory=list)
     terms: Optional[str] = None
     intro_note: Optional[str] = None
-    gst_percent: float = 18
+    gst_percent: float = 0
+    service_charge_percent: float = 15
+    interiors: List[SpecCategory] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)

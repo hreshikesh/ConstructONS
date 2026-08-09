@@ -1,46 +1,34 @@
 [
   {
-    "content": "Backend: extend models (QuoteTemplate, QuoteComment, public_token, client_action, comments on CustomQuote)",
+    "content": "Backend models: SpecItem+rate/rate_unit, CustomQuote+service_charge_percent/interiors/floor_plans/elevations/visual_boards",
     "status": "completed"
   },
   {
-    "content": "Backend: add CSV export endpoints for leads + quiz submissions",
+    "content": "Backend AI service: rewrite prompt with per-item rates, interiors, service charge, budget-aware",
     "status": "completed"
   },
   {
-    "content": "Backend: add Quote Templates CRUD + save-as-template + from-template routes",
+    "content": "Backend: add /api/ai/generate-image endpoint using Gemini Nano Banana + object storage",
     "status": "completed"
   },
   {
-    "content": "Backend: add Public Portal routes (GET by token, POST comment, POST action) + lazy token migration",
+    "content": "Backend PDF: rebrand custom_quote_pdf to match brochure style + add Interiors/Floor Plans/Elevations/Visual Board pages",
     "status": "completed"
   },
   {
-    "content": "Frontend: install TipTap + build reusable RichTextEditor component",
+    "content": "Backend routes: switch pricing formula (drop GST, apply 15% service charge)",
     "status": "completed"
   },
   {
-    "content": "Frontend: wire RichTextEditor into Custom Quote intro_note & terms, Blogs",
+    "content": "Frontend: Custom Quote editor — Service Charge field, rate+notes per spec item, Interiors, Floor Plans, Elevations, Visual Boards + AI Gen",
     "status": "completed"
   },
   {
-    "content": "Frontend: add Export CSV buttons to Leads + Quiz Submissions pages",
+    "content": "Frontend: update public quote page to show interiors/plans/elevations/visuals + service charge math",
     "status": "completed"
   },
   {
-    "content": "Frontend: add Quote Templates admin page + nav + Save-as-Template/Load Template in Custom Quote editor",
-    "status": "completed"
-  },
-  {
-    "content": "Frontend: build public /quote/:token page (view, comment, accept/reject)",
-    "status": "completed"
-  },
-  {
-    "content": "Frontend: add public link + comments panel in Custom Quote admin editor",
-    "status": "completed"
-  },
-  {
-    "content": "End-to-end verified: Template save/apply, Public accept/comment, CSV download, WYSIWYG editor",
+    "content": "End-to-end verified: PDF renders, AI image gen works (~16s), all new fields save/load",
     "status": "completed"
   }
 ]
