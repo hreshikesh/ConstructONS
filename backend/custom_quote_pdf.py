@@ -502,7 +502,7 @@ def generate_custom_quote_pdf(quote: Dict[str, Any], settings: Dict[str, Any]) -
             story.append(Paragraph(f"{kind} \u2014 Sheet {dr.get('sheet_number') or (i + 1)}", styles["h1"]))
             title = dr.get("title") or f"{kind} {i + 1}"
             story.append(Paragraph(title, styles["h3"]))
-            img = _fetch_image_flowable(dr.get("image_url") or "", max_w_mm=170, max_h_mm=180)
+            img = _fetch_image_flowable(dr.get("image_url") or "", max_w_mm=170, max_h_mm=160)
             if img:
                 story.append(img)
             else:
@@ -513,7 +513,32 @@ def generate_custom_quote_pdf(quote: Dict[str, Any], settings: Dict[str, Any]) -
             if dr.get("notes"):
                 story.append(Paragraph(f"<b>Notes:</b> {dr['notes']}", styles["small"]))
                 story.append(Spacer(1, 4))
-            # CAD-style title block at bottom
+
+            # Revisions history block (if any)
+            revs = dr.get("revisions") or []
+            current_rev = dr.get("current_revision") or (revs[-1].get("letter") if revs else "-")
+            if revs:
+                rev_rows = [["REV", "DATE", "DESCRIPTION"]]
+                for r in revs[-6:]:  # last 6
+                    rev_rows.append([
+                        str(r.get("letter") or "")[:4],
+                        str(r.get("date") or "")[:20],
+                        str(r.get("note") or "")[:120],
+                    ])
+                rt = Table(rev_rows, colWidths=[18 * mm, 30 * mm, 122 * mm])
+                rt.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), LIGHT),
+                    ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 7),
+                    ("FONT", (0, 1), (-1, -1), "Helvetica", 7.5),
+                    ("GRID", (0, 0), (-1, -1), 0.25, LINE),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ]))
+                story.append(rt)
+                story.append(Spacer(1, 4))
+
+            # CAD-style title block at bottom with current revision
             tb_rows = [[
                 "PROJECT", "SHEET TITLE", "SHEET NO.", "SCALE",
             ], [
@@ -521,12 +546,12 @@ def generate_custom_quote_pdf(quote: Dict[str, Any], settings: Dict[str, Any]) -
                 title[:30], str(dr.get("sheet_number") or (i + 1)),
                 dr.get("scale") or "1:100",
             ], [
-                "CLIENT", "UNITS", "DRAWN BY", "NORTH",
+                "CLIENT", "UNITS", "DRAWN BY", "REV / NORTH",
             ], [
                 client[:30],
                 dr.get("units") or "mm",
                 dr.get("drawn_by") or company,
-                dr.get("north_direction") or "N",
+                f"{current_rev}  \u00b7  {dr.get('north_direction') or 'N'}",
             ]]
             tb = Table(tb_rows, colWidths=[45 * mm, 55 * mm, 30 * mm, 40 * mm])
             tb.setStyle(TableStyle([

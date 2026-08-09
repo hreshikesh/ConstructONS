@@ -13,7 +13,7 @@ from models import (
     FinancialService, TeamMember, AIPlatformModule, JourneyStep,
     HeroSection, MediaItem, ComparisonRow, StatItem, SiteSettings,
     Lead, LeadCreate, QuizSubmission, Proposal, CustomQuote, QuoteTemplate,
-    now_iso, new_id
+    InteriorLibraryItem, now_iso, new_id
 )
 
 router = APIRouter(prefix="/api")
@@ -903,6 +903,81 @@ async def download_custom_quote_pdf(quote_id: str):
             "Cache-Control": "no-store",
         },
     )
+
+
+@router.post("/custom-quotes/preview", dependencies=[Depends(require_admin)])
+async def preview_custom_quote_pdf(body: CustomQuote):
+    """Render a PDF from an unsaved quote payload for the live editor preview.
+
+    Accepts a full CustomQuote body (may be missing an id) and returns the
+    PDF bytes inline so the frontend can drop the URL into an iframe.
+    """
+    quote = body.model_dump()
+    quote["ref_number"] = quote.get("ref_number") or "PREVIEW"
+    settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
+    from custom_quote_pdf import generate_custom_quote_pdf
+    pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    return FastAPIResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'inline; filename="preview.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+# ============================================================================
+# Interior Library — reusable interior catalog items
+# ============================================================================
+
+@router.get("/interior-library", dependencies=[Depends(require_admin)])
+async def list_interior_library(category: Optional[str] = None, q: Optional[str] = None):
+    query: Dict[str, Any] = {}
+    if category:
+        query["category"] = category
+    if q:
+        query["$or"] = [
+            {"name": {"$regex": q, "$options": "i"}},
+            {"brand": {"$regex": q, "$options": "i"}},
+            {"description": {"$regex": q, "$options": "i"}},
+        ]
+    docs = await db.interior_library.find(query, {"_id": 0}).sort("category", 1).limit(500).to_list(500)
+    return docs
+
+
+@router.get("/interior-library/categories", dependencies=[Depends(require_admin)])
+async def list_interior_library_categories():
+    cats = await db.interior_library.distinct("category")
+    return sorted(cats)
+
+
+@router.post("/interior-library", dependencies=[Depends(require_admin)])
+async def create_interior_library_item(body: InteriorLibraryItem):
+    data = body.model_dump()
+    data["id"] = data.get("id") or new_id()
+    data["created_at"] = now_iso()
+    data["updated_at"] = now_iso()
+    await db.interior_library.insert_one(data)
+    data.pop("_id", None)
+    return data
+
+
+@router.put("/interior-library/{item_id}", dependencies=[Depends(require_admin)])
+async def update_interior_library_item(item_id: str, body: InteriorLibraryItem):
+    data = body.model_dump()
+    data["id"] = item_id
+    data["updated_at"] = now_iso()
+    await db.interior_library.update_one({"id": item_id}, {"$set": data}, upsert=True)
+    return await db.interior_library.find_one({"id": item_id}, {"_id": 0})
+
+
+@router.delete("/interior-library/{item_id}", dependencies=[Depends(require_admin)])
+async def delete_interior_library_item(item_id: str):
+    res = await db.interior_library.delete_one({"id": item_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"success": True}
 
 
 # ============================================================================

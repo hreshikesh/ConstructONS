@@ -23,7 +23,7 @@ try {
 // Global 401 handler — if any admin call ever sees an unauthorised response,
 // bounce the user to the login page. Skipped for the public-facing endpoints
 // so the homepage doesn't redirect when a leads/subscribe call rate-limits.
-const ADMIN_PATH_RE = /^\/(admin|leads$|quiz-submissions|media\/upload|ai\/rewrite|ai\/generate-image|packages\/[^/]+\/versions|custom-quotes|quote-templates|exports)/;
+const ADMIN_PATH_RE = /^\/(admin|leads$|quiz-submissions|media\/upload|ai\/rewrite|ai\/generate-image|packages\/[^/]+\/versions|custom-quotes|quote-templates|exports|interior-library)/;
 api.interceptors.response.use(
   (r) => r,
   (error) => {
@@ -125,6 +125,19 @@ export const adminApi = {
   generateImage: (prompt, category = "quote-visuals") =>
     api.post("/ai/generate-image", { prompt, category }, { timeout: 120000 }).then((r) => r.data),
 
+  // ---------------- Interior Library ----------------
+  interiorLibrary: {
+    list: (params = {}) => {
+      const qs = new URLSearchParams();
+      if (params.category) qs.set("category", params.category);
+      if (params.q) qs.set("q", params.q);
+      return api.get(`/interior-library${qs.toString() ? `?${qs}` : ""}`).then((r) => r.data);
+    },
+    categories: () => api.get("/interior-library/categories").then((r) => r.data),
+    create: (body) => api.post("/interior-library", body).then((r) => r.data),
+    remove: (id) => api.delete(`/interior-library/${id}`).then((r) => r.data),
+  },
+
   // ---------------- Custom Quotes ----------------
   customQuotes: {
     list: (status) =>
@@ -138,6 +151,8 @@ export const adminApi = {
     aiSuggestStatus: (jobId) =>
       api.get(`/custom-quotes/ai-suggest/${jobId}`).then((r) => r.data),
     pdfUrl: (id) => `${API_BASE}/custom-quotes/${id}/pdf`,
+    previewPdf: (body) =>
+      api.post("/custom-quotes/preview", body, { responseType: "blob", timeout: 60000 }).then((r) => r.data),
     getPublicLink: (id) => api.post(`/custom-quotes/${id}/public-link`).then((r) => r.data),
     saveAsTemplate: (id, body) =>
       api.post(`/custom-quotes/${id}/save-as-template`, body).then((r) => r.data),

@@ -498,3 +498,19 @@ class QuoteTemplate(BaseDoc):
     service_charge_percent: float = 15
     interiors: List[SpecCategory] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
+
+
+# ---------- Interior Library ----------
+class InteriorLibraryItem(BaseDoc):
+    """Catalog item admins can drop into a Custom Quote's interior fit-out."""
+    category: str                              # 'Kitchen' | 'Wardrobes' | ...
+    name: str                                  # e.g. 'Modular Kitchen — L-Shape'
+    description: str = ""
+    brand: Optional[str] = None
+    rate: float = 0
+    rate_unit: Optional[str] = None            # 'per sqft', 'per unit', 'lumpsum'
+    warranty: Optional[str] = None
+    notes: Optional[str] = None
+    default_quantity: float = 1
+    image_url: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)

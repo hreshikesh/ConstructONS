@@ -1,34 +1,30 @@
 [
   {
-    "content": "Backend models: SpecItem+rate/rate_unit, CustomQuote+service_charge_percent/interiors/floor_plans/elevations/visual_boards",
+    "content": "Backend: Interior Library model + seed 70+ items across 9 categories + CRUD routes",
     "status": "completed"
   },
   {
-    "content": "Backend AI service: rewrite prompt with per-item rates, interiors, service charge, budget-aware",
+    "content": "Backend: add revisions[] + current_revision to drawing sheets; update PDF title block + revisions box",
     "status": "completed"
   },
   {
-    "content": "Backend: add /api/ai/generate-image endpoint using Gemini Nano Banana + object storage",
+    "content": "Backend: add /api/custom-quotes/preview endpoint accepting unsaved payload",
     "status": "completed"
   },
   {
-    "content": "Backend PDF: rebrand custom_quote_pdf to match brochure style + add Interiors/Floor Plans/Elevations/Visual Board pages",
+    "content": "Frontend: PDF Preview split panel with iframe + auto-refresh on type + toggle",
     "status": "completed"
   },
   {
-    "content": "Backend routes: switch pricing formula (drop GST, apply 15% service charge)",
+    "content": "Frontend: Interior Library picker modal (search, category tabs, multi-select → add to quote)",
     "status": "completed"
   },
   {
-    "content": "Frontend: Custom Quote editor — Service Charge field, rate+notes per spec item, Interiors, Floor Plans, Elevations, Visual Boards + AI Gen",
+    "content": "Frontend: Drawing revisions UI (letter+date+note history per sheet)",
     "status": "completed"
   },
   {
-    "content": "Frontend: update public quote page to show interiors/plans/elevations/visuals + service charge math",
-    "status": "completed"
-  },
-  {
-    "content": "End-to-end verified: PDF renders, AI image gen works (~16s), all new fields save/load",
+    "content": "End-to-end verified: preview renders, library seeds & picks work, revisions save",
     "status": "completed"
   }
 ]

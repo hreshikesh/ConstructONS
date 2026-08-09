@@ -77,6 +77,22 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Admin seed failed: {e}")
 
+    # Seed the Interior Library starter catalog if empty.
+    try:
+        count = await db.interior_library.count_documents({})
+        if count == 0:
+            from interior_library_seed import INTERIOR_LIBRARY_STARTER
+            from models import InteriorLibraryItem
+            docs = []
+            for item in INTERIOR_LIBRARY_STARTER:
+                obj = InteriorLibraryItem(**item).model_dump()
+                docs.append(obj)
+            if docs:
+                await db.interior_library.insert_many(docs)
+                logger.info(f"Interior library seeded with {len(docs)} items.")
+    except Exception as e:
+        logger.error(f"Interior library seed failed: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
