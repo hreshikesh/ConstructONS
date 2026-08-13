@@ -2215,7 +2215,8 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
   const [categories, setCategories] = useState([]);
   const [activeCat, setActiveCat] = useState(null);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState({});
+  const [selected, setSelected] = useState({});     // {id: true}
+  const [overrides, setOverrides] = useState({});   // {id: {rate, quantity, notes}}
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -2233,10 +2234,30 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
   }, [activeCat, query]);
 
   const toggle = (id) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+  const patchOverride = (id, patch) =>
+    setOverrides((o) => ({ ...o, [id]: { ...(o[id] || {}), ...patch } }));
 
   const selectedItems = useMemo(
-    () => items.filter((it) => selected[it.id]),
-    [items, selected]
+    () =>
+      items
+        .filter((it) => selected[it.id])
+        .map((it) => {
+          const ov = overrides[it.id] || {};
+          return {
+            ...it,
+            rate: ov.rate !== undefined && ov.rate !== "" ? Number(ov.rate) : it.rate,
+            default_quantity:
+              ov.quantity !== undefined && ov.quantity !== "" ? Number(ov.quantity) : it.default_quantity,
+            notes: ov.notes !== undefined ? ov.notes : it.notes,
+          };
+        }),
+    [items, selected, overrides]
+  );
+
+  const selectedCount = selectedItems.length;
+  const selectedTotal = useMemo(
+    () => selectedItems.reduce((s, it) => s + (Number(it.rate) || 0) * (Number(it.default_quantity) || 1), 0),
+    [selectedItems]
   );
 
   const addSelected = () => {
@@ -2246,13 +2267,13 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
 
   return (
     <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm z-[60] grid place-items-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden" data-testid="cq-library-picker">
+      <div className="bg-white rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden" data-testid="cq-library-picker">
         <div className="p-5 border-b border-black/5 flex items-center justify-between">
           <div>
             <div className="section-eyebrow">Interior Library</div>
             <div className="font-bold text-brand-navy text-lg inline-flex items-center gap-2">
               <PackageOpen className="w-5 h-5 text-brand-orange" />
-              Pick items to add
+              Pick items to add — edit rate &amp; qty inline
             </div>
           </div>
           <button onClick={onClose} className="w-9 h-9 rounded-full grid place-items-center hover:bg-brand-bg text-brand-navy">
@@ -2295,31 +2316,75 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
           ) : items.length === 0 ? (
             <div className="text-center py-16 text-sm text-brand-navy/50">No items found. Try a different search.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-2">
               {items.map((it) => {
                 const on = !!selected[it.id];
+                const ov = overrides[it.id] || {};
+                const rateVal = ov.rate !== undefined ? ov.rate : it.rate;
+                const qtyVal = ov.quantity !== undefined ? ov.quantity : it.default_quantity;
+                const noteVal = ov.notes !== undefined ? ov.notes : (it.notes || "");
+                const lineTotal = (Number(rateVal) || 0) * (Number(qtyVal) || 1);
                 return (
-                  <button
+                  <div
                     key={it.id}
-                    onClick={() => toggle(it.id)}
                     data-testid={`cq-lib-item-${it.id}`}
-                    className={`text-left rounded-xl border p-3 transition ${
-                      on ? "border-brand-orange bg-brand-orange/5 ring-2 ring-brand-orange/40" : "border-black/10 bg-white hover:border-brand-navy/30"
+                    className={`rounded-xl border p-3 transition ${
+                      on ? "border-brand-orange bg-brand-orange/5 ring-1 ring-brand-orange/40" : "border-black/10 bg-white hover:border-brand-navy/30"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                    <div className="grid grid-cols-12 gap-3 items-start">
+                      <label className="col-span-1 flex items-center justify-center pt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={() => toggle(it.id)}
+                          className="w-4 h-4 accent-brand-orange"
+                          data-testid={`cq-lib-check-${it.id}`}
+                        />
+                      </label>
+                      <div className="col-span-4 min-w-0 cursor-pointer" onClick={() => toggle(it.id)}>
                         <div className="text-[10px] uppercase tracking-widest text-brand-orange font-semibold">{it.category}</div>
-                        <div className="font-semibold text-brand-navy mt-0.5 truncate">{it.name}</div>
+                        <div className="font-semibold text-brand-navy text-sm mt-0.5 truncate">{it.name}</div>
                         {it.brand && <div className="text-xs text-brand-navy/60">{it.brand}</div>}
-                        {it.notes && <div className="text-xs text-brand-navy/50 mt-1 line-clamp-2">{it.notes}</div>}
                       </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-sm font-bold text-brand-navy">₹{Math.round(Number(it.rate) || 0).toLocaleString("en-IN")}</div>
-                        <div className="text-[10px] text-brand-navy/50">{it.rate_unit || ""}</div>
+                      <div className="col-span-2">
+                        <div className="text-[10px] uppercase tracking-wider text-brand-navy/60 font-semibold mb-0.5">Rate (₹)</div>
+                        <input
+                          type="number"
+                          value={rateVal ?? 0}
+                          onChange={(e) => patchOverride(it.id, { rate: e.target.value })}
+                          onFocus={(e) => e.target.select()}
+                          className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs font-bold"
+                          data-testid={`cq-lib-rate-${it.id}`}
+                        />
+                        <div className="text-[10px] text-brand-navy/50 mt-0.5">{it.rate_unit || ""}</div>
+                      </div>
+                      <div className="col-span-1">
+                        <div className="text-[10px] uppercase tracking-wider text-brand-navy/60 font-semibold mb-0.5">Qty</div>
+                        <input
+                          type="number"
+                          value={qtyVal ?? 1}
+                          onChange={(e) => patchOverride(it.id, { quantity: e.target.value })}
+                          onFocus={(e) => e.target.select()}
+                          className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs"
+                          data-testid={`cq-lib-qty-${it.id}`}
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <div className="text-[10px] uppercase tracking-wider text-brand-navy/60 font-semibold mb-0.5">Notes</div>
+                        <input
+                          value={noteVal}
+                          onChange={(e) => patchOverride(it.id, { notes: e.target.value })}
+                          className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs"
+                          placeholder="Custom note (optional)"
+                        />
+                      </div>
+                      <div className="col-span-1 text-right pt-4">
+                        <div className="text-[10px] uppercase tracking-wider text-brand-navy/50">Line</div>
+                        <div className="text-sm font-bold text-brand-navy">₹{Math.round(lineTotal).toLocaleString("en-IN")}</div>
                       </div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -2327,8 +2392,13 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
         </div>
 
         <div className="p-4 border-t border-black/5 flex items-center justify-between bg-brand-bg/30">
-          <div className="text-sm text-brand-navy/70">
-            {selectedItems.length} selected
+          <div className="text-sm">
+            <span className="text-brand-navy/70">{selectedCount} selected</span>
+            {selectedCount > 0 && (
+              <span className="ml-3 font-semibold text-brand-navy">
+                Est. total: ₹{Math.round(selectedTotal).toLocaleString("en-IN")}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
