@@ -27,6 +27,8 @@ const AdminProposals = lazy(() => import("@/pages/admin/AdminProposals"));
 const AdminCustomQuotes = lazy(() => import("@/pages/admin/AdminCustomQuotes"));
 const AdminQuoteTemplates = lazy(() => import("@/pages/admin/AdminQuoteTemplates"));
 const PublicQuotePage = lazy(() => import("@/pages/PublicQuotePage"));
+const PortalLogin = lazy(() => import("@/pages/portal/PortalLogin"));
+const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
 
 function PageFallback() {
   return (
@@ -55,6 +57,8 @@ function App() {
                 <Route path="/blog/:slug" element={<BlogDetailPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/quote/:token" element={<PublicQuotePage />} />
+                <Route path="/portal/login" element={<PortalLogin />} />
+                <Route path="/portal" element={<PortalHome />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />

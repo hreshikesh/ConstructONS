@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form, Response, Header
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form, Response, Header, Request
 from fastapi.responses import Response as FastAPIResponse
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
@@ -1313,6 +1313,35 @@ async def export_quiz_csv(status: Optional[str] = None):
         ])
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
     return _csv_response(rows, f"constructons-quiz-submissions-{ts}.csv")
+
+
+# ============================================================================
+# Customer Auth — Google OAuth via Emergent Auth
+# ============================================================================
+from customer_auth import (
+    ProcessSessionBody, process_google_session, get_current_customer,
+    logout_customer as _logout_customer,
+)
+
+
+@router.post("/customer/auth/session")
+async def customer_process_session(body: ProcessSessionBody, response: FastAPIResponse):
+    return await process_google_session(body, response)
+
+
+@router.get("/customer/me")
+async def customer_me(customer=Depends(get_current_customer)):
+    return {
+        "user_id": customer.get("user_id"),
+        "email": customer.get("email"),
+        "name": customer.get("name"),
+        "picture": customer.get("picture"),
+    }
+
+
+@router.post("/customer/logout")
+async def customer_logout(request: Request, response: FastAPIResponse):
+    return await _logout_customer(request, response)
 
 
 # ============================================================================
