@@ -26,6 +26,7 @@ const AdminPackages = lazy(() => import("@/pages/admin/AdminPackages"));
 const AdminProposals = lazy(() => import("@/pages/admin/AdminProposals"));
 const AdminCustomQuotes = lazy(() => import("@/pages/admin/AdminCustomQuotes"));
 const AdminQuoteTemplates = lazy(() => import("@/pages/admin/AdminQuoteTemplates"));
+const AdminProjects = lazy(() => import("@/pages/admin/AdminProjects"));
 const PublicQuotePage = lazy(() => import("@/pages/PublicQuotePage"));
 const PortalLogin = lazy(() => import("@/pages/portal/PortalLogin"));
 const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
@@ -69,6 +70,7 @@ function App() {
                   <Route path="proposals" element={<AdminProposals />} />
                   <Route path="custom-quotes" element={<AdminCustomQuotes />} />
                   <Route path="quote-templates" element={<AdminQuoteTemplates />} />
+                  <Route path="projects" element={<AdminProjects />} />
                   <Route path=":entity" element={<AdminEntity />} />
                 </Route>
               </Routes>

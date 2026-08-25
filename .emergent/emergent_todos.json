@@ -1,30 +1,30 @@
 [
   {
-    "content": "Backend: Interior Library model + seed 70+ items across 9 categories + CRUD routes",
+    "content": "Verify backend project_routes wiring & test endpoints",
     "status": "completed"
   },
   {
-    "content": "Backend: add revisions[] + current_revision to drawing sheets; update PDF title block + revisions box",
+    "content": "Review AdminProjects.js and PortalHome.js for correctness",
     "status": "completed"
   },
   {
-    "content": "Backend: add /api/custom-quotes/preview endpoint accepting unsaved payload",
+    "content": "Wire AdminProjects route in App.js + sidebar in AdminLayout.js",
     "status": "completed"
   },
   {
-    "content": "Frontend: PDF Preview split panel with iframe + auto-refresh on type + toggle",
+    "content": "Add 'Client Login' button on public site navbar",
     "status": "completed"
   },
   {
-    "content": "Frontend: Interior Library picker modal (search, category tabs, multi-select → add to quote)",
+    "content": "Seed demo project for admin email dkmanjeshbelli@gmail.com",
     "status": "completed"
   },
   {
-    "content": "Frontend: Drawing revisions UI (letter+date+note history per sheet)",
+    "content": "Restart services and take screenshots (Admin cockpit + Portal)",
     "status": "completed"
   },
   {
-    "content": "End-to-end verified: preview renders, library seeds & picks work, revisions save",
+    "content": "Backend + Frontend testing via testing agent",
     "status": "completed"
   }
 ]

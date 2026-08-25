@@ -12,6 +12,8 @@ from routes import router as api_router  # noqa: E402
 
 app = FastAPI(title="ConstructONS CMS API", version="1.0.0")
 app.include_router(api_router)
+from project_routes import proj_router  # noqa: E402
+app.include_router(proj_router)
 
 app.add_middleware(
     CORSMiddleware,

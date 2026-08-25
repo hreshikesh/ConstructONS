@@ -12,19 +12,19 @@
   - Client proposal PDFs + WhatsApp workflow
   - **Custom Quotes**: AI-assisted, fully editable, PDF-exportable bespoke quotations
   - **Quote Templates**: reusable quote baselines to speed up sales
-  - **Client Portal**: shareable public quote link for accept/reject + comments
+  - **Client Quote Viewer**: shareable public quote link for accept/reject + comments
   - **CSV Export**: one-click exports for leads and quiz submissions
   - **Interior Library**: curated interior items with brand pricing to drop into quotes
   - **Drawing Sheets**: floor plans/elevations with CAD title blocks + revision history
   - **Live PDF Preview**: real-time branded PDF rendering inside the quote editor
 
-### NEW (Major Objective)
-Build a **customer-facing AI chat portal** (ChatGPT/Claude-level UX) that spans the full construction lifecycle:
-- Customers can select and discuss packages via chat, generate quotes, request visuals/documents, and confirm projects.
-- Once booked, customers track a **milestone-based project timeline** from discovery → handover.
-- All actions are **synced to backend state** (quotes, projects, stages, docs, audit logs) and are visible to admins.
+### NEW (Major Objective) — Client Portal (Milestones + Future AI)
+Build a customer-facing portal that spans the full construction lifecycle:
+- Customers can log in via **Client Login** and track a **10-stage milestone-based project timeline** from Discovery → Handover.
+- Admin can manage projects and stage updates inside the Admin Panel; customers see updates instantly in the portal.
+- (Upcoming) Add an **AI Chat Assistant** inside the portal to help customers explore packages, generate quotes, and request updates.
 
-**Current status:** Phases 1–4.8 are complete and stable in preview. Next major work is Phase 5: **Customer AI Chat Portal + Milestone Tracker**.
+**Current status:** Phases 1–4.8 are complete and stable in preview. **Milestone Tracker (admin + customer) is COMPLETE and tested end-to-end.** Next major work is Phase 5.4: **Customer AI Chat Assistant**.
 
 ---
 
@@ -83,7 +83,7 @@ Frontend (Admin) ✅
 - Generic CRUD drawer editor.
 
 Testing ✅
-- End-to-end verified via `testing_agent_v3` (high pass rate) + iterative fixes.
+- End-to-end verified via `testing_agent_v3` + iterative fixes.
 
 ---
 
@@ -98,31 +98,29 @@ Delivered ✅
 - **PDF Systems**:
   - Public package brochure generator
   - Personalized client proposal generator (7-page) with WhatsApp sharing
-- **Realtime admin notifications** integrated.
+- Realtime admin notifications integrated.
 - Security: DOMPurify added to reduce XSS risk.
 
 Bug fixes ✅
-- **Packages Comparison page blank** fixed and visually verified (table renders with full spec matrix).
+- **Packages Comparison page blank** fixed and visually verified.
 
 ---
 
 ### Phase 3 — Sales Workflows: Custom Quotes ✅ COMPLETED
-**Goal:** Add a new Admin section **Custom Quotes** that lets ConstructONS generate tailored quotations per client requirements, with AI-assisted suggestions, full editability, and share-ready PDF.
+**Goal:** Add an Admin section **Custom Quotes** for bespoke quotations, AI-assisted drafting, and share-ready PDF.
 
 Delivered ✅
-- New admin section **/admin/custom-quotes** with:
-  - Client details + requirements (plot, floors, BHK, budget, start/end)
-  - Base package optional loading (deep spec sheet snapshot)
-  - Fully editable: deep specs, add-ons, custom line items, pricing, scope, exclusions, schedule, terms
-  - Actions: Save, Download PDF, WhatsApp share, Email share, Copy link, Status updates
+- Admin page **/admin/custom-quotes** with:
+  - client details + requirements
+  - base package snapshot loading
+  - deeply editable specs + add-ons + custom line items + pricing + terms
+  - actions: save, download PDF, WhatsApp share, copy public link, status updates
 - **AI Quote Assistant**:
-  - Mode A: Recommend + tune (package anchored)
-  - Mode B: Build from scratch
-  - Async AI job pattern (job_id + polling)
+  - job_id + polling
+  - package anchored + from-scratch modes
 - PDF generator + CRUD + PDF routes.
 
 Verification ✅
-- UI renders and editor drawer works
 - Quote CRUD works with sequential refs `CQ-YYYY-0001`
 - AI job completes successfully
 - PDF endpoint returns valid PDF bytes
@@ -130,166 +128,140 @@ Verification ✅
 ---
 
 ### Phase 4 — Sales Operations Upgrade ✅ COMPLETED
-**Goal:** Finish the "sales operating system" layer.
+**Goal:** Finish the sales operating system layer.
 
 #### 4.1 Rich Text Editor (TipTap) ✅
 - TipTap WYSIWYG installed and reusable `RichTextEditor` added.
-- Wired into:
-  - Blogs `content_html`
-  - Custom Quotes `intro_note`, `terms`
-- Rendered HTML styled via `.rich-html` and sanitized with DOMPurify.
+- Wired into blogs + custom quotes.
 
 #### 4.2 CSV Export ✅
-- Admin-protected endpoints:
-  - `GET /api/exports/leads.csv`
-  - `GET /api/exports/quiz-submissions.csv`
-- Admin buttons added to Leads and Quiz Submissions.
+- Admin-protected exports for leads + quiz submissions.
 
 #### 4.3 Quote Templates ✅
-- QuoteTemplates collection + CRUD endpoints.
-- Admin page `/admin/quote-templates` with card grid.
-- Save-as-template + create-from-template flows.
+- QuoteTemplates collection + CRUD.
+- Admin page `/admin/quote-templates`.
 
-#### 4.4 Client Portal Link ✅
-- Tokenized public route `/quote/:token`.
-- Client can view, comment, accept/reject.
-- Admin sees comments + action status.
+#### 4.4 Client Quote Viewer Link ✅
+- Tokenized public route `/quote/:token` with accept/reject + comments.
 
 #### 4.5 Quote Enhancements (Service Charge, Interiors, Drawings, Visual Boards) ✅
-- Replaced GST with **15% service charge** default.
-- Added per-item **rates**, **units**, **notes**, and billable toggles.
-- Added **Interiors** category editor.
-- Added **Floor Plans** and **Elevations** with CAD title blocks.
-- Added **Visual Boards** with uploads + AI image generation.
-- Rebranded custom quote PDF to match brochure look.
+- Service charge default.
+- Interiors category editor.
+- Floor plans/elevations with CAD title blocks.
+- Visual boards with uploads + AI image generation.
 
 #### 4.6 AI Image Generation ✅
-- `/api/ai/generate-image` using Gemini Nano Banana + Object Storage.
+- `/api/ai/generate-image`.
 
 #### 4.7 Live PDF Preview ✅
-- `POST /api/custom-quotes/preview` returns PDF from unsaved payload.
-- Admin quote editor split view: form left, live PDF iframe right.
+- `POST /api/custom-quotes/preview`.
 
 #### 4.8 Interior Library + Drawing Revisions ✅
-- Interior Library seeded (70+ items across 9 categories).
-- Picker modal with search/tabs and inline rate/qty overrides.
-- Drawing revisions (A/B/C...) tracked per sheet and rendered in PDF.
+- Interior library seeded.
+- Drawing revisions tracked and rendered in PDF.
 
 ---
 
-### Phase 5 — Customer-Facing AI Chat Portal + Milestone Tracker 🚧 NEXT
-**Goal:** Build a customer portal where users can select packages and manage the entire construction journey through an AI chat + milestone tracker, with backend-synced state.
+### Phase 5 — Client Portal (Milestones Complete) + Future AI Chat
 
-**Decisions locked ✅**
-- Auth: **Both** — Email OTP + Google OAuth (Emergent Auth)
-- Scope: **Phase 1 + 2** of portal — Auth + Chat + Booking → Milestone tracker
-- AI: **Multi-model**
-  - Chat: **GPT-4o-mini** (fast + streaming)
-  - Quotes: **GPT-5** (existing Custom Quote system)
-  - Images: **Nano Banana** (existing)
-  - Advanced reasoning optional: **Claude Sonnet 4**
-  - Model selector in chat
-- Quote linkage: AI recommendation → **creates draft Custom Quote** → customer views/comments via existing public link
-- Milestones: Use standard 10 stages
-- Chat UX: ChatGPT/Claude-like — streaming, file uploads, image gen, PDF/HTML blocks
+#### 5.1 Customer Auth + Portal Shell ✅ COMPLETED
+Backend ✅
+- Customer session + `/api/customer/me` + logout.
+- Google OAuth session exchange wired into portal entry.
+
+Frontend ✅
+- `/portal/login` implemented.
+- `/portal` route created.
+
+> Note: Production Google OAuth requires correct environment variables and domain cookie settings.
+
+#### 5.2 Project Milestone Tracker (Admin + Customer) ✅ COMPLETED (P0 Delivered)
+**Goal:** Deliver the exact requested feature: Admin controls projects; customers see a 10-stage tracker from Discovery → Handover.
+
+Backend ✅
+- Added `/app/backend/project_routes.py` and included it in FastAPI app.
+- MongoDB collection: `projects`.
+- Endpoints:
+  - Customer: `GET /api/portal/my-project`
+  - Admin:
+    - `GET /api/admin/projects`
+    - `POST /api/admin/projects` (seeds 10 stages)
+    - `PUT /api/admin/projects/{project_id}`
+    - `PATCH /api/admin/projects/{project_id}/stages/{index}` (auto-timestamps on status transitions)
+    - `DELETE /api/admin/projects/{project_id}`
+
+Frontend ✅
+- Admin:
+  - `/admin/projects` wired in `App.js`.
+  - Sidebar link added in `AdminLayout.js` as **Customer Projects**.
+  - AdminProjects cockpit:
+    - list projects + progress bar
+    - create new project modal
+    - manage stages modal (status/date/progress/notes + photo uploads)
+- Customer Portal:
+  - `PortalHome.js` renders the 10-stage tracker with expandable stage cards.
+
+Public Site ✅
+- Added **Client Login** button to Header (desktop + mobile) linking to `/portal/login`.
+
+Demo Seed ✅
+- Demo project created for `dkmanjeshbelli@gmail.com`:
+  - Title: **Belli Residence — G+1 Modern Home**
+  - Stages: 10 seeded
+  - Status: 3 stages completed
+  - Booking stage: in-progress at 55%
+
+Testing ✅
+- `testing_agent_v3` verified:
+  - **Backend: 52/52 tests passed**
+  - All frontend flows render and function:
+    - admin projects list + stages editor
+    - portal milestone timeline
+    - client login entry point visible
+
+#### 5.3 Customer AI Chat Assistant 🚧 NEXT (Deferred earlier; now the main remaining portal feature)
+**Goal:** ChatGPT/Claude-like assistant inside portal to guide package selection, quote generation, and project Q&A.
+
+Backend (Planned)
+- `POST /api/chat/message` with streaming (SSE).
+- Store conversations/messages in MongoDB.
+- Tool calls:
+  - list packages
+  - recommend package
+  - create custom quote draft + return public link
+  - generate images (reuse existing)
+
+Frontend (Planned)
+- Chat UI with streaming tokens + rich message renderer.
+- Optional file upload.
+
+#### 5.4 Notifications (Email/WhatsApp) for Milestone Updates ⏳ UPCOMING (P1)
+**Goal:** Auto-notify customers when stages are updated.
+- SMTP email notifications per stage update.
+- (Optional) WhatsApp notifications.
 
 ---
 
 ## 3) Next Actions
 
-### Phase 5.1 — Customer Auth + Portal Shell
-Backend
-- Add models:
-  - `Customer` (profile, contact, auth providers)
-  - `CustomerSession` (cookie-based)
-  - `OtpCode` (6-digit, 5 min expiry, rate limited)
-- Auth routes:
-  - `POST /api/customer/signup` (email OTP start)
-  - `POST /api/customer/verify-otp`
-  - `POST /api/customer/login`
-  - `GET /api/customer/me`
-  - Google OAuth via Emergent Auth:
-    - `GET /api/customer/auth/google/start`
-    - `GET /api/customer/auth/google/callback`
-- Security:
-  - throttling, OTP replay protection, ip/user limits
+### Immediate (Portal AI is next)
+1. Implement portal AI chat backend (SSE + conversation storage).
+2. Build portal chat UI and integrate with existing quote generation + public link.
 
-Frontend
-- `/portal/login`
-  - Email OTP flow
-  - Google sign-in
-- `/portal` layout
-  - left sidebar (conversations)
-  - main chat window
-
-### Phase 5.2 — Streaming Chat + Tool Calling
-Backend
-- `POST /api/chat/message` (SSE streaming)
-- Conversation storage in MongoDB:
-  - `conversations`, `messages` (role, text, attachments, tool_calls)
-- Tool calls available to AI:
-  - `list_packages` (returns 4 packages as cards)
-  - `recommend_package(brief)` (rationale + top 1–3)
-  - `create_quote(package_slug, params)` → creates CustomQuote + returns public link
-  - `generate_image(prompt)` → stores image and returns URL
-  - `render_html(html)` → safe HTML block
-  - `create_lead()` → optional, to sync sales follow-ups
-- Model selector
-  - GPT-4o-mini default; Claude Sonnet 4 optional; GPT-5 for quote gen tasks
-
-Frontend
-- Claude/ChatGPT-style chat UI:
-  - streaming assistant tokens
-  - rich message renderer: package cards, quote link cards, images, PDF preview blocks, HTML blocks
-  - file upload (reuse `/api/media/upload`)
-
-### Phase 5.3 — Booking → Project Creation + Milestone Tracker
-Backend
-- New `Project` model:
-  - created when quote status becomes `accepted`
-  - contains 10 seeded stages:
-    Discovery → Design → Approvals → Booking → Site Prep → Foundation → Structure → Walls & MEP → Finishing → Handover
-  - stage fields: status, expected_date, progress_pct, docs/photos, notes, customer_signoff
-- Routes:
-  - `GET /api/projects/mine`
-  - `GET /api/projects/{id}`
-  - `POST /api/projects/{id}/stages/{stage_id}/signoff`
-- Audit log:
-  - `milestone_events` collection
-- Automation:
-  - stage update → auto-post message into conversation
-
-Frontend
-- `/portal/project`
-  - vertical timeline of 10 stages
-  - per-stage: status, uploads, notes, signoff
-
-Admin
-- `/admin/projects`
-  - stage manager UI
-  - upload photos/docs per stage
-  - push updates into customer chat
-
-### Phase 5.4 — Quality Bar + Testing
-- SSE streaming reliability
-- Auth session integrity
-- XSS hardening for HTML blocks
-- File type validation and size limits
-- `testing_agent_v3` pass + screenshot verification for portal
+### Production Readiness Notes (User Action)
+- Ensure production env vars are set (e.g., `EMERGENT_LLM_KEY`, Google OAuth keys, admin emails, etc.). Preview works; production failures are commonly missing env configuration.
 
 ---
 
 ## 4) Success Criteria
 - Existing phases remain stable (no regressions).
 - Sales stack remains stable:
-  - Custom quotes, templates, portal links, exports, preview, interior library, drawings
-- New portal delivers:
-  - Customer can log in (OTP + Google)
-  - Customer can chat with streaming AI and browse the 4 packages
-  - Chat can produce a Custom Quote draft and send a public link
-  - Upon acceptance, a Project is created with 10 stages
-  - Customer can track milestones and sign off stages
-  - Admin can update stages and uploads; changes sync to customer chat
-- Production readiness:
-  - Works on custom domain with cookie security
-  - Environment variables documented and validated on boot
+  - custom quotes, templates, public quote links, exports, preview, interior library, drawings
+- Portal delivers (✅ now met for milestones):
+  - customer can log in and view a **10-stage milestone tracker**
+  - admin can create/manage projects and update stages
+  - client entry point exists on main site as **Client Login**
+- Next success criteria (upcoming):
+  - portal AI chat streams reliably
+  - chat can recommend packages and create a draft custom quote + share link
+  - optional milestone update notifications

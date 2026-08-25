@@ -15,8 +15,8 @@ BASE_URL = os.getenv(
     "TEST_BASE_URL",
     "https://ai-homes-3.preview.emergentagent.com/api",
 )
-ADMIN_EMAIL = os.getenv("TEST_ADMIN_EMAIL", "admin@constructons.in")
-ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD", "admin123")
+ADMIN_EMAIL = os.getenv("TEST_ADMIN_EMAIL", "dkmanjeshbelli@gmail.com")
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD", "9980577310@aB")
 DEV_BYPASS_TOKEN = os.getenv("TEST_DEV_BYPASS_TOKEN", "dev-bypass-constructons-2025")
 
 
@@ -51,6 +51,8 @@ class ConstructONSAPITester:
                 response = requests.post(url, json=data, headers=headers, timeout=10)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=10)
             elif method == 'DELETE':
                 response = requests.delete(url, headers=headers, timeout=10)
             else:
@@ -1066,6 +1068,311 @@ class ConstructONSAPITester:
                     self.log(f"  - Latest note: {first.get('note')}", "INFO")
         return success, response
 
+    # ----------------------- PROJECT ROUTES TESTS -----------------------
+    def test_list_projects(self):
+        """Test GET /api/admin/projects (requires admin auth)"""
+        success, response = self.run_test(
+            "List projects (admin)",
+            "GET",
+            "admin/projects",
+            200
+        )
+        if success and isinstance(response, list):
+            self.log(f"✓ Found {len(response)} projects", "INFO")
+            if len(response) > 0:
+                # Check for seeded 'Belli Residence' project
+                belli_project = None
+                for p in response:
+                    if 'Belli Residence' in p.get('title', ''):
+                        belli_project = p
+                        break
+                
+                if belli_project:
+                    self.log(f"✓ Found seeded 'Belli Residence' project", "INFO")
+                    self.log(f"  - Customer: {belli_project.get('customer_email')}", "INFO")
+                    self.log(f"  - Stages: {len(belli_project.get('stages', []))}", "INFO")
+                    
+                    # Verify 10 stages
+                    stages = belli_project.get('stages', [])
+                    if len(stages) == 10:
+                        self.log(f"✓ Project has 10 stages", "INFO")
+                        
+                        # Check stage statuses
+                        completed = [s for s in stages if s.get('status') == 'completed']
+                        in_progress = [s for s in stages if s.get('status') == 'in_progress']
+                        self.log(f"  - Completed stages: {len(completed)}", "INFO")
+                        self.log(f"  - In progress stages: {len(in_progress)}", "INFO")
+                    else:
+                        self.log(f"⚠️  Project has {len(stages)} stages, expected 10", "WARN")
+                else:
+                    self.log(f"⚠️  Seeded 'Belli Residence' project not found", "WARN")
+                
+                # Verify first project structure
+                first = response[0]
+                required = ['id', 'customer_email', 'customer_name', 'title', 'stages', 'created_at']
+                missing = [k for k in required if k not in first]
+                if missing:
+                    self.log(f"⚠️  Project missing fields: {missing}", "WARN")
+                else:
+                    self.log(f"✓ Project has all required fields", "INFO")
+        return success, response
+
+    def test_create_project(self):
+        """Test POST /api/admin/projects (requires admin auth)"""
+        timestamp = datetime.now().strftime("%H%M%S")
+        project_data = {
+            "customer_email": f"e2e-test-{timestamp}@example.com",
+            "customer_name": f"Test Customer {timestamp}",
+            "title": f"Test Project {timestamp}",
+            "address": "Test Address, Bangalore"
+        }
+        success, response = self.run_test(
+            "Create project",
+            "POST",
+            "admin/projects",
+            200,
+            data=project_data
+        )
+        if success and response.get('id'):
+            project_id = response['id']
+            self.log(f"✓ Project created with ID: {project_id}", "INFO")
+            
+            # Verify 10 default stages were created
+            stages = response.get('stages', [])
+            if len(stages) == 10:
+                self.log(f"✓ Project created with 10 default stages", "INFO")
+                
+                # Verify stage names
+                expected_stages = ["Discovery", "Design", "Approvals", "Booking", "Site Preparation", 
+                                 "Foundation", "Structure", "Walls & MEP", "Finishing", "Handover"]
+                actual_names = [s.get('name') for s in stages]
+                if actual_names == expected_stages:
+                    self.log(f"✓ All stage names are correct", "INFO")
+                else:
+                    self.log(f"⚠️  Stage names don't match expected", "WARN")
+            else:
+                self.log(f"⚠️  Project has {len(stages)} stages, expected 10", "WARN")
+            
+            return success, project_id
+        return success, None
+
+    def test_create_duplicate_project(self, email):
+        """Test POST /api/admin/projects with duplicate email - should return 409"""
+        project_data = {
+            "customer_email": email,
+            "customer_name": "Duplicate Test",
+            "title": "Duplicate Project"
+        }
+        success, response = self.run_test(
+            "Create duplicate project (should fail with 409)",
+            "POST",
+            "admin/projects",
+            409,
+            data=project_data
+        )
+        if success:
+            self.log(f"✓ Duplicate project correctly rejected with 409", "INFO")
+        return success, None
+
+    def test_update_project(self, project_id):
+        """Test PUT /api/admin/projects/{id} (requires admin auth)"""
+        update_data = {
+            "title": "Updated Project Title",
+            "address": "Updated Address, Mumbai",
+            "status": "active"
+        }
+        success, response = self.run_test(
+            f"Update project: {project_id}",
+            "PUT",
+            f"admin/projects/{project_id}",
+            200,
+            data=update_data
+        )
+        if success:
+            self.log(f"✓ Project updated successfully", "INFO")
+            if response.get('title') == update_data['title']:
+                self.log(f"✓ Title updated correctly", "INFO")
+            if response.get('address') == update_data['address']:
+                self.log(f"✓ Address updated correctly", "INFO")
+        return success, response
+
+    def test_patch_stage(self, project_id, stage_index):
+        """Test PATCH /api/admin/projects/{id}/stages/{index} (requires admin auth)"""
+        stage_data = {
+            "status": "in_progress",
+            "progress_pct": 55,
+            "expected_date": "2025-09-15",
+            "notes": "Stage is progressing well. Expected completion by mid-September."
+        }
+        success, response = self.run_test(
+            f"Update stage {stage_index} of project {project_id}",
+            "PATCH",
+            f"admin/projects/{project_id}/stages/{stage_index}",
+            200,
+            data=stage_data
+        )
+        if success:
+            self.log(f"✓ Stage updated successfully", "INFO")
+            
+            # Verify auto-timestamp for started_at
+            if response.get('status') == 'in_progress' and response.get('started_at'):
+                self.log(f"✓ started_at auto-stamped: {response.get('started_at')}", "INFO")
+            
+            if response.get('progress_pct') == 55:
+                self.log(f"✓ Progress percentage updated correctly", "INFO")
+            
+            if response.get('notes') == stage_data['notes']:
+                self.log(f"✓ Notes updated correctly", "INFO")
+        return success, response
+
+    def test_patch_stage_completed(self, project_id, stage_index):
+        """Test PATCH stage to completed status - should auto-stamp completed_at and set progress to 100"""
+        stage_data = {
+            "status": "completed"
+        }
+        success, response = self.run_test(
+            f"Mark stage {stage_index} as completed",
+            "PATCH",
+            f"admin/projects/{project_id}/stages/{stage_index}",
+            200,
+            data=stage_data
+        )
+        if success:
+            self.log(f"✓ Stage marked as completed", "INFO")
+            
+            # Verify auto-timestamp for completed_at
+            if response.get('completed_at'):
+                self.log(f"✓ completed_at auto-stamped: {response.get('completed_at')}", "INFO")
+            else:
+                self.log(f"⚠️  completed_at not set", "WARN")
+            
+            # Verify progress_pct set to 100
+            if response.get('progress_pct') == 100:
+                self.log(f"✓ progress_pct auto-set to 100", "INFO")
+            else:
+                self.log(f"⚠️  progress_pct is {response.get('progress_pct')}, expected 100", "WARN")
+        return success, response
+
+    def test_portal_my_project_unauth(self):
+        """Test GET /api/portal/my-project without auth - should return 401"""
+        # Temporarily remove token
+        saved_token = self.token
+        self.token = None
+        
+        url = f"{self.base_url}/portal/my-project"
+        self.tests_run += 1
+        self.log(f"Testing portal/my-project without auth...")
+        
+        try:
+            headers = {'Content-Type': 'application/json'}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            # Should be 401
+            if response.status_code == 401:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Unauthorized access blocked: {response.status_code}", "PASS")
+                success = True
+            else:
+                self.log(f"❌ FAILED - Expected 401, got {response.status_code}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Portal my-project (unauth)",
+                    "expected": 401,
+                    "actual": response.status_code,
+                    "endpoint": "portal/my-project"
+                })
+                success = False
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Portal my-project (unauth)",
+                "error": str(e),
+                "endpoint": "portal/my-project"
+            })
+            success = False
+        finally:
+            # Restore token
+            self.token = saved_token
+        
+        return success, None
+
+    def test_portal_my_project_with_session(self):
+        """Test GET /api/portal/my-project with customer session cookie"""
+        url = f"{self.base_url}/portal/my-project"
+        self.tests_run += 1
+        self.log(f"Testing portal/my-project with customer session...")
+        
+        try:
+            # Use the seeded customer session token
+            session_token = "test-session-fb2134222ed249bc9de7aa059408a3e8"
+            cookies = {"customer_session": session_token}
+            
+            response = requests.get(url, cookies=cookies, timeout=10)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Portal my-project with session - Status: {response.status_code}", "PASS")
+                
+                result = response.json()
+                project = result.get('project')
+                
+                if project:
+                    self.log(f"✓ Customer project found", "INFO")
+                    self.log(f"  - Title: {project.get('title')}", "INFO")
+                    self.log(f"  - Customer: {project.get('customer_email')}", "INFO")
+                    
+                    # Verify stages
+                    stages = project.get('stages', [])
+                    if len(stages) == 10:
+                        self.log(f"✓ Project has 10 stages", "INFO")
+                        
+                        # Check for stage 4 (Booking) in progress at 55%
+                        if len(stages) > 3:
+                            stage_4 = stages[3]  # index 3 = stage 4
+                            if stage_4.get('name') == 'Booking':
+                                self.log(f"✓ Stage 4 is 'Booking'", "INFO")
+                                if stage_4.get('status') == 'in_progress':
+                                    self.log(f"✓ Stage 4 status is 'in_progress'", "INFO")
+                                if stage_4.get('progress_pct') == 55:
+                                    self.log(f"✓ Stage 4 progress is 55%", "INFO")
+                    else:
+                        self.log(f"⚠️  Project has {len(stages)} stages, expected 10", "WARN")
+                else:
+                    self.log(f"⚠️  No project found for customer", "WARN")
+                
+                return True, project
+            else:
+                self.log(f"❌ FAILED - Expected 200, got {response.status_code}", "FAIL")
+                self.log(f"   Response: {response.text[:200]}", "FAIL")
+                self.failed_tests.append({
+                    "name": "Portal my-project with session",
+                    "expected": 200,
+                    "actual": response.status_code,
+                    "endpoint": "portal/my-project"
+                })
+                return False, None
+                
+        except Exception as e:
+            self.log(f"❌ FAILED - Error: {str(e)}", "ERROR")
+            self.failed_tests.append({
+                "name": "Portal my-project with session",
+                "error": str(e),
+                "endpoint": "portal/my-project"
+            })
+            return False, None
+
+    def test_delete_project(self, project_id):
+        """Test DELETE /api/admin/projects/{id} (requires admin auth)"""
+        success, response = self.run_test(
+            f"Delete project: {project_id}",
+            "DELETE",
+            f"admin/projects/{project_id}",
+            200
+        )
+        if success:
+            self.log(f"✓ Project deleted successfully", "INFO")
+        return success, response
+
     def run_all_tests(self):
         """Run all backend tests"""
         self.log("=" * 60, "INFO")
@@ -1177,6 +1484,40 @@ class ConstructONSAPITester:
                 package_id = packages[0].get('id')
                 if package_id:
                     self.test_package_versions(package_id)
+            
+            # PROJECT ROUTES: Test customer project milestone tracker
+            self.log("\n--- PROJECT ROUTES: Testing Customer Project Milestone Tracker ---", "INFO")
+            _, projects = self.test_list_projects()
+            
+            # Test create project
+            _, new_project_id = self.test_create_project()
+            
+            if new_project_id:
+                # Test duplicate project creation (should fail with 409)
+                # Get the email from the newly created project
+                _, project_list = self.test_list_projects()
+                if project_list:
+                    for p in project_list:
+                        if p.get('id') == new_project_id:
+                            self.test_create_duplicate_project(p.get('customer_email'))
+                            break
+                
+                # Test update project
+                self.test_update_project(new_project_id)
+                
+                # Test patch stage (stage 3 - index 3 = Booking)
+                self.test_patch_stage(new_project_id, 3)
+                
+                # Test patch stage to completed (stage 0 - Discovery)
+                self.test_patch_stage_completed(new_project_id, 0)
+                
+                # Test delete project
+                self.test_delete_project(new_project_id)
+            
+            # Test portal endpoints
+            self.log("\n--- PROJECT ROUTES: Testing Customer Portal ---", "INFO")
+            self.test_portal_my_project_unauth()
+            self.test_portal_my_project_with_session()
         
         # Print summary
         self.log("\n" + "=" * 60, "INFO")

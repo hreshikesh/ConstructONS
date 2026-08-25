@@ -57,6 +57,13 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
+            <Link
+              to="/portal/login"
+              data-testid="header-client-login"
+              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-brand-navy/15 bg-white/70 px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-navy hover:text-white transition-colors"
+            >
+              Client Login
+            </Link>
             <button
               onClick={() => openLead({ source: "header" })}
               data-testid="header-cta"
@@ -87,6 +94,14 @@ export default function Header() {
                 {NAV.map((n) => (
                   <MobileNavItem key={n.label} to={n.to} label={n.label} onClick={() => setOpen(false)} />
                 ))}
+                <Link
+                  to="/portal/login"
+                  onClick={() => setOpen(false)}
+                  data-testid="mobile-client-login"
+                  className="mt-2 rounded-full border border-brand-navy/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy text-center hover:bg-brand-navy hover:text-white transition-colors"
+                >
+                  Client Login
+                </Link>
                 <button
                   onClick={() => { setOpen(false); openLead({ source: "header" }); }}
                   className="btn-primary w-full mt-2 text-sm"
