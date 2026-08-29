@@ -117,16 +117,45 @@ export default function AdminCustomQuotes() {
     }
     setSaving(true);
     try {
+      // Robust numeric coercion helpers so a stray empty-string / comma / typo
+      // never triggers a silent 422 from Pydantic.
+      const num = (v, dflt = 0) => {
+        if (v === "" || v === null || v === undefined) return dflt;
+        const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, "").trim());
+        return Number.isFinite(n) ? n : dflt;
+      };
+      const numOrNull = (v) => {
+        if (v === "" || v === null || v === undefined) return null;
+        const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, "").trim());
+        return Number.isFinite(n) ? n : null;
+      };
+
       // Coerce numerics
       const payload = {
         ...editing,
-        plot_area: editing.plot_area === "" ? null : Number(editing.plot_area) || null,
-        built_up_area: Number(editing.built_up_area) || 0,
-        budget: editing.budget === "" ? null : Number(editing.budget) || null,
-        price_per_sqft: Number(editing.price_per_sqft) || 0,
-        discount_amount: Number(editing.discount_amount) || 0,
-        gst_percent: Number(editing.gst_percent) || 0,
-        warranty_years: Number(editing.warranty_years) || 10,
+        // Top-level numerics
+        plot_area: numOrNull(editing.plot_area),
+        built_up_area: num(editing.built_up_area, 0),
+        budget: numOrNull(editing.budget),
+        price_per_sqft: num(editing.price_per_sqft, 0),
+        discount_amount: num(editing.discount_amount, 0),
+        service_charge_percent: num(editing.service_charge_percent, 15),
+        gst_percent: num(editing.gst_percent, 0),
+        warranty_years: Math.trunc(num(editing.warranty_years, 10)),
+        valid_days: Math.trunc(num(editing.valid_days, 30)),
+        // Deep numeric coercion in nested arrays (row-level fields user can edit)
+        addons: (editing.addons || []).map((a) => ({
+          ...a,
+          price: num(a?.price, 0),
+        })),
+        line_items: (editing.line_items || []).map((li) => ({
+          ...li,
+          amount: num(li?.amount, 0),
+        })),
+        payment_schedule: (editing.payment_schedule || []).map((p) => ({
+          ...p,
+          percentage: num(p?.percentage, 0),
+        })),
       };
       const saved = editing.id
         ? await adminApi.customQuotes.update(editing.id, payload)
@@ -135,8 +164,27 @@ export default function AdminCustomQuotes() {
       toast.success(editing.id ? "Quote updated" : "Quote created");
       load();
     } catch (e) {
+      // Surface the ACTUAL reason instead of a mystery "Save failed" toast.
       const detail = e?.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Save failed");
+      let msg = "Save failed";
+      if (typeof detail === "string" && detail.trim()) {
+        msg = detail;
+      } else if (Array.isArray(detail) && detail.length > 0) {
+        // Pydantic validation errors — build a readable message.
+        const first = detail
+          .slice(0, 3)
+          .map((d) => {
+            const path = Array.isArray(d?.loc) ? d.loc.filter((x) => x !== "body").join(" › ") : "";
+            const reason = d?.msg || "invalid value";
+            return path ? `${path}: ${reason}` : reason;
+          })
+          .join(" | ");
+        msg = `Save failed — ${first}${detail.length > 3 ? ` (+${detail.length - 3} more)` : ""}`;
+      } else if (e?.message) {
+        msg = `Save failed — ${e.message}`;
+      }
+      console.error("[CustomQuotes] save error", { status: e?.response?.status, detail, error: e });
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
