@@ -12,7 +12,7 @@
  *   - Scope / Exclusions / Payment schedule / Terms
  *   - Actions: Save, Download PDF, WhatsApp share, Email share
  */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { adminApi, publicApi, API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -396,12 +396,41 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
   const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+  const previewUrlRef = useRef(null);
   const set = (patch) => setEditing((prev) => ({ ...prev, ...patch }));
 
   useEffect(() => {
     adminApi.quoteTemplates.list().then(setTemplates).catch(() => setTemplates([]));
   }, []);
+
+  // Same robust numeric coercion used by save() — so preview never trips a 422.
+  const _num = (v, dflt = 0) => {
+    if (v === "" || v === null || v === undefined) return dflt;
+    const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : dflt;
+  };
+  const _numOrNull = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : null;
+  };
+  const buildPayload = (src) => ({
+    ...src,
+    plot_area: _numOrNull(src.plot_area),
+    built_up_area: _num(src.built_up_area, 0),
+    budget: _numOrNull(src.budget),
+    price_per_sqft: _num(src.price_per_sqft, 0),
+    discount_amount: _num(src.discount_amount, 0),
+    service_charge_percent: _num(src.service_charge_percent, 15),
+    gst_percent: _num(src.gst_percent, 0),
+    warranty_years: Math.trunc(_num(src.warranty_years, 10)),
+    valid_days: Math.trunc(_num(src.valid_days, 30)),
+    addons: (src.addons || []).map((a) => ({ ...a, price: _num(a?.price, 0) })),
+    line_items: (src.line_items || []).map((li) => ({ ...li, amount: _num(li?.amount, 0) })),
+    payment_schedule: (src.payment_schedule || []).map((p) => ({ ...p, percentage: _num(p?.percentage, 0) })),
+  });
 
   // Live PDF preview — debounced regenerate when editing changes and preview is on.
   useEffect(() => {
@@ -409,29 +438,44 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
     let cancelled = false;
     const timer = setTimeout(async () => {
       setPreviewLoading(true);
+      setPreviewError(null);
       try {
-        // Coerce numeric fields (same rules as save()) so backend schema accepts payload
-        const payload = {
-          ...editing,
-          plot_area: editing.plot_area === "" || editing.plot_area == null ? null : Number(editing.plot_area) || null,
-          built_up_area: Number(editing.built_up_area) || 0,
-          budget: editing.budget === "" || editing.budget == null ? null : Number(editing.budget) || null,
-          price_per_sqft: Number(editing.price_per_sqft) || 0,
-          discount_amount: Number(editing.discount_amount) || 0,
-          gst_percent: Number(editing.gst_percent) || 0,
-          service_charge_percent: Number(editing.service_charge_percent ?? 15) || 15,
-          warranty_years: Number(editing.warranty_years) || 10,
-          valid_days: Number(editing.valid_days) || 30,
-        };
+        const payload = buildPayload(editing);
         const blob = await adminApi.customQuotes.previewPdf(payload);
         if (cancelled) return;
         const url = URL.createObjectURL(blob);
-        setPreviewUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return url;
-        });
+        // Swap the ref first, then commit state — so a rapid re-run of the effect
+        // can still revoke the OLD url via the ref without racing React state.
+        const previous = previewUrlRef.current;
+        previewUrlRef.current = url;
+        setPreviewUrl(url);
+        if (previous) {
+          // Small delay so the iframe latches the new URL before the old one dies
+          setTimeout(() => URL.revokeObjectURL(previous), 500);
+        }
       } catch (e) {
-        if (!cancelled) toast.error("Preview render failed");
+        if (cancelled) return;
+        const detail = e?.response?.data;
+        let msg = "Preview render failed";
+        // Response is a Blob when responseType='blob' — read text
+        if (detail instanceof Blob) {
+          try {
+            const text = await detail.text();
+            const parsed = JSON.parse(text);
+            const d = parsed?.detail;
+            if (typeof d === "string") msg = d;
+            else if (Array.isArray(d) && d.length > 0) {
+              msg = d.slice(0, 2).map((x) => {
+                const path = Array.isArray(x?.loc) ? x.loc.filter((y) => y !== "body").join(" › ") : "";
+                return path ? `${path}: ${x.msg}` : x.msg;
+              }).join(" | ");
+            }
+          } catch {/* keep default */}
+        } else if (typeof detail?.detail === "string") {
+          msg = detail.detail;
+        }
+        setPreviewError(msg);
+        console.error("[CustomQuotes] preview error", e);
       } finally {
         if (!cancelled) setPreviewLoading(false);
       }
@@ -445,9 +489,8 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
   // Revoke blob URL on unmount
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Pricing calculations (live)
@@ -1420,24 +1463,52 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
                 <div className="inline-flex items-center gap-2">
                   <Eye className="w-4 h-4 text-brand-orange" />
                   <span className="font-semibold uppercase tracking-wider">Live PDF Preview</span>
+                  <span className="text-white/40 hidden md:inline">— auto-refreshes as you edit</span>
                 </div>
-                {previewLoading && (
-                  <div className="inline-flex items-center gap-1.5 text-brand-orangeLight">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Rendering...
-                  </div>
-                )}
+                <div className="inline-flex items-center gap-3">
+                  {previewLoading && (
+                    <div className="inline-flex items-center gap-1.5 text-brand-orangeLight" data-testid="cq-preview-loading">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Rendering...
+                    </div>
+                  )}
+                  {previewUrl && !previewLoading && (
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-white/70 hover:text-white transition-colors"
+                      data-testid="cq-preview-open-new-tab"
+                    >
+                      Open in tab
+                    </a>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 bg-brand-navy/90">
+              {previewError && (
+                <div className="mx-3 mb-2 rounded-lg bg-red-500/15 border border-red-400/30 px-3 py-2 text-[11px] text-red-100" data-testid="cq-preview-error">
+                  <div className="font-semibold uppercase tracking-wider text-red-200 mb-0.5">Preview failed</div>
+                  {previewError}
+                </div>
+              )}
+              <div className="flex-1 bg-white">
                 {previewUrl ? (
-                  <iframe
-                    src={previewUrl}
-                    title="PDF Preview"
-                    className="w-full h-full border-0"
+                  <object
+                    key={previewUrl}
+                    data={previewUrl}
+                    type="application/pdf"
+                    className="w-full h-full"
+                    aria-label="PDF Preview"
                     data-testid="cq-preview-iframe"
-                  />
+                  >
+                    <iframe
+                      src={previewUrl}
+                      title="PDF Preview"
+                      className="w-full h-full border-0"
+                    />
+                  </object>
                 ) : (
-                  <div className="w-full h-full grid place-items-center text-white/50 text-sm">
-                    {previewLoading ? "Building preview..." : "Preview will appear here"}
+                  <div className="w-full h-full grid place-items-center text-brand-navy/40 text-sm">
+                    {previewLoading ? "Building preview..." : (previewError ? "" : "Preview will appear here")}
                   </div>
                 )}
               </div>
