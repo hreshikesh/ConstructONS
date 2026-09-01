@@ -17,6 +17,9 @@ from io import BytesIO
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 import logging
+import re
+from html import escape as _html_escape
+from html.parser import HTMLParser
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -28,6 +31,204 @@ from reportlab.platypus import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Rich-text sanitizer
+# ---------------------------------------------------------------------------
+# ReportLab's Paragraph accepts a tiny XML-flavoured subset of HTML. TipTap
+# (our WYSIWYG editor) emits full HTML with <h2>, <ul>/<li>, nested <p>, bare
+# <br>, <a>, etc. — most of which crash the paraparser. This helper converts
+# any user-supplied HTML into a list of ReportLab-safe Paragraph objects so
+# the PDF never blows up on rich text.
+
+_RL_INLINE_MAP = {
+    # TipTap / HTML tag  -> ReportLab equivalent
+    "strong": ("b", "b"),
+    "b":      ("b", "b"),
+    "em":     ("i", "i"),
+    "i":      ("i", "i"),
+    "u":      ("u", "u"),
+    "s":      ("strike", "strike"),
+    "strike": ("strike", "strike"),
+    "del":    ("strike", "strike"),
+    "code":   ("font face='Courier'", "font"),
+    "span":   (None, None),   # strip wrapper
+}
+_RL_BLOCK_TAGS = {"p", "div", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "figure"}
+_RL_LIST_TAGS = {"ul", "ol"}
+_RL_ITEM_TAG = "li"
+_RL_BREAK_TAGS = {"br"}
+
+
+class _TipTapToReportLabParser(HTMLParser):
+    """Convert TipTap/HTML into a list of ReportLab-safe paragraph strings.
+
+    Each element in `self.paragraphs` is a tuple (kind, html) where kind is
+    one of: 'p', 'bullet', 'number'. The caller renders each entry as its own
+    Paragraph so we don't feed ReportLab any unsupported block structure.
+    """
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.paragraphs: List[tuple] = []   # [(kind, safe_html), ...]
+        self._buf: List[str] = []
+        self._list_stack: List[str] = []    # 'ul' or 'ol'
+        self._ol_index: List[int] = []      # counters per ol level
+        self._pending_kind: str = "p"       # kind for the currently accumulating buffer
+
+    # ------------- helpers -------------
+    def _flush(self):
+        text = "".join(self._buf).strip()
+        self._buf = []
+        if not text:
+            return
+        # Collapse repeated whitespace and stray newlines
+        text = re.sub(r"\s+", " ", text)
+        self.paragraphs.append((self._pending_kind, text))
+
+    def _start_new(self, kind: str = "p"):
+        self._flush()
+        self._pending_kind = kind
+
+    # ------------- HTMLParser overrides -------------
+    def handle_starttag(self, tag, attrs):
+        t = tag.lower()
+        if t in _RL_BREAK_TAGS:
+            self._buf.append("<br/>")
+            return
+        if t in _RL_LIST_TAGS:
+            self._flush()
+            self._list_stack.append(t)
+            if t == "ol":
+                self._ol_index.append(0)
+            return
+        if t == _RL_ITEM_TAG:
+            # Start a new bullet/number paragraph
+            self._flush()
+            if self._list_stack and self._list_stack[-1] == "ol":
+                self._ol_index[-1] += 1
+                self._pending_kind = f"number:{self._ol_index[-1]}"
+            else:
+                self._pending_kind = "bullet"
+            return
+        if t in _RL_BLOCK_TAGS:
+            self._start_new("p")
+            return
+        if t in _RL_INLINE_MAP:
+            open_tag, _ = _RL_INLINE_MAP[t]
+            if open_tag:
+                self._buf.append(f"<{open_tag}>")
+            return
+        if t == "a":
+            href = ""
+            for k, v in attrs:
+                if k.lower() == "href" and v:
+                    href = _html_escape(v, quote=True)
+                    break
+            if href:
+                self._buf.append(f"<link href=\"{href}\"><u>")
+            else:
+                self._buf.append("<u>")
+            return
+        # Unknown tag: strip
+
+    def handle_endtag(self, tag):
+        t = tag.lower()
+        if t in _RL_BREAK_TAGS:
+            return
+        if t in _RL_LIST_TAGS:
+            self._flush()
+            if self._list_stack:
+                self._list_stack.pop()
+            if t == "ol" and self._ol_index:
+                self._ol_index.pop()
+            self._pending_kind = "p"
+            return
+        if t == _RL_ITEM_TAG:
+            self._flush()
+            # Stay inside list; next li will set kind again
+            self._pending_kind = "p"
+            return
+        if t in _RL_BLOCK_TAGS:
+            self._flush()
+            self._pending_kind = "p"
+            return
+        if t in _RL_INLINE_MAP:
+            _, close_tag = _RL_INLINE_MAP[t]
+            if close_tag:
+                self._buf.append(f"</{close_tag}>")
+            return
+        if t == "a":
+            # Close either <link><u> or bare <u>
+            joined = "".join(self._buf)
+            if "<link " in joined:
+                self._buf.append("</u></link>")
+            else:
+                self._buf.append("</u>")
+            return
+
+    def handle_data(self, data):
+        # Escape any XML-special chars the user typed as plain text.
+        # convert_charrefs=True has already decoded &amp; -> & etc, so we
+        # need to re-escape here for ReportLab safety.
+        self._buf.append(_html_escape(data, quote=False))
+
+    def close(self):
+        super().close()
+        self._flush()
+
+
+def _tiptap_to_rl_paragraphs(html: Optional[str], styles: Dict[str, ParagraphStyle]) -> List[Paragraph]:
+    """Best-effort convert user HTML into a list of Paragraph flowables.
+
+    Never raises: if parsing fails, falls back to a stripped plain-text render.
+    """
+    if not html:
+        return []
+    text = str(html)
+    body_style = styles.get("body")
+    small_style = styles.get("small") or body_style
+    try:
+        parser = _TipTapToReportLabParser()
+        parser.feed(text)
+        parser.close()
+        entries = parser.paragraphs
+    except Exception as e:
+        logger.warning("[pdf] TipTap parser failed, falling back to plain text: %s", e)
+        entries = [("p", _html_escape(re.sub(r"<[^>]+>", " ", text), quote=False))]
+
+    flowables: List[Paragraph] = []
+    for kind, safe_html in entries:
+        if not safe_html.strip():
+            continue
+        try:
+            if kind == "bullet":
+                flowables.append(Paragraph(f"\u2022&nbsp;&nbsp;{safe_html}", body_style))
+            elif kind.startswith("number:"):
+                idx = kind.split(":", 1)[1]
+                flowables.append(Paragraph(f"{idx}.&nbsp;&nbsp;{safe_html}", body_style))
+            else:
+                flowables.append(Paragraph(safe_html, body_style))
+        except Exception as e:
+            logger.warning("[pdf] Paragraph render failed for entry — using plain text: %s", e)
+            plain = _html_escape(re.sub(r"<[^>]+>", " ", safe_html), quote=False)
+            try:
+                flowables.append(Paragraph(plain, body_style))
+            except Exception:
+                # Absolute last resort: drop
+                pass
+    return flowables
+
+
+def _safe_inline(text: Optional[str]) -> str:
+    """Escape a plain string for safe inclusion inside a Paragraph."""
+    if text is None:
+        return ""
+    return _html_escape(str(text), quote=False)
+
+
+
 
 # Match brochure palette
 ORANGE = colors.HexColor("#FF5A00")
@@ -270,8 +471,9 @@ def generate_custom_quote_pdf(quote: Dict[str, Any], settings: Dict[str, Any]) -
     # ---------- 2. Project Brief ----------
     story.append(Paragraph("Project Brief", styles["h1"]))
     if quote.get("intro_note"):
-        # intro_note may be rich HTML — feed as-is to Paragraph (limited HTML support)
-        story.append(Paragraph(quote["intro_note"], styles["body"]))
+        # intro_note is TipTap-rich HTML — convert to ReportLab-safe paragraphs
+        for flow in _tiptap_to_rl_paragraphs(quote.get("intro_note"), styles):
+            story.append(flow)
         story.append(Spacer(1, 8))
 
     story.append(Paragraph("Client Details", styles["h2"]))
@@ -626,7 +828,12 @@ def generate_custom_quote_pdf(quote: Dict[str, Any], settings: Dict[str, Any]) -
         "6. Municipal approvals, land-related legal fees and utility deposits are excluded unless explicitly included.<br/>"
         "7. Rates and specifications shown are indicative and confirmed at booking. This quotation does not constitute a binding contract until a formal work order is signed."
     )
-    story.append(Paragraph(quote.get("terms") or default_terms, styles["body"]))
+    if quote.get("terms"):
+        # User-authored terms come from TipTap — sanitize
+        for flow in _tiptap_to_rl_paragraphs(quote.get("terms"), styles):
+            story.append(flow)
+    else:
+        story.append(Paragraph(default_terms, styles["body"]))
     story.append(Spacer(1, 30))
     sign_tbl = Table([
         ["For ConstructONS", "For Client"],

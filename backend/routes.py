@@ -893,7 +893,15 @@ async def download_custom_quote_pdf(quote_id: str):
     settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
 
     from custom_quote_pdf import generate_custom_quote_pdf
-    pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    try:
+        pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    except Exception as e:
+        import traceback, logging as _l
+        _l.getLogger(__name__).exception("[pdf] custom-quote download failed for %s", quote_id)
+        raise HTTPException(
+            status_code=500,
+            detail=f"PDF generation failed: {type(e).__name__}: {str(e)[:200]}",
+        )
     filename = f"{(quote.get('ref_number') or 'quote').replace('/', '_')}.pdf"
     return FastAPIResponse(
         content=pdf_bytes,
@@ -916,7 +924,15 @@ async def preview_custom_quote_pdf(body: CustomQuote):
     quote["ref_number"] = quote.get("ref_number") or "PREVIEW"
     settings = await db.site_settings.find_one({"id": "site_settings"}, {"_id": 0}) or {}
     from custom_quote_pdf import generate_custom_quote_pdf
-    pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    try:
+        pdf_bytes = generate_custom_quote_pdf(quote, settings)
+    except Exception as e:
+        import logging as _l
+        _l.getLogger(__name__).exception("[pdf] custom-quote preview failed")
+        raise HTTPException(
+            status_code=500,
+            detail=f"PDF preview failed: {type(e).__name__}: {str(e)[:200]}",
+        )
     return FastAPIResponse(
         content=pdf_bytes,
         media_type="application/pdf",
