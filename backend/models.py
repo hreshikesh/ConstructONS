@@ -405,6 +405,37 @@ class CustomQuoteAddon(BaseModel):
     unit: Optional[str] = None
 
 
+class MaterialSpecRow(BaseModel):
+    """A single row in the Material Specification sheet at the end of the quote."""
+    category: str = ""
+    item: str = ""
+    brand_grade: str = ""
+    notes: str = ""
+
+
+DEFAULT_MATERIAL_SPECS: List[Dict[str, str]] = [
+    {"category": "Structure",       "item": "Cement",             "brand_grade": "UltraTech / Ambuja (OPC 43 Grade)",   "notes": "Base Price - Rs. 410 / bag"},
+    {"category": "Structure",       "item": "Steel/TMT Bars",     "brand_grade": "SK Super / JSW Neosteel Fe-550D",     "notes": "Base Price - Rs. 65,000 / MT"},
+    {"category": "Structure",       "item": "Cement Blocks",      "brand_grade": "Hydraulic Compressed",                "notes": "Base Price - Rs. 40 / Block"},
+    {"category": "Flooring",        "item": "Living/Bedroom Tiles","brand_grade": "Kajaria / Somany, 2x2 ft Vitrified",   "notes": "Base Price - Rs. 55 / Sft"},
+    {"category": "Flooring",        "item": "Bathroom Tiles",     "brand_grade": "Kajaria / Somany, Anti-skid",         "notes": "Base Price - Rs. 45 / Sft"},
+    {"category": "Kitchen",         "item": "Modular Kitchen",    "brand_grade": "Sleek / Godrej Interio, Marine Ply",   "notes": "Base Price - Rs. 45 / Sft"},
+    {"category": "Kitchen",         "item": "Kitchen Countertop", "brand_grade": "Granite (standard)",                  "notes": "Base Price - Rs. 80 / Sft"},
+    {"category": "Kitchen",         "item": "Wall Dado",          "brand_grade": "Kajaria / Somany, 2x2 ft Vitrified",   "notes": "Base Price - Rs. 40 / Sft"},
+    {"category": "Kitchen",         "item": "Sink",               "brand_grade": "SS 304 Grade",                        "notes": "Base Price - Rs. 3000 / Sink"},
+    {"category": "Doors & Windows", "item": "Main Door",          "brand_grade": "Teak flush shutter, teak frame",      "notes": "Base Price - Rs. 4500 / Cft"},
+    {"category": "Doors & Windows", "item": "Windows",            "brand_grade": "Fenesta / Encraft UPVC",              "notes": "Base Price - Rs. 300 / Sft"},
+    {"category": "Bath Fittings",   "item": "Sanitaryware",       "brand_grade": "Cera / Parryware",                    "notes": "Base Price - Rs. 10000 / Bathroom"},
+    {"category": "Bath Fittings",   "item": "CP Fittings (taps, showers)", "brand_grade": "Jaquar (standard range)",    "notes": "Base Price - Rs. 3000 / Bathroom"},
+    {"category": "Bath Tiles",      "item": "Wall + Floor Tiles", "brand_grade": "Kajaria / Somany, 2x2 ft Vitrified",   "notes": "Base Price - Rs. 45 / Sft"},
+    {"category": "Electrical",      "item": "Wiring",             "brand_grade": "Havells / Finolex, ISI copper",       "notes": ""},
+    {"category": "Electrical",      "item": "Switches",           "brand_grade": "Legrand / Havells (modular)",         "notes": ""},
+    {"category": "Paint",           "item": "Interior",           "brand_grade": "Asian Paints Premium Emulsion",       "notes": ""},
+    {"category": "Paint",           "item": "Exterior",           "brand_grade": "Asian Paints Apex Weatherproof",      "notes": ""},
+    {"category": "Waterproofing",   "item": "Terrace",            "brand_grade": "Dr. Fixit system / equivalent",       "notes": "10-year warranty system available"},
+]
+
+
 class CustomQuote(BaseDoc):
     # Reference & workflow
     ref_number: Optional[str] = None            # auto-generated CQ-YYYY-NNNN on create
@@ -445,6 +476,10 @@ class CustomQuote(BaseDoc):
 
     # Deep spec sheet — fully editable snapshot per quote
     spec_categories: List[SpecCategory] = Field(default_factory=list)
+
+    # Material Specification sheet — simple 4-column table shown after specs
+    # (Category / Item / Standard Included Brand·Grade / Notes)
+    material_specs: List[MaterialSpecRow] = Field(default_factory=list)
 
     # Interior fit-out sheet — same shape as specs, editable per quote.
     interiors: List[SpecCategory] = Field(default_factory=list)

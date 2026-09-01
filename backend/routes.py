@@ -764,11 +764,16 @@ async def get_custom_quote(quote_id: str):
 
 @router.post("/custom-quotes", dependencies=[Depends(require_admin)])
 async def create_custom_quote(body: CustomQuote):
+    from models import DEFAULT_MATERIAL_SPECS
     data = body.model_dump()
     data["id"] = data.get("id") or new_id()
     data["ref_number"] = data.get("ref_number") or (await _generate_cq_ref_number())
     data["created_at"] = now_iso()
     data["updated_at"] = now_iso()
+    # Seed the standard Material Specification sheet on new quotes so admins
+    # can just tweak instead of typing 19 rows from scratch.
+    if not data.get("material_specs"):
+        data["material_specs"] = [dict(r) for r in DEFAULT_MATERIAL_SPECS]
     await db.custom_quotes.insert_one(data)
     data.pop("_id", None)
     return data

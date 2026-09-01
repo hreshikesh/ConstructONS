@@ -664,6 +664,38 @@ def generate_custom_quote_pdf(quote: Dict[str, Any], settings: Dict[str, Any]) -
         story.append(Paragraph("None.", styles["small"]))
     story.append(PageBreak())
 
+    # ---------- 6.5 Material Specification Sheet ----------
+    mats = quote.get("material_specs") or []
+    if mats:
+        story.append(Paragraph("Material Specification", styles["h1"]))
+        story.append(Paragraph(
+            "Standard brand/grade included per line-item. Any upgrades are quoted separately as variation orders.",
+            styles["small"],
+        ))
+        story.append(Spacer(1, 6))
+        m_rows = [["Category", "Item", "Standard Included Brand/Grade", "Notes"]]
+        for row in mats:
+            m_rows.append([
+                Paragraph(_safe_inline(row.get("category")), styles["small"]),
+                Paragraph(_safe_inline(row.get("item")), styles["small"]),
+                Paragraph(_safe_inline(row.get("brand_grade")), styles["small"]),
+                Paragraph(f"<i>{_safe_inline(row.get('notes'))}</i>", styles["small"]),
+            ])
+        mt = Table(m_rows, colWidths=[32 * mm, 42 * mm, 55 * mm, 46 * mm], repeatRows=1)
+        mt.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0F172A")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+            ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 9),
+            ("FONT", (0, 1), (-1, -1), "Helvetica", 8.5),
+            ("GRID", (0, 0), (-1, -1), 0.25, LINE),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TEXTCOLOR", (3, 1), (3, -1), colors.HexColor("#6B7280")),
+        ]))
+        story.append(mt)
+        story.append(PageBreak())
+
     # ---------- 7. Payment Schedule ----------
     schedule = quote.get("payment_schedule") or []
     if schedule:

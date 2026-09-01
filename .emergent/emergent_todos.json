@@ -1,30 +1,22 @@
 [
   {
-    "content": "Verify backend project_routes wiring & test endpoints",
+    "content": "Add MaterialSpecRow model + material_specs field to CustomQuote",
     "status": "completed"
   },
   {
-    "content": "Review AdminProjects.js and PortalHome.js for correctness",
+    "content": "Seed 23 default material rows for new quotes and populate existing ones",
     "status": "completed"
   },
   {
-    "content": "Wire AdminProjects route in App.js + sidebar in AdminLayout.js",
+    "content": "Add Material Specification section to PDF (after spec sheets, before Payment Schedule)",
     "status": "completed"
   },
   {
-    "content": "Add 'Client Login' button on public site navbar",
+    "content": "Build Admin UI editable table (add/remove/edit rows)",
     "status": "completed"
   },
   {
-    "content": "Seed demo project for admin email dkmanjeshbelli@gmail.com",
-    "status": "completed"
-  },
-  {
-    "content": "Restart services and take screenshots (Admin cockpit + Portal)",
-    "status": "completed"
-  },
-  {
-    "content": "Backend + Frontend testing via testing agent",
+    "content": "Verify PDF + save round-trip",
     "status": "completed"
   }
 ]

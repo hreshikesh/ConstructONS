@@ -53,6 +53,7 @@ const emptyQuote = () => ({
   service_charge_percent: 15,
   gst_percent: 0,
   spec_categories: [],
+  material_specs: [],
   interiors: [],
   floor_plans: [],
   elevations: [],
@@ -1171,6 +1172,17 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
             />
           </Section>
 
+          {/* Material Specification */}
+          <Section title="Material Specification" testId="cq-section-materials">
+            <div className="text-xs text-brand-navy/60 mb-3">
+              Standard brand/grade included per line-item. This appears as a dedicated table in the PDF after all specification sheets and before the Payment Schedule.
+            </div>
+            <MaterialSpecEditor
+              rows={editing.material_specs || []}
+              onChange={(material_specs) => set({ material_specs })}
+            />
+          </Section>
+
           {/* Floor Plans */}
           <Section title="Floor Plans" testId="cq-section-floor-plans">
             <div className="text-xs text-brand-navy/60 mb-3">
@@ -1930,6 +1942,151 @@ function ScheduleEditor({ items, onChange }) {
       >
         <Plus className="w-3.5 h-3.5" /> Add Milestone
       </button>
+    </div>
+  );
+}
+
+
+// ---------- Material Specification Editor ----------
+const DEFAULT_MATERIAL_ROWS = [
+  { category: "Structure", item: "Cement", brand_grade: "UltraTech / Ambuja (OPC 43 Grade)", notes: "Base Price - Rs. 410 / bag" },
+  { category: "Structure", item: "Steel/TMT Bars", brand_grade: "SK Super / JSW Neosteel Fe-550D", notes: "Base Price - Rs. 65,000 / MT" },
+  { category: "Structure", item: "Cement Blocks", brand_grade: "Hydraulic Compressed", notes: "Base Price - Rs. 40 / Block" },
+  { category: "Flooring", item: "Living/Bedroom Tiles", brand_grade: "Kajaria / Somany, 2x2 ft Vitrified", notes: "Base Price - Rs. 55 / Sft" },
+  { category: "Flooring", item: "Bathroom Tiles", brand_grade: "Kajaria / Somany, Anti-skid", notes: "Base Price - Rs. 45 / Sft" },
+  { category: "Kitchen", item: "Modular Kitchen", brand_grade: "Sleek / Godrej Interio, Marine Ply", notes: "Base Price - Rs. 45 / Sft" },
+  { category: "Kitchen", item: "Kitchen Countertop", brand_grade: "Granite (standard)", notes: "Base Price - Rs. 80 / Sft" },
+  { category: "Kitchen", item: "Wall Dado", brand_grade: "Kajaria / Somany, 2x2 ft Vitrified", notes: "Base Price - Rs. 40 / Sft" },
+  { category: "Kitchen", item: "Sink", brand_grade: "SS 304 Grade", notes: "Base Price - Rs. 3000 / Sink" },
+  { category: "Doors & Windows", item: "Main Door", brand_grade: "Teak flush shutter, teak frame", notes: "Base Price - Rs. 4500 / Cft" },
+  { category: "Doors & Windows", item: "Windows", brand_grade: "Fenesta / Encraft UPVC", notes: "Base Price - Rs. 300 / Sft" },
+  { category: "Bath Fittings", item: "Sanitaryware", brand_grade: "Cera / Parryware", notes: "Base Price - Rs. 10000 / Bathroom" },
+  { category: "Bath Fittings", item: "CP Fittings (taps, showers)", brand_grade: "Jaquar (standard range)", notes: "Base Price - Rs. 3000 / Bathroom" },
+  { category: "Bath Tiles", item: "Wall + Floor Tiles", brand_grade: "Kajaria / Somany, 2x2 ft Vitrified", notes: "Base Price - Rs. 45 / Sft" },
+  { category: "Electrical", item: "Wiring", brand_grade: "Havells / Finolex, ISI copper", notes: "" },
+  { category: "Electrical", item: "Switches", brand_grade: "Legrand / Havells (modular)", notes: "" },
+  { category: "Paint", item: "Interior", brand_grade: "Asian Paints Premium Emulsion", notes: "" },
+  { category: "Paint", item: "Exterior", brand_grade: "Asian Paints Apex Weatherproof", notes: "" },
+  { category: "Waterproofing", item: "Terrace", brand_grade: "Dr. Fixit system / equivalent", notes: "10-year warranty system available" },
+];
+
+function MaterialSpecEditor({ rows, onChange }) {
+  const list = rows || [];
+  const add = () =>
+    onChange([...list, { category: "", item: "", brand_grade: "", notes: "" }]);
+  const update = (i, patch) =>
+    onChange(list.map((r, ii) => (ii === i ? { ...r, ...patch } : r)));
+  const remove = (i) => onChange(list.filter((_, ii) => ii !== i));
+  const loadDefaults = () => {
+    if (list.length > 0 && !window.confirm("Replace current material specs with the standard 19-row template?")) return;
+    onChange(DEFAULT_MATERIAL_ROWS.map((r) => ({ ...r })));
+  };
+  const clearAll = () => {
+    if (!window.confirm("Remove all material spec rows?")) return;
+    onChange([]);
+  };
+
+  return (
+    <div className="space-y-2" data-testid="cq-material-editor">
+      {list.length === 0 ? (
+        <div className="p-4 rounded-xl border border-dashed border-black/15 text-center text-xs text-brand-navy/60">
+          No material specs yet. Load the standard 19-row template or add rows one-by-one.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-black/10">
+          <table className="w-full text-xs">
+            <thead className="bg-brand-navy text-white">
+              <tr>
+                <th className="text-left px-2 py-2 font-semibold w-[18%]">Category</th>
+                <th className="text-left px-2 py-2 font-semibold w-[22%]">Item</th>
+                <th className="text-left px-2 py-2 font-semibold w-[30%]">Standard Included Brand/Grade</th>
+                <th className="text-left px-2 py-2 font-semibold w-[26%]">Notes</th>
+                <th className="w-8"></th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {list.map((r, i) => (
+                <tr key={i} className="border-t border-black/5 hover:bg-brand-bg/40">
+                  <td className="px-1.5 py-1.5">
+                    <input
+                      value={r.category || ""}
+                      onChange={(e) => update(i, { category: e.target.value })}
+                      className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs focus:outline-none focus:border-brand-orange"
+                      placeholder="Structure"
+                      data-testid={`cq-mat-cat-${i}`}
+                    />
+                  </td>
+                  <td className="px-1.5 py-1.5">
+                    <input
+                      value={r.item || ""}
+                      onChange={(e) => update(i, { item: e.target.value })}
+                      className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs focus:outline-none focus:border-brand-orange"
+                      placeholder="Cement"
+                      data-testid={`cq-mat-item-${i}`}
+                    />
+                  </td>
+                  <td className="px-1.5 py-1.5">
+                    <input
+                      value={r.brand_grade || ""}
+                      onChange={(e) => update(i, { brand_grade: e.target.value })}
+                      className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs focus:outline-none focus:border-brand-orange"
+                      placeholder="UltraTech / Ambuja (OPC 43 Grade)"
+                      data-testid={`cq-mat-brand-${i}`}
+                    />
+                  </td>
+                  <td className="px-1.5 py-1.5">
+                    <input
+                      value={r.notes || ""}
+                      onChange={(e) => update(i, { notes: e.target.value })}
+                      className="w-full rounded border border-black/10 bg-white px-2 py-1 text-xs italic text-brand-navy/70 focus:outline-none focus:border-brand-orange"
+                      placeholder="Base Price - Rs. 410 / bag"
+                      data-testid={`cq-mat-notes-${i}`}
+                    />
+                  </td>
+                  <td className="px-1 py-1.5 align-middle">
+                    <button
+                      onClick={() => remove(i)}
+                      className="w-7 h-7 rounded-full grid place-items-center hover:bg-red-50 text-red-500 mx-auto"
+                      data-testid={`cq-mat-remove-${i}`}
+                      aria-label="Remove row"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div className="flex items-center gap-2 flex-wrap pt-1">
+        <button
+          onClick={add}
+          className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-4 py-1.5 text-xs font-semibold hover:brightness-110"
+          data-testid="cq-mat-add"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add Row
+        </button>
+        <button
+          onClick={loadDefaults}
+          className="inline-flex items-center gap-1.5 rounded-full border border-brand-navy/15 bg-white text-brand-navy px-4 py-1.5 text-xs font-semibold hover:bg-brand-navy/5"
+          data-testid="cq-mat-load-defaults"
+          type="button"
+        >
+          Load Standard Template (19 rows)
+        </button>
+        {list.length > 0 && (
+          <button
+            onClick={clearAll}
+            className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white text-red-600 px-4 py-1.5 text-xs font-semibold hover:bg-red-50"
+            data-testid="cq-mat-clear"
+            type="button"
+          >
+            Clear all
+          </button>
+        )}
+        <div className="text-[11px] text-brand-navy/50 ml-auto">{list.length} row{list.length === 1 ? "" : "s"}</div>
+      </div>
     </div>
   );
 }
