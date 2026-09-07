@@ -5,29 +5,62 @@ import { publicApi } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function BrochureModal({ isOpen, onClose, slug, packageName, ctx = {} }) {
-  const [form, setForm] = useState({ name: "", phone: "", email: "", city: "" });
+  const [form, setForm] = useState({ name: "", phone: "+91 ", email: "", city: "" });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(null); // { quoteRef, filename }
 
   React.useEffect(() => {
-    if (isOpen) { setDone(null); }
+    if (isOpen) {
+      setDone(null);
+      setForm({ name: "", phone: "+91 ", email: "", city: "" });
+    }
   }, [isOpen]);
+
+  const handleNameChange = (val) => {
+    // Only alphabets and spaces, max 30 characters
+    if (/^[a-zA-Z\s]*$/.test(val) && val.length <= 30) {
+      setForm((prev) => ({ ...prev, name: val }));
+    }
+  };
+
+  const handlePhoneChange = (val) => {
+    // Keep +91 prefix and filter strictly for max 10 numeric digits
+    const digitsOnly = val.replace(/^\+91\s?/, "").replace(/\D/g, "").slice(0, 10);
+    setForm((prev) => ({ ...prev, phone: `+91 ${digitsOnly}` }));
+  };
+
+  const handleCityChange = (val) => {
+    // Only alphabets and spaces allowed
+    if (/^[a-zA-Z\s]*$/.test(val)) {
+      setForm((prev) => ({ ...prev, city: val }));
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.phone) {
-      toast.error("Please enter your name and phone number.");
+
+    const phoneDigits = form.phone.replace(/^\+91\s?/, "").replace(/\D/g, "");
+
+    if (!form.name.trim()) {
+      toast.error("Please enter your full name.");
       return;
     }
+
+    if (phoneDigits.length !== 10) {
+      toast.error("Please enter a valid 10-digit phone number.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await publicApi.personalizedBrochure(slug, {
-        name: form.name,
-        phone: form.phone,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
         email: form.email || undefined,
-        city: form.city || undefined,
+        city: form.city.trim() || undefined,
         quiz_submission_id: ctx.quiz_submission_id || undefined,
       });
+
       // Trigger download
       const url = window.URL.createObjectURL(res.blob);
       const a = document.createElement("a");
@@ -78,10 +111,10 @@ export default function BrochureModal({ isOpen, onClose, slug, packageName, ctx 
 
             {!done ? (
               <form onSubmit={submit} className="p-6 space-y-3">
-                <Field icon={User} placeholder="Full name*" value={form.name} onChange={(v) => setForm({ ...form, name: v })} testId="brochure-name" />
-                <Field icon={Phone} placeholder="Phone number*" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} testId="brochure-phone" />
+                <Field icon={User} placeholder="Full name*" value={form.name} onChange={handleNameChange} testId="brochure-name" maxLength={30} />
+                <Field icon={Phone} placeholder="Phone number*" value={form.phone} onChange={handlePhoneChange} testId="brochure-phone" />
                 <Field icon={Mail} type="email" placeholder="Email (optional)" value={form.email} onChange={(v) => setForm({ ...form, email: v })} testId="brochure-email" />
-                <Field icon={MapPin} placeholder="City (optional)" value={form.city} onChange={(v) => setForm({ ...form, city: v })} testId="brochure-city" />
+                <Field icon={MapPin} placeholder="City (optional)" value={form.city} onChange={handleCityChange} testId="brochure-city" />
                 <button type="submit" disabled={submitting} data-testid="brochure-submit" className="btn-primary w-full mt-2 disabled:opacity-70">
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   {submitting ? "Preparing your brochure…" : "Download Personalised Brochure"}
@@ -115,13 +148,14 @@ export default function BrochureModal({ isOpen, onClose, slug, packageName, ctx 
   );
 }
 
-function Field({ icon: Icon, placeholder, value, onChange, type = "text", testId }) {
+function Field({ icon: Icon, placeholder, value, onChange, type = "text", testId, maxLength }) {
   return (
     <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-3 py-2.5 focus-within:border-brand-orange transition">
       <Icon className="w-4 h-4 text-brand-navy/50" />
       <input
         data-testid={testId}
         type={type}
+        maxLength={maxLength}
         className="flex-1 bg-transparent outline-none text-sm"
         placeholder={placeholder}
         value={value}

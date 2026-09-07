@@ -104,7 +104,7 @@ export default function HomePage() {
     <>
       <Header />
       <main>
-        <Hero hero={data.hero} />
+        <Hero  />
         <HomeCollection homes={data.homes} />
         <Packages packages={data.packages} />
         <AIPlatform modules={data.ai_modules} />

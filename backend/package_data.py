@@ -93,7 +93,7 @@ BASIC_SPECS = [
     _cat("Ceiling", "Ceiling", [
         _spec("False Ceiling", "Not included in Basic (available as add-on)", ""),
     ]),
-    _cat("AI Platform (Included)", "Sparkles", [
+    _cat("AI Platform (Included)", "Shield", [
         _spec("Live Progress Dashboard", "Web + mobile access with milestone tracking"),
         _spec("AI Assistant", "WhatsApp AI assistant for project queries"),
         _spec("Digital Documents", "All approvals, invoices & contracts online"),
@@ -231,7 +231,7 @@ ESSENTIAL_SPECS = [
         _spec("Living / Dining", "Peripheral gypsum false ceiling with cove lighting", "Gyproc Habito"),
         _spec("Bedrooms", "Peripheral cove ceiling (basic design)"),
     ]),
-    _cat("AI Platform (Included)", "Sparkles", [
+    _cat("AI Platform (Included)", "Shield", [
         _spec("Live Progress Dashboard", "Web + mobile with milestone + Gantt tracking"),
         _spec("AI Assistant", "WhatsApp + web AI assistant"),
         _spec("Site Camera", "1 live CCTV feed on your dashboard"),
@@ -349,7 +349,7 @@ STANDARD_SPECS = [
         _spec("Curtains", "Motorised curtains in living + master", "Silent Gliss / Aqara"),
         _spec("Voice Assistant", "Alexa / Google Home integration"),
     ]),
-    _cat("AI Platform (Included)", "Sparkles", [
+    _cat("AI Platform (Included)", "Shield", [
         _spec("Live Progress Dashboard", "Web + mobile + tablet"),
         _spec("AI Assistant", "24/7 WhatsApp + web assistant"),
         _spec("Site Cameras", "3 live CCTV feeds"),
@@ -471,7 +471,7 @@ PREMIUM_SPECS = [
         _spec("Compound", "Designer compound wall + automated gate"),
         _spec("Outdoor Lighting", "Landscape uplighters + facade highlight lighting"),
     ]),
-    _cat("AI Platform (Included)", "Sparkles", [
+    _cat("AI Platform (Included)", "Shield", [
         _spec("Live Dashboard", "Web + mobile + tablet with predictive insights"),
         _spec("AI Assistant", "Dedicated AI concierge + human maestro on speed-dial"),
         _spec("Site Cameras", "6+ live CCTV feeds"),

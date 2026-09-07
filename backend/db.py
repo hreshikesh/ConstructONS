@@ -1,14 +1,21 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
 from pathlib import Path
+from dotenv import load_dotenv
+from motor.motor_asyncio import AsyncIOMotorClient
+import certifi
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+
+# Only pass tlsCAFile for cloud connections (mongodb+srv)
+if "mongodb+srv://" in mongo_url:
+    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
+else:
+    client = AsyncIOMotorClient(mongo_url)
+
+db = client[os.environ.get('DB_NAME', 'constructons_db')]
 
 
 def serialize_doc(doc):

@@ -68,7 +68,26 @@ MARKETPLACE_IMGS = {
     "smart_home": "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
     "landscaping": "https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1200&q=80",
 }
+AI_MODULE_IMAGES = {
+  "ai-workspace":       "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777738/Screenshot_2026-09-07_160421_ovntod.jpg",
+  "project-management": "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777739/Screenshot_2026-09-07_160540_w0rzap.jpg",
+  "site-management":    "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777739/Screenshot_2026-09-07_160728_mqj8oy.jpg",
+  "documents":          "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777738/Screenshot_2026-09-07_160821_j9ix4v.jpg",
+  "finance":            "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777739/Screenshot_2026-09-07_161000_twxbtw.jpg",
+  "crm":                "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777739/Screenshot_2026-09-07_160907_lc7tal.jpg",
+  "enterprise":         "https://res.cloudinary.com/k4uklwi4/image/upload/v1788777739/Screenshot_2026-09-07_161032_uqf2iq.jpg",
+};
 
+JOURNEY_IMAGES = [
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785519/b24cad4f-6f38-4b21-ba3c-4df5b82c5b21.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785583/6346b918-33f9-4091-a84f-ea6305614647.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785652/935475f7-d4d9-4a94-a703-0c50ddc8f293.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785744/cf50e490-5052-4d33-91b3-5cb01d1b0f0c.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785775/c9a2ec26-fbf9-4ddf-8d7c-cb8b9a869734.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785850/4165cf33-b0de-4f99-8c1c-207cb33748d7.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785885/d2380a04-a9b8-40d8-9432-13cee6fe55db.png",
+    "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785936/78f7a88d-4ff3-4916-a4b8-2eda299240b7.png",
+]
 
 async def _reset(collection):
     await db[collection].delete_many({})
@@ -406,18 +425,20 @@ async def seed_all():
         await db.packages.insert_one(Package(**p).model_dump())
 
     # -------- AI Platform Modules --------
+# -------- AI Platform Modules --------
     await _reset("ai_modules")
     ai_modules = [
-        {"name": "AI Workspace", "slug": "ai-workspace", "icon": "Sparkles", "tagline": "Your intelligent construction assistant", "description": "Ask anything about your project — AI understands your timeline, budget, and site status."},
-        {"name": "Project Management", "slug": "project-management", "icon": "LayoutDashboard", "tagline": "Plan, track & manage every task", "description": "Milestones, Gantt views, resource allocation, and AI-driven risk alerts."},
-        {"name": "Site Management", "slug": "site-management", "icon": "HardHat", "tagline": "Monitor site, labor, materials & more", "description": "Daily site logs, labor attendance, material dispatch tracking."},
-        {"name": "Documents", "slug": "documents", "icon": "FileText", "tagline": "All documents in one secure place", "description": "Contracts, approvals, invoices, warranties — instantly searchable."},
-        {"name": "Finance", "slug": "finance", "icon": "Wallet", "tagline": "Track costs, invoices & payments", "description": "Live cost vs. budget, invoice approvals, escrow tracking."},
-        {"name": "CRM", "slug": "crm", "icon": "Users", "tagline": "Manage leads, customers & sales", "description": "For our partners: unified customer conversations across channels."},
-        {"name": "Enterprise", "slug": "enterprise", "icon": "Building2", "tagline": "Scalable solutions for construction businesses", "description": "Multi-project, multi-user, roles, audit logs, and analytics."},
-    ]
+    {"name": "AI Workspace",        "slug": "ai-workspace",       "icon": "Bot",       "tagline": "Your intelligent construction assistant",           "description": "Ask anything about your project — AI understands your timeline, budget, and site status."},
+    {"name": "Project Management",  "slug": "project-management", "icon": "LayoutDashboard","tagline": "Plan, track & manage every task",                    "description": "Milestones, Gantt views, resource allocation, and AI-driven risk alerts."},
+    {"name": "Site Management",     "slug": "site-management",    "icon": "HardHat",        "tagline": "Monitor site, labor, materials & more",              "description": "Daily site logs, labor attendance, material dispatch tracking."},
+    {"name": "Documents",           "slug": "documents",          "icon": "FileText",       "tagline": "All documents in one secure place",                  "description": "Contracts, approvals, invoices, warranties — instantly searchable."},
+    {"name": "Finance",             "slug": "finance",            "icon": "Wallet",         "tagline": "Track costs, invoices & payments",                   "description": "Live cost vs. budget, invoice approvals, escrow tracking."},
+    {"name": "CRM",                 "slug": "crm",                "icon": "Users",          "tagline": "Manage leads, customers & sales",                    "description": "For our partners: unified customer conversations across channels."},
+    {"name": "Enterprise",          "slug": "enterprise",         "icon": "Building2",      "tagline": "Scalable solutions for construction businesses",     "description": "Multi-project, multi-user, roles, audit logs, and analytics."},
+]
     for i, m in enumerate(ai_modules):
         m["sort_order"] = i + 1
+        m["image"] = AI_MODULE_IMAGES.get(m["slug"], "")   # ← NEW LINE
         await db.ai_modules.insert_one(AIPlatformModule(**m).model_dump())
 
     # -------- Marketplace --------
@@ -479,15 +500,63 @@ async def seed_all():
     # -------- Journey --------
     await _reset("journey_steps")
     journey = [
-        {"step_no": 1, "name": "Choose Home", "description": "Select from our ready-to-build home collection", "icon": "Home"},
-        {"step_no": 2, "name": "Choose Package", "description": "Pick the perfect package for your needs", "icon": "Package"},
-        {"step_no": 3, "name": "Consultation", "description": "Get free consultation & site evaluation", "icon": "MessageSquare"},
-        {"step_no": 4, "name": "Design & Planning", "description": "We finalize design & create 3D visuals", "icon": "PenTool"},
-        {"step_no": 5, "name": "Construction", "description": "We build with quality & transparency", "icon": "HardHat"},
-        {"step_no": 6, "name": "Live Tracking", "description": "Track progress in real-time on our platform", "icon": "Activity"},
-        {"step_no": 7, "name": "Handover", "description": "On-time handover with complete documentation", "icon": "KeyRound"},
-        {"step_no": 8, "name": "Warranty & Support", "description": "We're with you always, even after handover", "icon": "ShieldCheck"},
-    ]
+    {
+        "step_no": 1,
+        "name": "Choose Home",
+        "description": "Select from our ready-to-build home collection.",
+        "icon": "Home",
+        "image": JOURNEY_IMAGES[0],
+    },
+    {
+        "step_no": 2,
+        "name": "Choose Package",
+        "description": "Pick the construction package that fits your lifestyle.",
+        "icon": "Package",
+        "image": JOURNEY_IMAGES[1],
+    },
+    {
+        "step_no": 3,
+        "name": "Consultation",
+        "description": "Get a free consultation and detailed site evaluation.",
+        "icon": "MessageSquare",
+        "image": JOURNEY_IMAGES[2],
+    },
+    {
+        "step_no": 4,
+        "name": "Design & Planning",
+        "description": "Finalize your design with detailed plans and 3D visuals.",
+        "icon": "PenTool",
+        "image": JOURNEY_IMAGES[3],
+    },
+    {
+        "step_no": 5,
+        "name": "Construction",
+        "description": "Your home takes shape with controlled execution and quality checks.",
+        "icon": "HardHat",
+        "image": JOURNEY_IMAGES[4],
+    },
+    {
+        "step_no": 6,
+        "name": "Live Tracking",
+        "description": "Monitor construction progress, milestones and updates in real time.",
+        "icon": "Activity",
+        "image": JOURNEY_IMAGES[5],
+    },
+    {
+        "step_no": 7,
+        "name": "Handover",
+        "description": "Receive your completed home with complete documentation.",
+        "icon": "KeyRound",
+        "image": JOURNEY_IMAGES[6],
+    },
+    {
+        "step_no": 8,
+        "name": "Warranty & Support",
+        "description": "Our relationship continues even after you receive the keys.",
+        "icon": "ShieldCheck",
+        "image": JOURNEY_IMAGES[7],
+    },
+]
     for j in journey:
         j["sort_order"] = j["step_no"]
         await db.journey_steps.insert_one(JourneyStep(**j).model_dump())

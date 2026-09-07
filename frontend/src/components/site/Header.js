@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 import BrandLockup from "@/components/site/BrandLockup";
 
@@ -19,96 +19,175 @@ const NAV = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
   const { open: openLead } = useLeadModal();
   const location = useLocation();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   return (
     <header
       data-testid="site-header"
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled ? "py-2" : "py-4"
-      }`}
+      className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4"
     >
-      <div className="container-wide">
-        <div
-          className={`flex items-center justify-between gap-2 rounded-full px-3 md:px-5 transition-all ${
-            scrolled
-              ? "bg-white/85 backdrop-blur-xl border border-black/5 shadow-soft py-2"
-              : "bg-white/60 backdrop-blur-md border border-white/50 py-2"
-          }`}
+      <div className="mx-auto w-full max-w-[1536px]">
+        <motion.div
+          layout
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className={`
+            flex items-center justify-between
+            rounded-full border px-2 py-2 sm:px-3
+            ${
+              scrolled
+                ? "border-black/[0.06] bg-white/95 shadow-[0_12px_40px_rgba(0,15,27,0.08)] backdrop-blur-xl"
+                : "border-white/15 bg-[#000F1B]/30 backdrop-blur-md"
+            }
+          `}
         >
-          <Link to="/" className="flex items-center shrink-0 min-w-0" data-testid="header-logo">
-            <BrandLockup tone="light" size="md" responsive />
+          {/* Logo - Fixed tone logic */}
+          <Link
+            to="/"
+            data-testid="header-logo"
+            aria-label="ConstructONS home"
+            className="flex min-h-11 shrink-0 items-center px-2 sm:px-3"
+          >
+            <BrandLockup
+              tone={scrolled ? "light" : "dark"}
+              size="md"
+              responsive
+            />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
-            {NAV.map((n) => (
-              <NavItem key={n.label} to={n.to} label={n.label} />
+          {/* Desktop Navigation */}
+          <nav
+            aria-label="Primary navigation"
+            className="hidden xl:flex items-center gap-0.5"
+          >
+            {NAV.map((item) => (
+              <NavItem key={item.label} item={item} scrolled={scrolled} />
             ))}
           </nav>
 
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Actions */}
+          <div className="flex items-center gap-2">
             <Link
               to="/portal/login"
               data-testid="header-client-login"
-              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-brand-navy/15 bg-white/70 px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-brand-navy hover:text-white transition-colors"
+              className={`
+                hidden min-h-11 items-center justify-center rounded-full px-4
+                text-sm font-semibold transition-all duration-300 md:inline-flex
+                ${
+                  scrolled
+                    ? "text-[#000F1B] hover:bg-[#000F1B]/5"
+                    : "text-white hover:bg-white/10"
+                }
+              `}
             >
               Client Login
             </Link>
+
             <button
+              type="button"
               onClick={() => openLead({ source: "header" })}
               data-testid="header-cta"
-              className="hidden md:inline-flex btn-primary text-sm py-2.5 px-5"
+              className="
+                hidden min-h-11 items-center justify-center gap-2 rounded-full
+                bg-[#FF5A00] px-5 text-sm font-semibold text-white
+                transition-all duration-300
+                hover:bg-[#FF2D00] hover:shadow-[0_8px_30px_rgba(255,90,0,0.25)]
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A00]
+                focus-visible:ring-offset-2 md:inline-flex
+              "
             >
-              Get Free Consultation
+              Talk to an Expert
+              <ArrowRight className="h-4 w-4" />
             </button>
+
+            {/* Mobile Menu Button */}
             <button
-              onClick={() => setOpen((s) => !s)}
-              className="lg:hidden w-10 h-10 shrink-0 rounded-full grid place-items-center border border-black/10 bg-white"
-              aria-label="Menu"
+              type="button"
+              onClick={() => setOpen((current) => !current)}
+              aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={open}
               data-testid="mobile-menu-button"
+              className={`
+                grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors xl:hidden
+                ${
+                  scrolled
+                    ? "bg-[#000F1B] text-white"
+                    : "border border-white/20 bg-white/10 text-white"
+                }
+              `}
             >
-              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-        </div>
+        </motion.div>
 
+        {/* Mobile Navigation */}
         <AnimatePresence>
           {open && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="lg:hidden mt-2 bg-white rounded-2xl shadow-premium border border-black/5 overflow-hidden"
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="
+                mt-2 overflow-hidden rounded-3xl border border-black/[0.06]
+                bg-white shadow-[0_20px_60px_rgba(0,15,27,0.14)] xl:hidden
+              "
             >
-              <div className="flex flex-col p-2">
-                {NAV.map((n) => (
-                  <MobileNavItem key={n.label} to={n.to} label={n.label} onClick={() => setOpen(false)} />
+              <nav aria-label="Mobile navigation" className="p-2">
+                {NAV.map((item) => (
+                  <MobileNavItem
+                    key={item.label}
+                    item={item}
+                    onClose={() => setOpen(false)}
+                  />
                 ))}
-                <Link
-                  to="/portal/login"
-                  onClick={() => setOpen(false)}
-                  data-testid="mobile-client-login"
-                  className="mt-2 rounded-full border border-brand-navy/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy text-center hover:bg-brand-navy hover:text-white transition-colors"
-                >
-                  Client Login
-                </Link>
-                <button
-                  onClick={() => { setOpen(false); openLead({ source: "header" }); }}
-                  className="btn-primary w-full mt-2 text-sm"
-                >
-                  Get Free Consultation
-                </button>
-              </div>
+
+                <div className="mt-2 border-t border-black/[0.06] pt-2">
+                  <Link
+                    to="/portal/login"
+                    onClick={() => setOpen(false)}
+                    data-testid="mobile-client-login"
+                    className="
+                      flex min-h-12 items-center rounded-2xl px-4 text-sm
+                      font-semibold text-[#000F1B] transition-colors hover:bg-[#000F1B]/5
+                    "
+                  >
+                    Client Login
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      openLead({ source: "header" });
+                    }}
+                    className="
+                      mt-1 flex min-h-12 w-full items-center justify-center gap-2
+                      rounded-2xl bg-[#FF5A00] px-5 text-sm font-semibold text-white
+                      transition-colors hover:bg-[#FF2D00]
+                    "
+                  >
+                    Talk to an Expert
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </nav>
             </motion.div>
           )}
         </AnimatePresence>
@@ -117,59 +196,76 @@ export default function Header() {
   );
 }
 
-function NavItem({ to, label }) {
-  const isHash = to.includes("#");
+function NavItem({ item, scrolled }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleClick = (e) => {
-    if (isHash && to.startsWith("/#")) {
-      e.preventDefault();
-      const id = to.split("#")[1];
-      if (location.pathname !== "/") {
-        navigate("/");
-        setTimeout(() => {
-          document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-        }, 150);
-      } else {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-      }
+  const handleClick = (event) => {
+    if (!item.hash) return;
+    event.preventDefault();
+
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => scrollToSection(item.hash), 150);
+      return;
     }
+    scrollToSection(item.hash);
   };
 
   return (
     <a
-      href={to}
+      href={item.to}
       onClick={handleClick}
-      className="px-3 py-2 text-sm font-medium text-brand-navy/80 hover:text-brand-orange transition-colors rounded-full hover:bg-brand-navy/5"
+      className={`
+        relative rounded-full px-3 py-2.5 text-[13px] font-medium
+        transition-colors duration-200
+        ${
+          scrolled
+            ? "text-[#000F1B]/75 hover:bg-[#000F1B]/5 hover:text-[#000F1B]"
+            : "text-white/80 hover:bg-white/10 hover:text-white"
+        }
+      `}
     >
-      {label}
+      {item.label}
     </a>
   );
 }
 
-function MobileNavItem({ to, label, onClick }) {
+function MobileNavItem({ item, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const handle = (e) => {
-    e.preventDefault();
-    onClick && onClick();
-    if (to.startsWith("/#")) {
-      const id = to.split("#")[1];
-      if (location.pathname !== "/") {
-        navigate("/");
-        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 150);
-      } else {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      navigate(to);
+
+  const handleClick = (event) => {
+    if (!item.hash) return;
+    event.preventDefault();
+    onClose();
+
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => scrollToSection(item.hash), 150);
+      return;
     }
+    scrollToSection(item.hash);
   };
+
   return (
-    <a href={to} onClick={handle} className="px-4 py-3 text-brand-navy/80 hover:bg-brand-navy/5 rounded-xl flex items-center justify-between">
-      {label}
-      <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+    <a
+      href={item.to}
+      onClick={handleClick}
+      className="
+        flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm
+        font-medium text-[#000F1B]/80 transition-colors
+        hover:bg-[#000F1B]/5 hover:text-[#FF5A00]
+      "
+    >
+      <span>{item.label}</span>
+      <ArrowRight className="h-4 w-4 opacity-30" />
     </a>
   );
+}
+
+function scrollToSection(id) {
+  const element = document.getElementById(id);
+  if (!element) return;
+  element.scrollIntoView({ behavior: "smooth", block: "start" });
 }

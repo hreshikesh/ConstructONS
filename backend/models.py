@@ -213,6 +213,7 @@ class AIPlatformModule(BaseDoc):
     name: str  # 'AI Workspace', 'Project Management', ...
     slug: str
     tagline: str = ""
+    image: str = ""
     icon: Optional[str] = None
     description: str = ""
 
@@ -220,10 +221,10 @@ class AIPlatformModule(BaseDoc):
 # ---------- Journey Steps ----------
 class JourneyStep(BaseDoc):
     step_no: int = 1
-    name: str  # Choose Home
+    name: str
     description: str = ""
     icon: Optional[str] = None
-
+    image: Optional[str] = None
 
 # ---------- Hero Sections ----------
 class HeroSection(BaseDoc):
