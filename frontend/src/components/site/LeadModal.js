@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, User, Mail, MapPin, MessageSquare, ShieldCheck, Loader2 } from "lucide-react";
@@ -12,30 +14,79 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
     city: "",
     message: "",
   });
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Full Name Validation
+    const trimmedName = form.name.trim();
+    if (!trimmedName) {
+      newErrors.name = "Full name is required";
+    } else if (trimmedName.length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+
+    // Phone Number Validation (Indian 10-digit format / standard mobile)
+    const cleanPhone = form.phone.replace(/[\s\-\(\)\+]/g, "");
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (!phoneRegex.test(cleanPhone)) {
+      newErrors.phone = "Enter a valid 10-digit mobile number";
+    }
+
+    // Optional Email Validation
+    if (form.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email.trim())) {
+        newErrors.email = "Enter a valid email address";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    // Clear field-specific error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleClose = () => {
+    setErrors({});
+    setForm({ name: "", phone: "", email: "", city: "", message: "" });
+    onClose();
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.phone) {
-      toast.error("Please enter your name and phone number.");
+
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form.");
       return;
     }
+
     setSubmitting(true);
     try {
       const res = await publicApi.submitLead({
-        name: form.name,
-        phone: form.phone,
-        email: form.email || undefined,
-        city: form.city || undefined,
-        message: form.message || undefined,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        city: form.city.trim() || undefined,
+        message: form.message.trim() || undefined,
         interested_home: context.home || undefined,
         interested_package: context.package || undefined,
         source: context.source || "consultation",
         quiz_submission_id: context.quiz_submission_id || undefined,
       });
+
       toast.success(res.message || "Thanks! Our team will call you shortly.");
-      setForm({ name: "", phone: "", email: "", city: "", message: "" });
-      onClose();
+      handleClose();
     } catch (err) {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -52,7 +103,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div className="absolute inset-0 bg-brand-navy/60 backdrop-blur-sm" onClick={onClose} />
+          <div className="absolute inset-0 bg-brand-navy/60 backdrop-blur-sm" onClick={handleClose} />
           <motion.div
             data-testid="lead-modal"
             initial={{ scale: 0.96, y: 20, opacity: 0 }}
@@ -63,7 +114,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
           >
             <div className="relative p-6 pb-4 bg-gradient-to-br from-brand-navy to-brand-navySoft text-white">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 grid place-items-center transition"
                 aria-label="Close"
               >
@@ -81,22 +132,64 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 </div>
               )}
             </div>
+
             <form onSubmit={submit} className="p-6 space-y-3">
-              <Field icon={User} placeholder="Full name*" value={form.name} onChange={(v) => setForm({ ...form, name: v })} testId="lead-name" />
-              <Field icon={Phone} placeholder="Phone number*" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} testId="lead-phone" />
-              <Field icon={Mail} placeholder="Email (optional)" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} testId="lead-email" />
-              <Field icon={MapPin} placeholder="City (optional)" value={form.city} onChange={(v) => setForm({ ...form, city: v })} testId="lead-city" />
-              <Field icon={MessageSquare} placeholder="Message (optional)" value={form.message} onChange={(v) => setForm({ ...form, message: v })} isTextarea testId="lead-message" />
+              <Field
+                icon={User}
+                placeholder="Full name*"
+                value={form.name}
+                onChange={(v) => handleChange("name", v)}
+                error={errors.name}
+                testId="lead-name"
+              />
+
+              <Field
+                icon={Phone}
+                placeholder="Phone number*"
+                type="tel"
+                value={form.phone}
+                onChange={(v) => handleChange("phone", v)}
+                error={errors.phone}
+                testId="lead-phone"
+              />
+
+              <Field
+                icon={Mail}
+                placeholder="Email (optional)"
+                type="email"
+                value={form.email}
+                onChange={(v) => handleChange("email", v)}
+                error={errors.email}
+                testId="lead-email"
+              />
+
+              <Field
+                icon={MapPin}
+                placeholder="City (optional)"
+                value={form.city}
+                onChange={(v) => handleChange("city", v)}
+                testId="lead-city"
+              />
+
+              <Field
+                icon={MessageSquare}
+                placeholder="Message (optional)"
+                value={form.message}
+                onChange={(v) => handleChange("message", v)}
+                isTextarea
+                testId="lead-message"
+              />
 
               <button
                 type="submit"
                 disabled={submitting}
                 data-testid="lead-submit"
-                className="btn-primary w-full mt-2 disabled:opacity-70"
+                className="btn-primary w-full mt-2 disabled:opacity-70 flex items-center justify-center gap-2 py-3 bg-[#FF5A00] hover:bg-[#E04F00] text-white font-semibold rounded-xl transition shadow-md"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                 {submitting ? "Submitting..." : "Request Free Consultation"}
               </button>
+
               <p className="text-[11px] text-brand-navy/50 text-center pt-1">
                 By submitting, you agree to be contacted by ConstructONS. No spam, ever.
               </p>
@@ -108,28 +201,37 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
   );
 }
 
-function Field({ icon: Icon, placeholder, value, onChange, type = "text", isTextarea, testId }) {
+function Field({ icon: Icon, placeholder, value, onChange, type = "text", isTextarea, error, testId }) {
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-black/10 bg-white px-3 py-2.5 focus-within:border-brand-orange transition">
-      <Icon className="w-4 h-4 text-brand-navy/50 mt-1" />
-      {isTextarea ? (
-        <textarea
-          data-testid={testId}
-          className="flex-1 bg-transparent outline-none text-sm resize-none min-h-[60px]"
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      ) : (
-        <input
-          data-testid={testId}
-          type={type}
-          className="flex-1 bg-transparent outline-none text-sm"
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
+    <div className="w-full">
+      <div
+        className={`flex items-start gap-2 rounded-xl border bg-white px-3 py-2.5 transition ${
+          error
+            ? "border-red-500 focus-within:border-red-500 ring-1 ring-red-500/20"
+            : "border-black/10 focus-within:border-[#FF5A00]"
+        }`}
+      >
+        <Icon className={`w-4 h-4 mt-1 shrink-0 ${error ? "text-red-500" : "text-brand-navy/50"}`} />
+        {isTextarea ? (
+          <textarea
+            data-testid={testId}
+            className="flex-1 bg-transparent outline-none text-sm resize-none min-h-[60px]"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        ) : (
+          <input
+            data-testid={testId}
+            type={type}
+            className="flex-1 bg-transparent outline-none text-sm"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        )}
+      </div>
+      {error && <p className="mt-1 ml-1 text-xs text-red-500 font-medium">{error}</p>}
     </div>
   );
 }
