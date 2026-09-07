@@ -37,14 +37,13 @@ export default function DiagonalCarousel({
 
     const realIndex = N > 0 ? ((virtualIndex % N) + N) % N : 0;
     const slideHeight = slideSize / slideAspect;
-    useEffect(() => {
-        // Your effect logic using virtualIndex
-        doSomething(virtualIndex);
-    }, [virtualIndex]);
+
+    // Notify parent on index updates
     useEffect(() => {
         if (N > 0) onActiveIndexChange?.(realIndex);
-    }, [virtualIndex, N, onActiveIndexChange, realIndex]);
+    }, [realIndex, N, onActiveIndexChange]);
 
+    // Sync external activeIndex prop to internal virtualIndex
     useEffect(() => {
         if (activeIndex !== undefined && N > 0) {
             const currentReal = ((virtualIndex % N) + N) % N;
@@ -54,7 +53,7 @@ export default function DiagonalCarousel({
                 setVirtualIndex((v) => v + diff);
             }
         }
-    }, [activeIndex, N]);
+    }, [activeIndex, N, virtualIndex]);
 
     useEffect(() => {
         if (!autoPlay || isHovered || N <= 1) return;
