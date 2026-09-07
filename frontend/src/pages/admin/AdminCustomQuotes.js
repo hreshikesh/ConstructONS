@@ -90,7 +90,13 @@ export default function AdminCustomQuotes() {
       setLoading(false);
     }
   }, []);
+  useEffect(() => {
+    const buildPayload = () => {
+      // payload construction logic
+    };
 
+    const payload = buildPayload();
+  }, []); // Add any state/props used inside buildPayload to this array
   useEffect(() => {
     load();
   }, [load]);
@@ -470,7 +476,7 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
                 return path ? `${path}: ${x.msg}` : x.msg;
               }).join(" | ");
             }
-          } catch {/* keep default */}
+          } catch {/* keep default */ }
         } else if (typeof detail?.detail === "string") {
           msg = detail.detail;
         }
@@ -639,13 +645,13 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
     const pdfUrl = adminApi.customQuotes.pdfUrl(editing.id);
     const msg = encodeURIComponent(
       `Hi ${editing.client_name || "there"},\n\n` +
-        `Please find your customised home construction quotation from ConstructONS below:\n\n` +
-        `Reference: ${editing.ref_number || ""}\n` +
-        `Package: ${editing.package_name || "Custom Home"}\n` +
-        `Built-up: ${editing.built_up_area} sq.ft\n` +
-        `Total: ${rupees(pricing.grand)}\n\n` +
-        `Full PDF: ${pdfUrl}\n\n` +
-        `Feel free to reply with any questions. — ConstructONS`
+      `Please find your customised home construction quotation from ConstructONS below:\n\n` +
+      `Reference: ${editing.ref_number || ""}\n` +
+      `Package: ${editing.package_name || "Custom Home"}\n` +
+      `Built-up: ${editing.built_up_area} sq.ft\n` +
+      `Total: ${rupees(pricing.grand)}\n\n` +
+      `Full PDF: ${pdfUrl}\n\n` +
+      `Feel free to reply with any questions. — ConstructONS`
     );
     window.open(`https://wa.me/${digits}?text=${msg}`, "_blank");
   };
@@ -665,13 +671,13 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
     );
     const body = encodeURIComponent(
       `Hi ${editing.client_name || "there"},\n\n` +
-        `Please find your customised home construction quotation attached / linked below.\n\n` +
-        `Reference: ${editing.ref_number || ""}\n` +
-        `Package: ${editing.package_name || "Custom Home"}\n` +
-        `Built-up: ${editing.built_up_area} sq.ft\n` +
-        `Total: ${rupees(pricing.grand)}\n\n` +
-        `Download PDF: ${pdfUrl}\n\n` +
-        `Warm regards,\nConstructONS Sales Team`
+      `Please find your customised home construction quotation attached / linked below.\n\n` +
+      `Reference: ${editing.ref_number || ""}\n` +
+      `Package: ${editing.package_name || "Custom Home"}\n` +
+      `Built-up: ${editing.built_up_area} sq.ft\n` +
+      `Total: ${rupees(pricing.grand)}\n\n` +
+      `Download PDF: ${pdfUrl}\n\n` +
+      `Warm regards,\nConstructONS Sales Team`
     );
     window.location.href = `mailto:${editing.client_email}?subject=${subject}&body=${body}`;
   };
@@ -757,7 +763,7 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
       setShowTplModal(false);
       setTplName("");
       setTplDesc("");
-      adminApi.quoteTemplates.list().then(setTemplates).catch(() => {});
+      adminApi.quoteTemplates.list().then(setTemplates).catch(() => { });
     } catch {
       toast.error("Failed to save template");
     } finally {
@@ -798,9 +804,8 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
             <button
               onClick={() => setShowPreview((v) => !v)}
               data-testid="cq-toggle-preview"
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
-                showPreview ? "bg-brand-navy text-white" : "border border-black/10 bg-white text-brand-navy hover:bg-brand-bg"
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition ${showPreview ? "bg-brand-navy text-white" : "border border-black/10 bg-white text-brand-navy hover:bg-brand-bg"
+                }`}
             >
               {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               {showPreview ? "Hide Preview" : "Preview PDF"}
@@ -828,632 +833,629 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
         <div className={`flex ${showPreview ? "flex-row" : "flex-col"} h-[calc(100vh-73px)]`}>
           <div className={`${showPreview ? "w-1/2 border-r border-black/5" : "w-full"} overflow-y-auto px-5 md:px-8 py-6 space-y-6`}>
             {/* form body starts here (unchanged) */}
-          {/* Actions row for saved quotes */}
-          {editing.id && (
-            <div className="rounded-2xl bg-white border border-black/5 p-4 flex flex-wrap items-center gap-2">
-              <div className="text-xs text-brand-navy/60 mr-2 font-medium">Share this quote:</div>
-              <a
-                href={adminApi.customQuotes.pdfUrl(editing.id)}
-                target="_blank"
-                rel="noreferrer"
-                data-testid="cq-download-pdf"
-                className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
-              >
-                <FileDown className="w-3.5 h-3.5" /> Download PDF
-              </a>
-              <button
-                onClick={whatsappShare}
-                data-testid="cq-share-whatsapp"
-                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
-              >
-                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-              </button>
-              <button
-                onClick={emailShare}
-                data-testid="cq-share-email"
-                className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
-              >
-                <Mail className="w-3.5 h-3.5" /> Email
-              </button>
-              <button
-                onClick={copyPdfLink}
-                data-testid="cq-copy-link"
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
-              >
-                <Copy className="w-3.5 h-3.5" /> Copy Link
-              </button>
-              <button
-                onClick={() => setShowTplModal(true)}
-                data-testid="cq-save-as-template"
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
-              >
-                <BookOpen className="w-3.5 h-3.5" /> Save as Template
-              </button>
-              <div className="ml-auto flex items-center gap-2">
-                <label className="text-xs text-brand-navy/60">Status</label>
-                <select
-                  value={editing.status || "draft"}
-                  onChange={(e) => set({ status: e.target.value })}
-                  data-testid="cq-status-select"
-                  className="rounded-lg border border-black/10 bg-white px-2 py-1 text-xs"
+            {/* Actions row for saved quotes */}
+            {editing.id && (
+              <div className="rounded-2xl bg-white border border-black/5 p-4 flex flex-wrap items-center gap-2">
+                <div className="text-xs text-brand-navy/60 mr-2 font-medium">Share this quote:</div>
+                <a
+                  href={adminApi.customQuotes.pdfUrl(editing.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-testid="cq-download-pdf"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-navy text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
                 >
-                  <option value="draft">Draft</option>
-                  <option value="sent">Sent</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="rejected">Rejected</option>
+                  <FileDown className="w-3.5 h-3.5" /> Download PDF
+                </a>
+                <button
+                  onClick={whatsappShare}
+                  data-testid="cq-share-whatsapp"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                </button>
+                <button
+                  onClick={emailShare}
+                  data-testid="cq-share-email"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+                >
+                  <Mail className="w-3.5 h-3.5" /> Email
+                </button>
+                <button
+                  onClick={copyPdfLink}
+                  data-testid="cq-copy-link"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
+                >
+                  <Copy className="w-3.5 h-3.5" /> Copy Link
+                </button>
+                <button
+                  onClick={() => setShowTplModal(true)}
+                  data-testid="cq-save-as-template"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
+                >
+                  <BookOpen className="w-3.5 h-3.5" /> Save as Template
+                </button>
+                <div className="ml-auto flex items-center gap-2">
+                  <label className="text-xs text-brand-navy/60">Status</label>
+                  <select
+                    value={editing.status || "draft"}
+                    onChange={(e) => set({ status: e.target.value })}
+                    data-testid="cq-status-select"
+                    className="rounded-lg border border-black/10 bg-white px-2 py-1 text-xs"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="sent">Sent</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Public Client Portal Link */}
+            {editing.id && (
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 p-5" data-testid="cq-public-link-section">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 grid place-items-center shrink-0">
+                    <LinkIcon className="w-5 h-5 text-emerald-700" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs uppercase tracking-widest text-emerald-700 font-semibold">Client Portal</div>
+                    <div className="font-bold text-brand-navy mt-0.5">
+                      Shareable link — client can view, comment, accept or decline
+                    </div>
+                    {publicLink ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <code className="text-xs bg-white border border-black/10 rounded-lg px-3 py-1.5 text-brand-navy/80 break-all">
+                          {`${window.location.origin}/quote/${publicLink}`}
+                        </code>
+                        <button
+                          onClick={copyPublicLink}
+                          data-testid="cq-copy-public-link"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Copy Link
+                        </button>
+                        <a
+                          href={`/quote/${publicLink}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
+                        >
+                          Open Preview
+                        </a>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={generatePublicLink}
+                        data-testid="cq-generate-public-link"
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold hover:brightness-110"
+                      >
+                        <LinkIcon className="w-3.5 h-3.5" /> Generate Client Link
+                      </button>
+                    )}
+                    {editing.client_action && (
+                      <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${editing.client_action === "accepted"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-red-100 text-red-800"
+                        }`}>
+                        Client {editing.client_action} on {new Date(editing.client_action_at).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Load Template */}
+            {templates.length > 0 && !editing.id && (
+              <div className="rounded-2xl bg-white border border-black/5 p-4 flex flex-wrap items-center gap-2" data-testid="cq-template-loader">
+                <BookOpen className="w-4 h-4 text-brand-orange" />
+                <div className="text-sm font-semibold text-brand-navy">Start from template:</div>
+                <select
+                  onChange={(e) => { loadTemplate(e.target.value); e.target.value = ""; }}
+                  data-testid="cq-load-template"
+                  className="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm"
+                  defaultValue=""
+                >
+                  <option value="">— Pick a template —</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} · {rupees(t.price_per_sqft)}/sqft</option>
+                  ))}
                 </select>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Public Client Portal Link */}
-          {editing.id && (
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 p-5" data-testid="cq-public-link-section">
+            {/* Client Info */}
+            <Section title="Client Details" testId="cq-section-client">
+              <Grid>
+                <Field label="Client Name *" testId="cq-field-name">
+                  <input
+                    value={editing.client_name || ""}
+                    onChange={(e) => set({ client_name: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. Rajesh Kumar"
+                  />
+                </Field>
+                <Field label="Phone" testId="cq-field-phone">
+                  <input
+                    value={editing.client_phone || ""}
+                    onChange={(e) => set({ client_phone: e.target.value })}
+                    className={inputCls}
+                    placeholder="+91 98765 43210"
+                  />
+                </Field>
+                <Field label="Email" testId="cq-field-email">
+                  <input
+                    value={editing.client_email || ""}
+                    onChange={(e) => set({ client_email: e.target.value })}
+                    className={inputCls}
+                    placeholder="rajesh@example.com"
+                  />
+                </Field>
+                <Field label="Client Address" testId="cq-field-address">
+                  <input
+                    value={editing.client_address || ""}
+                    onChange={(e) => set({ client_address: e.target.value })}
+                    className={inputCls}
+                    placeholder="Home / office address"
+                  />
+                </Field>
+              </Grid>
+            </Section>
+
+            {/* Requirements */}
+            <Section title="Client Requirements" testId="cq-section-req">
+              <Grid>
+                <Field label="Site Address" testId="cq-field-site">
+                  <input
+                    value={editing.site_address || ""}
+                    onChange={(e) => set({ site_address: e.target.value })}
+                    className={inputCls}
+                    placeholder="Plot address"
+                  />
+                </Field>
+                <Field label="Plot Area (sq.ft)" testId="cq-field-plot">
+                  <input
+                    type="number"
+                    value={editing.plot_area || ""}
+                    onChange={(e) => set({ plot_area: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. 2400"
+                  />
+                </Field>
+                <Field label="Built-up Area (sq.ft)" testId="cq-field-builtup">
+                  <input
+                    type="number"
+                    value={editing.built_up_area || ""}
+                    onChange={(e) => set({ built_up_area: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. 1800"
+                  />
+                </Field>
+                <Field label="Floors" testId="cq-field-floors">
+                  <select
+                    value={editing.floors || "G+1"}
+                    onChange={(e) => set({ floors: e.target.value })}
+                    className={inputCls}
+                  >
+                    {["G", "G+1", "G+2", "G+3", "G+4"].map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="BHK" testId="cq-field-bhk">
+                  <select
+                    value={editing.bhk || "3 BHK"}
+                    onChange={(e) => set({ bhk: e.target.value })}
+                    className={inputCls}
+                  >
+                    {["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5 BHK", "Duplex", "Villa"].map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Budget (₹)" testId="cq-field-budget">
+                  <input
+                    type="number"
+                    value={editing.budget || ""}
+                    onChange={(e) => set({ budget: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. 3500000"
+                  />
+                </Field>
+                <Field label="Style" testId="cq-field-style">
+                  <select
+                    value={editing.style_pref || "Modern"}
+                    onChange={(e) => set({ style_pref: e.target.value })}
+                    className={inputCls}
+                  >
+                    {["Modern", "Classic", "Contemporary", "Duplex", "Villa", "Farmhouse", "Traditional"].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Expected Start" testId="cq-field-start">
+                  <input
+                    value={editing.expected_start || ""}
+                    onChange={(e) => set({ expected_start: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. Jan 2026"
+                  />
+                </Field>
+                <Field label="Expected Completion" testId="cq-field-end">
+                  <input
+                    value={editing.expected_completion || ""}
+                    onChange={(e) => set({ expected_completion: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. Nov 2026"
+                  />
+                </Field>
+              </Grid>
+            </Section>
+
+            {/* AI Panel */}
+            <div className="rounded-2xl bg-gradient-to-br from-brand-navy to-[#152847] text-white p-5 md:p-6 shadow-lg" data-testid="cq-ai-panel">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 grid place-items-center shrink-0">
-                  <LinkIcon className="w-5 h-5 text-emerald-700" />
+                <div className="w-10 h-10 rounded-xl bg-brand-orange/20 grid place-items-center shrink-0">
+                  <Wand2 className="w-5 h-5 text-brand-orangeLight" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs uppercase tracking-widest text-emerald-700 font-semibold">Client Portal</div>
-                  <div className="font-bold text-brand-navy mt-0.5">
-                    Shareable link — client can view, comment, accept or decline
+                  <div className="text-xs uppercase tracking-widest text-brand-orangeLight">
+                    AI Quote Assistant · GPT-5
                   </div>
-                  {publicLink ? (
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <code className="text-xs bg-white border border-black/10 rounded-lg px-3 py-1.5 text-brand-navy/80 break-all">
-                        {`${window.location.origin}/quote/${publicLink}`}
-                      </code>
-                      <button
-                        onClick={copyPublicLink}
-                        data-testid="cq-copy-public-link"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-110"
-                      >
-                        <Copy className="w-3.5 h-3.5" /> Copy Link
-                      </button>
-                      <a
-                        href={`/quote/${publicLink}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg"
-                      >
-                        Open Preview
-                      </a>
-                    </div>
-                  ) : (
+                  <div className="font-bold text-lg mt-1">Generate a draft based on requirements</div>
+                  <p className="text-sm text-white/70 mt-1">
+                    Pick a mode — the AI will draft specs, addons, pricing, scope & payment schedule.
+                    Everything is editable before download.
+                  </p>
+
+                  {/* Mode toggle */}
+                  <div className="mt-4 inline-flex rounded-full bg-white/10 p-1">
                     <button
-                      onClick={generatePublicLink}
-                      data-testid="cq-generate-public-link"
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold hover:brightness-110"
+                      onClick={() => setAiMode("recommend")}
+                      data-testid="cq-ai-mode-recommend"
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${aiMode === "recommend" ? "bg-brand-orange text-white" : "text-white/70 hover:text-white"
+                        }`}
                     >
-                      <LinkIcon className="w-3.5 h-3.5" /> Generate Client Link
+                      Recommend + tune
                     </button>
-                  )}
-                  {editing.client_action && (
-                    <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-                      editing.client_action === "accepted"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      Client {editing.client_action} on {new Date(editing.client_action_at).toLocaleString()}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Load Template */}
-          {templates.length > 0 && !editing.id && (
-            <div className="rounded-2xl bg-white border border-black/5 p-4 flex flex-wrap items-center gap-2" data-testid="cq-template-loader">
-              <BookOpen className="w-4 h-4 text-brand-orange" />
-              <div className="text-sm font-semibold text-brand-navy">Start from template:</div>
-              <select
-                onChange={(e) => { loadTemplate(e.target.value); e.target.value = ""; }}
-                data-testid="cq-load-template"
-                className="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm"
-                defaultValue=""
-              >
-                <option value="">— Pick a template —</option>
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} · {rupees(t.price_per_sqft)}/sqft</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Client Info */}
-          <Section title="Client Details" testId="cq-section-client">
-            <Grid>
-              <Field label="Client Name *" testId="cq-field-name">
-                <input
-                  value={editing.client_name || ""}
-                  onChange={(e) => set({ client_name: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. Rajesh Kumar"
-                />
-              </Field>
-              <Field label="Phone" testId="cq-field-phone">
-                <input
-                  value={editing.client_phone || ""}
-                  onChange={(e) => set({ client_phone: e.target.value })}
-                  className={inputCls}
-                  placeholder="+91 98765 43210"
-                />
-              </Field>
-              <Field label="Email" testId="cq-field-email">
-                <input
-                  value={editing.client_email || ""}
-                  onChange={(e) => set({ client_email: e.target.value })}
-                  className={inputCls}
-                  placeholder="rajesh@example.com"
-                />
-              </Field>
-              <Field label="Client Address" testId="cq-field-address">
-                <input
-                  value={editing.client_address || ""}
-                  onChange={(e) => set({ client_address: e.target.value })}
-                  className={inputCls}
-                  placeholder="Home / office address"
-                />
-              </Field>
-            </Grid>
-          </Section>
-
-          {/* Requirements */}
-          <Section title="Client Requirements" testId="cq-section-req">
-            <Grid>
-              <Field label="Site Address" testId="cq-field-site">
-                <input
-                  value={editing.site_address || ""}
-                  onChange={(e) => set({ site_address: e.target.value })}
-                  className={inputCls}
-                  placeholder="Plot address"
-                />
-              </Field>
-              <Field label="Plot Area (sq.ft)" testId="cq-field-plot">
-                <input
-                  type="number"
-                  value={editing.plot_area || ""}
-                  onChange={(e) => set({ plot_area: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. 2400"
-                />
-              </Field>
-              <Field label="Built-up Area (sq.ft)" testId="cq-field-builtup">
-                <input
-                  type="number"
-                  value={editing.built_up_area || ""}
-                  onChange={(e) => set({ built_up_area: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. 1800"
-                />
-              </Field>
-              <Field label="Floors" testId="cq-field-floors">
-                <select
-                  value={editing.floors || "G+1"}
-                  onChange={(e) => set({ floors: e.target.value })}
-                  className={inputCls}
-                >
-                  {["G", "G+1", "G+2", "G+3", "G+4"].map((f) => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="BHK" testId="cq-field-bhk">
-                <select
-                  value={editing.bhk || "3 BHK"}
-                  onChange={(e) => set({ bhk: e.target.value })}
-                  className={inputCls}
-                >
-                  {["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5 BHK", "Duplex", "Villa"].map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Budget (₹)" testId="cq-field-budget">
-                <input
-                  type="number"
-                  value={editing.budget || ""}
-                  onChange={(e) => set({ budget: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. 3500000"
-                />
-              </Field>
-              <Field label="Style" testId="cq-field-style">
-                <select
-                  value={editing.style_pref || "Modern"}
-                  onChange={(e) => set({ style_pref: e.target.value })}
-                  className={inputCls}
-                >
-                  {["Modern", "Classic", "Contemporary", "Duplex", "Villa", "Farmhouse", "Traditional"].map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Expected Start" testId="cq-field-start">
-                <input
-                  value={editing.expected_start || ""}
-                  onChange={(e) => set({ expected_start: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. Jan 2026"
-                />
-              </Field>
-              <Field label="Expected Completion" testId="cq-field-end">
-                <input
-                  value={editing.expected_completion || ""}
-                  onChange={(e) => set({ expected_completion: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. Nov 2026"
-                />
-              </Field>
-            </Grid>
-          </Section>
-
-          {/* AI Panel */}
-          <div className="rounded-2xl bg-gradient-to-br from-brand-navy to-[#152847] text-white p-5 md:p-6 shadow-lg" data-testid="cq-ai-panel">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-orange/20 grid place-items-center shrink-0">
-                <Wand2 className="w-5 h-5 text-brand-orangeLight" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs uppercase tracking-widest text-brand-orangeLight">
-                  AI Quote Assistant · GPT-5
-                </div>
-                <div className="font-bold text-lg mt-1">Generate a draft based on requirements</div>
-                <p className="text-sm text-white/70 mt-1">
-                  Pick a mode — the AI will draft specs, addons, pricing, scope & payment schedule.
-                  Everything is editable before download.
-                </p>
-
-                {/* Mode toggle */}
-                <div className="mt-4 inline-flex rounded-full bg-white/10 p-1">
-                  <button
-                    onClick={() => setAiMode("recommend")}
-                    data-testid="cq-ai-mode-recommend"
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
-                      aiMode === "recommend" ? "bg-brand-orange text-white" : "text-white/70 hover:text-white"
-                    }`}
-                  >
-                    Recommend + tune
-                  </button>
-                  <button
-                    onClick={() => setAiMode("scratch")}
-                    data-testid="cq-ai-mode-scratch"
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
-                      aiMode === "scratch" ? "bg-brand-orange text-white" : "text-white/70 hover:text-white"
-                    }`}
-                  >
-                    Build from scratch
-                  </button>
-                </div>
-
-                <div className="mt-3 text-xs text-white/60">
-                  {aiMode === "recommend"
-                    ? "Anchors on the selected base package below and proposes upgrades/downgrades to fit the budget."
-                    : "Ignores base packages and drafts a fully bespoke spec sheet from client requirements."}
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={runAI}
-                    disabled={aiLoading}
-                    data-testid="cq-ai-generate"
-                    className="inline-flex items-center gap-2 rounded-full bg-brand-orange text-white px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
-                  >
-                    {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {aiLoading ? "Drafting... (60-120s)" : "Generate AI Draft"}
-                  </button>
-                  {aiLoading && (
-                    <div className="text-xs text-white/60">
-                      GPT-5 is analysing requirements & drafting full specs. Hang tight — this takes about a minute.
-                    </div>
-                  )}
-                  {editing.ai_notes && (
-                    <div className="text-xs text-white/60 max-w-xl">
-                      <span className="text-brand-orangeLight font-semibold">AI notes:</span> {editing.ai_notes}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Base package + spec editor */}
-          <Section title="Base Package & Specs" testId="cq-section-specs" defaultOpen>
-            <div className="mb-4">
-              <Field label="Base Package (optional)" testId="cq-field-pkg">
-                <select
-                  value={editing.package_slug || ""}
-                  onChange={(e) => applyBasePackage(e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">— Custom, no base package —</option>
-                  {packages.map((p) => (
-                    <option key={p.slug} value={p.slug}>
-                      {p.name} · ₹{p.price_per_sqft || "custom"}/sqft
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <div className="text-xs text-brand-navy/50 mt-1">
-                Loads that package's baseline specs, scope, exclusions & payment schedule (fully editable below).
-              </div>
-            </div>
-
-            <SpecCategoryEditor
-              categories={editing.spec_categories || []}
-              onChange={(specs) => set({ spec_categories: specs })}
-            />
-          </Section>
-
-          {/* Add-ons */}
-          <Section title="Add-ons" testId="cq-section-addons">
-            <AddOnEditor
-              items={editing.addons || []}
-              onChange={(addons) => set({ addons })}
-            />
-          </Section>
-
-          {/* Interiors */}
-          <Section title="Interior Fit-Out" testId="cq-section-interiors" defaultOpen>
-            <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
-              <div className="text-xs text-brand-navy/60 flex-1 min-w-0">
-                Add interior items (kitchen, wardrobes, lighting, bath, furnishings). Tick "Bill" on any item to include its rate × qty in the grand total. Notes and rates appear on the PDF.
-              </div>
-              <button
-                onClick={() => setShowLibraryPicker(true)}
-                data-testid="cq-open-library"
-                className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-95"
-              >
-                <PackageOpen className="w-3.5 h-3.5" /> Add from Library
-              </button>
-            </div>
-            <SpecCategoryEditor
-              categories={editing.interiors || []}
-              onChange={(interiors) => set({ interiors })}
-              isInterior
-            />
-          </Section>
-
-          {/* Material Specification */}
-          <Section title="Material Specification" testId="cq-section-materials">
-            <div className="text-xs text-brand-navy/60 mb-3">
-              Standard brand/grade included per line-item. This appears as a dedicated table in the PDF after all specification sheets and before the Payment Schedule.
-            </div>
-            <MaterialSpecEditor
-              rows={editing.material_specs || []}
-              onChange={(material_specs) => set({ material_specs })}
-            />
-          </Section>
-
-          {/* Floor Plans */}
-          <Section title="Floor Plans" testId="cq-section-floor-plans">
-            <div className="text-xs text-brand-navy/60 mb-3">
-              Upload one floor plan image per sheet. Fill the CAD title block (units, scale, drawn by, north). Each sheet renders as a full A4 page in the PDF.
-            </div>
-            <DrawingSheetsEditor
-              sheets={editing.floor_plans || []}
-              onChange={(floor_plans) => set({ floor_plans })}
-              kind="floor-plan"
-            />
-          </Section>
-
-          {/* Elevations */}
-          <Section title="Elevations" testId="cq-section-elevations">
-            <div className="text-xs text-brand-navy/60 mb-3">
-              Upload elevation drawings (north/south/east/west or perspective).
-            </div>
-            <DrawingSheetsEditor
-              sheets={editing.elevations || []}
-              onChange={(elevations) => set({ elevations })}
-              kind="elevation"
-            />
-          </Section>
-
-          {/* Visual Boards */}
-          <Section title="Visual Boards & AI Renders" testId="cq-section-visuals">
-            <div className="text-xs text-brand-navy/60 mb-3">
-              Add mood boards, photos of finishes, or generate AI reference images (Gemini Nano Banana). These render in the PDF as image galleries.
-            </div>
-            <VisualBoardsEditor
-              boards={editing.visual_boards || []}
-              onChange={(visual_boards) => set({ visual_boards })}
-            />
-          </Section>
-
-          {/* Custom line items */}
-          <Section title="Custom Line Items" testId="cq-section-lines">
-            <LineItemEditor
-              items={editing.line_items || []}
-              onChange={(line_items) => set({ line_items })}
-            />
-          </Section>
-
-          {/* Pricing */}
-          <Section title="Pricing" testId="cq-section-pricing" defaultOpen>
-            <Grid>
-              <Field label="Rate per sq.ft (₹)" testId="cq-field-rate">
-                <input
-                  type="number"
-                  value={editing.price_per_sqft || 0}
-                  onChange={(e) => set({ price_per_sqft: e.target.value })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Discount Label" testId="cq-field-disc-label">
-                <input
-                  value={editing.discount_label || ""}
-                  onChange={(e) => set({ discount_label: e.target.value })}
-                  className={inputCls}
-                  placeholder="e.g. Diwali offer"
-                />
-              </Field>
-              <Field label="Discount Amount (₹)" testId="cq-field-disc-amt">
-                <input
-                  type="number"
-                  value={editing.discount_amount || 0}
-                  onChange={(e) => set({ discount_amount: e.target.value })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="GST % (deprecated)" testId="cq-field-gst">
-                <input
-                  type="number"
-                  value={editing.gst_percent || 0}
-                  onChange={(e) => set({ gst_percent: e.target.value })}
-                  className={inputCls}
-                  disabled
-                  placeholder="0 — replaced by service charge"
-                />
-              </Field>
-              <Field label="Service Charge % (contractor fee)" testId="cq-field-service">
-                <input
-                  type="number"
-                  value={editing.service_charge_percent ?? 15}
-                  onChange={(e) => set({ service_charge_percent: e.target.value })}
-                  className={inputCls}
-                  placeholder="15"
-                />
-              </Field>
-              <Field label="Warranty (years)" testId="cq-field-warranty">
-                <input
-                  type="number"
-                  value={editing.warranty_years || 10}
-                  onChange={(e) => set({ warranty_years: e.target.value })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Valid For (days)" testId="cq-field-valid">
-                <input
-                  type="number"
-                  value={editing.valid_days || 30}
-                  onChange={(e) => set({ valid_days: e.target.value })}
-                  className={inputCls}
-                />
-              </Field>
-            </Grid>
-
-            {/* Live pricing preview */}
-            <div className="mt-4 rounded-xl bg-brand-navy text-white p-4">
-              <div className="text-xs uppercase tracking-widest text-brand-orangeLight">Live Pricing</div>
-              <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                <PriceLine label="Base build" value={pricing.base} />
-                <PriceLine label="Add-ons" value={pricing.addonTotal} />
-                <PriceLine label="Line items" value={pricing.lineTotal} />
-                <PriceLine label="Subtotal" value={pricing.subtotal} bold />
-                {pricing.discount > 0 && (
-                  <PriceLine label="Discount" value={-pricing.discount} negative />
-                )}
-                <PriceLine label={`GST @ ${editing.gst_percent || 0}%`} value={pricing.gstAmt} />
-              </div>
-              <div className="mt-3 pt-3 border-t border-white/15 flex items-center justify-between">
-                <div className="text-sm text-white/70">Grand Total</div>
-                <div className="text-2xl font-bold text-brand-orangeLight" data-testid="cq-grand-total">
-                  {rupees(pricing.grand)}
-                </div>
-              </div>
-              {pricing.budgetDelta !== null && (
-                <div className="mt-2 text-xs text-white/60">
-                  Client budget {rupees(editing.budget)} —{" "}
-                  <span className={pricing.budgetDelta > 0 ? "text-red-300" : "text-emerald-300"}>
-                    {pricing.budgetDelta > 0 ? "over" : "under"} by {rupees(Math.abs(pricing.budgetDelta))}
-                  </span>
-                </div>
-              )}
-            </div>
-          </Section>
-
-          {/* Scope of Work */}
-          <Section title="Scope of Work" testId="cq-section-scope">
-            <ListEditor
-              items={editing.scope_of_work || []}
-              onChange={(scope_of_work) => set({ scope_of_work })}
-              placeholder="e.g. Structural design & drawings"
-            />
-          </Section>
-
-          {/* Exclusions */}
-          <Section title="Exclusions" testId="cq-section-excl">
-            <ListEditor
-              items={editing.exclusions || []}
-              onChange={(exclusions) => set({ exclusions })}
-              placeholder="e.g. Government approvals & fees"
-            />
-          </Section>
-
-          {/* Payment Schedule */}
-          <Section title="Payment Schedule" testId="cq-section-schedule">
-            <ScheduleEditor
-              items={editing.payment_schedule || []}
-              onChange={(payment_schedule) => set({ payment_schedule })}
-            />
-          </Section>
-
-          {/* Client Comments */}
-          {editing.id && (editing.comments || []).length > 0 && (
-            <Section title={`Client Comments (${editing.comments.length})`} testId="cq-section-comments" defaultOpen>
-              <div className="space-y-3">
-                {editing.comments.map((c, i) => (
-                  <div key={c.id || i} className={`p-3 rounded-xl border ${c.source === "client" ? "bg-emerald-50 border-emerald-100" : "bg-brand-bg/50 border-black/5"}`}>
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="font-semibold text-brand-navy text-sm inline-flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                        {c.author || "Client"}
-                      </div>
-                      <div className="text-[10px] text-brand-navy/50">{new Date(c.created_at).toLocaleString()}</div>
-                    </div>
-                    <div className="text-sm text-brand-navy/80 whitespace-pre-wrap">{c.message}</div>
+                    <button
+                      onClick={() => setAiMode("scratch")}
+                      data-testid="cq-ai-mode-scratch"
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${aiMode === "scratch" ? "bg-brand-orange text-white" : "text-white/70 hover:text-white"
+                        }`}
+                    >
+                      Build from scratch
+                    </button>
                   </div>
-                ))}
+
+                  <div className="mt-3 text-xs text-white/60">
+                    {aiMode === "recommend"
+                      ? "Anchors on the selected base package below and proposes upgrades/downgrades to fit the budget."
+                      : "Ignores base packages and drafts a fully bespoke spec sheet from client requirements."}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={runAI}
+                      disabled={aiLoading}
+                      data-testid="cq-ai-generate"
+                      className="inline-flex items-center gap-2 rounded-full bg-brand-orange text-white px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
+                    >
+                      {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      {aiLoading ? "Drafting... (60-120s)" : "Generate AI Draft"}
+                    </button>
+                    {aiLoading && (
+                      <div className="text-xs text-white/60">
+                        GPT-5 is analysing requirements & drafting full specs. Hang tight — this takes about a minute.
+                      </div>
+                    )}
+                    {editing.ai_notes && (
+                      <div className="text-xs text-white/60 max-w-xl">
+                        <span className="text-brand-orangeLight font-semibold">AI notes:</span> {editing.ai_notes}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Base package + spec editor */}
+            <Section title="Base Package & Specs" testId="cq-section-specs" defaultOpen>
+              <div className="mb-4">
+                <Field label="Base Package (optional)" testId="cq-field-pkg">
+                  <select
+                    value={editing.package_slug || ""}
+                    onChange={(e) => applyBasePackage(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">— Custom, no base package —</option>
+                    {packages.map((p) => (
+                      <option key={p.slug} value={p.slug}>
+                        {p.name} · ₹{p.price_per_sqft || "custom"}/sqft
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <div className="text-xs text-brand-navy/50 mt-1">
+                  Loads that package's baseline specs, scope, exclusions & payment schedule (fully editable below).
+                </div>
+              </div>
+
+              <SpecCategoryEditor
+                categories={editing.spec_categories || []}
+                onChange={(specs) => set({ spec_categories: specs })}
+              />
+            </Section>
+
+            {/* Add-ons */}
+            <Section title="Add-ons" testId="cq-section-addons">
+              <AddOnEditor
+                items={editing.addons || []}
+                onChange={(addons) => set({ addons })}
+              />
+            </Section>
+
+            {/* Interiors */}
+            <Section title="Interior Fit-Out" testId="cq-section-interiors" defaultOpen>
+              <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
+                <div className="text-xs text-brand-navy/60 flex-1 min-w-0">
+                  Add interior items (kitchen, wardrobes, lighting, bath, furnishings). Tick "Bill" on any item to include its rate × qty in the grand total. Notes and rates appear on the PDF.
+                </div>
+                <button
+                  onClick={() => setShowLibraryPicker(true)}
+                  data-testid="cq-open-library"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-3.5 py-1.5 text-xs font-semibold hover:brightness-95"
+                >
+                  <PackageOpen className="w-3.5 h-3.5" /> Add from Library
+                </button>
+              </div>
+              <SpecCategoryEditor
+                categories={editing.interiors || []}
+                onChange={(interiors) => set({ interiors })}
+                isInterior
+              />
+            </Section>
+
+            {/* Material Specification */}
+            <Section title="Material Specification" testId="cq-section-materials">
+              <div className="text-xs text-brand-navy/60 mb-3">
+                Standard brand/grade included per line-item. This appears as a dedicated table in the PDF after all specification sheets and before the Payment Schedule.
+              </div>
+              <MaterialSpecEditor
+                rows={editing.material_specs || []}
+                onChange={(material_specs) => set({ material_specs })}
+              />
+            </Section>
+
+            {/* Floor Plans */}
+            <Section title="Floor Plans" testId="cq-section-floor-plans">
+              <div className="text-xs text-brand-navy/60 mb-3">
+                Upload one floor plan image per sheet. Fill the CAD title block (units, scale, drawn by, north). Each sheet renders as a full A4 page in the PDF.
+              </div>
+              <DrawingSheetsEditor
+                sheets={editing.floor_plans || []}
+                onChange={(floor_plans) => set({ floor_plans })}
+                kind="floor-plan"
+              />
+            </Section>
+
+            {/* Elevations */}
+            <Section title="Elevations" testId="cq-section-elevations">
+              <div className="text-xs text-brand-navy/60 mb-3">
+                Upload elevation drawings (north/south/east/west or perspective).
+              </div>
+              <DrawingSheetsEditor
+                sheets={editing.elevations || []}
+                onChange={(elevations) => set({ elevations })}
+                kind="elevation"
+              />
+            </Section>
+
+            {/* Visual Boards */}
+            <Section title="Visual Boards & AI Renders" testId="cq-section-visuals">
+              <div className="text-xs text-brand-navy/60 mb-3">
+                Add mood boards, photos of finishes, or generate AI reference images (Gemini Nano Banana). These render in the PDF as image galleries.
+              </div>
+              <VisualBoardsEditor
+                boards={editing.visual_boards || []}
+                onChange={(visual_boards) => set({ visual_boards })}
+              />
+            </Section>
+
+            {/* Custom line items */}
+            <Section title="Custom Line Items" testId="cq-section-lines">
+              <LineItemEditor
+                items={editing.line_items || []}
+                onChange={(line_items) => set({ line_items })}
+              />
+            </Section>
+
+            {/* Pricing */}
+            <Section title="Pricing" testId="cq-section-pricing" defaultOpen>
+              <Grid>
+                <Field label="Rate per sq.ft (₹)" testId="cq-field-rate">
+                  <input
+                    type="number"
+                    value={editing.price_per_sqft || 0}
+                    onChange={(e) => set({ price_per_sqft: e.target.value })}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Discount Label" testId="cq-field-disc-label">
+                  <input
+                    value={editing.discount_label || ""}
+                    onChange={(e) => set({ discount_label: e.target.value })}
+                    className={inputCls}
+                    placeholder="e.g. Diwali offer"
+                  />
+                </Field>
+                <Field label="Discount Amount (₹)" testId="cq-field-disc-amt">
+                  <input
+                    type="number"
+                    value={editing.discount_amount || 0}
+                    onChange={(e) => set({ discount_amount: e.target.value })}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="GST % (deprecated)" testId="cq-field-gst">
+                  <input
+                    type="number"
+                    value={editing.gst_percent || 0}
+                    onChange={(e) => set({ gst_percent: e.target.value })}
+                    className={inputCls}
+                    disabled
+                    placeholder="0 — replaced by service charge"
+                  />
+                </Field>
+                <Field label="Service Charge % (contractor fee)" testId="cq-field-service">
+                  <input
+                    type="number"
+                    value={editing.service_charge_percent ?? 15}
+                    onChange={(e) => set({ service_charge_percent: e.target.value })}
+                    className={inputCls}
+                    placeholder="15"
+                  />
+                </Field>
+                <Field label="Warranty (years)" testId="cq-field-warranty">
+                  <input
+                    type="number"
+                    value={editing.warranty_years || 10}
+                    onChange={(e) => set({ warranty_years: e.target.value })}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Valid For (days)" testId="cq-field-valid">
+                  <input
+                    type="number"
+                    value={editing.valid_days || 30}
+                    onChange={(e) => set({ valid_days: e.target.value })}
+                    className={inputCls}
+                  />
+                </Field>
+              </Grid>
+
+              {/* Live pricing preview */}
+              <div className="mt-4 rounded-xl bg-brand-navy text-white p-4">
+                <div className="text-xs uppercase tracking-widest text-brand-orangeLight">Live Pricing</div>
+                <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <PriceLine label="Base build" value={pricing.base} />
+                  <PriceLine label="Add-ons" value={pricing.addonTotal} />
+                  <PriceLine label="Line items" value={pricing.lineTotal} />
+                  <PriceLine label="Subtotal" value={pricing.subtotal} bold />
+                  {pricing.discount > 0 && (
+                    <PriceLine label="Discount" value={-pricing.discount} negative />
+                  )}
+                  <PriceLine label={`GST @ ${editing.gst_percent || 0}%`} value={pricing.gstAmt} />
+                </div>
+                <div className="mt-3 pt-3 border-t border-white/15 flex items-center justify-between">
+                  <div className="text-sm text-white/70">Grand Total</div>
+                  <div className="text-2xl font-bold text-brand-orangeLight" data-testid="cq-grand-total">
+                    {rupees(pricing.grand)}
+                  </div>
+                </div>
+                {pricing.budgetDelta !== null && (
+                  <div className="mt-2 text-xs text-white/60">
+                    Client budget {rupees(editing.budget)} —{" "}
+                    <span className={pricing.budgetDelta > 0 ? "text-red-300" : "text-emerald-300"}>
+                      {pricing.budgetDelta > 0 ? "over" : "under"} by {rupees(Math.abs(pricing.budgetDelta))}
+                    </span>
+                  </div>
+                )}
               </div>
             </Section>
-          )}
 
-          {/* Notes & Terms */}
-          <Section title="Notes & Terms" testId="cq-section-notes">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
-                Intro Note (top of PDF)
-              </div>
-              <RichTextEditor
-                value={editing.intro_note || ""}
-                onChange={(html) => set({ intro_note: html })}
-                placeholder="Personal note that appears on page 2 of the PDF"
-                minHeight={140}
-                data-testid="cq-field-intro-rte"
+            {/* Scope of Work */}
+            <Section title="Scope of Work" testId="cq-section-scope">
+              <ListEditor
+                items={editing.scope_of_work || []}
+                onChange={(scope_of_work) => set({ scope_of_work })}
+                placeholder="e.g. Structural design & drawings"
               />
-            </div>
-            <div className="mt-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
-                Terms &amp; Conditions (leave blank for default)
-              </div>
-              <RichTextEditor
-                value={editing.terms || ""}
-                onChange={(html) => set({ terms: html })}
-                placeholder="Override the default terms if needed"
-                minHeight={200}
-                data-testid="cq-field-terms-rte"
-              />
-            </div>
-          </Section>
+            </Section>
 
-          <div className="pt-2 flex items-center gap-3 sticky bottom-0 bg-brand-bg py-4">
-            <button
-              onClick={onSave}
-              disabled={saving}
-              data-testid="cq-save-btn-bottom"
-              className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
-            >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Quote
-            </button>
-            <button
-              onClick={onCancel}
-              className="rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm font-semibold text-brand-navy hover:bg-brand-bg"
-            >
-              Close
-            </button>
-          </div>
+            {/* Exclusions */}
+            <Section title="Exclusions" testId="cq-section-excl">
+              <ListEditor
+                items={editing.exclusions || []}
+                onChange={(exclusions) => set({ exclusions })}
+                placeholder="e.g. Government approvals & fees"
+              />
+            </Section>
+
+            {/* Payment Schedule */}
+            <Section title="Payment Schedule" testId="cq-section-schedule">
+              <ScheduleEditor
+                items={editing.payment_schedule || []}
+                onChange={(payment_schedule) => set({ payment_schedule })}
+              />
+            </Section>
+
+            {/* Client Comments */}
+            {editing.id && (editing.comments || []).length > 0 && (
+              <Section title={`Client Comments (${editing.comments.length})`} testId="cq-section-comments" defaultOpen>
+                <div className="space-y-3">
+                  {editing.comments.map((c, i) => (
+                    <div key={c.id || i} className={`p-3 rounded-xl border ${c.source === "client" ? "bg-emerald-50 border-emerald-100" : "bg-brand-bg/50 border-black/5"}`}>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="font-semibold text-brand-navy text-sm inline-flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                          {c.author || "Client"}
+                        </div>
+                        <div className="text-[10px] text-brand-navy/50">{new Date(c.created_at).toLocaleString()}</div>
+                      </div>
+                      <div className="text-sm text-brand-navy/80 whitespace-pre-wrap">{c.message}</div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {/* Notes & Terms */}
+            <Section title="Notes & Terms" testId="cq-section-notes">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
+                  Intro Note (top of PDF)
+                </div>
+                <RichTextEditor
+                  value={editing.intro_note || ""}
+                  onChange={(html) => set({ intro_note: html })}
+                  placeholder="Personal note that appears on page 2 of the PDF"
+                  minHeight={140}
+                  data-testid="cq-field-intro-rte"
+                />
+              </div>
+              <div className="mt-4">
+                <div className="text-xs font-semibold uppercase tracking-wider text-brand-navy/60 mb-1.5">
+                  Terms &amp; Conditions (leave blank for default)
+                </div>
+                <RichTextEditor
+                  value={editing.terms || ""}
+                  onChange={(html) => set({ terms: html })}
+                  placeholder="Override the default terms if needed"
+                  minHeight={200}
+                  data-testid="cq-field-terms-rte"
+                />
+              </div>
+            </Section>
+
+            <div className="pt-2 flex items-center gap-3 sticky bottom-0 bg-brand-bg py-4">
+              <button
+                onClick={onSave}
+                disabled={saving}
+                data-testid="cq-save-btn-bottom"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-orange text-white px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Quote
+              </button>
+              <button
+                onClick={onCancel}
+                className="rounded-full border border-black/10 bg-white px-5 py-2.5 text-sm font-semibold text-brand-navy hover:bg-brand-bg"
+              >
+                Close
+              </button>
+            </div>
           </div>{/* end form column */}
 
           {/* PDF Preview column */}
@@ -2604,9 +2606,8 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
                   <div
                     key={it.id}
                     data-testid={`cq-lib-item-${it.id}`}
-                    className={`rounded-xl border p-3 transition ${
-                      on ? "border-brand-orange bg-brand-orange/5 ring-1 ring-brand-orange/40" : "border-black/10 bg-white hover:border-brand-navy/30"
-                    }`}
+                    className={`rounded-xl border p-3 transition ${on ? "border-brand-orange bg-brand-orange/5 ring-1 ring-brand-orange/40" : "border-black/10 bg-white hover:border-brand-navy/30"
+                      }`}
                   >
                     <div className="grid grid-cols-12 gap-3 items-start">
                       <label className="col-span-1 flex items-center justify-center pt-1 cursor-pointer">
