@@ -27,7 +27,7 @@ export default function CustomerJourney({ steps = [] }) {
       ref={sectionRef}
       id="journey"
       data-testid="journey-section"
-      className="relative bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white scroll-mt-20"
     >
       {/* INTRO — compact */}
       <div className="container-wide pt-12 md:pt-16 lg:pt-20 pb-6 md:pb-8">

@@ -41,7 +41,7 @@ export default function WhyConstructONS({
     <section
       id="why"
       data-testid="why-section"
-      className="relative bg-[#F8F9FA] font-sans selection:bg-[#FF5A00] selection:text-white"
+      className="relative scroll-mt-20 bg-[#F8F9FA] font-sans selection:bg-[#FF5A00] selection:text-white"
     >
       {/* 1) HERO SPOTLIGHT REVEAL */}
       <MaskRevealHero />

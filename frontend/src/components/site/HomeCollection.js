@@ -31,7 +31,7 @@ export default function HomeCollection({ homes = [] }) {
     <section
       id="home-collection"
       data-testid="home-collection-section"
-      className="relative overflow-hidden py-16 md:py-20 lg:py-24 font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative overflow-hidden py-16 md:py-20 lg:py-24 font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white scroll-mt-20"
     >
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img
@@ -164,15 +164,7 @@ export default function HomeCollection({ homes = [] }) {
                   )}
                 </AnimatePresence>
 
-                <div className="mt-5">
-                  <Link
-                    to="/homes"
-                    className="group inline-flex min-h-[46px] w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl bg-[#FF5A00] px-6 py-3 text-[13px] font-semibold text-white transition-all duration-300 hover:bg-[#E04F00] hover:shadow-[0_10px_28px_rgba(255,90,0,0.35)] active:scale-[0.98]"
-                  >
-                    Explore All Designs
-                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                  </Link>
-                </div>
+            
               </div>
 
             </div>

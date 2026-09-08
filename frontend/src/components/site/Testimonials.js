@@ -16,7 +16,7 @@ export default function Testimonials({ items = [] }) {
     <section
       id="testimonials"
       data-testid="testimonials-section"
-      className="relative py-16 md:py-24 lg:py-28 bg-[#F7F7F7] overflow-hidden font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative py-16 md:py-24 lg:py-28 scroll-mt-20 bg-[#F7F7F7] overflow-hidden font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
     >
       <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-[#FF5A00]/[0.06] blur-3xl" />
 

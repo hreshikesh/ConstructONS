@@ -9,7 +9,7 @@ export default function Marketplace({ items = [] }) {
     <section
       id="marketplace"
       data-testid="marketplace-section"
-      className="relative py-16 md:py-20 lg:py-24 bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
     >
       <div className="container-wide">
         {/* Header */}

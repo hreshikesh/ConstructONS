@@ -36,7 +36,7 @@ export default function FinancialServices({ items = [] }) {
     <section
       id="financial"
       data-testid="financial-section"
-      className="relative overflow-hidden py-16 md:py-20 lg:py-24 bg-[#000F1B] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative overflow-hidden py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#000F1B] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
     >
       {/* Construction grid + beams */}
       <div className="pointer-events-none absolute inset-0">

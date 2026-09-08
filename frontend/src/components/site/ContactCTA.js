@@ -34,7 +34,7 @@ export default function ContactCTA({ settings = {} }) {
     <section
       id="contact"
       data-testid="contact-section"
-      className="relative py-14 md:py-20 lg:py-24 bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white overflow-hidden"
+      className="relative py-14 md:py-20 lg:py-24 scroll-mt-20 bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white overflow-hidden"
     >
       <div className="container-wide relative z-10">
         {/* Header */}

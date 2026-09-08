@@ -29,7 +29,7 @@ export default function Packages({ packages = [] }) {
     <section
       id="packages"
       data-testid="packages-section"
-      className="relative py-16 md:py-20 lg:py-24 bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
     >
       <div className="container-wide">
         {/* Header — single-line title, orange/black */}
