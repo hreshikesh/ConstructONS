@@ -90,16 +90,6 @@ export default function AdminCustomQuotes() {
       setLoading(false);
     }
   }, []);
-  useEffect(() => {
-    const buildPayload = () => {
-      // payload construction logic
-    };
-
-    const payload = buildPayload();
-  }, []); // Add any state/props used inside buildPayload to this array
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const startNew = () => setEditing(emptyQuote());
   const startEdit = (row) => setEditing({ ...emptyQuote(), ...row });

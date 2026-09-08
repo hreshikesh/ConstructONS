@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, User, Mail, MapPin, MessageSquare, ShieldCheck, Loader2 } from "lucide-react";
 import { publicApi } from "@/lib/api";
@@ -9,13 +9,43 @@ import { toast } from "sonner";
 export default function LeadModal({ isOpen, onClose, context = {} }) {
   const [form, setForm] = useState({
     name: "",
-    phone: "",
+    phone: "+91 ",
     email: "",
     city: "",
     message: "",
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Reset form whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setErrors({});
+      setForm({ name: "", phone: "+91 ", email: "", city: "", message: "" });
+    }
+  }, [isOpen]);
+
+  // Name handler: Alphabets & spaces only, max 30 characters
+  const handleNameChange = (val) => {
+    if (/^[a-zA-Z\s]*$/.test(val) && val.length <= 30) {
+      setForm((prev) => ({ ...prev, name: val }));
+      if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+    }
+  };
+
+  // Phone handler: Fixed +91 prefix, strictly 10 numeric digits
+  const handlePhoneChange = (val) => {
+    const digitsOnly = val.replace(/^\+91\s?/, "").replace(/\D/g, "").slice(0, 10);
+    setForm((prev) => ({ ...prev, phone: `+91 ${digitsOnly}` }));
+    if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+  };
+
+  // City handler: Alphabets & spaces only
+  const handleCityChange = (val) => {
+    if (/^[a-zA-Z\s]*$/.test(val)) {
+      setForm((prev) => ({ ...prev, city: val }));
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -28,12 +58,11 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
       newErrors.name = "Name must be at least 2 characters";
     }
 
-    // Phone Number Validation (Indian 10-digit format / standard mobile)
-    const cleanPhone = form.phone.replace(/[\s\-\(\)\+]/g, "");
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!form.phone.trim()) {
+    // Phone Number Validation (Strictly 10 digits after +91)
+    const phoneDigits = form.phone.replace(/^\+91\s?/, "").replace(/\D/g, "");
+    if (!phoneDigits) {
       newErrors.phone = "Phone number is required";
-    } else if (!phoneRegex.test(cleanPhone)) {
+    } else if (phoneDigits.length !== 10) {
       newErrors.phone = "Enter a valid 10-digit mobile number";
     }
 
@@ -49,17 +78,9 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    // Clear field-specific error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
   const handleClose = () => {
     setErrors({});
-    setForm({ name: "", phone: "", email: "", city: "", message: "" });
+    setForm({ name: "", phone: "+91 ", email: "", city: "", message: "" });
     onClose();
   };
 
@@ -138,9 +159,10 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 icon={User}
                 placeholder="Full name*"
                 value={form.name}
-                onChange={(v) => handleChange("name", v)}
+                onChange={handleNameChange}
                 error={errors.name}
                 testId="lead-name"
+                maxLength={30}
               />
 
               <Field
@@ -148,7 +170,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 placeholder="Phone number*"
                 type="tel"
                 value={form.phone}
-                onChange={(v) => handleChange("phone", v)}
+                onChange={handlePhoneChange}
                 error={errors.phone}
                 testId="lead-phone"
               />
@@ -158,7 +180,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 placeholder="Email (optional)"
                 type="email"
                 value={form.email}
-                onChange={(v) => handleChange("email", v)}
+                onChange={(v) => setForm((prev) => ({ ...prev, email: v }))}
                 error={errors.email}
                 testId="lead-email"
               />
@@ -167,7 +189,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 icon={MapPin}
                 placeholder="City (optional)"
                 value={form.city}
-                onChange={(v) => handleChange("city", v)}
+                onChange={handleCityChange}
                 testId="lead-city"
               />
 
@@ -175,7 +197,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 icon={MessageSquare}
                 placeholder="Message (optional)"
                 value={form.message}
-                onChange={(v) => handleChange("message", v)}
+                onChange={(v) => setForm((prev) => ({ ...prev, message: v }))}
                 isTextarea
                 testId="lead-message"
               />
@@ -201,7 +223,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
   );
 }
 
-function Field({ icon: Icon, placeholder, value, onChange, type = "text", isTextarea, error, testId }) {
+function Field({ icon: Icon, placeholder, value, onChange, type = "text", isTextarea, error, testId, maxLength }) {
   return (
     <div className="w-full">
       <div
@@ -224,6 +246,7 @@ function Field({ icon: Icon, placeholder, value, onChange, type = "text", isText
           <input
             data-testid={testId}
             type={type}
+            maxLength={maxLength}
             className="flex-1 bg-transparent outline-none text-sm"
             placeholder={placeholder}
             value={value}
