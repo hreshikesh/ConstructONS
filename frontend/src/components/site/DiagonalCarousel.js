@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, MousePointer2 } from "lucide-react";
 
@@ -12,12 +12,12 @@ const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 export default function DiagonalCarousel({
   items = [],
-  activeIndex,
+  activeIndex = 0,
   onActiveIndexChange,
   autoPlay = true,
   autoPlayInterval = 3500,
   slideSize = 220,
-  slideAspect = 0.72, // width / height — 0.72 = tall portrait card
+  slideAspect = 0.72,
   rotationStep = 20,
   verticalStep = 78,
   inactiveScale = 0.58,
@@ -31,45 +31,47 @@ export default function DiagonalCarousel({
   renderSlide,
 }) {
   const N = items.length;
-  const [virtualIndex, setVirtualIndex] = useState(() => activeIndex ?? 0);
+  const [virtualIndex, setVirtualIndex] = useState(activeIndex);
   const [isHovered, setIsHovered] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
 
-  const prevActiveIndexRef = useRef(activeIndex);
-  const onActiveIndexChangeRef = useRef(onActiveIndexChange);
+  const lastNotifiedIndex = useRef(null);
 
   const realIndex = N > 0 ? ((virtualIndex % N) + N) % N : 0;
   const slideHeight = slideSize / slideAspect;
 
-  // Keep callback reference updated without triggering re-renders
-  useEffect(() => {
-    onActiveIndexChangeRef.current = onActiveIndexChange;
-  }, [onActiveIndexChange]);
+  // Single safely-guarded callback emitter (prevents infinite loop)
+  const handleIndexChange = useCallback(
+    (newRealIndex) => {
+      if (
+        onActiveIndexChange &&
+        N > 0 &&
+        lastNotifiedIndex.current !== newRealIndex
+      ) {
+        lastNotifiedIndex.current = newRealIndex;
+        onActiveIndexChange(newRealIndex);
+      }
+    },
+    [onActiveIndexChange, N]
+  );
 
-  // Notify parent on index updates
+  // Sync state upward when realIndex changes internally
   useEffect(() => {
-    if (N > 0) {
-      onActiveIndexChangeRef.current?.(realIndex);
-    }
-  }, [realIndex, N]);
+    handleIndexChange(realIndex);
+  }, [realIndex, handleIndexChange]);
 
-  // Sync external activeIndex prop when it actually changes from parent
+  // Sync state downward when activeIndex changes from parent externally
   useEffect(() => {
-    if (activeIndex !== undefined && N > 0) {
-      if (activeIndex !== prevActiveIndexRef.current) {
-        prevActiveIndexRef.current = activeIndex;
-        setVirtualIndex((v) => {
-          const currentReal = ((v % N) + N) % N;
-          if (activeIndex === currentReal) return v;
-          let diff = (((activeIndex - currentReal) % N) + N) % N;
-          if (diff > N / 2) diff -= N;
-          return v + diff;
-        });
+    if (N > 0 && activeIndex !== undefined) {
+      if (activeIndex !== realIndex) {
+        let diff = (((activeIndex - realIndex) % N) + N) % N;
+        if (diff > N / 2) diff -= N;
+        setVirtualIndex((v) => v + diff);
       }
     }
-  }, [activeIndex, N]);
+  }, [activeIndex, N]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Autoplay interval
+  // Autoplay timer
   useEffect(() => {
     if (!autoPlay || isHovered || N <= 1) return;
     const interval = setInterval(() => {
@@ -154,12 +156,12 @@ export default function DiagonalCarousel({
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  {item.title}
+                  {item?.title || ""}
                 </motion.p>
 
                 <button
                   type="button"
-                  aria-label={`Show ${item.title ?? "slide"}`}
+                  aria-label={`Show ${item?.title ?? "slide"}`}
                   className="w-full cursor-pointer focus:outline-none"
                   style={{ height: slideHeight }}
                   onClick={() => setVirtualIndex(vIndex)}
@@ -168,8 +170,8 @@ export default function DiagonalCarousel({
                     renderSlide(item, isActive)
                   ) : (
                     <img
-                      src={item.src}
-                      alt={item.alt ?? item.title ?? ""}
+                      src={item?.src || "/images/placeholder.webp"}
+                      alt={item?.alt ?? item?.title ?? ""}
                       draggable={false}
                       className={cn(
                         "h-full w-full select-none rounded-2xl object-cover shadow-2xl transition-all duration-300",

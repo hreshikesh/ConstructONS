@@ -24,15 +24,7 @@ export default function Hero() {
     };
   }, []);
 
-  const scrollToEcosystem = () => {
-    const section = document.getElementById("ecosystem");
-    if (section) {
-      section.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
+
 
   return (
     <section
@@ -116,14 +108,14 @@ export default function Hero() {
               className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4"
             >
               {/* Primary Button */}
-              <button
+              <a
+              href="/about"
                 type="button"
-                onClick={scrollToEcosystem}
                 className="group flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-8 py-3 font-[Poppins] text-base font-medium text-white transition-all duration-300 hover:bg-[#FF2D00] hover:shadow-[0_8px_25px_rgba(255,90,0,0.3)] w-full sm:w-auto"
               >
                 Explore Our Ecosystem
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </button>
+              </a>
 
               {/* Secondary Button */}
               <button

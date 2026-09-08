@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import { motion } from "framer-motion";
 import { LeadModalProvider } from "@/components/site/LeadModalProvider";
 import { BrochureModalProvider } from "@/components/site/BrochureModalProvider";
 
@@ -30,11 +31,123 @@ const AdminProjects = lazy(() => import("@/pages/admin/AdminProjects"));
 const PublicQuotePage = lazy(() => import("@/pages/PublicQuotePage"));
 const PortalLogin = lazy(() => import("@/pages/portal/PortalLogin"));
 const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
-
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 function PageFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#000F1B] selection:bg-[#FF5A00] selection:text-white font-['Poppins',sans-serif]">
+      {/* Background Glow */}
+      <div className="absolute h-72 w-72 rounded-full bg-[#FF5A00]/15 blur-3xl pointer-events-none" />
+
+      {/* Animated Construction Logo */}
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="relative h-24 w-24">
+          <svg
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-full w-full"
+          >
+            {/* Ground Baseline */}
+            <motion.path
+              d="M10 85 H90"
+              stroke="#ffffff"
+              strokeOpacity="0.2"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+
+            {/* Building / House Outline */}
+            <motion.path
+              d="M20 85 V45 L50 20 L80 45 V85 H20 Z"
+              stroke="#ffffff"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Structural Inner Beams */}
+            <motion.path
+              d="M50 20 V85 M20 55 H80 M35 85 V55 M65 85 V55"
+              stroke="#FF5A00"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{
+                duration: 1.5,
+                delay: 0.3,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Construction Crane Arm Placement */}
+            <motion.path
+              d="M50 20 L50 8 L75 8"
+              stroke="#FF5A00"
+              strokeWidth="3"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{
+                duration: 1.2,
+                repeat: Infinity,
+                repeatType: "loop",
+                repeatDelay: 0.5,
+                ease: "easeInOut",
+              }}
+            />
+
+            {/* Crane Hook Block */}
+            <motion.circle
+              cx="75"
+              cy="16"
+              r="3"
+              fill="#FF5A00"
+              animate={{ y: [0, 6, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </svg>
+        </div>
+
+        {/* Loading Text & Shimmer Bar */}
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <motion.span
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/80"
+          >
+            ConstructONS
+          </motion.span>
+
+          {/* Progress Bar */}
+          <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10">
+            <motion.div
+              className="h-full bg-[#FF5A00]"
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{
+                duration: 1.2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -60,6 +173,7 @@ function App() {
                 <Route path="/quote/:token" element={<PublicQuotePage />} />
                 <Route path="/portal/login" element={<PortalLogin />} />
                 <Route path="/portal" element={<PortalHome />} />
+                <Route path="*" element={<NotFoundPage />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
