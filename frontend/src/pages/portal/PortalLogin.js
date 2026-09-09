@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   Loader2, 
@@ -34,7 +34,33 @@ export default function PortalLogin() {
       .finally(() => setChecking(false));
   }, [navigate]);
 
-  // 2. Initialize Google Identity Services (GSI)
+  // 2. Handle Token Response (wrapped in useCallback)
+  const handleGoogleAuthResponse = useCallback(async (response) => {
+    if (!response.credential) {
+      setError("Unable to obtain Google profile. Please try again.");
+      return;
+    }
+
+    setSigningIn(true);
+    setError(null);
+
+    try {
+      await axios.post(
+        `${API_BASE}/customer/auth/google`,
+        { credential: response.credential },
+        { withCredentials: true }
+      );
+      navigate("/portal", { replace: true });
+    } catch (err) {
+      console.error("[ConstructONS Auth] Google login error:", err);
+      setError(
+        err?.response?.data?.detail || "Authentication failed. Access restricted."
+      );
+      setSigningIn(false);
+    }
+  }, [navigate]);
+
+  // 3. Initialize Google Identity Services (GSI)
   useEffect(() => {
     if (checking) return;
 
@@ -85,33 +111,7 @@ export default function PortalLogin() {
     } else {
       initGoogleGSI();
     }
-  }, [checking]);
-
-  // 3. Handle Token Response
-  const handleGoogleAuthResponse = async (response) => {
-    if (!response.credential) {
-      setError("Unable to obtain Google profile. Please try again.");
-      return;
-    }
-
-    setSigningIn(true);
-    setError(null);
-
-    try {
-      await axios.post(
-        `${API_BASE}/customer/auth/google`,
-        { credential: response.credential },
-        { withCredentials: true }
-      );
-      navigate("/portal", { replace: true });
-    } catch (err) {
-      console.error("[ConstructONS Auth] Google login error:", err);
-      setError(
-        err?.response?.data?.detail || "Authentication failed. Access restricted."
-      );
-      setSigningIn(false);
-    }
-  };
+  }, [checking, handleGoogleAuthResponse]);
 
   if (checking) {
     return (
@@ -203,7 +203,7 @@ export default function PortalLogin() {
             },
           ].map((item, index) => (
             <div key={index} className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center shrink-0 mt-0.5">
+              <div className="w-9 h-9 rounded-xl bg-[#white]/5 border border-white/10 grid place-items-center shrink-0 mt-0.5">
                 <item.Icon className="w-4 h-4 text-[#FF5A00]" strokeWidth={2} aria-hidden="true" />
               </div>
               <div>
