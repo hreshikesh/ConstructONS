@@ -111,7 +111,7 @@ if raw_cors.strip() == '*':
     ]
 else:
     origins = [origin.strip() for origin in raw_cors.split(',') if origin.strip()]
-,
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
