@@ -95,10 +95,26 @@ app = FastAPI(
 app.include_router(api_router)
 app.include_router(proj_router)
 
+# --- CORS CONFIGURATION ---
+# Parse CORS_ORIGINS or CORS from environment
+raw_cors = os.environ.get('CORS_ORIGINS', os.environ.get('CORS', '*'))
+
+# Browsers reject allow_credentials=True if origin is '*'.
+# Convert '*' to explicit local defaults, or split comma-separated origins.
+if raw_cors.strip() == '*':
+    origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+else:
+    origins = [origin.strip() for origin in raw_cors.split(',') if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
