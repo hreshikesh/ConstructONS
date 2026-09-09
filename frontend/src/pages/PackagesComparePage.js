@@ -75,8 +75,8 @@ export default function PackagesComparePage() {
   }, [data]);
 
   // Extract variables with fallbacks before calling useMemo
-  const packages = data?.packages || [];
-  const category_order = data?.category_order || [];
+const packages = useMemo(() => data?.packages || [], [data]);
+const category_order = useMemo(() => data?.category_order || [], [data]);
 
   // Union of item labels per category (called unconditionally before early return)
   const categoryItems = useMemo(() => {

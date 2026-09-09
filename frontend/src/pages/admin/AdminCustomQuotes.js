@@ -412,21 +412,21 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
     const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, "").trim());
     return Number.isFinite(n) ? n : null;
   };
-  const buildPayload = (src) => ({
-    ...src,
-    plot_area: _numOrNull(src.plot_area),
-    built_up_area: _num(src.built_up_area, 0),
-    budget: _numOrNull(src.budget),
-    price_per_sqft: _num(src.price_per_sqft, 0),
-    discount_amount: _num(src.discount_amount, 0),
-    service_charge_percent: _num(src.service_charge_percent, 15),
-    gst_percent: _num(src.gst_percent, 0),
-    warranty_years: Math.trunc(_num(src.warranty_years, 10)),
-    valid_days: Math.trunc(_num(src.valid_days, 30)),
-    addons: (src.addons || []).map((a) => ({ ...a, price: _num(a?.price, 0) })),
-    line_items: (src.line_items || []).map((li) => ({ ...li, amount: _num(li?.amount, 0) })),
-    payment_schedule: (src.payment_schedule || []).map((p) => ({ ...p, percentage: _num(p?.percentage, 0) })),
-  });
+const buildPayload = useCallback((src) => ({
+  ...src,
+  plot_area: _numOrNull(src.plot_area),
+  built_up_area: _num(src.built_up_area, 0),
+  budget: _numOrNull(src.budget),
+  price_per_sqft: _num(src.price_per_sqft, 0),
+  discount_amount: _num(src.discount_amount, 0),
+  service_charge_percent: _num(src.service_charge_percent, 15),
+  gst_percent: _num(src.gst_percent, 0),
+  warranty_years: Math.trunc(_num(src.warranty_years, 10)),
+  valid_days: Math.trunc(_num(src.valid_days, 30)),
+  addons: (src.addons || []).map((a) => ({ ...a, price: _num(a?.price, 0) })),
+  line_items: (src.line_items || []).map((li) => ({ ...li, amount: _num(li?.amount, 0) })),
+  payment_schedule: (src.payment_schedule || []).map((p) => ({ ...p, percentage: _num(p?.percentage, 0) })),
+}), []);
 
   // Live PDF preview — debounced regenerate when editing changes and preview is on.
   useEffect(() => {
@@ -480,7 +480,7 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel }
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [showPreview, editing]);
+  }, [showPreview, editing,buildPayload]);
 
   // Revoke blob URL on unmount
   useEffect(() => {
@@ -2686,4 +2686,3 @@ function InteriorLibraryPicker({ onClose, onAdd }) {
     </div>
   );
 }
-
