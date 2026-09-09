@@ -1,4 +1,4 @@
-"""Admin auth — JWT stored in an httpOnly, Secure, SameSite=Lax cookie.
+"""Admin auth — JWT stored in an httpOnly, Secure, SameSite=None cookie.
 
 Credentials live in MongoDB (`admin_users` collection) with bcrypt-hashed
 passwords, so they survive every future re-deploy without any .env edits.
@@ -23,8 +23,10 @@ JWT_ALGO = "HS256"
 COOKIE_NAME = "cons_admin_token"
 COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 COOKIE_PATH = "/"
+
+# Defaults set to 'true' and 'none' for Vercel -> Render cross-domain authentication
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() != "false"
-COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax").lower()
+COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "none").lower()
 
 security = HTTPBearer(auto_error=False)
 
@@ -114,17 +116,23 @@ async def ensure_admin_seeded() -> None:
 
 def set_admin_cookie(response: Response, token: str) -> None:
     response.set_cookie(
-        key=COOKIE_NAME, value=token,
-        max_age=COOKIE_MAX_AGE_SECONDS, expires=COOKIE_MAX_AGE_SECONDS,
-        path=COOKIE_PATH, httponly=True,
-        secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE,
+        key=COOKIE_NAME,
+        value=token,
+        max_age=COOKIE_MAX_AGE_SECONDS,
+        expires=COOKIE_MAX_AGE_SECONDS,
+        path=COOKIE_PATH,
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
     )
 
 
 def clear_admin_cookie(response: Response) -> None:
     response.delete_cookie(
-        key=COOKIE_NAME, path=COOKIE_PATH,
-        secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE,
+        key=COOKIE_NAME,
+        path=COOKIE_PATH,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
     )
 
 

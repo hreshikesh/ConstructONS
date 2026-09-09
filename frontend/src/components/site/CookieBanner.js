@@ -32,7 +32,8 @@ export default function CookieBanner() {
   }, []);
 
   useEffect(() => {
-    checkConsent();
+    // Capture the cleanup function returned by checkConsent
+    const cleanupTimer = checkConsent();
 
     // 🛠️ Developer / Tester helper attached to global window object
     window.constructonsConsent = {
@@ -59,6 +60,8 @@ export default function CookieBanner() {
     };
 
     return () => {
+      // Clean up timer if component unmounts before 600ms
+      if (typeof cleanupTimer === "function") cleanupTimer();
       delete window.constructonsConsent;
     };
   }, [checkConsent]);
