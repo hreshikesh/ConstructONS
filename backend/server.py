@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("All critical collections populated — skipping seed.")
 
-    # Initialize Emergent Object Storage session key
+    # Initialize Media Object Storage
     try:
         from media_service import init_storage
         init_storage()
@@ -96,11 +96,8 @@ app.include_router(api_router)
 app.include_router(proj_router)
 
 # --- CORS CONFIGURATION ---
-# Parse CORS_ORIGINS or CORS from environment
 raw_cors = os.environ.get('CORS_ORIGINS', os.environ.get('CORS', '*'))
 
-# Browsers reject allow_credentials=True if origin is '*'.
-# Convert '*' to explicit local defaults, or split comma-separated origins.
 if raw_cors.strip() == '*':
     origins = [
         "http://localhost:3000",

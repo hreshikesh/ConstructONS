@@ -6,16 +6,26 @@ import {
   Smartphone, 
   FileText, 
   Clock, 
-  ShieldCheck 
+  ShieldCheck,
+  AlertCircle
 } from "lucide-react";
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL + "/api";
+const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
+
+// Sourced with clean string sanitization and fallback
+const GOOGLE_CLIENT_ID = (
+  process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+  "519701626953-d4dneugq3bphakti7ss79omkc74e2e4q.apps.googleusercontent.com"
+).replace(/['"]/g, "").trim();
 
 export default function PortalLogin() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
+  const [error, setError] = useState(null);
 
+  // 1. Verify if customer is already logged in
   useEffect(() => {
     axios
       .get(`${API_BASE}/customer/me`, { withCredentials: true })
@@ -24,11 +34,83 @@ export default function PortalLogin() {
       .finally(() => setChecking(false));
   }, [navigate]);
 
-  const signInWithGoogle = () => {
-    const redirectUrl = window.location.origin + "/portal";
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(
-      redirectUrl
-    )}`;
+  // 2. Initialize Google Identity Services (GSI)
+  useEffect(() => {
+    if (checking) return;
+
+    if (!GOOGLE_CLIENT_ID) {
+      setError("Google Client ID is missing. Please configure REACT_APP_GOOGLE_CLIENT_ID.");
+      return;
+    }
+
+    const scriptId = "google-gis-script";
+    let script = document.getElementById(scriptId);
+
+    const initGoogleGSI = () => {
+      if (window.google?.accounts?.id && GOOGLE_CLIENT_ID) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleAuthResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          const btnContainer = document.getElementById("google-signin-btn-container");
+          if (btnContainer) {
+            btnContainer.innerHTML = ""; // clean any prior instances
+            window.google.accounts.id.renderButton(btnContainer, {
+              theme: "outline",
+              size: "large",
+              shape: "rectangular",
+              width: btnContainer.offsetWidth || 340,
+              text: "continue_with",
+              logo_alignment: "left",
+            });
+          }
+        } catch (e) {
+          console.error("[GSI init error]", e);
+        }
+      }
+    };
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogleGSI;
+      document.body.appendChild(script);
+    } else {
+      initGoogleGSI();
+    }
+  }, [checking]);
+
+  // 3. Handle Token Response
+  const handleGoogleAuthResponse = async (response) => {
+    if (!response.credential) {
+      setError("Unable to obtain Google profile. Please try again.");
+      return;
+    }
+
+    setSigningIn(true);
+    setError(null);
+
+    try {
+      await axios.post(
+        `${API_BASE}/customer/auth/google`,
+        { credential: response.credential },
+        { withCredentials: true }
+      );
+      navigate("/portal", { replace: true });
+    } catch (err) {
+      console.error("[ConstructONS Auth] Google login error:", err);
+      setError(
+        err?.response?.data?.detail || "Authentication failed. Access restricted."
+      );
+      setSigningIn(false);
+    }
   };
 
   if (checking) {
@@ -53,12 +135,12 @@ export default function PortalLogin() {
       className="min-h-screen bg-[#F2F2F2] flex flex-col md:grid md:grid-cols-2 font-['Poppins'] relative selection:bg-[#FF5A00]/20 selection:text-[#000F1B]"
       data-testid="portal-login"
     >
-      {/* 📱 Mobile Top App Bar (UX: Gives mobile users an immediate exit back to homepage) */}
+      {/* 📱 Mobile Top Header */}
       <header className="md:hidden bg-[#000F1B] border-b border-white/10 px-4 py-3 flex items-center justify-between z-10">
         <Link
           to="/"
           aria-label="Back to ConstructONS Home"
-          className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium transition-colors py-2 px-3 -ml-2 rounded-lg active:bg-white/10 min-h-[44px] min-w-[44px]"
+          className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium transition-colors py-2 px-3 -ml-2 rounded-lg active:bg-white/10 min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4 text-[#FF5A00]" aria-hidden="true" />
           <span>Home</span>
@@ -68,23 +150,20 @@ export default function PortalLogin() {
         </span>
       </header>
 
-      {/* 💻 Left Hero Column: Brand Ecosystem Showcase (Desktop Only) */}
+      {/* 💻 Left Hero Column: Brand Ecosystem Showcase */}
       <div className="hidden md:flex bg-[#000F1B] text-white flex-col justify-between p-10 lg:p-14 xl:p-16 relative overflow-hidden">
-        {/* Top Accent Stripe */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF5A00]" />
 
-        {/* Top: Desktop "Back to Home" Button */}
         <div>
           <Link
             to="/"
             aria-label="Back to ConstructONS Home"
-            className="inline-flex items-center gap-2.5 text-white/80 hover:text-white text-sm font-medium transition-all py-2 px-3.5 -ml-3 rounded-xl hover:bg-white/10 min-h-[44px] group focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
+            className="inline-flex items-center gap-2.5 text-white/80 hover:text-white text-sm font-medium transition-all py-2 px-3.5 -ml-3 rounded-xl hover:bg-white/10 min-h-[44px] group"
           >
             <ArrowLeft className="w-4 h-4 text-[#FF5A00] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
             <span>Back to Home</span>
           </Link>
 
-          {/* Heading & Positioning */}
           <div className="mt-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF5A00]/10 border border-[#FF5A00]/20 rounded-full text-xs font-semibold text-[#FF5A00] tracking-wider uppercase">
               Customer Portal
@@ -99,7 +178,7 @@ export default function PortalLogin() {
           </div>
         </div>
 
-        {/* Feature List (Directly from Welcome Guide Technology Pillars) */}
+        {/* Feature List */}
         <div className="space-y-4 max-w-md my-8">
           {[
             {
@@ -135,7 +214,6 @@ export default function PortalLogin() {
           ))}
         </div>
 
-        {/* Footer Brand Marker */}
         <div className="text-xs text-white/40 border-t border-white/10 pt-4">
           India's First Integrated Construction Ecosystem
         </div>
@@ -151,26 +229,39 @@ export default function PortalLogin() {
             Sign in to your portal
           </h2>
           <p className="mt-2 text-sm text-[#111111]/70 leading-relaxed">
-            Sign in with your Google account to access your live home construction project.
+            Verify identity with your Google account to access your live home construction project.
           </p>
 
-          {/* Google Sign-in Button */}
-          <button
-            type="button"
-            onClick={signInWithGoogle}
-            data-testid="portal-google-signin"
-            className="mt-8 w-full inline-flex items-center justify-center gap-3 rounded-xl border border-[#A6A6A6]/40 bg-white px-5 py-3.5 text-sm font-semibold text-[#000F1B] hover:bg-[#F2F2F2] hover:border-[#111111]/30 active:scale-[0.99] transition duration-200 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:ring-offset-2"
-          >
-            <GoogleG />
-            <span>Continue with Google</span>
-          </button>
+          {/* Error Notice */}
+          {error && (
+            <div className="mt-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          {/* Security & Privacy Notice */}
-          <div className="mt-6 text-[12px] text-[#111111]/60 leading-relaxed bg-[#F2F2F2] p-3.5 rounded-xl border border-black/5">
-            By signing in, you access ConstructONS™ secure project management. Your Google account is used only for verified authentication.
+          {/* Google Sign-In Container */}
+          <div className="mt-8 flex justify-center">
+            {signingIn ? (
+              <div className="w-full py-3.5 px-4 rounded-xl border border-black/10 bg-[#F2F2F2] flex items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-[#000F1B]">
+                <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" />
+                <span>Creating ConstructONS session...</span>
+              </div>
+            ) : (
+              <div className="w-full flex justify-center">
+                <div 
+                  id="google-signin-btn-container" 
+                  className="w-full min-h-[44px] flex justify-center" 
+                />
+              </div>
+            )}
           </div>
 
-          {/* Admin & Staff Fallback */}
+          <div className="mt-6 text-[12px] text-[#111111]/60 leading-relaxed bg-[#F2F2F2] p-3.5 rounded-xl border border-black/5">
+            By signing in, you access ConstructONS™ secure project management. Direct Google authentication is used securely to identify your verified profile.
+          </div>
+
+          {/* Switch to Staff Login */}
           <div className="mt-8 pt-6 border-t border-black/5 flex items-center justify-between text-xs text-[#111111]/70">
             <span>Admin or Site Engineer?</span>
             <Link
@@ -183,34 +274,5 @@ export default function PortalLogin() {
         </main>
       </div>
     </div>
-  );
-}
-
-function GoogleG() {
-  return (
-    <svg 
-      width="20" 
-      height="20" 
-      viewBox="0 0 48 48" 
-      aria-hidden="true" 
-      className="shrink-0"
-    >
-      <path
-        fill="#FFC107"
-        d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 5.1 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.2-.1-2.4-.4-3.5z"
-      />
-      <path
-        fill="#FF3D00"
-        d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 5.1 29.3 3 24 3 15.7 3 8.6 7.5 6.3 14.7z"
-      />
-      <path
-        fill="#4CAF50"
-        d="M24 45c5.2 0 10-2 13.6-5.3l-6.3-5.3c-2 1.4-4.6 2.3-7.3 2.3-5.3 0-9.7-3.4-11.3-8l-6.5 5C8.5 40.4 15.7 45 24 45z"
-      />
-      <path
-        fill="#1976D2"
-        d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4 5.6l6.3 5.3C40 34.9 45 30 45 24c0-1.2-.1-2.4-.4-3.5z"
-      />
-    </svg>
   );
 }
