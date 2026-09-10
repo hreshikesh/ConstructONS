@@ -24,14 +24,26 @@ async def lifespan(app: FastAPI):
     # --- STARTUP LOGIC ---
     from db import db
     from seed import seed_all
+    
+    # ⚡ 1. PERFORMANCE: Build MongoDB Indexes for lightning-fast queries
+    logger.info("Building MongoDB indexes...")
+    try:
+        await db.projects.create_index("customer_email")
+        await db.projects.create_index("id", unique=True)
+        await db.customers.create_index("email", unique=True)
+        await db.customer_sessions.create_index("session_token", unique=True)
+        await db.team_members.create_index("id")
+        await db.leads.create_index("created_at")
+        await db.custom_quotes.create_index("public_token")
+        await db.packages.create_index("slug")
+        logger.info("Indexes verified.")
+    except Exception as e:
+        logger.warning(f"Failed to create indexes: {e}")
 
+    # 2. POPULATE CRITICAL DATA
     critical_collections = [
-        "homes",
-        "packages",
-        "hero_sections",
-        "site_settings",
-        "financial_services",
-        "marketplace_categories",
+        "homes", "packages", "hero_sections", "site_settings",
+        "financial_services", "marketplace_categories",
     ]
     needs_seed = False
     for coll in critical_collections:
@@ -48,14 +60,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("All critical collections populated — skipping seed.")
 
-    # Initialize Media Object Storage
+    # 3. INITIALIZE MEDIA STORAGE
     try:
         from media_service import init_storage
         init_storage()
     except Exception as e:
         logger.warning(f"Object storage init deferred: {e}")
 
-    # Seed the first admin user in the DB
+    # 4. ENSURE ADMIN ACCESS
     try:
         from auth import ensure_admin_seeded
         await ensure_admin_seeded()
@@ -63,7 +75,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Admin seed failed: {e}")
 
-    # Seed the Interior Library starter catalog if empty
+    # 5. SEED INTERIOR LIBRARY
     try:
         count = await db.interior_library.count_documents({})
         if count == 0:

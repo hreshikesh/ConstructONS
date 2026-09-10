@@ -10,11 +10,10 @@ import {
   IndianRupee,
   ShieldCheck,
   Video,
-  FileText,
-  Users,
   Bot
 } from "lucide-react";
 import { usePortal } from "../context/PortalContext";
+import DashboardMetricsRow from "../components/dashboard/DashboardMetricsRow";
 
 export default function DashboardPage() {
   const { user, project } = usePortal();
@@ -22,7 +21,7 @@ export default function DashboardPage() {
   // Empty State: No project assigned yet
   if (!project) {
     return (
-      <div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center font-['Poppins']">
         <div className="w-16 h-16 rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-5">
           <Building2 className="w-8 h-8 text-[#FF5A00]" />
         </div>
@@ -106,7 +105,6 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex-1 flex flex-col items-center justify-center">
-            {/* SVG Donut Chart */}
             <div className="relative w-32 h-32 rounded-full flex items-center justify-center bg-[#F2F2F2] shadow-inner mb-4">
               <svg className="w-32 h-32 -rotate-90 absolute inset-0">
                 <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-[#F2F2F2]" />
@@ -210,7 +208,10 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* Row 3: Future Modules (Strictly Locked / Coming Soon) */}
+      {/* Row 3: Site Team & Live Metrics */}
+      <DashboardMetricsRow project={project} />
+
+      {/* Row 4: Future Modules (Strictly Locked / Coming Soon) */}
       <div className="pt-6 border-t border-black/5">
         <h2 className="text-sm font-bold text-[#000F1B] mb-4 px-1">Phase 2 Modules (Rolling out soon)</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">

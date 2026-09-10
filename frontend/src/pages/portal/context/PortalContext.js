@@ -22,7 +22,14 @@ export function PortalProvider({ children }) {
 
       try {
         const pr = await axios.get(`${API_BASE}/portal/my-project`, { withCredentials: true });
-        setProject(pr.data?.project || pr.data || null);
+        const rawProj = pr.data?.project !== undefined ? pr.data.project : pr.data;
+        
+        // Strict check: Only set project if it contains a valid project ID or title
+        if (rawProj && (rawProj.id || rawProj.title || rawProj.project_code)) {
+          setProject(rawProj);
+        } else {
+          setProject(null);
+        }
       } catch {
         setProject(null);
       }
