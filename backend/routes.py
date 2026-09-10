@@ -3,6 +3,8 @@ from fastapi.responses import Response as FastAPIResponse
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timezone
+import logging
+
 from db import db, serialize_doc
 from auth import (
     require_admin, verify_admin_credentials, create_admin_token,
@@ -16,11 +18,12 @@ from models import (
     InteriorLibraryItem, now_iso, new_id
 )
 
-# Native Customer Authentication Imports
 from customer_auth import (
     GoogleAuthBody, process_google_auth, get_current_customer,
     logout_customer as _logout_customer,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api")
 
@@ -36,7 +39,6 @@ async def list_docs(collection: str, published_only: bool = True, sort_field: st
 async def get_doc(collection: str, id_or_slug: str, key: str = "id"):
     doc = await db[collection].find_one({key: id_or_slug}, {"_id": 0})
     if not doc:
-        # try slug fallback
         doc = await db[collection].find_one({"slug": id_or_slug}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail=f"{collection} not found")
@@ -73,7 +75,6 @@ async def admin_login(body: AdminLoginReq, response: FastAPIResponse):
 
 @router.post("/admin/logout")
 async def admin_logout(response: FastAPIResponse):
-    """Clear the httpOnly admin cookie. Safe to call even if not logged in."""
     clear_admin_cookie(response)
     return {"success": True}
 
@@ -85,7 +86,6 @@ async def admin_me(user=Depends(require_admin)):
 
 @router.post("/admin/reseed", dependencies=[Depends(require_admin)])
 async def admin_reseed():
-    """Force-reseed all collections from `seed.py`."""
     from seed import seed_all
     await seed_all()
     counts = {}
@@ -97,6 +97,32 @@ async def admin_reseed():
     ]:
         counts[coll] = await db[coll].count_documents({})
     return {"success": True, "counts": counts}
+
+
+# ============================================================================
+# Customer Auth — Direct Google OAuth & Session Management
+# ============================================================================
+@router.post("/customer/auth/google")
+async def customer_process_google(body: GoogleAuthBody, response: FastAPIResponse):
+    """Authenticate customer directly using Google ID token credential."""
+    return await process_google_auth(body, response)
+
+
+@router.get("/customer/me")
+async def customer_me(customer=Depends(get_current_customer)):
+    """Retrieve identity of logged in customer."""
+    return {
+        "user_id": customer.get("user_id"),
+        "email": customer.get("email"),
+        "name": customer.get("name"),
+        "picture": customer.get("picture"),
+    }
+
+
+@router.post("/customer/logout")
+async def customer_logout(request: Request, response: FastAPIResponse):
+    """Logout customer session."""
+    return await _logout_customer(request, response)
 
 
 # ----------------------- Homes -----------------------
@@ -588,6 +614,7 @@ async def root():
 # ============================================================================
 # Client Proposals — CRUD + PDF generation
 # ============================================================================
+
 async def _generate_ref_number() -> str:
     year = datetime.now(timezone.utc).year
     prefix = f"CON-{year}-"
@@ -697,6 +724,7 @@ async def download_proposal_pdf(proposal_id: str):
 # ============================================================================
 # Custom Quotes — bespoke quotation builder
 # ============================================================================
+
 async def _generate_cq_ref_number() -> str:
     year = datetime.now(timezone.utc).year
     prefix = f"CQ-{year}-"
@@ -769,84 +797,40 @@ async def delete_custom_quote(quote_id: str):
 
 
 # ============================================================================
-# Customer Auth — Google OAuth via Native Google Identity Services (GIS)
+# Interior Library & Quote Templates
 # ============================================================================
-@router.post("/customer/auth/google")
-async def customer_process_google(body: GoogleAuthBody, response: FastAPIResponse):
-    """Authenticate customer directly using Google ID token credential."""
-    return await process_google_auth(body, response)
+
+@router.get("/interior-library", dependencies=[Depends(require_admin)])
+async def list_interior_library(category: Optional[str] = None, q: Optional[str] = None):
+    query: Dict[str, Any] = {}
+    if category:
+        query["category"] = category
+    if q:
+        query["$or"] = [
+            {"name": {"$regex": q, "$options": "i"}},
+            {"brand": {"$regex": q, "$options": "i"}},
+            {"description": {"$regex": q, "$options": "i"}},
+        ]
+    docs = await db.interior_library.find(query, {"_id": 0}).sort("category", 1).limit(500).to_list(500)
+    return docs
 
 
-@router.get("/customer/me")
-async def customer_me(customer=Depends(get_current_customer)):
-    return {
-        "user_id": customer.get("user_id"),
-        "email": customer.get("email"),
-        "name": customer.get("name"),
-        "picture": customer.get("picture"),
-    }
+@router.get("/interior-library/categories", dependencies=[Depends(require_admin)])
+async def list_interior_library_categories():
+    cats = await db.interior_library.distinct("category")
+    return sorted(cats)
 
 
-@router.post("/customer/logout")
-async def customer_logout(request: Request, response: FastAPIResponse):
-    return await _logout_customer(request, response)
-
-
-# ============================================================================
-# AI Image Generation — Gemini Nano Banana + Object Storage
-# ============================================================================
-class AiImageBody(BaseModel):
-    prompt: str
-    category: str = "quote-visuals"
-
-
-@router.post("/ai/generate-image", dependencies=[Depends(require_admin)])
-async def ai_generate_image(body: AiImageBody):
-    from ai_service import generate_image_nanobanana
-    from media_service import put_object, build_storage_path
-
-    prompt = (body.prompt or "").strip()
-    if not prompt:
-        raise HTTPException(status_code=400, detail="Prompt is required")
-    if len(prompt) > 1000:
-        raise HTTPException(status_code=400, detail="Prompt too long")
-
-    img_bytes = await generate_image_nanobanana(prompt)
-    if not img_bytes:
-        raise HTTPException(status_code=502, detail="Image generation failed. Try a different prompt.")
-
-    ct = "image/png"
-    path = build_storage_path(body.category or "quote-visuals", "ai-gen.png", ct)
-    try:
-        put_object(path, img_bytes, ct)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Storage upload failed: {e}")
-
-    record = {
-        "id": new_id(),
-        "storage_path": path,
-        "original_filename": "ai-generated.png",
-        "content_type": ct,
-        "size": len(img_bytes),
-        "category": body.category or "quote-visuals",
-        "is_deleted": False,
-        "created_at": now_iso(),
-        "ai_prompt": prompt[:800],
-    }
-    await db.media_uploads.insert_one(record)
-    return {
-        "id": record["id"],
-        "storage_path": path,
-        "url": f"/api/media/{path}",
-        "content_type": ct,
-        "size": len(img_bytes),
-        "ai_prompt": prompt[:800],
-    }
+@router.get("/quote-templates", dependencies=[Depends(require_admin)])
+async def list_quote_templates():
+    cursor = db.quote_templates.find({}, {"_id": 0}).sort("created_at", -1).limit(200)
+    return await cursor.to_list(200)
 
 
 # ============================================================================
 # Media Upload & Read
 # ============================================================================
+
 @router.post("/media/upload", dependencies=[Depends(require_admin)])
 async def upload_media(file: UploadFile = File(...), category: str = Form("general")):
     from media_service import (
@@ -869,12 +853,16 @@ async def upload_media(file: UploadFile = File(...), category: str = Form("gener
     try:
         result = put_object(path, data, ct)
     except Exception as e:
+        logger.error(f"[media] Upload failed: {e}")
         raise HTTPException(status_code=502, detail=f"Storage upload failed: {e}")
 
     stored_path = result.get("path") or path
+    final_url = result.get("url") or f"/api/media/{stored_path}"
+
     record = {
         "id": new_id(),
         "storage_path": stored_path,
+        "url": final_url,
         "original_filename": file.filename,
         "content_type": ct,
         "size": len(data),
@@ -886,7 +874,7 @@ async def upload_media(file: UploadFile = File(...), category: str = Form("gener
     return {
         "id": record["id"],
         "storage_path": stored_path,
-        "url": f"/api/media/{stored_path}",
+        "url": final_url,
         "size": len(data),
         "content_type": ct,
         "original_filename": file.filename,
@@ -897,22 +885,15 @@ async def upload_media(file: UploadFile = File(...), category: str = Form("gener
 async def download_media(path: str):
     from media_service import get_object
 
-    record = await db.media_uploads.find_one({"storage_path": path, "is_deleted": False})
-    if not record:
-        raise HTTPException(status_code=404, detail="File not found")
-
-    content: bytes = b""
-    fetched_content_type: str = "application/octet-stream"
     try:
         content, fetched_content_type = get_object(path)
+        return FastAPIResponse(
+            content=content,
+            media_type=fetched_content_type,
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Storage read failed: {e}")
-
-    return FastAPIResponse(
-        content=content,
-        media_type=record.get("content_type") or fetched_content_type,
-        headers={"Cache-Control": "public, max-age=86400"},
-    )
+        raise HTTPException(status_code=404, detail="File not found")
 
 
 @router.delete("/media/{media_id}", dependencies=[Depends(require_admin)])
@@ -924,18 +905,6 @@ async def delete_media(media_id: str):
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Media not found")
     return {"success": True}
-
-
-@router.get("/media", dependencies=[Depends(require_admin)])
-async def list_media(category: Optional[str] = None, limit: int = 50):
-    q: Dict[str, Any] = {"is_deleted": False}
-    if category:
-        q["category"] = category
-    cursor = db.media_uploads.find(q, {"_id": 0}).sort("created_at", -1).limit(limit)
-    items = await cursor.to_list(limit)
-    for it in items:
-        it["url"] = f"/api/media/{it['storage_path']}"
-    return items
 
 
 # ============================================================================
@@ -956,69 +925,3 @@ async def _snapshot_package(package_id: str, note: str = "edit"):
         "data": current,
     }
     await db.package_versions.insert_one(snap)
-    older_ids_cursor = (
-        db.package_versions.find({"package_id": package_id}, {"_id": 1})
-        .sort("snapshot_at", -1)
-        .skip(MAX_VERSIONS_PER_PACKAGE)
-    )
-    old_ids = [d["_id"] async for d in older_ids_cursor]
-    if old_ids:
-        await db.package_versions.delete_many({"_id": {"$in": old_ids}})
-
-
-@router.get("/packages/{package_id}/versions", dependencies=[Depends(require_admin)])
-async def list_package_versions(package_id: str):
-    cursor = (
-        db.package_versions.find({"package_id": package_id}, {"_id": 0, "data": 0})
-        .sort("snapshot_at", -1)
-        .limit(MAX_VERSIONS_PER_PACKAGE)
-    )
-    return await cursor.to_list(MAX_VERSIONS_PER_PACKAGE)
-
-
-@router.get("/packages/{package_id}/versions/{version_id}", dependencies=[Depends(require_admin)])
-async def get_package_version(package_id: str, version_id: str):
-    snap = await db.package_versions.find_one(
-        {"id": version_id, "package_id": package_id}, {"_id": 0}
-    )
-    if not snap:
-        raise HTTPException(status_code=404, detail="Version not found")
-    return snap
-
-
-@router.post("/packages/{package_id}/versions/{version_id}/restore", dependencies=[Depends(require_admin)])
-async def restore_package_version(package_id: str, version_id: str):
-    snap = await db.package_versions.find_one(
-        {"id": version_id, "package_id": package_id}, {"_id": 0}
-    )
-    if not snap:
-        raise HTTPException(status_code=404, detail="Version not found")
-    data = snap.get("data") or {}
-    await _snapshot_package(package_id, note=f"pre-restore from {version_id[:8]}")
-
-    data["updated_at"] = now_iso()
-    data.pop("_id", None)
-    await db.packages.update_one({"id": package_id}, {"$set": data})
-    return {"success": True, "restored_from": version_id}
-
-
-# ============================================================================
-# AI Copy Assist
-# ============================================================================
-class RewriteRequest(BaseModel):
-    text: str
-    purpose: Optional[str] = "copy"
-    tone: Optional[str] = "on-brand"
-
-
-@router.post("/ai/rewrite", dependencies=[Depends(require_admin)])
-async def ai_rewrite(body: RewriteRequest):
-    if not body.text or not body.text.strip():
-        raise HTTPException(status_code=400, detail="Empty text")
-    if len(body.text) > 4000:
-        raise HTTPException(status_code=413, detail="Text too long (max 4000 chars)")
-    from ai_service import rewrite_copy
-    suggestions = await rewrite_copy(body.text, body.purpose or "copy", body.tone or "on-brand")
-    if not suggestions:
-        raise HTTPException(status_code=502, detail="AI could not generate suggestions right now. Please try again.")
-    return {"suggestions": suggestions}

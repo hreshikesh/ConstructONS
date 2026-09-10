@@ -1,116 +1,116 @@
-"""Emergent Object Storage helper for image / file uploads.
-
-Session-scoped storage_key is initialised once at startup and reused for
-all subsequent PUT / GET calls. All object paths are prefixed with the
-app name (`constructons/`) to isolate our bucket.
+"""
+ConstructONS Storage Service.
+Primary: Cloudinary Cloud Storage (if env vars set)
+Fallback: Local Disk Storage (saved to backend/uploads/)
 """
 import os
 import uuid
 import logging
-import requests
-from typing import Optional, Tuple
+from pathlib import Path
+from typing import Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
-STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
-APP_NAME = "constructons"
+# Constants required by routes.py
+ALLOWED_MIME_PREFIXES = ("image/", "application/pdf")
+MAX_UPLOAD_BYTES = 15 * 1024 * 1024  # 15 MB limit
 
-_storage_key: Optional[str] = None
+# Local disk fallback directory
+LOCAL_UPLOADS_DIR = Path(__file__).parent / "uploads"
+LOCAL_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
-ALLOWED_MIME_PREFIXES = ("image/",)
-MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # 8 MB per image
+# Cloudinary Config
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
 
-MIME_TO_EXT = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "image/gif": "gif",
-    "image/svg+xml": "svg",
-}
+USE_CLOUDINARY = bool(CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)
+
+if USE_CLOUDINARY:
+    try:
+        import cloudinary
+        import cloudinary.uploader
+        cloudinary.config(
+            cloud_name=CLOUDINARY_CLOUD_NAME,
+            api_key=CLOUDINARY_API_KEY,
+            api_secret=CLOUDINARY_API_SECRET,
+            secure=True
+        )
+        logger.info("[media] Production Cloudinary Storage Initialized")
+    except ImportError:
+        logger.warning("[media] cloudinary package not installed — using local disk storage.")
+        USE_CLOUDINARY = False
 
 
 def init_storage() -> Optional[str]:
-    """Init once at startup. Safe to call repeatedly — returns cached key."""
-    global _storage_key
-    if _storage_key:
-        return _storage_key
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
-    if not api_key:
-        logger.error("[media] EMERGENT_LLM_KEY not set — object storage disabled")
-        return None
-    try:
-        resp = requests.post(
-            f"{STORAGE_URL}/init",
-            json={"emergent_key": api_key},
-            timeout=30,
-        )
-        resp.raise_for_status()
-        _storage_key = resp.json()["storage_key"]
-        logger.info("[media] object storage initialised")
-        return _storage_key
-    except Exception as e:
-        logger.error(f"[media] object storage init failed: {e}")
-        _storage_key = None
-        return None
-
-
-def _reinit_and_get():
-    global _storage_key
-    _storage_key = None
-    return init_storage()
+    """Startup lifespan hook compatibility."""
+    return "cloudinary" if USE_CLOUDINARY else "local"
 
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    key = init_storage()
-    if not key:
-        raise RuntimeError("Object storage unavailable")
-    resp = requests.put(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data,
-        timeout=120,
-    )
-    if resp.status_code == 403:
-        # Session token expired — refresh and retry once
-        key = _reinit_and_get()
-        if not key:
-            raise RuntimeError("Object storage session expired")
-        resp = requests.put(
-            f"{STORAGE_URL}/objects/{path}",
-            headers={"X-Storage-Key": key, "Content-Type": content_type},
-            data=data,
-            timeout=120,
-        )
-    resp.raise_for_status()
-    return resp.json()
+    """Uploads file to Cloudinary if configured, otherwise saves to local disk."""
+    if USE_CLOUDINARY:
+        try:
+            folder = f"constructons/{path.split('/')[1]}" if "/" in path else "constructons"
+            res = cloudinary.uploader.upload(
+                data,
+                folder=folder,
+                resource_type="auto"
+            )
+            return {
+                "path": path,
+                "url": res.get("secure_url"),
+                "storage": "cloudinary"
+            }
+        except Exception as e:
+            logger.error(f"[media] Cloudinary upload failed ({e}) — falling back to local disk")
+
+    # Local Disk Fallback
+    file_path = LOCAL_UPLOADS_DIR / path
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(file_path, "wb") as f:
+        f.write(data)
+    
+    return {
+        "path": path,
+        "url": f"/api/media/{path}",
+        "storage": "local"
+    }
 
 
 def get_object(path: str) -> Tuple[bytes, str]:
-    key = init_storage()
-    if not key:
-        raise RuntimeError("Object storage unavailable")
-    resp = requests.get(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key},
-        timeout=60,
-    )
-    if resp.status_code == 403:
-        key = _reinit_and_get()
-        if not key:
-            raise RuntimeError("Object storage session expired")
-        resp = requests.get(
-            f"{STORAGE_URL}/objects/{path}",
-            headers={"X-Storage-Key": key},
-            timeout=60,
-        )
-    resp.raise_for_status()
-    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+    """Retrieve file bytes from local disk."""
+    file_path = LOCAL_UPLOADS_DIR / path
+    if file_path.exists():
+        with open(file_path, "rb") as f:
+            content = f.read()
+        ext = file_path.suffix.lstrip(".").lower()
+        if ext in ("jpg", "jpeg"):
+            ct = "image/jpeg"
+        elif ext == "png":
+            ct = "image/png"
+        elif ext == "webp":
+            ct = "image/webp"
+        elif ext == "pdf":
+            ct = "application/pdf"
+        else:
+            ct = "application/octet-stream"
+        return content, ct
+
+    raise FileNotFoundError(f"File {path} not found on local disk")
 
 
 def build_storage_path(category: str, filename: str, content_type: str) -> str:
+    MIME_TO_EXT = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+        "image/svg+xml": "svg",
+        "application/pdf": "pdf",
+    }
     ext = MIME_TO_EXT.get((content_type or "").lower())
     if not ext:
-        # fall back to filename extension
         ext = (filename.rsplit(".", 1)[-1] if "." in filename else "bin").lower()
     safe_category = "".join(c for c in category if c.isalnum() or c in "-_") or "general"
-    return f"{APP_NAME}/{safe_category}/{uuid.uuid4()}.{ext}"
+    return f"constructons/{safe_category}/{uuid.uuid4()}.{ext}"

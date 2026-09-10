@@ -2,7 +2,8 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 import uuid
-
+import re
+from pydantic import field_validator, model_validator
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -199,15 +200,63 @@ class FinancialService(BaseDoc):
     coming_soon: bool = False
 
 
+
 # ---------- Team ----------
+# ---------- Team ----------
+import re
+from pydantic import field_validator, model_validator
+
 class TeamMember(BaseDoc):
     name: str
-    role: str
-    photo: str
+    designation: str = ""
+    photo: str = ""
     bio: Optional[str] = ""
     linkedin: Optional[str] = None
+    phone: Optional[str] = None
+    whatsapp: Optional[str] = None
+    # legacy seed field (optional)
+    role: Optional[str] = None
 
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = (v or "").strip()
+        if not v:
+            raise ValueError("Name is required")
+        # letters and spaces only, max 30 characters
+        if not re.fullmatch(r"[A-Za-z ]{1,30}", v):
+            raise ValueError("Name must be 1–30 letters/spaces only (no numbers or symbols)")
+        if len(v) > 30:
+            raise ValueError("Name cannot exceed 30 characters")
+        return v
 
+    @field_validator("designation")
+    @classmethod
+    def validate_designation(cls, v: str) -> str:
+        v = (v or "").strip()
+        if not v:
+            raise ValueError("Designation is required")
+        if len(v) > 60:
+            raise ValueError("Designation cannot exceed 60 characters")
+        return v
+
+    @field_validator("phone", "whatsapp")
+    @classmethod
+    def validate_phone_in(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or str(v).strip() == "":
+            return None
+        raw = str(v).strip().replace(" ", "")
+        # Must be exactly +91 + 10 digits
+        if not re.fullmatch(r"\+91[6-9]\d{9}", raw):
+            raise ValueError("Phone/WhatsApp must be +91 followed by exactly 10 digits (e.g. +919876543210)")
+        return raw
+
+    @field_validator("photo")
+    @classmethod
+    def validate_photo(cls, v: str) -> str:
+        return (v or "").strip()
+
+        
 # ---------- AI Platform Modules ----------
 class AIPlatformModule(BaseDoc):
     name: str  # 'AI Workspace', 'Project Management', ...

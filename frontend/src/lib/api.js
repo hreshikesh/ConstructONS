@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000").replace(/\/$/, "");
 export const API_BASE = `${BACKEND_URL}/api`;
 
 // httpOnly cookie auth — every request sends the `cons_admin_token` cookie.
@@ -100,11 +100,16 @@ export const adminApi = {
           if (onProgress && evt.total) onProgress(Math.round((evt.loaded / evt.total) * 100));
         },
       })
-      .then((r) => ({
-        ...r.data,
-        // Absolute URL so <img src> works from any origin
-        absoluteUrl: `${BACKEND_URL}${r.data.url}`,
-      }));
+      .then((r) => {
+        const rawUrl = r.data.url || "";
+        const isAbsolute = rawUrl.startsWith("http://") || rawUrl.startsWith("https://");
+        const fullUrl = isAbsolute ? rawUrl : `${BACKEND_URL}${rawUrl.startsWith("/") ? "" : "/"}${rawUrl}`;
+        return {
+          ...r.data,
+          url: fullUrl,
+          absoluteUrl: fullUrl,
+        };
+      });
   },
   listMedia: (category) =>
     api.get(`/media${category ? `?category=${category}` : ""}`).then((r) => r.data),
