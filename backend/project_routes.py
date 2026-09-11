@@ -247,17 +247,56 @@ async def _auto_activate_pending_user(project_id: str, email: str, name: str):
 # ---------------- Customer Portal Endpoints ----------------
 # ============================================================================
 
+@proj_router.get("/portal/my-projects-list")
+async def portal_my_projects_list(customer=Depends(get_current_customer)):
+    """Returns a lightweight list of all projects the user owns or is invited to."""
+    email = (customer.get("email") or "").lower()
+    if not email:
+        return {"projects": []}
+
+    cursor = db.projects.find(
+        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
+        {"id": 1, "title": 1, "project_code": 1, "address": 1, "cover_image": 1, "customer_email": 1, "team_directory": 1, "updated_at": 1}
+    ).sort("updated_at", -1)
+
+    projects = await cursor.to_list(100)
+    
+    out = []
+    for p in projects:
+        # Determine their role for this specific project
+        role = "Project Owner" if p.get("customer_email") == email else "Guest"
+        for t in p.get("team_directory", []):
+            if t.get("email") == email:
+                role = t.get("role") or role
+                break
+        
+        out.append({
+            "id": p["id"],
+            "title": p.get("title") or "Unnamed Project",
+            "project_code": p.get("project_code"),
+            "address": p.get("address"),
+            "cover_image": p.get("cover_image"),
+            "user_role": role
+        })
+        
+    return {"projects": out}
+
+
 @proj_router.get("/portal/my-project")
-async def portal_my_project(customer=Depends(get_current_customer)):
+async def portal_my_project(project_id: Optional[str] = None, customer=Depends(get_current_customer)):
+    """Fetch full project details. Defaults to latest if project_id is omitted."""
     email = (customer.get("email") or "").lower()
     name = customer.get("name") or ""
     if not email:
-        raise HTTPException(status_code=404, detail="No project")
+        raise HTTPException(status_code=404, detail="No user email found")
 
-    proj = await db.projects.find_one(
-        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
-        {"_id": 0}
-    )
+    query = {"$or": [{"customer_email": email}, {"team_directory.email": email}]}
+    if project_id:
+        query["id"] = project_id
+
+    # If no project_id passed, just get the most recently updated one they have access to
+    proj = await db.projects.find_one(query, {"_id": 0}, sort=[("updated_at", -1)])
+    
     if not proj:
         return {"project": None}
 
@@ -267,12 +306,19 @@ async def portal_my_project(customer=Depends(get_current_customer)):
 
 
 @proj_router.get("/portal/my-project/team-data")
-async def portal_team_data(customer=Depends(get_current_customer)):
+async def portal_team_data(project_id: Optional[str] = None, customer=Depends(get_current_customer)):
+    """Powers Team page for a specific project."""
     email = (customer.get("email") or "").lower()
     name = customer.get("name") or ""
+    
+    query = {"$or": [{"customer_email": email}, {"team_directory.email": email}]}
+    if project_id:
+        query["id"] = project_id
+
     proj = await db.projects.find_one(
-        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
+        query,
         {"_id": 0, "id": 1, "customer_email": 1, "team_ids": 1, "team_directory": 1, "activities": 1, "attendance": 1, "title": 1},
+        sort=[("updated_at", -1)]
     )
     if not proj:
         raise HTTPException(status_code=404, detail="No project found")
@@ -280,7 +326,6 @@ async def portal_team_data(customer=Depends(get_current_customer)):
     await _auto_activate_pending_user(proj["id"], email, name)
 
     members = await _build_unified_team(proj)
-
     today = _ist_today()
     attendance = sorted(proj.get("attendance") or [], key=lambda a: a.get("date", ""), reverse=True)
     today_entry = next((a for a in attendance if a.get("date") == today), None)
@@ -309,7 +354,6 @@ async def portal_team_data(customer=Depends(get_current_customer)):
         "on_site_ids": list(on_site_ids),
         "date_today": today,
     }
-
 
 @proj_router.post("/portal/my-project/team/invite")
 async def portal_invite_team_member(request: Request, body: TeamInviteBody, customer=Depends(get_current_customer)):

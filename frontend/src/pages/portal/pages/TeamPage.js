@@ -48,7 +48,8 @@ export default function TeamPage() {
   const loadTeam = useCallback(async (isSilent = false) => {
     if (!isSilent) setRefreshing(true);
     try {
-      const res = await axios.get(`${API_BASE}/portal/my-project/team-data`, { withCredentials: true });
+    // Add project?.id to the query
+const res = await axios.get(`${API_BASE}/portal/my-project/team-data?project_id=${project.id}`, { withCredentials: true });
       setTeamData(res.data);
     } catch (err) {
       if (!isSilent) toast.error("Failed to sync live team data");

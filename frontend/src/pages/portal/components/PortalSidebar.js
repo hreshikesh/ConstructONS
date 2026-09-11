@@ -83,6 +83,7 @@ export default function PortalSidebar({ open, onClose }) {
         {/* Brand */}
         <div className="h-16 px-5 flex items-center justify-between border-b border-white/10 shrink-0">
           <Link to="/portal" className="flex items-center gap-2" onClick={onClose}>
+            <img src="/logo/logo.webp" alt="ConstructONS Logo" className="h-8 w-8 object-contain" />
             <span className="font-bold text-base tracking-tight">
               Construct<span className="text-[#FF5A00]">ONS™</span>
             </span>
@@ -112,10 +113,9 @@ export default function PortalSidebar({ open, onClose }) {
                       end={item.end}
                       onClick={onClose}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition min-h-[44px] ${
-                          isActive
-                            ? "bg-[#FF5A00] text-white shadow-sm"
-                            : "text-white/70 hover:bg-white/5 hover:text-white"
+                        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition min-h-[44px] ${isActive
+                          ? "bg-[#FF5A00] text-white shadow-sm"
+                          : "text-white/70 hover:bg-white/5 hover:text-white"
                         }`
                       }
                     >

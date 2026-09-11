@@ -10,7 +10,12 @@ const PortalContext = createContext(null);
 export function PortalProvider({ children }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  
+  // Multiple Projects Support
+  const [projectsList, setProjectsList] = useState([]);
+  const [activeProjectId, setActiveProjectId] = useState(localStorage.getItem("cons_active_project") || null);
   const [project, setProject] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -21,10 +26,27 @@ export function PortalProvider({ children }) {
       setUser(me.data);
 
       try {
-        const pr = await axios.get(`${API_BASE}/portal/my-project`, { withCredentials: true });
+        // 1. Fetch all projects this user has access to
+        const listRes = await axios.get(`${API_BASE}/portal/my-projects-list`, { withCredentials: true });
+        const list = listRes.data?.projects || [];
+        setProjectsList(list);
+
+        // 2. Determine which project to load
+        let targetId = activeProjectId;
+        if (list.length > 0 && (!targetId || !list.find(p => p.id === targetId))) {
+          targetId = list[0].id; // Fallback to first project if stored ID is invalid
+          setActiveProjectId(targetId);
+          localStorage.setItem("cons_active_project", targetId);
+        }
+
+        // 3. Fetch the full active project data
+        const url = targetId 
+          ? `${API_BASE}/portal/my-project?project_id=${targetId}` 
+          : `${API_BASE}/portal/my-project`;
+          
+        const pr = await axios.get(url, { withCredentials: true });
         const rawProj = pr.data?.project !== undefined ? pr.data.project : pr.data;
         
-        // Strict check: Only set project if it contains a valid project ID or title
         if (rawProj && (rawProj.id || rawProj.title || rawProj.project_code)) {
           setProject(rawProj);
         } else {
@@ -42,7 +64,7 @@ export function PortalProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [activeProjectId, navigate]);
 
   useEffect(() => {
     load();
@@ -50,14 +72,24 @@ export function PortalProvider({ children }) {
 
   const logout = async () => {
     try {
+      localStorage.removeItem("cons_active_project");
       await axios.post(`${API_BASE}/customer/logout`, {}, { withCredentials: true });
     } catch {}
     navigate("/portal/login", { replace: true });
   };
 
+  const switchProject = (id) => {
+    setActiveProjectId(id);
+    localStorage.setItem("cons_active_project", id);
+    // Reload is triggered automatically because load() depends on activeProjectId
+  };
+
   const value = {
     user,
     project,
+    projectsList,
+    activeProjectId,
+    switchProject,
     loading,
     reload: load,
     logout,
