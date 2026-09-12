@@ -36,7 +36,7 @@ export default function FloatingActions({ phone, whatsapp }) {
   if (!phone && !wa) return null;
 
   return (
-    <div className="fixed right-4 md:right-6 bottom-6 md:bottom-auto md:top-1/2 md:-translate-y-1/2 z-50 flex flex-col gap-3.5 items-end">
+    <div className="fixed right-4 bottom-6 md:right-6 md:bottom-8 z-50 flex flex-col gap-3.5 items-end">
       {/* Phone Action */}
       {phone && (
         <motion.div

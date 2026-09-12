@@ -100,8 +100,13 @@ async def admin_reseed():
 
 
 # ============================================================================
-# Customer Auth — Direct Google OAuth & Session Management
+# Customer Auth & Profile Settings
 # ============================================================================
+from customer_auth import (
+    GoogleAuthBody, process_google_auth, get_current_customer,
+    logout_customer as _logout_customer, CustomerProfileUpdate
+)
+
 @router.post("/customer/auth/google")
 async def customer_process_google(body: GoogleAuthBody, response: FastAPIResponse):
     """Authenticate customer directly using Google ID token credential."""
@@ -110,13 +115,25 @@ async def customer_process_google(body: GoogleAuthBody, response: FastAPIRespons
 
 @router.get("/customer/me")
 async def customer_me(customer=Depends(get_current_customer)):
-    """Retrieve identity of logged in customer."""
-    return {
-        "user_id": customer.get("user_id"),
-        "email": customer.get("email"),
-        "name": customer.get("name"),
-        "picture": customer.get("picture"),
-    }
+    """Retrieve full identity & onboarding status of logged in customer."""
+    return customer
+
+
+@router.put("/customer/profile")
+async def update_customer_profile(body: CustomerProfileUpdate, customer=Depends(get_current_customer)):
+    """Allows client to complete onboarding or update profile settings."""
+    update_data = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not update_data:
+        return {"success": True, "customer": customer}
+
+    update_data["updated_at"] = now_iso()
+
+    await db.customers.update_one(
+        {"user_id": customer["user_id"]},
+        {"$set": update_data}
+    )
+    updated_customer = await db.customers.find_one({"user_id": customer["user_id"]}, {"_id": 0})
+    return {"success": True, "customer": updated_customer}
 
 
 @router.post("/customer/logout")
@@ -124,6 +141,32 @@ async def customer_logout(request: Request, response: FastAPIResponse):
     """Logout customer session."""
     return await _logout_customer(request, response)
 
+
+# ============================================================================
+# Admin CRM: Registered Client Users Directory
+# ============================================================================
+@router.get("/admin/customers", dependencies=[Depends(require_admin)])
+async def list_registered_customers(q: Optional[str] = None):
+    """Admin endpoint to view all onboarded clients and their project requirements."""
+    query: Dict[str, Any] = {}
+    if q:
+        query["$or"] = [
+            {"email": {"$regex": q, "$options": "i"}},
+            {"name": {"$regex": q, "$options": "i"}},
+            {"phone": {"$regex": q, "$options": "i"}},
+            {"plot_location": {"$regex": q, "$options": "i"}},
+        ]
+    docs = await db.customers.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return docs
+
+
+@router.get("/admin/customers/{user_id}", dependencies=[Depends(require_admin)])
+async def get_customer_details(user_id: str):
+    """Admin view of a single customer profile."""
+    doc = await db.customers.find_one({"user_id": user_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return doc
 
 # ----------------------- Homes -----------------------
 @router.get("/homes")
@@ -827,12 +870,22 @@ async def list_quote_templates():
     return await cursor.to_list(200)
 
 
-# ============================================================================
-# Media Upload & Read
-# ============================================================================
+async def require_admin_or_customer(request: Request):
+    """Dependency that accepts either an Admin session or a Customer session."""
+    try:
+        return await require_admin(request)
+    except HTTPException:
+        pass
+    try:
+        return await get_current_customer(request)
+    except HTTPException:
+        pass
+    raise HTTPException(status_code=401, detail="Authentication required")
 
-@router.post("/media/upload", dependencies=[Depends(require_admin)])
+
+@router.post("/media/upload", dependencies=[Depends(require_admin_or_customer)])
 async def upload_media(file: UploadFile = File(...), category: str = Form("general")):
+    """Upload a single image to Cloudinary or local storage (accessible by Admin or Customer)."""
     from media_service import (
         put_object, build_storage_path,
         ALLOWED_MIME_PREFIXES, MAX_UPLOAD_BYTES,
@@ -843,9 +896,15 @@ async def upload_media(file: UploadFile = File(...), category: str = Form("gener
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ct}")
 
     data = await file.read()
-    if len(data) > MAX_UPLOAD_BYTES:
-        mb = MAX_UPLOAD_BYTES // (1024 * 1024)
-        raise HTTPException(status_code=413, detail=f"File exceeds {mb} MB limit")
+    cat = (category or "general").lower()
+    max_bytes = 1 * 1024 * 1024 if cat == "team" else MAX_UPLOAD_BYTES
+
+    if len(data) > max_bytes:
+        mb = max_bytes / (1024 * 1024)
+        raise HTTPException(
+            status_code=413,
+            detail=f"File exceeds {mb:g} MB limit",
+        )
     if len(data) == 0:
         raise HTTPException(status_code=400, detail="Empty file")
 
@@ -879,34 +938,6 @@ async def upload_media(file: UploadFile = File(...), category: str = Form("gener
         "content_type": ct,
         "original_filename": file.filename,
     }
-
-
-@router.get("/media/{path:path}")
-async def download_media(path: str):
-    from media_service import get_object
-
-    try:
-        content, fetched_content_type = get_object(path)
-        return FastAPIResponse(
-            content=content,
-            media_type=fetched_content_type,
-            headers={"Cache-Control": "public, max-age=86400"},
-        )
-    except Exception as e:
-        raise HTTPException(status_code=404, detail="File not found")
-
-
-@router.delete("/media/{media_id}", dependencies=[Depends(require_admin)])
-async def delete_media(media_id: str):
-    res = await db.media_uploads.update_one(
-        {"id": media_id},
-        {"$set": {"is_deleted": True, "deleted_at": now_iso()}},
-    )
-    if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Media not found")
-    return {"success": True}
-
-
 # ============================================================================
 # Package Version History
 # ============================================================================

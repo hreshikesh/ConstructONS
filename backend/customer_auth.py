@@ -9,7 +9,7 @@ import os
 import uuid
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, List
 
 import httpx
 from fastapi import HTTPException, Request, Response
@@ -29,6 +29,19 @@ class GoogleAuthBody(BaseModel):
     credential: str  # Google ID token (JWT) returned by Google GIS SDK
 
 
+class CustomerProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    whatsapp: Optional[str] = None
+    current_status: Optional[str] = None
+    plot_location: Optional[str] = None
+    plot_size: Optional[str] = None
+    style_pref: Optional[str] = None
+    budget_range: Optional[str] = None
+    site_photos: Optional[List[str]] = None
+    onboarding_completed: Optional[bool] = None
+
+
 async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dict:
     """Inserts or updates customer identity in MongoDB."""
     existing = await db.customers.find_one({"email": email}, {"_id": 0})
@@ -38,8 +51,11 @@ async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dic
             {"user_id": existing["user_id"]},
             {"$set": {"name": name, "picture": picture, "updated_at": now}},
         )
-        return {**existing, "name": name, "picture": picture, "updated_at": now}
-    
+        existing["name"] = name
+        existing["picture"] = picture
+        existing["updated_at"] = now
+        return existing
+
     user_id = f"cust_{uuid.uuid4().hex[:16]}"
     doc = {
         "user_id": user_id,
@@ -47,6 +63,15 @@ async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dic
         "name": name,
         "picture": picture,
         "role": "customer",
+        "phone": "",
+        "whatsapp": "",
+        "current_status": "",
+        "plot_location": "",
+        "plot_size": "",
+        "style_pref": "",
+        "budget_range": "",
+        "site_photos": [],
+        "onboarding_completed": False,  # First-time users trigger onboarding wizard
         "created_at": now,
         "updated_at": now,
     }
@@ -93,9 +118,8 @@ async def process_google_auth(body: GoogleAuthBody, resp: Response) -> dict:
     """Verifies Google Token directly with Google APIs and creates an application session."""
     if not body.credential:
         raise HTTPException(status_code=400, detail="Google credential required")
-        
+
     try:
-        # Verify directly with Google's public tokeninfo endpoint
         async with httpx.AsyncClient(timeout=10) as client:
             r = await client.get(
                 GOOGLE_TOKEN_INFO_URL,
@@ -111,7 +135,6 @@ async def process_google_auth(body: GoogleAuthBody, resp: Response) -> dict:
         logger.error(f"[customer-auth] Google API network call error: {e}")
         raise HTTPException(status_code=502, detail="Google auth server unreachable")
 
-    # Verify audience matches our Client ID if provided
     aud = data.get("aud") or ""
     if GOOGLE_CLIENT_ID and aud != GOOGLE_CLIENT_ID:
         logger.warning(f"[customer-auth] Audience mismatch! Got: {aud}, Expected: {GOOGLE_CLIENT_ID}")
@@ -119,41 +142,34 @@ async def process_google_auth(body: GoogleAuthBody, resp: Response) -> dict:
     email = (data.get("email") or "").lower()
     name = data.get("name") or email.split("@")[0]
     picture = data.get("picture")
-    
+
     if not email:
         raise HTTPException(status_code=400, detail="Incomplete Google user profile details")
 
-    # Generate our own unique application session token
     session_token = f"cust_sess_{uuid.uuid4().hex}{uuid.uuid4().hex}"
 
     customer = await _upsert_customer(email, name, picture)
     await _create_session(customer["user_id"], session_token)
     _set_session_cookie(resp, session_token)
 
-    return {
-        "user_id": customer["user_id"],
-        "email": customer["email"],
-        "name": customer["name"],
-        "picture": customer["picture"],
-    }
+    return customer
 
 
 async def get_current_customer(request: Request) -> dict:
     """Validates the active httpOnly cookie session, returns customer document."""
     token = request.cookies.get(COOKIE_NAME)
     if not token:
-        # Fallback to Authorization Header
         auth = request.headers.get("Authorization") or ""
         if auth.startswith("Bearer "):
             token = auth[7:]
-            
+
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-        
+
     sess = await db.customer_sessions.find_one({"session_token": token}, {"_id": 0})
     if not sess:
         raise HTTPException(status_code=401, detail="Session not found")
-        
+
     expires_at = sess.get("expires_at")
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at)
@@ -161,11 +177,11 @@ async def get_current_customer(request: Request) -> dict:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at and expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="Session expired")
-        
+
     customer = await db.customers.find_one({"user_id": sess["user_id"]}, {"_id": 0})
     if not customer:
         raise HTTPException(status_code=401, detail="Customer profile not found")
-        
+
     return customer
 
 

@@ -54,6 +54,7 @@ const AdminProposals = lazy(() => import("@/pages/admin/AdminProposals"));
 const AdminCustomQuotes = lazy(() => import("@/pages/admin/AdminCustomQuotes"));
 const AdminQuoteTemplates = lazy(() => import("@/pages/admin/AdminQuoteTemplates"));
 const AdminProjects = lazy(() => import("@/pages/admin/AdminProjects"));
+const AdminClientUsers = lazy(() => import("@/pages/admin/AdminClientUsers"));
 
 function PageFallback() {
   return (
@@ -182,6 +183,7 @@ function App() {
                   <Route path="quote-templates" element={<AdminQuoteTemplates />} />
                   <Route path="projects" element={<AdminProjects />} />
                   <Route path=":entity" element={<AdminEntity />} />
+                  <Route path="client-users" element={<AdminClientUsers />} />
                 </Route>
 
                 <Route path="*" element={<NotFoundPage />} />

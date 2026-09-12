@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 import { PortalProvider, usePortal } from "./context/PortalContext";
 import PortalSidebar from "./components/PortalSidebar";
 import PortalTopBar from "./components/PortalTopBar";
+import OnboardingWizard from "../../components/site/OnboardingWizard";
 
 function NoProjectView() {
   const { user, logout, reload, loading } = usePortal();
@@ -125,7 +126,7 @@ function NoProjectView() {
 }
 
 function PortalShell() {
-  const { project, loading, sidebarOpen, setSidebarOpen } = usePortal();
+  const { user, project, loading, sidebarOpen, setSidebarOpen, reload } = usePortal();
 
   if (loading) {
     return (
@@ -138,13 +139,19 @@ function PortalShell() {
     );
   }
 
-  // Failsafe check: If project is null or doesn't have an ID, show NoProjectView
+  // 1. INTERCEPT: First-time user must complete onboarding wizard
+  if (user && user.onboarding_completed === false) {
+    return <OnboardingWizard user={user} onComplete={reload} />;
+  }
+
+  // 2. INTERCEPT: User completed onboarding but has no active project
   const hasProject = Boolean(project && (project.id || project.title || project.project_code));
 
   if (!hasProject) {
     return <NoProjectView />;
   }
 
+  // 3. FULL PORTAL ACCESS
   return (
     <div className="h-screen bg-[#F5F6F8] font-['Poppins'] text-[#111111] flex overflow-hidden">
       <Toaster richColors position="top-right" />

@@ -35,6 +35,7 @@ const NAV = [
   { label: "Stats", to: "/admin/stats", icon: BarChart3 },
   { label: "Media", to: "/admin/media", icon: ImageIcon },
   { label: "Site Settings", to: "/admin/site-settings", icon: Settings },
+    { label: "Client Users", to: "/admin/client-users", icon: Users },
 ];
 
 const CURRENT_LABEL = (path) => {

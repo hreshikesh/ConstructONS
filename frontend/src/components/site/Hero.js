@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 
 export default function Hero() {
@@ -24,8 +24,6 @@ export default function Hero() {
     };
   }, []);
 
-
-
   return (
     <section
       id="top"
@@ -43,19 +41,18 @@ export default function Hero() {
           loop
           playsInline
           preload="metadata"
-          className="absolute inset-0 h-full w-full object-cover scale-[1.02]"
+          className="absolute inset-0 h-full w-full scale-[1.02] object-cover"
         >
           <source src="/videos/constructons-hero.mp4" type="video/mp4" />
         </video>
 
-        {/* 1. Base light darkening to ensure general contrast */}
+        {/* 1. Base light darkening */}
         <div className="absolute inset-0 bg-[#000F1B]/20" />
 
-        {/* 2. Text Protection Gradient (Dark on left, transparent on right) 
-            This allows the video to shine on the right side! */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#000F1B]/95 via-[#000F1B]/70 to-transparent w-full md:w-[85%]" />
+        {/* 2. Text Protection Gradient */}
+        <div className="absolute inset-0 w-full bg-gradient-to-r from-[#000F1B]/95 via-[#000F1B]/70 to-transparent md:w-[85%]" />
 
-        {/* 3. Bottom fade to blend seamlessly into the next section */}
+        {/* 3. Bottom fade */}
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#000F1B] to-transparent" />
       </div>
 
@@ -63,9 +60,9 @@ export default function Hero() {
           HERO CONTENT
       -------------------------------------------------- */}
       <div className="relative z-10 flex min-h-[100svh] items-center">
-        <div className="mx-auto w-full max-w-[1536px] px-5 sm:px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-24 pt-28 md:pt-32 pb-20">
+        <div className="mx-auto w-full max-w-[1536px] px-5 py-28 sm:px-8 md:px-12 md:py-36 lg:px-16 xl:px-20 2xl:px-24">
           <div className="max-w-4xl">
-            
+
             {/* Tagline / Kicker */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -74,63 +71,59 @@ export default function Hero() {
               className="mb-6 flex items-center gap-4"
             >
               <span className="h-[2px] w-12 bg-[#FF5A00]" />
-              <span className="font-[Poppins] text-sm font-semibold tracking-[0.15em] text-white uppercase">
-                ConstructONS™
+              <span className="font-[Poppins] text-sm font-semibold tracking-[0.15em] uppercase text-white">
+                Construct<span className="text-[#FF5A00]">ONS™</span>
               </span>
             </motion.div>
 
-            {/* Main Premium Heading */}
+            {/* Main Premium Heading (Adjusted leading to prevent overlap) */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="font-[Poppins] text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-bold leading-[1.15] text-white tracking-tight"
+              className="font-[Poppins] text-4xl font-bold leading-[1.25] tracking-tight text-white sm:text-5xl sm:leading-[1.2] md:text-6xl md:leading-[1.18] lg:text-[64px] lg:leading-[1.15]"
             >
               Your trusted partner for <br className="hidden lg:block" />
               every stage of <span className="text-[#FF5A00]">home construction.</span>
             </motion.h1>
 
-            {/* Subtext (Exact copy from Welcome Guide Page 2) */}
+            {/* Subtext */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-6 max-w-2xl font-[Poppins] text-base md:text-lg text-white/80 leading-relaxed font-light"
+              className="mt-6 max-w-2xl font-[Poppins] text-base font-light leading-relaxed text-white/80 md:text-lg"
             >
               From the first blueprint to the final handover, we make your dream home a reality with transparency, quality and trust.
             </motion.p>
 
-            {/* Premium CTAs */}
+            {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+              className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
             >
-              {/* Primary Button */}
               <a
-              href="/about"
-                type="button"
-                className="group flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-8 py-3 font-[Poppins] text-base font-medium text-white transition-all duration-300 hover:bg-[#FF2D00] hover:shadow-[0_8px_25px_rgba(255,90,0,0.3)] w-full sm:w-auto"
+                href="/about"
+                className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-8 py-3 font-[Poppins] text-base font-medium text-white transition-all duration-300 hover:bg-[#FF2D00] hover:shadow-[0_8px_25px_rgba(255,90,0,0.3)] sm:w-auto"
               >
                 Explore Our Ecosystem
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </a>
 
-              {/* Secondary Button */}
               <button
                 type="button"
                 onClick={() => openLead({ source: "hero" })}
-                className="flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/20 bg-transparent px-8 py-3 font-[Poppins] text-base font-medium text-white backdrop-blur-sm transition-all duration-300 hover:border-[#FF5A00] hover:bg-[#FF5A00]/10 hover:text-[#FF5A00] w-full sm:w-auto"
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-transparent px-8 py-3 font-[Poppins] text-base font-medium text-white backdrop-blur-sm transition-all duration-300 hover:border-[#FF5A00] hover:bg-[#FF5A00]/10 hover:text-[#FF5A00] sm:w-auto"
               >
                 Talk to an Expert
               </button>
             </motion.div>
+
           </div>
         </div>
       </div>
-
-     
     </section>
   );
 }
