@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { BellRing } from "lucide-react";
+import { BellRing, ExternalLink } from "lucide-react";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "") + "/api";
 
@@ -19,8 +19,45 @@ export function PortalProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Ref to track notification count without re-triggering effects
-  const prevNotifCountRef = useRef(0);
+  // Ref to track known notification IDs to prevent duplicate toasts & bypass array length limits
+  const knownNotifIdsRef = useRef(new Set());
+  const isInitialLoadRef = useRef(true);
+
+  // Helper to trigger Sonner toast popup
+  const triggerNotificationToast = useCallback((notif) => {
+    if (!notif || !notif.title) return;
+
+    toast.custom((t) => (
+      <div className="flex items-start gap-3 p-4 bg-white border border-[#FF5A00]/30 rounded-2xl shadow-2xl shadow-[#FF5A00]/15 w-[350px] font-['Poppins'] relative overflow-hidden animate-in fade-in slide-in-from-top-3 duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF5A00]" />
+        
+        <div className="w-10 h-10 rounded-xl bg-[#FF5A00]/10 border border-[#FF5A00]/20 grid place-items-center shrink-0 mt-0.5">
+          <BellRing className="w-5 h-5 text-[#FF5A00] animate-bounce" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-0.5">
+            <span className="text-[10px] font-extrabold text-[#FF5A00] uppercase tracking-wider">Live Project Update</span>
+            <span className="text-[9px] text-[#111111]/40 font-medium">Just now</span>
+          </div>
+          
+          <div className="font-bold text-[#000F1B] text-sm leading-snug line-clamp-1">{notif.title}</div>
+          <div className="text-[11px] text-[#111111]/70 mt-1 line-clamp-2 leading-relaxed">{notif.message}</div>
+          
+          <button 
+            onClick={() => {
+              toast.dismiss(t);
+              if (notif.link) navigate(notif.link);
+            }}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-white bg-[#000F1B] hover:bg-[#FF5A00] px-3 py-2 rounded-xl transition-all shadow-md active:scale-95"
+          >
+            <span>View Details</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    ), { duration: 7000 });
+  }, [navigate]);
 
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -46,7 +83,12 @@ export function PortalProvider({ children }) {
         
         if (rawProj && (rawProj.id || rawProj.title || rawProj.project_code)) {
           setProject(rawProj);
-          prevNotifCountRef.current = (rawProj.notifications || []).length;
+
+          // Populate initial known notifications so we don't toast historical items on first load
+          const notifs = rawProj.notifications || [];
+          notifs.forEach(n => {
+            if (n.id) knownNotifIdsRef.current.add(n.id);
+          });
         } else {
           setProject(null);
         }
@@ -61,6 +103,7 @@ export function PortalProvider({ children }) {
       if (!isSilent) toast.error("Failed to load your portal");
     } finally {
       if (!isSilent) setLoading(false);
+      isInitialLoadRef.current = false;
     }
   }, [activeProjectId, navigate]);
 
@@ -69,7 +112,13 @@ export function PortalProvider({ children }) {
     load();
   }, [load]);
 
-  // Background Notification Polling
+  // Reset known notifications when switching projects
+  useEffect(() => {
+    knownNotifIdsRef.current.clear();
+    isInitialLoadRef.current = true;
+  }, [activeProjectId]);
+
+  // Background Real-Time Polling (Checks every 8 seconds)
   useEffect(() => {
     if (!user || !activeProjectId) return;
     
@@ -79,51 +128,36 @@ export function PortalProvider({ children }) {
         const pr = await axios.get(url, { withCredentials: true });
         const rawProj = pr.data?.project !== undefined ? pr.data.project : pr.data;
         
-        if (rawProj) {
+        if (rawProj && rawProj.notifications) {
           const currentNotifs = rawProj.notifications || [];
-          const currentCount = currentNotifs.length;
 
-          // Trigger toast if a new notification arrives
-          if (currentCount > prevNotifCountRef.current) {
-            const newestNotif = currentNotifs[0];
-            
-            if (newestNotif) {
-              toast.custom((t) => (
-                <div className="flex items-start gap-3 p-4 bg-white border border-[#FF5A00]/20 rounded-2xl shadow-2xl shadow-[#FF5A00]/10 w-[340px] font-['Poppins'] relative overflow-hidden">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF5A00]" />
-                  <div className="w-10 h-10 rounded-full bg-[#FF5A00]/10 grid place-items-center shrink-0 mt-0.5">
-                    <BellRing className="w-5 h-5 text-[#FF5A00] animate-bounce" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-[#FF5A00] uppercase tracking-wider mb-0.5">New Update</div>
-                    <div className="font-bold text-[#000F1B] text-sm leading-tight">{newestNotif.title}</div>
-                    <div className="text-[10px] text-[#111111]/60 mt-1 line-clamp-2 leading-relaxed">{newestNotif.message}</div>
-                    <button 
-                      onClick={() => {
-                        toast.dismiss(t);
-                        navigate(newestNotif.link || "/portal/site-reports");
-                      }}
-                      className="mt-3 text-[10px] font-bold text-white bg-[#000F1B] hover:bg-[#FF5A00] px-4 py-2 rounded-lg transition"
-                    >
-                      View Details &rarr;
-                    </button>
-                  </div>
-                </div>
-              ), { duration: 6000 });
-            }
-            
-            prevNotifCountRef.current = currentCount;
+          // Find any unread notification that is NOT in our knownSet
+          const freshNotifications = currentNotifs.filter(
+            n => n.id && !knownNotifIdsRef.current.has(n.id) && !n.is_read
+          );
+
+          // Trigger popup toast for each fresh unread notification
+          if (freshNotifications.length > 0 && !isInitialLoadRef.current) {
+            freshNotifications.forEach(newNotif => {
+              triggerNotificationToast(newNotif);
+              knownNotifIdsRef.current.add(newNotif.id);
+            });
           }
+
+          // Always add current IDs to set
+          currentNotifs.forEach(n => {
+            if (n.id) knownNotifIdsRef.current.add(n.id);
+          });
 
           setProject(rawProj);
         }
       } catch (e) {
-        // Silently fail in background
+        // Silently fail background poll
       }
-    }, 10000);
+    }, 8000);
 
     return () => clearInterval(interval);
-  }, [user, activeProjectId, navigate]);
+  }, [user, activeProjectId, triggerNotificationToast]);
 
   const logout = async () => {
     try {

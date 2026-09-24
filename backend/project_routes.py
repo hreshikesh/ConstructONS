@@ -95,7 +95,7 @@ async def _push_notification(project_id: str, title: str, message: str, link: st
     }
     await db.projects.update_one(
         {"id": project_id},
-        {"$push": {"notifications": {"$each": [notif], "$slice": -50, "$sort": {"timestamp": -1}}}},
+        {"$push": {"notifications": {"$each": [notif], "$slice": 50, "$sort": {"timestamp": -1}}}},
     )
 
     # 📧 Email Integration: Fetch project customer info and dispatch email notification
