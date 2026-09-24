@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Check,
+  Home as HomeIcon,
   Download,
   Phone,
   RotateCcw,
@@ -18,16 +19,14 @@ import {
   Bed,
   Bath,
   Layers,
-  Loader2,
 } from "lucide-react";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
-import LogoMark from "@/components/site/LogoMark";
 import { publicApi } from "@/lib/api";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 
 /* ──────────────────────────────────────────────────────────────
-   CURATED IMAGES
+   CURATED UNSPLASH IMAGES (per-option only)
 ────────────────────────────────────────────────────────────── */
 const IMG = {
   budget: {
@@ -138,15 +137,67 @@ const LABELS = {
   smart_home: { yes: "Full automation", partial: "Essentials only", no: "Traditional" },
 };
 
-/* Fallback package details */
+/* Package details for result screen */
 const PACKAGE_DETAILS = {
-  basic: { slug: "basic", name: "Basic Package", tagline: "Smart & Affordable", price: "₹1,499", unit: "/sqft", tone: "Value", highlights: ["ISI-certified structural materials", "Standard specifications, no hidden costs", "Digital progress tracking on the app", "1-year defect warranty · 10-year structural"] },
-  essential: { slug: "essential", name: "Essential Package", tagline: "Perfect Balance", price: "₹1,799", unit: "/sqft", tone: "Balanced", highlights: ["Upgraded flooring, doors and fittings", "Dedicated project manager", "Live milestone tracking + weekly reports", "10-year structural warranty"] },
-  standard: { slug: "standard", name: "Standard Package", tagline: "Premium Value", price: "₹2,199", unit: "/sqft", tone: "Premium", highlights: ["Designer finishes and premium fixtures", "Full AI dashboard + document vault", "Multi-level quality inspections", "10-year structural warranty"] },
-  premium: { slug: "premium", name: "Premium Package", tagline: "Bespoke Luxury", price: "Custom", unit: "quote", tone: "Luxury", highlights: ["Fully customised design + planning", "Luxury materials and imported fittings", "Smart-home integration included", "10-year structural warranty"] },
+  basic: {
+    slug: "basic",
+    name: "Basic Package",
+    tagline: "Smart & Affordable",
+    price: "₹1,499",
+    unit: "/sqft",
+    tone: "Value",
+    highlights: [
+      "ISI-certified structural materials",
+      "Standard specifications, no hidden costs",
+      "Digital progress tracking on the app",
+      "1-year defect warranty · 10-year structural",
+    ],
+  },
+  essential: {
+    slug: "essential",
+    name: "Essential Package",
+    tagline: "Perfect Balance",
+    price: "₹1,799",
+    unit: "/sqft",
+    tone: "Balanced",
+    highlights: [
+      "Upgraded flooring, doors and fittings",
+      "Dedicated project manager",
+      "Live milestone tracking + weekly reports",
+      "10-year structural warranty",
+    ],
+  },
+  standard: {
+    slug: "standard",
+    name: "Standard Package",
+    tagline: "Premium Value",
+    price: "₹2,199",
+    unit: "/sqft",
+    tone: "Premium",
+    highlights: [
+      "Designer finishes and premium fixtures",
+      "Full AI dashboard + document vault",
+      "Multi-level quality inspections",
+      "10-year structural warranty",
+    ],
+  },
+  premium: {
+    slug: "premium",
+    name: "Premium Package",
+    tagline: "Bespoke Luxury",
+    price: "Custom",
+    unit: "quote",
+    tone: "Luxury",
+    highlights: [
+      "Fully customised design + planning",
+      "Luxury materials and imported fittings",
+      "Smart-home integration included",
+      "10-year structural warranty",
+    ],
+  },
 };
 
-function recommendPackageLocal(answers) {
+function recommendPackage(answers) {
   if (answers.budget === "luxury") return PACKAGE_DETAILS.premium;
   if (answers.budget === "premium") return PACKAGE_DETAILS.standard;
   if (answers.budget === "balanced") return PACKAGE_DETAILS.essential;
@@ -154,9 +205,47 @@ function recommendPackageLocal(answers) {
 }
 
 /* ──────────────────────────────────────────────────────────────
+   CUSTOM LOGO COMPONENT WITH POWER BUTTON 'O' (Darker styling)
+────────────────────────────────────────────────────────────── */
+function LogoMark({ className = "w-6 h-6" }) {
+  return (
+    <div className={`relative inline-flex items-center justify-center shrink-0 ${className}`}>
+      <img
+        src="/logo.webp"
+        alt="ConstructONS Logo"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+}
+
+function BrandLogoText({ size = "md" }) {
+  const sizes = {
+    sm: "text-xs",
+    md: "text-base",
+    lg: "text-xl",
+  }[size];
+
+  return (
+    <span className={`font-bold tracking-tight text-white inline-flex items-center ${sizes}`}>
+      Construct
+      {/* The 'O' rendered as a darker, bolder power button */}
+      <span className="inline-flex items-center justify-center relative mx-[1px] w-[0.8em] h-[0.8em] rounded-full border-[2.5px] border-[#D44A00] align-middle bg-[#FF5A00]/10">
+        <span className="absolute top-0 w-[2.5px] h-[48%] bg-[#D44A00] rounded-full -translate-y-0.5" />
+      </span>
+      NS
+    </span>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
    PAGE
 ────────────────────────────────────────────────────────────── */
 export default function FindMyPackagePage() {
+  const navigate = useNavigate();
   const { open: openLead } = useLeadModal();
 
   const [screen, setScreen] = useState("intro");
@@ -174,54 +263,19 @@ export default function FindMyPackagePage() {
   const total = QUESTIONS.length;
   const current = QUESTIONS[step];
 
-  // FIX: Make API call to backend when quiz is completed
   const pickAnswer = (optionId) => {
     const next = { ...answers, [current.id]: optionId };
     setAnswers(next);
-
-    setTimeout(async () => {
+    setTimeout(() => {
       if (step < total - 1) {
         setStep(step + 1);
       } else {
         setScreen("analysing");
-
-        try {
-          // Send Quiz Answers to Backend API
-          const apiRes = await publicApi.recommendPackage({
-            budget: next.budget || "balanced",
-            family_size: next.family || "3-4",
-            style: next.style || "modern",
-            smart_home: next.smart_home || "no",
-          });
-
-          if (apiRes && apiRes.recommended_package) {
-            const pkg = apiRes.recommended_package;
-            setResult({
-              slug: pkg.slug,
-              name: pkg.name,
-              tagline: pkg.tagline || "Recommended Match",
-              price: pkg.price_display || "Custom",
-              unit: pkg.price_unit || "",
-              tone: pkg.tier?.toUpperCase() || "Value",
-              highlights: pkg.highlights?.length ? pkg.highlights : ["ISI-certified materials", "Digital updates", "Warranty"],
-              submissionId: apiRes.submission_id,
-            });
-            if (apiRes.shortlisted_homes?.length) {
-              setHomes(apiRes.shortlisted_homes);
-            }
-          } else {
-            const localRec = recommendPackageLocal(next);
-            setResult(localRec);
-          }
-        } catch (err) {
-          console.error("Failed to submit quiz to backend:", err);
-          const localRec = recommendPackageLocal(next);
-          setResult(localRec);
-        } finally {
-          setTimeout(() => {
-            setScreen("result");
-          }, 1500);
-        }
+        const rec = recommendPackage(next);
+        setTimeout(() => {
+          setResult(rec);
+          setScreen("result");
+        }, 2600);
       }
     }, 350);
   };
@@ -268,8 +322,8 @@ export default function FindMyPackagePage() {
               answers={answers}
               homes={homes}
               onRestart={restart}
-              onConsult={() => openLead({ source: "quiz-result", quiz_submission_id: result.submissionId })}
-              onBrochure={() => openLead({ source: "quiz-brochure", package: result.name, quiz_submission_id: result.submissionId })}
+              onConsult={() => openLead({ source: "quiz-result" })}
+              onBrochure={() => openLead({ source: "quiz-brochure", package: result.name })}
             />
           )}
         </AnimatePresence>
@@ -281,31 +335,33 @@ export default function FindMyPackagePage() {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   BRAND PILL
+   BRAND PILL (Supports logo-only mode)
 ────────────────────────────────────────────────────────────── */
-function BrandPill({ size = "md" }) {
+function BrandPill({ size = "md", logoOnly = false }) {
   const sizes = {
-    sm: { pill: "px-3 py-1.5 text-[11px] gap-1.5", mark: "w-4 h-4" },
-    md: { pill: "px-4 py-2 text-xs gap-2", mark: "w-5 h-5" },
-    lg: { pill: "px-5 py-2.5 text-sm gap-2.5", mark: "w-6 h-6" },
+    sm: { pill: "px-3 py-1.5 text-[11px] gap-1.5", mark: "w-5 h-5" },
+    md: { pill: "px-4 py-2 text-xs gap-2", mark: "w-6 h-6" },
+    lg: { pill: "px-5 py-2.5 text-sm gap-2.5", mark: "w-7 h-7" },
   }[size];
+
+  if (logoOnly) {
+    return (
+      <div className={`inline-flex items-center justify-center rounded-full bg-[#000F1B] shadow-[0_10px_30px_rgba(0,15,27,0.25)] border border-white/10 ${size === 'sm' ? 'p-2' : size === 'lg' ? 'p-3.5' : 'p-2.5'}`}>
+        <LogoMark className={sizes.mark} />
+      </div>
+    );
+  }
 
   return (
     <div className={`inline-flex items-center rounded-full bg-[#000F1B] shadow-[0_10px_30px_rgba(0,15,27,0.25)] border border-white/5 ${sizes.pill}`}>
       <LogoMark className={sizes.mark} />
-      <span className="font-bold tracking-tight text-white">
-        Construct<span className="text-[#FF5A00]">ONS</span>
-      </span>
-      <span className="hidden sm:inline text-white/40 mx-1">·</span>
-      <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
-        Discovery
-      </span>
+      <BrandLogoText size={size === "sm" ? "sm" : size === "lg" ? "lg" : "md"} />
     </div>
   );
 }
 
 /* ──────────────────────────────────────────────────────────────
-   INTRO
+   INTRO — Heading modified to remove Discovery references
 ────────────────────────────────────────────────────────────── */
 function IntroScreen({ onBegin }) {
   return (
@@ -321,10 +377,6 @@ function IntroScreen({ onBegin }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#FF5A00] mb-5">
-            Find Your Home
-          </div>
-
           <h1 className="text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-[1.05] tracking-tight">
             Answer four questions.
             <br />
@@ -339,8 +391,8 @@ function IntroScreen({ onBegin }) {
           />
 
           <p className="mt-6 max-w-lg mx-auto text-[#000F1B]/60 text-sm md:text-base leading-relaxed">
-            A short guided discovery — your investment, lifestyle, style and
-            technology preferences. We'll match you to the right package.
+            A short guided preference selection — your investment, lifestyle, style and
+            technology priorities. We'll match you to the right package.
           </p>
 
           <motion.div
@@ -354,7 +406,7 @@ function IntroScreen({ onBegin }) {
               onClick={onBegin}
               className="group inline-flex items-center gap-3 rounded-full bg-[#000F1B] hover:bg-[#FF5A00] text-white text-sm font-semibold px-8 py-4 transition-all shadow-[0_16px_40px_rgba(0,15,27,0.25)]"
             >
-              Begin Discovery
+              Begin Selection
               <span className="w-7 h-7 rounded-full bg-[#FF5A00] group-hover:bg-white group-hover:text-[#FF5A00] text-white grid place-items-center transition">
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
@@ -466,6 +518,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                   {current.subtitle}
                 </p>
 
+                {/* Options */}
                 <div className="mt-7 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                   {current.options.map((opt, i) => {
                     const active = answers[current.id] === opt.id;
@@ -550,7 +603,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                     className="inline-flex items-center gap-2 text-sm font-semibold text-[#000F1B]/60 hover:text-[#FF5A00] transition"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    {step === 0 ? "Back to intro" : "Previous"}
+                    {step === 0 ? "Back to start" : "Previous"}
                   </button>
 
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#000F1B]/40">
@@ -608,7 +661,7 @@ function ProfilePanel({ answers }) {
       <div className="rounded-sm bg-white/70 backdrop-blur border border-black/5 p-4 shadow-sm">
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A00]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A00] animate-pulse" />
-          Your Profile
+          Your Selections
         </div>
 
         <div className="mt-4 space-y-3">
@@ -656,7 +709,7 @@ function AnalysingScreen() {
     >
       <div className="container-wide text-center max-w-md">
         <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A00] mb-4">
-          Analysing
+          Processing
         </div>
         <h3 className="text-[#000F1B] font-bold text-2xl sm:text-3xl md:text-4xl leading-tight tracking-tight">
           Finding spaces that fit you.
@@ -668,14 +721,14 @@ function AnalysingScreen() {
               key={s}
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.3, duration: 0.3 }}
+              transition={{ delay: i * 0.4, duration: 0.4 }}
               className="flex items-center justify-between border-b border-black/10 pb-3"
             >
               <span className="text-sm font-semibold text-[#000F1B]">{s}</span>
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.3 + 0.2 }}
+                transition={{ delay: i * 0.4 + 0.3 }}
                 className="w-6 h-6 rounded-full bg-[#FF5A00] grid place-items-center"
               >
                 <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
@@ -687,20 +740,17 @@ function AnalysingScreen() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 0.4 }}
-          className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#000F1B]/50 flex items-center justify-center gap-2"
+          transition={{ delay: 2, duration: 0.5 }}
+          className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#000F1B]/50"
         >
-          <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" />
-          Connecting to ConstructONS Engine...
+          Your match is ready
         </motion.div>
       </div>
     </motion.section>
   );
 }
 
-
 function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure }) {
- 
   const shortlisted = useMemo(() => {
     if (!homes?.length) return [];
     let list = [...homes];
@@ -730,30 +780,30 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
       <div className="container-wide">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto">
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A00] mb-4">
-            Your Match
-          </div>
           <h2 className="text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-tight">
             A home designed{" "}
             <span className="italic text-[#FF5A00]">around you.</span>
           </h2>
         </div>
 
-        {/* PACKAGE CARD + WHY */}
+        {/* PACKAGE CARD (Logo-only badge) + WHY */}
         <div className="mt-10 grid lg:grid-cols-[1.15fr_1fr] gap-5 items-stretch">
+          {/* Left: package summary card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="relative overflow-hidden rounded-sm bg-gradient-to-br from-[#000F1B] via-[#0B1E30] to-[#000F1B] text-white p-7 sm:p-9 border border-white/10 shadow-[0_30px_60px_-30px_rgba(0,15,27,0.4)]"
           >
+            {/* soft ambient */}
             <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#FF5A00]/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FF5A00]/10 blur-3xl" />
 
             <div className="relative z-10">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                  <BrandPill size="sm" />
+                  {/* BrandPill with logoOnly enabled to display ONLY the logo mark */}
+                  <BrandPill size="sm" logoOnly={true} />
                   <div className="mt-5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF8A4C]">
                     Recommended Package
                   </div>
@@ -906,7 +956,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#000F1B]/60 hover:text-[#FF5A00] transition"
           >
             <RotateCcw className="w-4 h-4" />
-            Retake Discovery
+            Retake Selection
           </button>
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -992,7 +1042,7 @@ function SmallHomeCard({ home, isBest }) {
           </div>
           <span className="text-[10px] font-bold text-[#FF5A00] inline-flex items-center gap-0.5 group-hover:gap-1 transition-all">
             View
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3 h-3" />
           </span>
         </div>
       </div>
