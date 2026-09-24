@@ -12,6 +12,7 @@ import {
   BarChart3, ClipboardList, Menu, X, Bell, CheckCheck, FileText, Calculator, BookOpen, Building2
 } from "lucide-react";
 
+// Removed "Hero Sections" from this list
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard, end: true },
   { label: "Leads Inbox", to: "/admin/leads", icon: Inbox },
@@ -30,7 +31,6 @@ const NAV = [
   { label: "Blogs", to: "/admin/blogs", icon: Newspaper },
   { label: "Team", to: "/admin/team", icon: Users },
   { label: "Journey Steps", to: "/admin/journey-steps", icon: Route },
-  { label: "Hero Sections", to: "/admin/hero-sections", icon: ImageIcon },
   { label: "Comparison", to: "/admin/comparison", icon: GitCompareArrows },
   { label: "Stats", to: "/admin/stats", icon: BarChart3 },
   { label: "Media", to: "/admin/media", icon: ImageIcon },
@@ -115,7 +115,6 @@ export default function AdminLayout() {
         <div className="px-5 pb-2 text-[9px] tracking-widest uppercase text-white/40">Admin CMS</div>
         <nav className="flex-1 px-3 pb-4 space-y-0.5">
           {NAV.map((n) => {
-            // FIX: Added badge logic for "Customer Projects" (Client Actions)
             const badgeCount =
               n.to === "/admin/leads"
                 ? notifications.filter((i) => i.type === "lead").length
@@ -211,8 +210,6 @@ function NotificationBell({ unseenCount, open, setOpen, notifications, markAllSe
                   <div className="p-6 text-sm text-brand-navy/50 text-center">No new activity yet. New leads and quiz submissions will appear here.</div>
                 ) : (
                   notifications.map((n) => {
-                    
-                    // FIX: Determine Icon and Colors based on notification type
                     let iconBg = "bg-emerald-100 text-emerald-600";
                     let IconCmp = ClipboardList;
                     
