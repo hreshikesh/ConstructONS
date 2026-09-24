@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-_WORKING_MODEL_NAME: Optional[str] = None
+_VERIFIED_MODELS: Optional[List[str]] = None
 
 
 def _init_gemini() -> bool:
@@ -23,47 +23,34 @@ def _init_gemini() -> bool:
     return False
 
 
-def _get_working_model_name() -> str:
-    """Dynamically queries Google AI API to find the best supported model for this API key."""
-    global _WORKING_MODEL_NAME
-    if _WORKING_MODEL_NAME:
-        return _WORKING_MODEL_NAME
+def _get_available_models() -> List[str]:
+    """Dynamically queries Google AI API to list models supported specifically by this API key."""
+    global _VERIFIED_MODELS
+    if _VERIFIED_MODELS:
+        return _VERIFIED_MODELS
 
     if not _init_gemini():
-        return "gemini-1.5-flash"
+        return ["gemini-2.5-flash", "gemini-1.5-flash"]
 
     try:
-        available = []
+        found = []
         for m in genai.list_models():
             if "generateContent" in getattr(m, "supported_generation_methods", []):
-                available.append(m.name)
+                found.append(m.name)
 
-        logger.info(f"[AI Service] Available models on key: {available}")
-
-        preferred_keywords = [
-            "gemini-1.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-pro",
-            "gemini-flash",
-        ]
-
-        for pref in preferred_keywords:
-            for m_name in available:
-                if pref in m_name.lower():
-                    _WORKING_MODEL_NAME = m_name
-                    logger.info(f"[AI Service] Auto-selected model: {_WORKING_MODEL_NAME}")
-                    return _WORKING_MODEL_NAME
-
-        if available:
-            _WORKING_MODEL_NAME = available[0]
-            logger.info(f"[AI Service] Fallback selected model: {_WORKING_MODEL_NAME}")
-            return _WORKING_MODEL_NAME
+        if found:
+            # Prioritize fast 'flash' models first, followed by others
+            flash_models = [m for m in found if "flash" in m.lower()]
+            other_models = [m for m in found if "flash" not in m.lower()]
+            _VERIFIED_MODELS = flash_models + other_models
+            logger.info(f"[AI Service] Verified working models for this key: {_VERIFIED_MODELS[:5]}")
+            return _VERIFIED_MODELS
 
     except Exception as e:
-        logger.warning(f"[AI Service] Dynamic model listing failed: {e}. Using default.")
+        logger.warning(f"[AI Service] Dynamic model listing failed: {e}")
 
-    _WORKING_MODEL_NAME = "gemini-1.5-flash"
-    return _WORKING_MODEL_NAME
+    _VERIFIED_MODELS = ["gemini-2.5-flash", "gemini-1.5-flash"]
+    return _VERIFIED_MODELS
 
 
 def _format_gemini_history(history: Optional[List[Dict[str, str]]]) -> List[Dict[str, Any]]:
@@ -88,24 +75,41 @@ def _format_gemini_history(history: Optional[List[Dict[str, str]]]) -> List[Dict
 async def _execute_chat_with_gemini(
     system_instruction: str, message: str, gemini_history: List[Dict[str, Any]]
 ) -> str:
-    """Executes chat session with adequate token budget to ensure complete answers."""
-    model_name = _get_working_model_name()
+    """Executes chat session using only verified working models on this API key."""
+    models_to_try = _get_available_models()
     
-    # Adequate token budget (1200 tokens) so replies never cut off mid-sentence
     chat_config = genai.types.GenerationConfig(
         max_output_tokens=1200,
         temperature=0.4,
         top_p=0.9
     )
 
-    model = genai.GenerativeModel(
-        model_name=model_name,
-        system_instruction=system_instruction,
-        generation_config=chat_config
-    )
-    chat = model.start_chat(history=gemini_history)
-    response = await chat.send_message_async(message)
-    return response.text.strip()
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                system_instruction=system_instruction,
+                generation_config=chat_config
+            )
+            chat = model.start_chat(history=gemini_history)
+            response = await chat.send_message_async(message)
+            return response.text.strip()
+        except Exception as e:
+            last_error = e
+            err_str = str(e).lower()
+            if "429" in err_str or "quota" in err_str or "resourceexhausted" in err_str:
+                logger.warning(f"[AI Service] Quota limit hit on '{model_name}'. Trying next model on key...")
+                continue
+            elif "404" in err_str or "not found" in err_str:
+                logger.warning(f"[AI Service] Model '{model_name}' 404, trying next...")
+                continue
+            else:
+                logger.error(f"[AI Service] Execution error on '{model_name}': {e}")
+                continue
+
+    logger.warning(f"[AI Service] All model candidates rate-limited or unavailable: {last_error}")
+    return "QUOTA_EXCEEDED"
 
 
 # ============================================================================
@@ -134,11 +138,14 @@ async def chat_public_gemini(
 
     try:
         gemini_history = _format_gemini_history(history)
-        return await _execute_chat_with_gemini(
+        res = await _execute_chat_with_gemini(
             system_instruction=PUBLIC_BOT_SYSTEM_PROMPT,
             message=message,
             gemini_history=gemini_history,
         )
+        if res == "QUOTA_EXCEEDED":
+            return "ConstructONS AI Assist is currently experiencing high request volume. Please explore our Home Packages or contact our team at hello@constructons.in!"
+        return res
     except Exception as e:
         logger.error(f"[Gemini Public Chat Error]: {e}")
         return (
@@ -180,11 +187,14 @@ async def chat_portal_gemini(
         )
 
         gemini_history = _format_gemini_history(history)
-        return await _execute_chat_with_gemini(
+        res = await _execute_chat_with_gemini(
             system_instruction=system_instruction,
             message=message,
             gemini_history=gemini_history,
         )
+        if res == "QUOTA_EXCEEDED":
+            return "Your AI Project Advisor is currently at daily free-tier request limit. Please check your live Dashboard tabs or reach out to your Site Engineer directly!"
+        return res
     except Exception as e:
         logger.error(f"[Gemini Portal Advisor Error]: {e}")
         return (
@@ -226,31 +236,33 @@ async def rewrite_copy(text: str, purpose: str = "copy", tone: str = "on-brand")
         "Return the JSON as instructed."
     )
 
-    try:
-        model_name = _get_working_model_name()
-        model = genai.GenerativeModel(
-            model_name=model_name,
-            system_instruction=BRAND_SYSTEM_PROMPT,
-        )
-        response = await model.generate_content_async(prompt)
-        raw = response.text.strip()
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            return []
-        parsed = json.loads(match.group(0))
-        suggestions = parsed.get("suggestions") or []
-        cleaned = []
-        seen = set()
-        for s in suggestions:
-            if isinstance(s, str) and s.strip() and s.strip() not in seen:
-                seen.add(s.strip())
-                cleaned.append(s.strip())
-            if len(cleaned) >= 3:
-                break
-        return cleaned
-    except Exception as e:
-        logger.error(f"[Gemini Copy Rewrite Error]: {e}")
-        return []
+    models_to_try = _get_available_models()
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                system_instruction=BRAND_SYSTEM_PROMPT,
+            )
+            response = await model.generate_content_async(prompt)
+            raw = response.text.strip()
+            match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if not match:
+                return []
+            parsed = json.loads(match.group(0))
+            suggestions = parsed.get("suggestions") or []
+            cleaned = []
+            seen = set()
+            for s in suggestions:
+                if isinstance(s, str) and s.strip() and s.strip() not in seen:
+                    seen.add(s.strip())
+                    cleaned.append(s.strip())
+                if len(cleaned) >= 3:
+                    break
+            return cleaned
+        except Exception as e:
+            logger.warning(f"[Gemini Copy Rewrite Warning on '{model_name}']: {e}")
+            continue
+    return []
 
 
 # ============================================================================
@@ -343,123 +355,126 @@ async def suggest_custom_quote(payload: dict) -> dict:
         "Return the JSON payload exactly as specified — no prose, no markdown."
     )
 
-    try:
-        model_name = _get_working_model_name()
-        model = genai.GenerativeModel(
-            model_name=model_name,
-            system_instruction=QUOTE_SYSTEM_PROMPT,
-        )
-        response = await model.generate_content_async(user_prompt)
-        raw = response.text.strip()
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            return {}
-        parsed = json.loads(match.group(0))
+    models_to_try = _get_available_models()
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                system_instruction=QUOTE_SYSTEM_PROMPT,
+            )
+            response = await model.generate_content_async(user_prompt)
+            raw = response.text.strip()
+            match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if not match:
+                return {}
+            parsed = json.loads(match.group(0))
 
-        def _list(x):
-            return x if isinstance(x, list) else []
+            def _list(x):
+                return x if isinstance(x, list) else []
 
-        def _normalise_categories(raw_cats, mark_include=False):
-            out = []
-            for cat in _list(raw_cats)[:12]:
-                if not isinstance(cat, dict):
-                    continue
-                items = []
-                for it in _list(cat.get("items"))[:20]:
-                    if not isinstance(it, dict):
+            def _normalise_categories(raw_cats, mark_include=False):
+                out = []
+                for cat in _list(raw_cats)[:12]:
+                    if not isinstance(cat, dict):
                         continue
-                    try:
-                        rate = float(it.get("rate") or 0)
-                    except Exception:
-                        rate = 0.0
-                    items.append({
-                        "spec": str(it.get("spec") or "")[:120],
-                        "value": str(it.get("value") or "")[:400],
-                        "brand": (str(it.get("brand"))[:120] if it.get("brand") else None),
-                        "warranty": (str(it.get("warranty"))[:80] if it.get("warranty") else None),
-                        "notes": (str(it.get("notes"))[:220] if it.get("notes") else None),
-                        "rate": max(0.0, rate),
-                        "rate_unit": (str(it.get("rate_unit"))[:40] if it.get("rate_unit") else None),
-                        "include_in_total": bool(it.get("include_in_total")) or mark_include,
-                    })
-                if items:
-                    out.append({
-                        "name": str(cat.get("name") or "Category")[:80],
-                        "icon": (str(cat.get("icon"))[:40] if cat.get("icon") else None),
-                        "items": items,
-                    })
+                    items = []
+                    for it in _list(cat.get("items"))[:20]:
+                        if not isinstance(it, dict):
+                            continue
+                        try:
+                            rate = float(it.get("rate") or 0)
+                        except Exception:
+                            rate = 0.0
+                        items.append({
+                            "spec": str(it.get("spec") or "")[:120],
+                            "value": str(it.get("value") or "")[:400],
+                            "brand": (str(it.get("brand"))[:120] if it.get("brand") else None),
+                            "warranty": (str(it.get("warranty"))[:80] if it.get("warranty") else None),
+                            "notes": (str(it.get("notes"))[:220] if it.get("notes") else None),
+                            "rate": max(0.0, rate),
+                            "rate_unit": (str(it.get("rate_unit"))[:40] if it.get("rate_unit") else None),
+                            "include_in_total": bool(it.get("include_in_total")) or mark_include,
+                        })
+                    if items:
+                        out.append({
+                            "name": str(cat.get("name") or "Category")[:80],
+                            "icon": (str(cat.get("icon"))[:40] if cat.get("icon") else None),
+                            "items": items,
+                        })
+                return out
+
+            out: dict = {}
+            out["package_name"] = str(parsed.get("package_name") or "Custom Home")[:120]
+            try:
+                rate = float(parsed.get("price_per_sqft") or 0)
+                out["price_per_sqft"] = max(1000.0, min(4000.0, rate)) if rate else 0.0
+            except Exception:
+                out["price_per_sqft"] = 0.0
+
+            out["spec_categories"] = _normalise_categories(parsed.get("spec_categories"))
+            out["interiors"] = _normalise_categories(parsed.get("interiors"), mark_include=True)
+
+            addons = []
+            for a in _list(parsed.get("addons"))[:20]:
+                if not isinstance(a, dict):
+                    continue
+                try:
+                    price = float(a.get("price") or 0)
+                except Exception:
+                    price = 0.0
+                addons.append({
+                    "name": str(a.get("name") or "Add-on")[:120],
+                    "description": str(a.get("description") or "")[:300],
+                    "price": max(0.0, price),
+                    "unit": (str(a.get("unit"))[:40] if a.get("unit") else None),
+                })
+            out["addons"] = addons
+
+            lines = []
+            for l in _list(parsed.get("line_items"))[:20]:
+                if not isinstance(l, dict):
+                    continue
+                try:
+                    amt = float(l.get("amount") or 0)
+                except Exception:
+                    amt = 0.0
+                lines.append({
+                    "name": str(l.get("name") or "Item")[:120],
+                    "description": str(l.get("description") or "")[:300],
+                    "amount": max(0.0, amt),
+                })
+            out["line_items"] = lines
+
+            out["scope_of_work"] = [str(s)[:220] for s in _list(parsed.get("scope_of_work"))[:30] if s]
+            out["exclusions"] = [str(s)[:220] for s in _list(parsed.get("exclusions"))[:30] if s]
+
+            sched = []
+            for s in _list(parsed.get("payment_schedule"))[:12]:
+                if not isinstance(s, dict):
+                    continue
+                try:
+                    pct = float(s.get("percentage") or 0)
+                except Exception:
+                    pct = 0.0
+                sched.append({
+                    "milestone": str(s.get("milestone") or "Milestone")[:80],
+                    "percentage": max(0.0, min(100.0, pct)),
+                    "description": str(s.get("description") or "")[:200],
+                })
+            out["payment_schedule"] = sched
+
+            try:
+                out["warranty_years"] = int(parsed.get("warranty_years") or 10)
+            except Exception:
+                out["warranty_years"] = 10
+
+            out["ai_notes"] = str(parsed.get("ai_notes") or "")[:2000]
+            out["ai_mode"] = mode
+            out["service_charge_percent"] = 15
+            out["gst_percent"] = 0
             return out
+        except Exception as e:
+            logger.warning(f"[Gemini Custom Quote Warning on '{model_name}']: {e}")
+            continue
 
-        out: dict = {}
-        out["package_name"] = str(parsed.get("package_name") or "Custom Home")[:120]
-        try:
-            rate = float(parsed.get("price_per_sqft") or 0)
-            out["price_per_sqft"] = max(1000.0, min(4000.0, rate)) if rate else 0.0
-        except Exception:
-            out["price_per_sqft"] = 0.0
-
-        out["spec_categories"] = _normalise_categories(parsed.get("spec_categories"))
-        out["interiors"] = _normalise_categories(parsed.get("interiors"), mark_include=True)
-
-        addons = []
-        for a in _list(parsed.get("addons"))[:20]:
-            if not isinstance(a, dict):
-                continue
-            try:
-                price = float(a.get("price") or 0)
-            except Exception:
-                price = 0.0
-            addons.append({
-                "name": str(a.get("name") or "Add-on")[:120],
-                "description": str(a.get("description") or "")[:300],
-                "price": max(0.0, price),
-                "unit": (str(a.get("unit"))[:40] if a.get("unit") else None),
-            })
-        out["addons"] = addons
-
-        lines = []
-        for l in _list(parsed.get("line_items"))[:20]:
-            if not isinstance(l, dict):
-                continue
-            try:
-                amt = float(l.get("amount") or 0)
-            except Exception:
-                amt = 0.0
-            lines.append({
-                "name": str(l.get("name") or "Item")[:120],
-                "description": str(l.get("description") or "")[:300],
-                "amount": max(0.0, amt),
-            })
-        out["line_items"] = lines
-
-        out["scope_of_work"] = [str(s)[:220] for s in _list(parsed.get("scope_of_work"))[:30] if s]
-        out["exclusions"] = [str(s)[:220] for s in _list(parsed.get("exclusions"))[:30] if s]
-
-        sched = []
-        for s in _list(parsed.get("payment_schedule"))[:12]:
-            if not isinstance(s, dict):
-                continue
-            try:
-                pct = float(s.get("percentage") or 0)
-            except Exception:
-                pct = 0.0
-            sched.append({
-                "milestone": str(s.get("milestone") or "Milestone")[:80],
-                "percentage": max(0.0, min(100.0, pct)),
-                "description": str(s.get("description") or "")[:200],
-            })
-        out["payment_schedule"] = sched
-
-        try:
-            out["warranty_years"] = int(parsed.get("warranty_years") or 10)
-        except Exception:
-            out["warranty_years"] = 10
-
-        out["ai_notes"] = str(parsed.get("ai_notes") or "")[:2000]
-        out["ai_mode"] = mode
-        out["service_charge_percent"] = 15
-        out["gst_percent"] = 0
-        return out
-    except Exception as e:
-        logger.error(f"[Gemini Custom Quote Error]: {e}")
-        return {}
+    return {}

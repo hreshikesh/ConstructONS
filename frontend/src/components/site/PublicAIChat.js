@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { X, Send, Loader2,  Bot } from "lucide-react";
+import { X, Send, Loader2, Bot } from "lucide-react";
 import axios from "axios";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
@@ -49,28 +49,28 @@ export default function PublicAIChat() {
   };
 
   return (
-    // FIX: Stacked neatly on BOTTOM RIGHT above Call (bottom-20) & WhatsApp (bottom-6)
-    <div className={`fixed right-4 md:right-6 z-50 font-['Poppins'] ${open ? "bottom-6" : "bottom-[148px] md:bottom-[160px]"}`}>
+    <div className={`fixed z-50 font-['Poppins'] transition-all duration-300 ${open ? "bottom-0 right-0 sm:bottom-6 sm:right-6" : "bottom-[148px] md:bottom-[160px] right-4 sm:right-6"}`}>
       
       {/* Floating AI Button (Top of Stack) */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="bg-[#FF5A00] hover:bg-[#FF2D00] text-white h-12 px-4 rounded-full shadow-lg shadow-[#FF5A00]/30 flex items-center gap-2 transition-all duration-300 hover:scale-105"
+          className="bg-[#FF5A00] hover:bg-[#FF2D00] text-white h-12 px-4 rounded-full shadow-lg shadow-[#FF5A00]/30 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105"
         >
-        
+          <Bot className="w-5 h-5 animate-pulse" />
           <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Ask AI</span>
         </button>
       )}
 
       {/* Chat Window */}
       {open && (
-        <div className="bg-white rounded-3xl shadow-2xl border border-black/10 w-[calc(100vw-32px)] sm:w-[380px] h-[520px] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 origin-bottom-right">
+        <div className="bg-white shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 origin-bottom-right 
+          w-screen h-[85vh] rounded-t-3xl sm:w-[380px] sm:h-[520px] sm:rounded-3xl sm:border sm:border-black/10">
           
           {/* Header */}
           <div className="bg-[#000F1B] p-4 text-white flex items-center justify-between shrink-0 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#FF5A00] grid place-items-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[#FF5A00] grid place-items-center shrink-0 shadow-sm">
                 <Bot className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -109,7 +109,7 @@ export default function PublicAIChat() {
           </div>
 
           {/* Input Form */}
-          <form onSubmit={send} className="p-3 bg-white border-t border-black/5 flex items-center gap-2">
+          <form onSubmit={send} className="p-3 bg-white border-t border-black/5 flex items-center gap-2 pb-safe sm:pb-3">
             <input
               type="text"
               value={input}

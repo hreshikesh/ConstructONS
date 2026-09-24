@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { publicApi } from "@/lib/api"; // Added API import to fetch real CMS stats
 
 /* -------------------------------------------------------------------------- */
 /*                        DYNAMIC LUCIDE ICON HELPER                          */
@@ -11,19 +12,17 @@ import * as LucideIcons from "lucide-react";
 function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF5A00]" }) {
   if (!name) return <LucideIcons.Home className={className} strokeWidth={2} />;
 
-  // If name is already a valid React Component (e.g. default props)
+  // If name is already a valid React Component
   if (typeof name === "function" || typeof name === "object") {
     const CustomIcon = name;
     return <CustomIcon className={className} strokeWidth={2} />;
   }
 
-  // 1. Exact match (e.g. "Home", "Award", "Clock", "Users")
   if (LucideIcons[name]) {
     const IconComponent = LucideIcons[name];
     return <IconComponent className={className} strokeWidth={2} />;
   }
 
-  // 2. PascalCase conversion for lowercase/kebab-case strings (e.g. "home" -> "Home", "building-2" -> "Building2")
   const pascalName = name
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -34,7 +33,6 @@ function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF5A00]" }) {
     return <IconComponent className={className} strokeWidth={2} />;
   }
 
-  // Fallback icon if string doesn't match any Lucide icon name
   return <LucideIcons.Home className={className} strokeWidth={2} />;
 }
 
@@ -46,17 +44,12 @@ function BrandText({ dark = false }) {
   return (
     <span className="inline-flex items-center align-middle">
       <span className={dark ? "text-[#000F1B]" : "text-white"}>Construct</span>
-      {/* Power Icon replacing 'O' */}
       <span className="mx-[0.05em] inline-flex items-center justify-center text-[#FF5A00]">
         <svg
           className="h-[0.82em] w-[0.82em] fill-none stroke-current stroke-[3.5] align-middle"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10" />
         </svg>
       </span>
       <span className="text-[#FF5A00]">NS</span>
@@ -91,41 +84,26 @@ const DEFAULT_CONSTRUCTONS = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*                              DEFAULT STATS                                 */
-/* -------------------------------------------------------------------------- */
-
-const DEFAULT_STATS = [
-  {
-    value: "250+",
-    label: "Homes Planned",
-    icon: "Home",
-  },
-  {
-    value: "10+",
-    label: "Years Experience",
-    icon: "Award",
-  },
-  {
-    value: "98%",
-    label: "On-Time Delivery",
-    icon: "Clock",
-  },
-  {
-    value: "50+",
-    label: "Expert Professionals",
-    icon: "Users",
-  },
-];
-
-/* -------------------------------------------------------------------------- */
 /*                              MAIN COMPONENT                                 */
 /* -------------------------------------------------------------------------- */
 
 export default function WhyConstructONS({
   traditionalPoints = DEFAULT_TRADITIONAL,
   constructonsPoints = DEFAULT_CONSTRUCTONS,
-  stats = DEFAULT_STATS,
 }) {
+  const [liveStats, setLiveStats] = useState([]);
+
+  // Fetch real stats from the backend CMS
+  useEffect(() => {
+    publicApi.bootstrap()
+      .then((data) => {
+        if (data && data.stats && data.stats.length > 0) {
+          setLiveStats(data.stats);
+        }
+      })
+      .catch((err) => console.error("Failed to load CMS stats:", err));
+  }, []);
+
   return (
     <section
       id="why"
@@ -143,8 +121,8 @@ export default function WhyConstructONS({
         />
       </div>
 
-      {/* 3. STATS BANNER */}
-      {stats.length > 0 && <StatsBanner stats={stats} />}
+      {/* 3. LIVE CMS STATS BANNER */}
+      {liveStats.length > 0 && <StatsBanner stats={liveStats} />}
     </section>
   );
 }
@@ -176,7 +154,6 @@ function MaskRevealHero() {
       onMouseLeave={() => setIsHovered(false)}
       className="relative flex h-[24rem] w-full cursor-none select-none items-center justify-center overflow-hidden bg-[#000F1B] sm:h-[28rem] md:h-[32rem]"
     >
-      {/* Base layer */}
       <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
         <p className="max-w-4xl text-xl font-bold leading-snug text-white/30 sm:text-3xl md:text-5xl">
           Building better with{" "}
@@ -186,16 +163,11 @@ function MaskRevealHero() {
         </p>
       </div>
 
-      {/* Orange reveal */}
       <div
         className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#FF5A00] px-6 text-center transition-opacity duration-300"
         style={{
-          WebkitMaskImage: `radial-gradient(circle ${
-            isHovered ? 260 : 60
-          }px at ${pos.x}% ${pos.y}%, black 100%, transparent 100%)`,
-          maskImage: `radial-gradient(circle ${
-            isHovered ? 260 : 60
-          }px at ${pos.x}% ${pos.y}%, black 100%, transparent 100%)`,
+          WebkitMaskImage: `radial-gradient(circle ${isHovered ? 260 : 60}px at ${pos.x}% ${pos.y}%, black 100%, transparent 100%)`,
+          maskImage: `radial-gradient(circle ${isHovered ? 260 : 60}px at ${pos.x}% ${pos.y}%, black 100%, transparent 100%)`,
         }}
       >
         <p className="max-w-4xl text-xl font-extrabold leading-snug text-white sm:text-3xl md:text-5xl">
@@ -205,13 +177,9 @@ function MaskRevealHero() {
         </p>
       </div>
 
-      {/* Pointer */}
       <div
         className="pointer-events-none absolute z-30 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/80 transition-transform duration-75"
-        style={{
-          left: `${pos.x}%`,
-          top: `${pos.y}%`,
-        }}
+        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       />
     </div>
   );
@@ -224,47 +192,32 @@ function MaskRevealHero() {
 function ComparisonGrid({ traditional = [], constructons = [] }) {
   return (
     <div className="w-full">
-      {/* Header */}
       <div className="mx-auto mb-12 max-w-3xl text-center sm:mb-16">
         <span className="inline-block rounded-full border border-[#FF5A00]/20 bg-[#FF5A00]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#FF5A00]">
           Side-By-Side Comparison
         </span>
-
         <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#000F1B] sm:text-4xl md:text-5xl">
           The <BrandText dark={true} /> Advantage
         </h2>
-
         <p className="mt-3 text-base text-slate-600 sm:text-lg">
           See how tech-driven execution eliminates the risks of traditional
           construction.
         </p>
       </div>
 
-      {/* Grid */}
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
-        {/* Traditional */}
         <div className="flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 hover:border-slate-300 sm:p-8 md:p-10">
           <div>
             <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
               <div>
-                <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
-                  The Old Way
-                </span>
-                <h3 className="mt-1 text-xl font-extrabold text-slate-800 sm:text-2xl">
-                  Traditional Contractors
-                </h3>
+                <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">The Old Way</span>
+                <h3 className="mt-1 text-xl font-extrabold text-slate-800 sm:text-2xl">Traditional Contractors</h3>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500">
-                Opaque
-              </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500">Opaque</span>
             </div>
-
             <ul className="space-y-4">
               {traditional.map((point, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-3.5 text-sm font-medium text-slate-600 sm:text-base"
-                >
+                <li key={idx} className="flex items-start gap-3.5 text-sm font-medium text-slate-600 sm:text-base">
                   <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-red-500">
                     <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                   </div>
@@ -273,44 +226,30 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
               ))}
             </ul>
           </div>
-
           <div className="mt-8 border-t border-slate-100 pt-6 text-xs font-semibold text-slate-400">
             Higher risk of cost revisions & unexpected delays.
           </div>
         </div>
 
-        {/* VS */}
         <div className="my-2 flex items-center justify-center lg:my-0">
           <div className="z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#FF5A00] text-lg font-black text-white shadow-lg shadow-[#FF5A00]/30 sm:h-16 sm:w-16 sm:text-xl">
             VS
           </div>
         </div>
 
-        {/* ConstructONS */}
         <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#000F1B] p-6 text-white shadow-xl sm:p-8 md:p-10">
           <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-[#FF5A00]/20 blur-3xl" />
-
           <div>
             <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-6">
               <div>
-                <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF5A00]">
-                  Next-Gen Standard
-                </span>
-                <h3 className="mt-1 text-xl font-extrabold text-white sm:text-2xl">
-                  <BrandText dark={false} />
-                </h3>
+                <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF5A00]">Next-Gen Standard</span>
+                <h3 className="mt-1 text-xl font-extrabold text-white sm:text-2xl"><BrandText dark={false} /></h3>
               </div>
-              <span className="rounded-full border border-[#FF5A00]/30 bg-[#FF5A00]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF5A00]">
-                Recommended
-              </span>
+              <span className="rounded-full border border-[#FF5A00]/30 bg-[#FF5A00]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF5A00]">Recommended</span>
             </div>
-
             <ul className="space-y-4">
               {constructons.map((point, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-3.5 text-sm font-semibold text-slate-200 sm:text-base"
-                >
+                <li key={idx} className="flex items-start gap-3.5 text-sm font-semibold text-slate-200 sm:text-base">
                   <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/20 text-emerald-400">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </div>
@@ -319,7 +258,6 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
               ))}
             </ul>
           </div>
-
           <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6 text-xs font-semibold text-slate-400">
             <span>Guaranteed deliverables backed by technology.</span>
             <span className="font-bold text-[#FF5A00]">100% Tracked →</span>
@@ -331,40 +269,33 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              STATS BANNER                                  */
+/*                              STATS BANNER (Real Data)                      */
 /* -------------------------------------------------------------------------- */
 
 function StatsBanner({ stats }) {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-24 lg:px-8">
-      <div className="flex flex-col items-center rounded-full bg-[#030914] px-6 py-5 text-white shadow-2xl md:flex-row md:justify-around md:px-12 md:py-6">
-        {stats.map((s, idx) => {
-          return (
-            <React.Fragment key={idx}>
-              <div className="flex items-center gap-4 py-3 md:py-0">
-                {/* ICON CONTAINER */}
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0D1829]">
-                  <DynamicLucideIcon name={s.icon} className="h-6 w-6 text-[#FF5A00]" />
-                </div>
-
-                {/* STAT TEXT */}
-                <div className="flex flex-col">
-                  <span className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-                    {s.value}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-400 sm:text-sm">
-                    {s.label}
-                  </span>
-                </div>
+      <div className="flex flex-col items-center rounded-full bg-[#030914] px-6 py-5 text-white shadow-2xl md:flex-row md:justify-around md:px-12 md:py-6 gap-y-6 md:gap-y-0">
+        {stats.map((s, idx) => (
+          <React.Fragment key={idx}>
+            <div className="flex items-center gap-4 py-2 md:py-0 w-full md:w-auto justify-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0D1829]">
+                <DynamicLucideIcon name={s.icon} className="h-6 w-6 text-[#FF5A00]" />
               </div>
-
-              {/* VERTICAL DIVIDER LINE */}
-              {idx < stats.length - 1 && (
-                <div className="hidden h-10 w-[1px] bg-white/10 md:block" />
-              )}
-            </React.Fragment>
-          );
-        })}
+              <div className="flex flex-col">
+                <span className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                  {s.value}
+                </span>
+                <span className="text-xs font-semibold text-slate-400 sm:text-sm">
+                  {s.label}
+                </span>
+              </div>
+            </div>
+            {idx < stats.length - 1 && (
+              <div className="hidden h-10 w-[1px] bg-white/10 md:block" />
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
