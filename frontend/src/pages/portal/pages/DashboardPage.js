@@ -26,7 +26,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-4 pb-12 font-['Poppins']">
+    // FIX: Changed space-y-6 to space-y-3 for a much tighter, compact layout
+    <div className="max-w-[1400px] mx-auto space-y-3 pb-10 font-['Poppins'] px-1">
       <DashboardHeaders user={user} project={project} />
       <DashboardMainRow project={project} />
       <DashboardMetricsRow project={project} />

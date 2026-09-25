@@ -234,6 +234,29 @@ class MaintenanceTicketUpdateBody(BaseModel):
     status: str  # 'open', 'in_progress', 'resolved'
     admin_notes: Optional[str] = None
 
+
+# ---------------- Daily Reports Schemas ----------------
+class DailyReportPhotoBody(BaseModel):
+    url: str
+    caption: Optional[str] = None
+    time: Optional[str] = None
+
+class DailyReportCreateBody(BaseModel):
+    date: str  # YYYY-MM-DD
+    overall_status: str = "Work as per plan"
+    status_notes: Optional[str] = None
+    work_completed: List[str] = Field(default_factory=list)
+    planned_tomorrow: List[str] = Field(default_factory=list)
+    photos: List[DailyReportPhotoBody] = Field(default_factory=list)
+
+class DailyReportUpdateBody(BaseModel):
+    date: Optional[str] = None
+    overall_status: Optional[str] = None
+    status_notes: Optional[str] = None
+    work_completed: Optional[List[str]] = None
+    planned_tomorrow: Optional[List[str]] = None
+    photos: Optional[List[DailyReportPhotoBody]] = None
+
 async def _build_unified_team(proj: dict) -> List[Dict[str, Any]]:
     unified: List[Dict[str, Any]] = []
     team_ids = proj.get("team_ids") or []
@@ -570,30 +593,109 @@ async def patch_stage(project_id: str, index: int, body: StagePatchBody):
     stages = p.get("stages") or []
     if index < 0 or index >= len(stages):
         raise HTTPException(status_code=400, detail="Invalid stage index")
+    
     stage = stages[index]
+    old_status = stage.get("status")
+    old_progress = float(stage.get("progress_pct") or 0)
+    old_photos_count = len(stage.get("photos") or [])
+    
     patch = body.model_dump(exclude_unset=True)
-    status_changed_to_started = (patch.get("status") == "in_progress" and stage.get("status") != "in_progress")
-    status_changed_to_completed = (patch.get("status") == "completed" and stage.get("status") != "completed")
-    new_photos_added = (patch.get("photos") is not None and len(patch.get("photos")) > len(stage.get("photos") or []))
+    
+    # Auto-manage timestamps based on status transitions
     if patch.get("status") == "in_progress" and not stage.get("started_at"):
         patch["started_at"] = datetime.now(timezone.utc).isoformat()
     if patch.get("status") == "completed" and not stage.get("completed_at"):
         patch["completed_at"] = datetime.now(timezone.utc).isoformat()
         patch["progress_pct"] = 100
+    
     stage.update(patch)
     stages[index] = stage
-    await db.projects.update_one({"id": project_id}, {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}})
-    if status_changed_to_started:
-        await _log_activity(project_id, "Site Engineer", f"Started stage: {stage['name']}", "Progress")
-        asyncio.create_task(_push_notification(project_id, "Stage Started", f"Work on {stage['name']} has officially begun.", "/portal/timeline", "progress"))
-    if status_changed_to_completed:
-        await _log_activity(project_id, "Site Engineer", f"Completed stage: {stage['name']}", "Progress")
-        asyncio.create_task(_push_notification(project_id, "Milestone Achieved!", f"Stage {stage['name']} has been completed.", "/portal/timeline", "progress"))
-    if new_photos_added:
-        await _log_activity(project_id, "Site Engineer", f"Uploaded new photos for {stage['name']}", "Progress")
-        asyncio.create_task(_push_notification(project_id, "New Site Photos", f"Fresh progress photos uploaded for {stage['name']}.", "/portal/timeline", "progress"))
-    return stage
 
+    # ==========================================================
+    # 🆕 REAL MONTHLY PROGRESS SNAPSHOT LOGIC
+    # ==========================================================
+    total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
+    overall_progress = round(total_pct / (len(stages) or 1))
+    
+    # Get current month label (e.g., "Sep 2026")
+    current_month_label = datetime.now(timezone.utc).strftime("%b %Y")
+    
+    monthly_records = p.get("monthly_progress") or []
+    month_found = False
+    
+    for rec in monthly_records:
+        if rec.get("month") == current_month_label:
+            rec["actual_pct"] = overall_progress
+            month_found = True
+            break
+            
+    if not month_found:
+        monthly_records.append({
+            "month": current_month_label,
+            "actual_pct": overall_progress
+        })
+    # ==========================================================
+
+    await db.projects.update_one(
+        {"id": project_id}, 
+        {"$set": {
+            "stages": stages, 
+            "monthly_progress": monthly_records, # Save the real snapshot
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # ==== NOTIFICATION LOGIC ====
+    new_status = stage.get("status")
+    new_progress = float(stage.get("progress_pct") or 0)
+    new_photos_count = len(stage.get("photos") or [])
+    
+    # 1. Status transition: pending → in_progress
+    if old_status != "in_progress" and new_status == "in_progress":
+        await _log_activity(project_id, "Site Engineer", f"Started stage: {stage['name']}", "Progress")
+        asyncio.create_task(_push_notification(
+            project_id, "🚧 Stage Started",
+            f"Work on '{stage['name']}' has officially begun on your site.",
+            "/portal/progress", "progress"
+        ))
+    
+    # 2. Status transition: → completed
+    elif old_status != "completed" and new_status == "completed":
+        await _log_activity(project_id, "Site Engineer", f"Completed stage: {stage['name']} (100%)", "Progress")
+        asyncio.create_task(_push_notification(
+            project_id, "🎉 Milestone Achieved!",
+            f"Stage '{stage['name']}' has been completed. View the full progress update on your portal.",
+            "/portal/progress", "progress"
+        ))
+    
+    # 3. Progress % changed significantly (≥5% jump) without status change
+    elif new_status == "in_progress" and abs(new_progress - old_progress) >= 5:
+        await _log_activity(
+            project_id, "Site Engineer",
+            f"Progress update on '{stage['name']}': {int(old_progress)}% → {int(new_progress)}%",
+            "Progress"
+        )
+        asyncio.create_task(_push_notification(
+            project_id, "📊 Progress Update",
+            f"'{stage['name']}' is now {int(new_progress)}% complete (was {int(old_progress)}%).",
+            "/portal/progress", "progress"
+        ))
+    
+    # 4. New photos uploaded
+    if new_photos_count > old_photos_count:
+        photos_added = new_photos_count - old_photos_count
+        await _log_activity(
+            project_id, "Site Engineer",
+            f"Uploaded {photos_added} new photo(s) for {stage['name']}",
+            "Progress"
+        )
+        asyncio.create_task(_push_notification(
+            project_id, "📸 New Site Photos",
+            f"{photos_added} fresh progress photo{'s' if photos_added > 1 else ''} uploaded for '{stage['name']}'.",
+            "/portal/progress", "progress"
+        ))
+    
+    return stage
 
 @proj_router.delete("/admin/projects/{project_id}", dependencies=[Depends(require_admin)])
 async def delete_project(project_id: str):
@@ -1252,3 +1354,336 @@ async def admin_update_ticket(project_id: str, ticket_id: str, body: Maintenance
         ))
 
     return {"success": True, "ticket": tickets[idx]}
+
+# ============================================================================
+# PROGRESS REPORTING SCHEMAS & ENDPOINTS
+# ============================================================================
+
+class DailyReportPhoto(BaseModel):
+    url: str
+    caption: Optional[str] = None
+    time: Optional[str] = None
+
+class DailyReportCreateBody(BaseModel):
+    date: str  # YYYY-MM-DD
+    overall_status: str = "Work as per plan"
+    status_notes: Optional[str] = None
+    work_completed: List[str] = Field(default_factory=list)
+    planned_tomorrow: List[str] = Field(default_factory=list)
+    photos: List[DailyReportPhoto] = Field(default_factory=list)
+
+@proj_router.post("/admin/projects/{project_id}/daily-reports", dependencies=[Depends(require_admin)])
+async def submit_daily_report(project_id: str, body: DailyReportCreateBody):
+    """Site Engineer submits a daily report. Defaults to UNAPPROVED."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    await db.projects.update_one(
+        {"id": project_id, "$or": [{"daily_reports": {"$exists": False}}, {"daily_reports": None}]},
+        {"$set": {"daily_reports": []}}
+    )
+
+    report_data = body.model_dump()
+    report_data["id"] = f"rep_{uuid.uuid4().hex[:10]}"
+    report_data["is_approved"] = False  # Client CANNOT see this yet
+    report_data["submitted_at"] = datetime.now(timezone.utc).isoformat()
+    report_data["submitted_by"] = "Site Engineer"
+
+    # Push to array
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"daily_reports": {"$each": [report_data], "$position": 0}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    await _log_activity(project_id, "Site Engineer", f"Submitted Daily Report for {body.date} (Awaiting Approval)", "Progress")
+    return {"success": True, "report": report_data}
+
+
+@proj_router.patch("/admin/projects/{project_id}/daily-reports/{report_id}/approve", dependencies=[Depends(require_admin)])
+async def approve_daily_report(project_id: str, report_id: str):
+    """Project Manager approves the report, making it visible to the client."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "daily_reports": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    reports = p.get("daily_reports", [])
+    idx = next((i for i, r in enumerate(reports) if r["id"] == report_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    reports[idx]["is_approved"] = True
+    reports[idx]["approved_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"daily_reports": reports, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    await _log_activity(project_id, "Project Manager", f"Approved Daily Report for {reports[idx]['date']}", "Progress")
+    
+    # 🔔 ONLY notify client AFTER PM approves
+    asyncio.create_task(_push_notification(
+        project_id, 
+        "New Daily Progress Report", 
+        f"Your daily site update for {reports[idx]['date']} has been verified and published.", 
+        "/portal/progress", 
+        "progress"
+    ))
+
+    return {"success": True, "report": reports[idx]}
+
+
+@proj_router.delete("/admin/projects/{project_id}/daily-reports/{report_id}", dependencies=[Depends(require_admin)])
+async def delete_daily_report(project_id: str, report_id: str):
+    """Admin deletes a report."""
+    res = await db.projects.update_one(
+        {"id": project_id},
+        {"$pull": {"daily_reports": {"id": report_id}}}
+    )
+    if res.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"success": True}
+
+
+# ============================================================================
+# MONTHLY REPORT PDF GENERATOR (NO EXTERNAL LIBS)
+# ============================================================================
+from fastapi.responses import HTMLResponse
+
+@proj_router.get("/portal/my-project/{project_id}/monthly-report/{month_slug}/pdf")
+async def download_monthly_pdf(project_id: str, month_slug: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    stages = p.get("stages", [])
+    
+    # FIXED: Replaced JS Number() with Python float()
+    total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
+    overall = total_pct / (len(stages) or 1)
+    
+    html_content = f"""
+    <html>
+    <head>
+        <title>Monthly Progress Report - {month_slug}</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }}
+            h1 {{ color: #FF5A00; border-bottom: 2px solid #FF5A00; padding-bottom: 10px; }}
+            .header-info {{ background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 30px; }}
+            .header-info strong {{ color: #000F1B; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+            th {{ background-color: #000F1B; color: #fff; }}
+            .footer {{ margin-top: 50px; font-size: 12px; text-align: center; color: #777; }}
+        </style>
+    </head>
+    <body onload="window.print()">
+        <h1>CONSTRUCTONS™ Monthly Report</h1>
+        <div class="header-info">
+            <p><strong>Project:</strong> {p.get("title", "Unnamed")}</p>
+            <p><strong>Location:</strong> {p.get("address", "N/A")}</p>
+            <p><strong>Month:</strong> {month_slug.replace("-", " ").title()}</p>
+            <p><strong>Overall Progress Verified:</strong> {round(overall)}%</p>
+        </div>
+        <h3>Stage-Wise Breakdown</h3>
+        <table>
+            <tr>
+                <th>Stage Name</th>
+                <th>Status</th>
+                <th>Completion %</th>
+            </tr>
+            {"".join(f'''
+            <tr>
+                <td>{s.get("name")}</td>
+                <td>{s.get("status").replace("_", " ").title()}</td>
+                <td>{s.get("progress_pct", 0)}%</td>
+            </tr>
+            ''' for s in stages)}
+        </table>
+        <div class="footer">
+            Generated securely from the ConstructONS Client Portal. <br/>
+            This is an auto-generated system report based on PM-approved site data.
+        </div>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content)
+# ============================================================================
+# DAILY PROGRESS REPORTS — Site Engineer submits, PM approves
+# ============================================================================
+
+@proj_router.get("/admin/projects/{project_id}/daily-reports", dependencies=[Depends(require_admin)])
+async def list_daily_reports(project_id: str, status: Optional[str] = None):
+    """List all daily reports for admin. Filter by status: 'pending' | 'approved' | 'all' """
+    p = await db.projects.find_one({"id": project_id}, {"daily_reports": 1, "_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    reports = p.get("daily_reports") or []
+    
+    if status == "pending":
+        reports = [r for r in reports if not r.get("is_approved")]
+    elif status == "approved":
+        reports = [r for r in reports if r.get("is_approved")]
+    
+    reports.sort(key=lambda r: r.get("date", ""), reverse=True)
+    return {"reports": reports, "count": len(reports)}
+
+
+@proj_router.post("/admin/projects/{project_id}/daily-reports", dependencies=[Depends(require_admin)])
+async def submit_daily_report(project_id: str, body: DailyReportCreateBody):
+    """Site Engineer submits a daily report. Defaults to UNAPPROVED (not client-visible)."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Ensure array exists
+    await db.projects.update_one(
+        {"id": project_id, "$or": [{"daily_reports": {"$exists": False}}, {"daily_reports": None}]},
+        {"$set": {"daily_reports": []}}
+    )
+
+    # Check duplicate for same date
+    existing = await db.projects.find_one(
+        {"id": project_id, "daily_reports.date": body.date},
+        {"_id": 1}
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail=f"A report already exists for {body.date}. Edit or delete the existing one.")
+
+    now = datetime.now(timezone.utc).isoformat()
+    report_data = body.model_dump()
+    report_data["id"] = f"rep_{uuid.uuid4().hex[:10]}"
+    report_data["is_approved"] = False
+    report_data["submitted_at"] = now
+    report_data["submitted_by"] = "Site Engineer"
+    report_data["approved_at"] = None
+    report_data["approved_by"] = None
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"daily_reports": {"$each": [report_data], "$position": 0}},
+         "$set": {"updated_at": now}}
+    )
+
+    await _log_activity(project_id, "Site Engineer", f"Submitted Daily Report for {body.date} — awaiting PM approval", "Progress")
+    return {"success": True, "report": report_data}
+
+
+@proj_router.put("/admin/projects/{project_id}/daily-reports/{report_id}", dependencies=[Depends(require_admin)])
+async def update_daily_report(project_id: str, report_id: str, body: DailyReportUpdateBody):
+    """Edit a daily report. If it was approved, editing resets to pending re-approval."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "daily_reports": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    reports = p.get("daily_reports") or []
+    idx = next((i for i, r in enumerate(reports) if r["id"] == report_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    update_data = {k: v for k, v in body.model_dump().items() if v is not None}
+    now = datetime.now(timezone.utc).isoformat()
+    
+    for key, value in update_data.items():
+        reports[idx][key] = value
+    reports[idx]["updated_at"] = now
+    
+    # If report was approved and content changed, reset to pending
+    if reports[idx].get("is_approved") and update_data:
+        reports[idx]["is_approved"] = False
+        reports[idx]["approved_at"] = None
+        reports[idx]["approved_by"] = None
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"daily_reports": reports, "updated_at": now}}
+    )
+
+    await _log_activity(project_id, "Site Engineer", f"Updated Daily Report for {reports[idx]['date']}", "Progress")
+    return {"success": True, "report": reports[idx]}
+
+
+@proj_router.patch("/admin/projects/{project_id}/daily-reports/{report_id}/approve", dependencies=[Depends(require_admin)])
+async def approve_daily_report(project_id: str, report_id: str):
+    """Project Manager approves the daily report → client gets notified."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "daily_reports": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    reports = p.get("daily_reports") or []
+    idx = next((i for i, r in enumerate(reports) if r["id"] == report_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    if reports[idx].get("is_approved"):
+        raise HTTPException(status_code=400, detail="Report is already approved")
+
+    now = datetime.now(timezone.utc).isoformat()
+    reports[idx]["is_approved"] = True
+    reports[idx]["approved_at"] = now
+    reports[idx]["approved_by"] = "Project Manager"
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"daily_reports": reports, "updated_at": now}}
+    )
+
+    await _log_activity(project_id, "Project Manager", f"Approved Daily Report for {reports[idx]['date']}", "Progress")
+    
+    # 🔔 Notify client ONLY after PM approval
+    asyncio.create_task(_push_notification(
+        project_id,
+        "New Daily Progress Report",
+        f"Your site update for {reports[idx]['date']} has been verified and published by the Project Manager.",
+        "/portal/progress",
+        "progress"
+    ))
+
+    return {"success": True, "report": reports[idx]}
+
+
+@proj_router.patch("/admin/projects/{project_id}/daily-reports/{report_id}/unapprove", dependencies=[Depends(require_admin)])
+async def unapprove_daily_report(project_id: str, report_id: str):
+    """PM can revoke approval to hide from client (e.g. incorrect data)."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "daily_reports": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    reports = p.get("daily_reports") or []
+    idx = next((i for i, r in enumerate(reports) if r["id"] == report_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    reports[idx]["is_approved"] = False
+    reports[idx]["approved_at"] = None
+    reports[idx]["approved_by"] = None
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"daily_reports": reports, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    await _log_activity(project_id, "Project Manager", f"Revoked approval for Daily Report {reports[idx]['date']}", "Progress")
+    return {"success": True}
+
+
+@proj_router.delete("/admin/projects/{project_id}/daily-reports/{report_id}", dependencies=[Depends(require_admin)])
+async def delete_daily_report(project_id: str, report_id: str):
+    """Delete a daily report entirely."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "daily_reports": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    target = next((r for r in (p.get("daily_reports") or []) if r["id"] == report_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$pull": {"daily_reports": {"id": report_id}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Admin", f"Deleted Daily Report for {target['date']}", "Progress")
+    return {"success": True}

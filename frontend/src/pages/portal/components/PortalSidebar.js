@@ -13,11 +13,11 @@ import {
   Wallet,
   Users,
   CheckSquare,
-  MessageSquare,
   ClipboardList,
   Wrench,
   Settings,
   X,
+  Power,
 } from "lucide-react";
 import { usePortal } from "../context/PortalContext";
 
@@ -47,7 +47,6 @@ const NAV_SECTIONS = [
     items: [
       { to: "/portal/team", label: "Team", icon: Users },
       { to: "/portal/approvals", label: "Approvals", icon: CheckSquare },
-      // { to: "/portal/messages", label: "Messages", icon: MessageSquare },
       { to: "/portal/site-reports", label: "Activity Log", icon: ClipboardList },
     ],
   },
@@ -63,8 +62,6 @@ const NAV_SECTIONS = [
 
 export default function PortalSidebar({ open, onClose }) {
   const { project } = usePortal();
-
-  // Dynamic Approvals Badge Calculation
   const pendingApprovalsCount = project?.pending_approvals || 0;
 
   return (
@@ -80,40 +77,60 @@ export default function PortalSidebar({ open, onClose }) {
 
       <aside
         className={`
-          fixed top-0 left-0 z-50 h-full w-[260px] bg-[#0B1220] text-white
+          fixed top-0 left-0 z-50 h-full w-[220px] bg-[#0B1220] text-white
           flex flex-col transition-transform duration-300 ease-out font-['Poppins']
           lg:translate-x-0 lg:static lg:z-auto
           ${open ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* Brand */}
-        <div className="h-16 px-5 flex items-center justify-between border-b border-white/10 shrink-0">
-          <Link to="/portal" className="flex items-center gap-2.5" onClick={onClose}>
-            <img src="/logo.webp" alt="ConstructONS Logo" className="h-7 w-auto object-contain" />
-            <span className="font-bold text-base tracking-tight text-white">
-              Construct
-              <span className="inline-flex items-center justify-center relative align-middle mx-[0.5px]" style={{ width: '0.8em', height: '0.8em' }}>
-                <span className="absolute inset-0 rounded-full border-[2.5px] border-[#C73E00]" />
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-[2px] h-[35%] bg-[#C73E00] rounded-full" />
+        {/* Brand — Logo + CONSTRUCT + Power O + NS */}
+        <div className="h-14 px-3 flex items-center justify-between border-b border-white/10 shrink-0">
+          <Link
+            to="/portal"
+            onClick={onClose}
+            className="flex items-center gap-2 min-w-0 select-none"
+            aria-label="ConstructONS Portal Home"
+          >
+            {/* Original logo image */}
+            <img
+              src="/logo.webp"
+              alt="ConstructONS"
+              className="h-7 w-auto object-contain shrink-0"
+            />
+
+            {/* Wordmark: CONSTRUCT + Power O + NS */}
+            <span className="flex items-center gap-0.5 min-w-0">
+              <span className="font-extrabold text-[12px] tracking-[0.12em] text-white leading-none">
+                CONSTRUCT
               </span>
-              NS<span className="text-[#C73E00]">™</span>
+              <Power
+                className="w-3.5 h-3.5 text-[#FF5A00] stroke-[2.75] shrink-0 mx-px"
+                aria-hidden="true"
+              />
+              <span className="font-extrabold text-[12px] tracking-[0.12em] text-white leading-none">
+                NS
+              </span>
+              <span className="text-[8px] text-[#FF5A00] font-bold self-start mt-0.5 ml-0.5">
+                ™
+              </span>
             </span>
           </Link>
+
           <button
             type="button"
             onClick={onClose}
-            className="lg:hidden w-9 h-9 rounded-lg grid place-items-center hover:bg-white/10"
+            className="lg:hidden w-8 h-8 rounded-lg grid place-items-center hover:bg-white/10 shrink-0"
             aria-label="Close menu"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 no-scrollbar">
+        {/* Nav — compact */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-3.5 no-scrollbar">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
-              <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/35">
+              <div className="px-2.5 mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/30">
                 {section.label}
               </div>
               <ul className="space-y-0.5">
@@ -124,25 +141,31 @@ export default function PortalSidebar({ open, onClose }) {
                       end={item.end}
                       onClick={onClose}
                       className={({ isActive }) =>
-                        `flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition min-h-[44px] group ${
+                        `flex items-center justify-between px-2.5 py-2 rounded-lg text-[12px] font-medium transition min-h-[36px] group ${
                           isActive
                             ? "bg-[#FF5A00] text-white shadow-sm"
                             : "text-white/70 hover:bg-white/5 hover:text-white"
                         }`
                       }
                     >
-                      <div className="flex items-center gap-3">
-                        <item.icon className={`w-4 h-4 shrink-0 transition ${
-                          window.location.pathname === item.to ? "text-white" : "group-hover:text-[#FF5A00]"
-                        }`} strokeWidth={2} />
-                        <span>{item.label}</span>
-                      </div>
-                      
-                      {/* Approvals Red Badge */}
-                      {item.label === "Approvals" && pendingApprovalsCount > 0 && (
-                        <span className="bg-[#FF2D00] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
-                          {pendingApprovalsCount}
-                        </span>
+                      {({ isActive }) => (
+                        <>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <item.icon
+                              className={`w-3.5 h-3.5 shrink-0 transition ${
+                                isActive ? "text-white" : "group-hover:text-[#FF5A00]"
+                              }`}
+                              strokeWidth={2}
+                            />
+                            <span className="truncate">{item.label}</span>
+                          </div>
+
+                          {item.label === "Approvals" && pendingApprovalsCount > 0 && (
+                            <span className="bg-[#FF2D00] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
+                              {pendingApprovalsCount}
+                            </span>
+                          )}
+                        </>
                       )}
                     </NavLink>
                   </li>
@@ -152,12 +175,14 @@ export default function PortalSidebar({ open, onClose }) {
           ))}
         </nav>
 
-        {/* Footer strip */}
-        <div className="p-4 border-t border-white/10 shrink-0">
-          <p className="text-[10px] text-white/40 leading-relaxed font-semibold">
+        {/* Footer strip — compact */}
+        <div className="px-3.5 py-3 border-t border-white/10 shrink-0">
+          <p className="text-[9px] text-white/35 leading-snug font-semibold tracking-wide">
             PLAN · BUILD · MONITOR · COMPLETE
           </p>
-          <p className="text-[10px] text-[#FF5A00] mt-1 font-bold">Your Home. Our Commitment.</p>
+          <p className="text-[9px] text-[#FF5A00] mt-0.5 font-bold">
+            Your Home. Our Commitment.
+          </p>
         </div>
       </aside>
     </>

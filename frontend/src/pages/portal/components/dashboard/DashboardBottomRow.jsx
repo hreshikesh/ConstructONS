@@ -10,76 +10,54 @@ export default function DashboardBottomRow({ project }) {
   return (
     <div className="font-['Poppins']">
       
-      {/* Quick Vaults & Actions Grid (5 Tiles) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-4 mt-6">
+      {/* Quick Vaults (Compact Row) */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-1">
         
-        {/* 1. Approvals */}
-        <Link to="/portal/approvals" className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex flex-col items-center justify-center text-center hover:bg-amber-100 transition shadow-sm group">
-          <CheckSquare className="w-5 h-5 text-amber-600 mb-2 group-hover:scale-110 transition" />
-          <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Action Center</span>
-          <span className="text-[9px] font-bold text-amber-600 mt-1">Approvals</span>
+        <Link to="/portal/approvals" className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 flex items-center justify-center gap-2 hover:bg-amber-100 transition shadow-sm group">
+          <CheckSquare className="w-4 h-4 text-amber-600 group-hover:scale-110 transition" />
+          <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Approvals</span>
         </Link>
 
-        {/* 2. Documents */}
-        <Link to="/portal/documents" className="rounded-xl border border-black/10 bg-white p-4 flex flex-col items-center justify-center text-center hover:bg-[#F2F2F2] transition shadow-sm group">
-          <FileText className="w-5 h-5 text-purple-600 mb-2 group-hover:scale-110 transition" />
-          <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Document Vault</span>
-          <span className="text-[9px] font-bold text-[#111111]/50 mt-1">{(project?.documents || []).length} Files</span>
+        <Link to="/portal/documents" className="rounded-xl border border-black/10 bg-white p-2.5 flex items-center justify-center gap-2 hover:bg-[#F2F2F2] transition shadow-sm group">
+          <FileText className="w-4 h-4 text-purple-600 group-hover:scale-110 transition" />
+          <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Docs ({(project?.documents || []).length})</span>
         </Link>
 
-        {/* 3. Quality */}
-        <Link to="/portal/quality" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex flex-col items-center justify-center text-center hover:bg-emerald-100 transition shadow-sm group">
-          <ShieldCheck className="w-5 h-5 text-emerald-700 mb-2 group-hover:scale-110 transition" />
-          <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Quality Control</span>
-          <span className="text-[9px] font-bold text-emerald-700 mt-1">{(project?.quality_inspections || []).length} Audits</span>
+        <Link to="/portal/quality" className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 flex items-center justify-center gap-2 hover:bg-emerald-100 transition shadow-sm group">
+          <ShieldCheck className="w-4 h-4 text-emerald-700 group-hover:scale-110 transition" />
+          <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Quality</span>
         </Link>
 
-        {/* 4. Maintenance */}
         {isHandoverComplete ? (
-          <Link to="/portal/maintenance" className="rounded-xl border border-blue-200 bg-blue-50 p-4 flex flex-col items-center justify-center text-center hover:bg-blue-100 transition shadow-sm group">
-            <Hammer className="w-5 h-5 text-blue-600 mb-2 group-hover:scale-110 transition" />
-            <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Maintenance</span>
-            <span className="text-[9px] font-bold text-blue-700 mt-1">Tickets & Warranty</span>
+          <Link to="/portal/maintenance" className="rounded-xl border border-blue-200 bg-blue-50 p-2.5 flex items-center justify-center gap-2 hover:bg-blue-100 transition shadow-sm group">
+            <Hammer className="w-4 h-4 text-blue-600 group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Maint.</span>
           </Link>
         ) : (
-          <div className="rounded-xl border border-dashed border-black/15 bg-white/50 p-4 flex flex-col items-center justify-center text-center opacity-70">
-            <Hammer className="w-5 h-5 text-[#111111]/40 mb-2" />
-            <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Maintenance</span>
-            <span className="text-[9px] font-semibold text-[#FF5A00] mt-1">Unlocks at Handover</span>
+          <div className="rounded-xl border border-dashed border-black/15 bg-white/50 p-2.5 flex items-center justify-center gap-2 opacity-60">
+            <Hammer className="w-4 h-4 text-[#111111]/40" />
+            <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Locked</span>
           </div>
         )}
 
-        {/* 5. AI Project Advisor Module */}
-        <button
-          onClick={() => setShowAdvisor(true)}
-          className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 flex flex-col items-center justify-center text-center hover:bg-indigo-100 transition shadow-sm group cursor-pointer"
-        >
-          <Bot className="w-5 h-5 text-indigo-600 mb-2 group-hover:scale-110 transition" />
+        <button onClick={() => setShowAdvisor(true)} className="rounded-xl border border-indigo-200 bg-indigo-50 p-2.5 flex items-center justify-center gap-2 hover:bg-indigo-100 transition shadow-sm group">
+          <Bot className="w-4 h-4 text-indigo-600 group-hover:scale-110 transition" />
           <span className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">AI Advisor</span>
-          <span className="text-[9px] font-bold text-indigo-600 mt-1">Project Q&A</span>
         </button>
-
       </div>
 
       {/* Portal AI Advisor Modal Window */}
-      {showAdvisor && (
-        <PortalProjectAdvisorModal 
-          project={project} 
-          onClose={() => setShowAdvisor(false)} 
-        />
-      )}
+      {showAdvisor && <PortalProjectAdvisorModal project={project} onClose={() => setShowAdvisor(false)} />}
 
       {/* Footer Ribbon */}
-      <div className="mt-8 pt-4 border-t border-black/5 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-4 sm:gap-8">
+      <div className="mt-5 pt-3 border-t border-black/5 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-6">
           <FooterItem icon={FileText} text="PLAN WITH CLARITY" />
           <FooterItem icon={Building2} text="BUILD WITH QUALITY" />
           <FooterItem icon={Clock} text="TRACK WITH TRANSPARENCY" />
-          <FooterItem icon={Camera} text="LIVE WITH CONFIDENCE" />
-          <FooterItem icon={ShieldCheck} text="HANDOVER WITH PEACE OF MIND" />
         </div>
-        <div className="text-xs font-bold text-[#000F1B] uppercase tracking-[0.2em] border-l-2 border-red-500 pl-4 hidden md:block">
-          A Better Tomorrow Begins Here.
+        <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-[0.2em] border-l-2 border-[#FF5A00] pl-3 hidden md:block">
+          ConstructONS
         </div>
       </div>
     </div>
@@ -88,9 +66,9 @@ export default function DashboardBottomRow({ project }) {
 
 function FooterItem({ icon: Icon, text }) {
   return (
-    <div className="flex items-center gap-2">
-      <Icon className="w-4 h-4 text-[#111111]/40" />
-      <span className="text-[9px] font-bold text-[#111111]/50 uppercase tracking-widest leading-tight w-20">{text}</span>
+    <div className="flex items-center gap-1.5">
+      <Icon className="w-3.5 h-3.5 text-[#111111]/40" />
+      <span className="text-[8px] font-bold text-[#111111]/50 uppercase tracking-widest leading-tight">{text}</span>
     </div>
   );
 }
