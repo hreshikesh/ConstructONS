@@ -1447,7 +1447,7 @@ async def delete_daily_report(project_id: str, report_id: str):
 
 
 # ============================================================================
-# MONTHLY REPORT PDF GENERATOR (NO EXTERNAL LIBS)
+# MONTHLY REPORT PDF GENERATOR — ConstructONS™ branding (no logo)
 # ============================================================================
 from fastapi.responses import HTMLResponse
 
@@ -1457,57 +1457,260 @@ async def download_monthly_pdf(project_id: str, month_slug: str):
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    stages = p.get("stages", [])
-    
-    # FIXED: Replaced JS Number() with Python float()
+    stages = p.get("stages", []) or []
     total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
     overall = total_pct / (len(stages) or 1)
-    
-    html_content = f"""
-    <html>
-    <head>
-        <title>Monthly Progress Report - {month_slug}</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; padding: 40px; color: #111; line-height: 1.6; }}
-            h1 {{ color: #FF5A00; border-bottom: 2px solid #FF5A00; padding-bottom: 10px; }}
-            .header-info {{ background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 30px; }}
-            .header-info strong {{ color: #000F1B; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
-            th {{ background-color: #000F1B; color: #fff; }}
-            .footer {{ margin-top: 50px; font-size: 12px; text-align: center; color: #777; }}
-        </style>
-    </head>
-    <body onload="window.print()">
-        <h1>CONSTRUCTONS™ Monthly Report</h1>
-        <div class="header-info">
-            <p><strong>Project:</strong> {p.get("title", "Unnamed")}</p>
-            <p><strong>Location:</strong> {p.get("address", "N/A")}</p>
-            <p><strong>Month:</strong> {month_slug.replace("-", " ").title()}</p>
-            <p><strong>Overall Progress Verified:</strong> {round(overall)}%</p>
-        </div>
-        <h3>Stage-Wise Breakdown</h3>
-        <table>
-            <tr>
-                <th>Stage Name</th>
-                <th>Status</th>
-                <th>Completion %</th>
-            </tr>
-            {"".join(f'''
-            <tr>
-                <td>{s.get("name")}</td>
-                <td>{s.get("status").replace("_", " ").title()}</td>
-                <td>{s.get("progress_pct", 0)}%</td>
-            </tr>
-            ''' for s in stages)}
-        </table>
-        <div class="footer">
-            Generated securely from the ConstructONS Client Portal. <br/>
-            This is an auto-generated system report based on PM-approved site data.
-        </div>
-    </body>
-    </html>
+
+    month_label = month_slug.replace("-", " ").title()
+    project_title = p.get("title") or "Unnamed Project"
+    project_address = p.get("address") or "N/A"
+    project_code = p.get("project_code") or "—"
+
+    rows_html = "".join(
+        f"""
+        <tr>
+            <td>{(s.get("name") or "—")}</td>
+            <td>{(s.get("status") or "pending").replace("_", " ").title()}</td>
+            <td class="pct">{float(s.get("progress_pct") or 0):.0f}%</td>
+        </tr>
+        """
+        for s in stages
+    ) or """
+        <tr>
+            <td colspan="3" style="text-align:center;color:#777;font-style:italic;">No stages configured</td>
+        </tr>
     """
+
+    # Power "O" as inline SVG (print-safe, matches Lucide Power)
+    power_svg = """<svg class="power-o" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <path fill="none" stroke="#FF5A00" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"
+        d="M12 2v10"/>
+      <path fill="none" stroke="#FF5A00" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"
+        d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+    </svg>"""
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ConstructONS™ Monthly Progress — {month_label}</title>
+  <style>
+    :root {{
+      --orange: #FF5A00;
+      --navy: #000F1B;
+      --charcoal: #111111;
+      --grey: #A6A6A6;
+      --light: #F2F2F2;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 40px 48px;
+      color: var(--charcoal);
+      line-height: 1.55;
+      margin: 0;
+    }}
+    .brand-row {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 3px solid var(--orange);
+      padding-bottom: 14px;
+      margin-bottom: 28px;
+    }}
+    .brand-lockup {{
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      line-height: 1;
+    }}
+    .brand-construct {{
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: 0.14em;
+      color: var(--navy);
+      text-transform: uppercase;
+    }}
+    .power-o {{
+      display: inline-block;
+      vertical-align: middle;
+      margin: 0 1px 1px 1px;
+      flex-shrink: 0;
+    }}
+    .brand-ns {{
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: 0.14em;
+      color: var(--orange);
+      text-transform: uppercase;
+    }}
+    .brand-tm {{
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 2px;
+      position: relative;
+      top: -8px;
+    }}
+    .tagline {{
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--grey);
+      text-align: right;
+      line-height: 1.4;
+    }}
+    .tagline strong {{
+      color: var(--orange);
+      display: block;
+      margin-top: 4px;
+      letter-spacing: 0.1em;
+    }}
+    h1 {{
+      color: var(--navy);
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }}
+    h1 span {{ color: var(--orange); }}
+    .subtitle {{
+      font-size: 13px;
+      color: #666;
+      margin: 0 0 22px 0;
+    }}
+    .header-info {{
+      background: var(--light);
+      border-left: 4px solid var(--orange);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 28px;
+    }}
+    .header-info p {{ margin: 6px 0; font-size: 13px; }}
+    .header-info strong {{
+      color: var(--navy);
+      font-weight: 600;
+      min-width: 140px;
+      display: inline-block;
+    }}
+    .badge {{
+      display: inline-block;
+      background: var(--orange);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-left: 6px;
+    }}
+    h3 {{
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0 0 12px 0;
+      border-bottom: 1px solid #e5e5e5;
+      padding-bottom: 8px;
+    }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }}
+    th, td {{
+      border: 1px solid #e0e0e0;
+      padding: 10px 12px;
+      text-align: left;
+    }}
+    th {{
+      background: var(--navy);
+      color: #fff;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }}
+    tr:nth-child(even) td {{ background: #fafafa; }}
+    td.pct {{
+      font-weight: 700;
+      color: var(--orange);
+      text-align: right;
+    }}
+    .footer {{
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e5e5;
+      font-size: 11px;
+      text-align: center;
+      color: var(--grey);
+    }}
+    .footer-brand {{
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--navy);
+      margin-bottom: 8px;
+      font-size: 12px;
+    }}
+    .footer-brand .ns {{ color: var(--orange); }}
+    @media print {{
+      body {{ padding: 24px; }}
+      .badge, th, .power-o path {{
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }}
+    }}
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="brand-row">
+    <div class="brand-lockup">
+      <span class="brand-construct">CONSTRUCT</span>{power_svg}<span class="brand-ns">NS</span><span class="brand-tm">™</span>
+    </div>
+    <div class="tagline">
+      Everything Construction.
+      <strong>Always On.</strong>
+    </div>
+  </div>
+
+  <h1>Monthly Progress <span>Report</span></h1>
+  <p class="subtitle">Verified stage progress for client review · Auto-generated from portal data</p>
+
+  <div class="header-info">
+    <p><strong>Project</strong> {project_title}</p>
+    <p><strong>Project ID</strong> {project_code}</p>
+    <p><strong>Location</strong> {project_address}</p>
+    <p><strong>Reporting period</strong> {month_label}</p>
+    <p>
+      <strong>Overall progress</strong>
+      <span class="badge">{round(overall)}% Verified</span>
+    </p>
+  </div>
+
+  <h3>Stage-wise breakdown</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Stage name</th>
+        <th>Status</th>
+        <th style="text-align:right;">Completion %</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows_html}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div class="footer-brand">CONSTRUCT<span class="ns">ONS</span>™</div>
+    Generated securely from the ConstructONS Client Portal.<br/>
+    Auto-generated system report based on site progress data.<br/>
+    India's First Integrated Construction Ecosystem · Everything Construction. Always On.
+  </div>
+</body>
+</html>
+"""
 
     return HTMLResponse(content=html_content)
 # ============================================================================

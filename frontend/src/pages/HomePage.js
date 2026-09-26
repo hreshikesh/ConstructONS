@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { publicApi } from "@/lib/api";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import Hero from "@/components/site/Hero";
+import VideoShowcase from "@/components/site/VideoShowcase"; // <--- 1. Import new component
 import HomeCollection from "@/components/site/HomeCollection";
-import Packages from "@/components/site/Packages";
 import AIPlatform from "@/components/site/AIPlatform";
 import Marketplace from "@/components/site/Marketplace";
 import FinancialServices from "@/components/site/FinancialServices";
@@ -13,7 +14,7 @@ import CustomerJourney from "@/components/site/CustomerJourney";
 import Testimonials from "@/components/site/Testimonials";
 import ContactCTA from "@/components/site/ContactCTA";
 import FloatingActions from "@/components/site/FloatingActions";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle, ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   const [data, setData] = useState(null);
@@ -40,17 +41,13 @@ export default function HomePage() {
   }, [load]);
 
   const hardReload = () => {
-    // Bypass browser cache — helps users stuck on a stale JS bundle from an
-    // earlier deploy that references a dead backend URL.
     try {
       if ("caches" in window) {
         caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.warn("[HomePage] cache bust failed (non-fatal)", err);
     }
-    // Cache-bust reload
     const url = new URL(window.location.href);
     url.searchParams.set("_r", Date.now().toString());
     window.location.replace(url.toString());
@@ -65,28 +62,15 @@ export default function HomePage() {
           </div>
           <h1 className="text-brand-navy font-bold text-xl">We couldn't reach our servers</h1>
           <p className="mt-2 text-sm text-brand-navy/60">
-            This is usually a stale cache from a previous version. Try again — if it keeps happening, do a hard refresh
-            (<kbd className="px-1.5 py-0.5 rounded bg-black/5 text-xs">⌘⇧R</kbd> on Mac, <kbd className="px-1.5 py-0.5 rounded bg-black/5 text-xs">Ctrl+Shift+R</kbd> on Windows).
+            This is usually a stale cache from a previous version. Try again — if it keeps happening, do a hard refresh.
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <button
-              onClick={load}
-              disabled={retrying}
-              data-testid="bootstrap-retry"
-              className="btn-primary text-sm py-2.5 px-5"
-            >
+            <button onClick={load} disabled={retrying} className="btn-primary text-sm py-2.5 px-5">
               <RefreshCw className={`w-4 h-4 ${retrying ? "animate-spin" : ""}`} /> Try again
             </button>
-            <button
-              onClick={hardReload}
-              data-testid="bootstrap-hard-reload"
-              className="btn-ghost text-sm py-2.5 px-5"
-            >
+            <button onClick={hardReload} className="btn-ghost text-sm py-2.5 px-5">
               Clear cache & reload
             </button>
-          </div>
-          <div className="mt-6 text-[10px] uppercase tracking-widest text-brand-navy/40">
-            Error: {error}
           </div>
         </div>
       </div>
@@ -104,9 +88,41 @@ export default function HomePage() {
     <>
       <Header />
       <main>
-        <Hero  />
+        <Hero />
+
+        {/* <--- 2. Add the Video TV Showcase exactly here ---> */}
+        <VideoShowcase />
+
         <HomeCollection homes={data.homes} />
-        <Packages packages={data.packages} />
+        
+        {/* PREMIUM PACKAGES TEASER BANNER */}
+        <section className="py-12 md:py-20 px-4">
+          <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden relative bg-[#000F1B] shadow-2xl">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-[#FF5A00]/20 blur-[100px] rounded-full animate-pulse" />
+              <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+            </div>
+            
+            <div className="relative z-10 px-6 py-12 md:py-16 md:px-12 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+              <div>
+                <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-3">
+                  Transparent Pricing. <span className="text-[#FF5A00]">Zero Surprises.</span>
+                </h2>
+                <p className="text-white/60 text-sm md:text-base max-w-lg">
+                  Explore our curated construction packages designed for every budget. From essential builds to premium custom homes, know exactly what you pay for.
+                </p>
+              </div>
+              <Link 
+                to="/packages" 
+                className="shrink-0 inline-flex items-center justify-center gap-2 bg-[#FF5A00] hover:bg-[#E04F00] text-white px-8 py-4 rounded-full font-bold transition shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:shadow-[0_0_30px_rgba(255,90,0,0.5)] hover:-translate-y-1"
+              >
+                <span>View All Packages</span>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <AIPlatform modules={data.ai_modules} />
         <Marketplace items={data.marketplace} />
         <FinancialServices items={data.financial_services} />

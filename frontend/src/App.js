@@ -7,8 +7,9 @@ import { LeadModalProvider } from "@/components/site/LeadModalProvider";
 import { BrochureModalProvider } from "@/components/site/BrochureModalProvider";
 import CookieBanner from "./components/site/CookieBanner";
 import PublicAIChat from "@/components/site/PublicAIChat";
+import { Power, Loader2 } from "lucide-react";
 
-// Lazy-loaded Public Pages
+// Lazy-loaded Pages
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const HomeDetailPage = lazy(() => import("@/pages/HomeDetailPage"));
 const PackagesPage = lazy(() => import("@/pages/PackagesPage"));
@@ -21,8 +22,6 @@ const BlogDetailPage = lazy(() => import("@/pages/BlogDetailPage"));
 const ContactPage = lazy(() => import("@/pages/ContactPage"));
 const PublicQuotePage = lazy(() => import("@/pages/PublicQuotePage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
-
-// Lazy-loaded Portal
 const PortalLogin = lazy(() => import("@/pages/portal/PortalLogin"));
 const PortalLayout = lazy(() => import("@/pages/portal/PortalLayout"));
 const DashboardPage = lazy(() => import("@/pages/portal/pages/DashboardPage"));
@@ -41,8 +40,6 @@ const MessagesPage = lazy(() => import("@/pages/portal/pages/MessagesPage"));
 const SiteReportsPage = lazy(() => import("@/pages/portal/pages/SiteReportsPage"));
 const MaintenancePage = lazy(() => import("@/pages/portal/pages/MaintenancePage"));
 const SettingsPage = lazy(() => import("@/pages/portal/pages/SettingsPage"));
-
-// Lazy-loaded Admin
 const AdminLoginPage = lazy(() => import("@/pages/admin/AdminLoginPage"));
 const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
@@ -58,163 +55,297 @@ const AdminProjects = lazy(() => import("@/pages/admin/AdminProjects"));
 const AdminClientUsers = lazy(() => import("@/pages/admin/AdminClientUsers"));
 
 /* =========================================================================
-   STORYTELLING LOADER DATA & COMPONENT
+   STORYLINE JCB CONSTRUCTION LOADER (Mobile Responsive & Premium)
    ========================================================================= */
-const STORY_SCENES = [
-  {
-    id: 1,
-    text: "Planning with clarity...",
-    icon: (
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        <motion.path d="M20 20 H80 M20 40 H80 M20 60 H80 M20 80 H80 M20 20 V80 M40 20 V80 M60 20 V80 M80 20 V80" stroke="#FFFFFF" strokeOpacity="0.1" strokeWidth="1" />
-        <motion.path d="M50 20 L35 70 H65 Z" stroke="#FF5A00" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeInOut" }} />
-        <motion.circle cx="50" cy="20" r="4" fill="#FF5A00" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3 }} />
-        <motion.path d="M35 70 Q50 80 65 70" stroke="#FF5A00" strokeWidth="2" strokeDasharray="4 4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} />
-      </svg>
-    )
-  },
-  {
-    id: 2,
-    text: "Building with quality...",
-    icon: (
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        <motion.path d="M20 90 V20 L60 10 M20 40 L50 30" stroke="#FFFFFF" strokeOpacity="0.4" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-        <motion.path d="M60 10 V40" stroke="#FFFFFF" strokeOpacity="0.4" strokeWidth="1.5" strokeDasharray="3 3" initial={{ y: -15 }} animate={{ y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} />
-        <motion.path d="M45 40 H75" stroke="#FF5A00" strokeWidth="6" strokeLinecap="round" initial={{ y: -15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} />
-        <motion.path d="M30 85 H70 M35 75 H65" stroke="#FF5A00" strokeWidth="6" strokeLinecap="round" />
-      </svg>
-    )
-  },
-  {
-    id: 3,
-    text: "Your dream home is arriving...",
-    icon: (
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        <motion.path d="M15 50 L50 20 L85 50 V85 H15 Z" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, ease: "easeInOut" }} />
-        <motion.path d="M40 55 L50 65 L65 40" stroke="#FF5A00" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }} />
-      </svg>
-    )
-  }
-];
 
-function InitialSplashLoader({ onComplete }) {
-  const [scene, setScene] = useState(0);
+function StoryJcbLoader({ onComplete }) {
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState("planning"); 
+  const [isFinishing, setIsFinishing] = useState(false);
 
   useEffect(() => {
-    // 1.4s per scene x 3 scenes = 4.2s total story duration
-    const sceneTimer = setInterval(() => {
-      setScene((prev) => {
-        if (prev < STORY_SCENES.length - 1) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, 1400);
+    // 5.2 Second Smooth Storyline Pacing
+    const duration = 5200;
+    const interval = 20; 
+    const steps = duration / interval;
+    let currentStep = 0;
 
-    // End loader after full story completes (~4.5s)
-    const endTimer = setTimeout(() => {
-      onComplete();
-    }, 4500);
+    const timer = setInterval(() => {
+      currentStep++;
+      const currentProgress = (currentStep / steps) * 100;
+      setProgress(currentProgress);
 
-    return () => {
-      clearInterval(sceneTimer);
-      clearTimeout(endTimer);
-    };
+      if (currentProgress < 30) setPhase("planning");
+      else if (currentProgress >= 30 && currentProgress < 80) setPhase("building");
+      else if (currentProgress >= 80 && currentProgress < 100) setPhase("completed");
+      else if (currentProgress >= 100) {
+        setPhase("brand");
+        clearInterval(timer);
+        
+        setTimeout(() => setIsFinishing(true), 400);
+        setTimeout(() => {
+          sessionStorage.setItem("constructons_splash_seen", "true");
+          onComplete();
+        }, 2000); 
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
   }, [onComplete]);
 
   return (
     <motion.div
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#000F1B] font-['Poppins',sans-serif] select-none"
+      exit={{ opacity: 0, scale: 1.04, filter: "blur(12px)" }}
+      transition={{ duration: 0.8, ease: "easeInOut" }}
+      className="fixed inset-0 z-[9999] bg-[#000F1B] flex flex-col items-center justify-center overflow-hidden select-none font-['Poppins',sans-serif] text-white p-4"
     >
-      <div className="absolute h-96 w-96 rounded-full bg-[#FF5A00]/15 blur-[120px] pointer-events-none" />
-      
-      <div className="relative z-10 flex flex-col items-center">
-        
-        {/* Animated Icon Container */}
-        <div className="relative h-28 w-28 mb-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={scene}
-              initial={{ opacity: 0, scale: 0.85, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: -12 }}
-              transition={{ duration: 0.35 }}
-              className="absolute inset-0"
-            >
-              {STORY_SCENES[scene].icon}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+      {/* Blueprint Grid Background */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+          backgroundSize: "40px 40px"
+        }}
+      />
 
-        {/* Story Text */}
-        <div className="flex flex-col items-center gap-1.5 text-center">
-          <div className="text-sm font-bold tracking-tight text-white mb-2">
-            Construct<span className="text-[#FF5A00]">ONS™</span>
-          </div>
+      {/* Ambient Orange Backlight Glow */}
+      <motion.div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35rem] h-[35rem] bg-[#FF5A00]/15 blur-[140px] rounded-full pointer-events-none"
+        animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {phase !== "brand" ? (
+        <div className="relative w-full max-w-5xl mx-auto flex flex-col h-full">
           
-          <div className="h-6 overflow-hidden">
+          {/* Top Brand Lockup Pill */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
+            <img src="/logo.webp" alt="ConstructONS" className="h-5 w-auto object-contain shrink-0" />
+            <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] text-white select-none">
+              CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF5A00] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF5A00] font-bold self-start mt-0.5 ml-0.5">™</span>
+            </div>
+          </div>
+
+          {/* Dynamic Storytelling Text Overlay */}
+          <div className="absolute top-[25%] sm:top-[30%] w-full text-center flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={scene}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.3 }}
-                className="text-xs font-semibold text-white/80 tracking-wider uppercase"
-              >
-                {STORY_SCENES[scene].text}
-              </motion.div>
+              {phase === "planning" && (
+                <motion.div key="s1" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#FF5A00] uppercase mb-1">STORY 01 / 03 · PLANNING</div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">Every home starts with a vision.</h2>
+                </motion.div>
+              )}
+              {phase === "building" && (
+                <motion.div key="s2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#FF5A00] uppercase mb-1">STORY 02 / 03 · EXECUTION</div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">Structure rises &amp; details come together.</h2>
+                </motion.div>
+              )}
+              {phase === "completed" && (
+                <motion.div key="s3" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#10B981] uppercase mb-1">STORY 03 / 03 · HANDOVER</div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">And it becomes your dream home.</h2>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
 
-          {/* Progress Indicator */}
-          <div className="mt-5 flex gap-1.5">
-            {STORY_SCENES.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-500 ${
-                  i === scene ? "w-8 bg-[#FF5A00]" : "w-2 bg-white/20"
-                }`}
-              />
-            ))}
+          {/* =========================================================
+              DOM-BASED RESPONSIVE PROGRESS TRACK
+              ========================================================= */}
+          <div className="absolute bottom-[20%] sm:bottom-[25%] left-4 right-4 sm:left-12 sm:right-12 h-32 sm:h-48 border-b-2 border-white/20">
+            
+            {/* Filled Progress Line */}
+            <div 
+              className="absolute bottom-[-2px] left-0 h-[2px] bg-gradient-to-r from-[#FF5A00] to-[#FF7A2E] shadow-[0_0_15px_#FF5A00] transition-all duration-75"
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            />
+
+            {/* STATION 1: Planning (10%) */}
+            <div className={`absolute bottom-0 left-[10%] -translate-x-1/2 w-14 h-14 sm:w-20 sm:h-20 transition-opacity duration-700 ${progress > 30 ? "opacity-20 blur-[1px]" : "opacity-100"}`}>
+              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg overflow-visible">
+                {/* Drafting Table */}
+                <rect x="25" y="45" width="50" height="8" fill="#0B1E30" stroke="#38BDF8" strokeWidth="1.5" />
+                <path d="M35 53 V90 M65 53 V90" stroke="#38BDF8" strokeWidth="1.5" strokeLinecap="round" />
+                <polygon points="35,25 65,25 75,45 25,45" fill="#FF5A00" opacity="0.8" />
+                {/* Architect */}
+                <circle cx="20" cy="35" r="7" fill="#FFF" />
+                <path d="M20 42 V80" stroke="#FFF" strokeWidth="4" strokeLinecap="round" />
+                {/* Engineer */}
+                <circle cx="80" cy="35" r="7" fill="#F59E0B" />
+                <path d="M80 42 V80" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            {/* STATION 2: Crane (50%) */}
+            <div className={`absolute bottom-0 left-[50%] -translate-x-1/2 w-20 h-24 sm:w-28 sm:h-32 transition-all duration-700 ${progress < 25 ? "opacity-0 translate-y-4" : progress > 80 ? "opacity-20 blur-[1px]" : "opacity-100 translate-y-0"}`}>
+              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl overflow-visible">
+                {/* Frame */}
+                <path d="M20 100 V50 M50 100 V50 M80 100 V50" stroke="#38BDF8" strokeWidth="2.5" opacity="0.7" strokeLinecap="round" />
+                <path d="M20 75 H80 M20 50 H80" stroke="#38BDF8" strokeWidth="2.5" opacity="0.7" strokeLinecap="round" />
+                {/* Crane */}
+                <path d="M90 100 V10 M90 20 H10" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
+                <path d="M90 10 L60 20" stroke="#D97706" strokeWidth="2" />
+                <line x1="30" y1="20" x2="30" y2="40" stroke="#FFF" strokeWidth="1.5" strokeDasharray="2 2" />
+                <rect x="15" y="40" width="30" height="6" fill="#FF5A00" rx="1" />
+              </svg>
+            </div>
+
+            {/* STATION 3: House (90%) */}
+            <div className={`absolute bottom-0 left-[90%] -translate-x-1/2 w-20 h-20 sm:w-28 sm:h-28 transition-all duration-700 ${progress < 75 ? "opacity-0 scale-90 translate-y-4" : "opacity-100 scale-100 translate-y-0"}`}>
+              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl overflow-visible">
+                {/* House Shape */}
+                <path d="M10 100 V50 L50 20 L90 50 V100 Z" fill="#000F1B" stroke="#FFFFFF" strokeWidth="2.5" strokeLinejoin="round" />
+                <path d="M5 52 L50 18 L95 52" stroke="#FF5A00" strokeWidth="3" strokeLinecap="round" />
+                {/* Windows/Doors */}
+                <rect x="40" y="65" width="20" height="35" rx="1" fill="#FF5A00" fillOpacity="0.85" />
+                <rect x="20" y="55" width="12" height="12" rx="1" fill="#38BDF8" fillOpacity="0.7" />
+                <rect x="68" y="55" width="12" height="12" rx="1" fill="#38BDF8" fillOpacity="0.7" />
+                {/* Sparkle */}
+                <motion.circle cx="50" cy="8" r="3" fill="#FF5A00" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }} />
+              </svg>
+            </div>
+
+            {/* =========================================================
+                THE COMPACT JCB (Drives along the track)
+                ========================================================= */}
+            <motion.div 
+              className="absolute bottom-0 -translate-x-[80%] w-16 h-12 sm:w-24 sm:h-16"
+              style={{ left: `${Math.max(0, Math.min(progress, 100))}%` }}
+            >
+              <svg viewBox="0 0 100 60" className="w-full h-full drop-shadow-lg overflow-visible">
+                {/* Exhaust Smoke */}
+                <g className={progress > 95 ? "opacity-0 transition-opacity" : "opacity-100"}>
+                  <circle cx="20" cy="5" r="3" fill="#FFF" opacity="0.4" className="animate-[nf_float_1.5s_ease-in-out_infinite]" />
+                  <circle cx="25" cy="0" r="4" fill="#FFF" opacity="0.2" className="animate-[nf_float_2s_ease-in-out_infinite_0.5s]" />
+                </g>
+
+                <g className={progress < 95 ? "animate-[nf_jig_0.3s_linear_infinite]" : ""}>
+                  {/* Cabin */}
+                  <path d="M15 25 L35 25 L45 45 L10 45 Z" fill="#0F172A" />
+                  <path d="M18 28 L32 28 L40 42 L13 42 Z" fill="#38BDF8" opacity="0.6" />
+                  
+                  {/* Body */}
+                  <rect x="30" y="35" width="45" height="15" rx="3" fill="#FF5A00" />
+                  <rect x="35" y="40" width="12" height="6" rx="1" fill="#0F172A" opacity="0.5" />
+                  
+                  {/* Arm */}
+                  <path d="M50 40 L75 25 L85 45" stroke="#0F172A" strokeWidth="4" fill="none" strokeLinecap="round" />
+                  <path d="M50 40 L75 25 L85 45" stroke="#FF5A00" strokeWidth="2" fill="none" strokeLinecap="round" />
+                  
+                  {/* Bucket */}
+                  <path d="M80 40 L95 40 L90 55 L75 55 Z" fill="#0F172A" stroke="#FF5A00" strokeWidth="1" strokeLinejoin="round" />
+                </g>
+
+                {/* Tracks / Wheels */}
+                <g>
+                  <rect x="5" y="50" width="75" height="12" rx="6" fill="#0F172A" stroke="#FF5A00" strokeWidth="1.5" />
+                  <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "15px 56px" }}><circle cx="15" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
+                  <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "35px 56px" }}><circle cx="35" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
+                  <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "55px 56px" }}><circle cx="55" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
+                  <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "70px 56px" }}><circle cx="70" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
+                </g>
+              </svg>
+            </motion.div>
           </div>
+          
+          <div className="absolute bottom-10 font-mono text-[10px] font-bold text-white/30 tracking-[0.2em]">
+            PROGRESS: <span className="text-[#FF5A00]">{Math.min(Math.round(progress), 100)}%</span>
+          </div>
+
+          <style>{`
+            @keyframes nf_float {
+              0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+              50% { transform: translateY(-4px) scale(1.1); opacity: 0.5; }
+            }
+            @keyframes nf_jig {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-1px); }
+            }
+          `}</style>
         </div>
-      </div>
+      ) : (
+        /* =========================================================
+           SCENE 4: FINAL REVEAL (Takes over screen before entry)
+           ========================================================= */
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-20 flex flex-col items-center text-center px-6 my-auto"
+        >
+          <img src="/logo.webp" alt="ConstructONS Logo" className="h-16 md:h-20 w-auto object-contain mb-6 drop-shadow-[0_0_30px_rgba(255,90,0,0.6)]" />
+          
+          <div className="flex items-center gap-1 text-2xl sm:text-3xl md:text-4xl font-black tracking-[0.18em] text-white select-none mb-3">
+            CONSTRUCT<Power className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-[#FF5A00] stroke-[3.5] mx-1" />NS<span className="text-sm text-[#FF5A00] font-bold self-start mt-1">™</span>
+          </div>
+
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-[#FF5A00] drop-shadow-[0_0_12px_rgba(255,90,0,0.5)]">
+            Everything Construction. Always On.
+          </p>
+        </motion.div>
+      )}
+
+      {/* Orange Flash Transition */}
+      <AnimatePresence>
+        {isFinishing && (
+          <motion.div
+            initial={{ scaleY: 0, opacity: 0 }}
+            animate={{ scaleY: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
+            className="absolute inset-0 z-[100] origin-bottom bg-[#FF5A00]"
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
+/* Fast Route Fallback Spinner for subsequent inner page transitions */
 function PageFallback() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000F1B] text-white text-xs font-semibold tracking-wider uppercase">
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-[#FF5A00] animate-ping" />
-        Loading...
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-md font-['Poppins',sans-serif]">
+      <div className="relative w-12 h-12 mb-3">
+        <svg viewBox="0 0 100 100" className="w-full h-full stroke-[#FF5A00] drop-shadow-[0_4px_12px_rgba(255,90,0,0.3)]" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <motion.path
+            d="M50 15 L80 32 L80 68 L50 85 L20 68 L20 32 Z M50 15 L50 50 M20 32 L50 50 L80 32 M50 50 L50 85"
+            initial={{ pathLength: 0, opacity: 0.2 }}
+            animate={{ pathLength: [0, 1, 0], opacity: [0.2, 1, 0.2] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </svg>
+      </div>
+      <div className="text-[10px] font-bold tracking-[0.25em] text-[#000F1B] uppercase animate-pulse">
+        Constructing...
       </div>
     </div>
   );
 }
 
+/* =========================================================================
+   MAIN APP ROUTER COMPONENT
+   ========================================================================= */
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  // Query sessionStorage so the story loader runs ONLY once per session
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem("constructons_splash_seen");
+  });
 
   return (
     <div className="App font-['Poppins',sans-serif] text-[#111111] bg-white antialiased min-h-screen flex flex-col selection:bg-[#FF5A00]/20 selection:text-[#000F1B]">
       
-      {/* 🎬 Full Storytelling Splash Screen on App Mount */}
+      {/* 🎬 ONE-TIME Storyline JCB Construction Loader */}
       <AnimatePresence>
         {showSplash && (
-          <InitialSplashLoader onComplete={() => setShowSplash(false)} />
+          <StoryJcbLoader onComplete={() => setShowSplash(false)} />
         )}
       </AnimatePresence>
 
       <BrowserRouter>
         <LeadModalProvider>
           <BrochureModalProvider>
-            <Suspense fallback={<PageFallback />}>
+            <Suspense fallback={!showSplash ? <PageFallback /> : null}>
               <Routes>
                 {/* Public */}
                 <Route path="/" element={<HomePage />} />
@@ -250,7 +381,7 @@ function App() {
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
 
-                {/* Admin */}
+                {/* Admin Panels */}
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
