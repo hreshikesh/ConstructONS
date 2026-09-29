@@ -1189,7 +1189,106 @@ async def save_quote_as_template(quote_id: str, request: Request):
     tpl.pop("_id", None)
     return tpl
 
+# ============================================================================
+# Create Custom Quote from Template
+# ============================================================================
 
+@router.post("/custom-quotes/from-template", dependencies=[Depends(require_admin)])
+async def create_quote_from_template(request: Request):
+    """Create a new CustomQuote draft populated from an existing QuoteTemplate."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    
+    template_id = body.get("template_id")
+    if not template_id:
+        raise HTTPException(status_code=400, detail="template_id is required")
+
+    tpl = await db.quote_templates.find_one({"id": template_id}, {"_id": 0})
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Quote template not found")
+
+    from models import DEFAULT_MATERIAL_SPECS
+    ref_num = await _generate_cq_ref_number()
+    
+    quote_doc = {
+        "id": new_id(),
+        "ref_number": ref_num,
+        "status": "draft",
+        "valid_days": 30,
+        "client_name": body.get("client_name") or "New Client",
+        "client_phone": body.get("client_phone") or "",
+        "client_email": body.get("client_email") or None,
+        "client_address": body.get("client_address") or None,
+        "site_address": body.get("site_address") or None,
+        "plot_area": None,
+        "floors": "G+1",
+        "built_up_area": 1200,
+        "bhk": "3 BHK",
+        "budget": None,
+        "style_pref": "Modern",
+        "expected_start": None,
+        "expected_completion": None,
+        "package_slug": None,
+        "package_name": tpl.get("name") or "Custom Home",
+        "price_per_sqft": tpl.get("price_per_sqft") or 1799,
+        "spec_categories": tpl.get("spec_categories") or [],
+        "material_specs": tpl.get("material_specs") or [dict(r) for r in DEFAULT_MATERIAL_SPECS],
+        "interiors": tpl.get("interiors") or [],
+        "addons": tpl.get("addons") or [],
+        "line_items": tpl.get("line_items") or [],
+        "discount_label": "",
+        "discount_amount": 0,
+        "service_charge_percent": tpl.get("service_charge_percent") if tpl.get("service_charge_percent") is not None else 15,
+        "gst_percent": 0,
+        "floor_plans": [],
+        "elevations": [],
+        "visual_boards": [],
+        "scope_of_work": tpl.get("scope_of_work") or [],
+        "exclusions": tpl.get("exclusions") or [],
+        "payment_schedule": tpl.get("payment_schedule") or [],
+        "intro_note": tpl.get("intro_note") or "",
+        "terms": tpl.get("terms") or "",
+        "warranty_years": tpl.get("warranty_years") or 10,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+
+    await db.custom_quotes.insert_one(quote_doc)
+    quote_doc.pop("_id", None)
+    return quote_doc
+
+
+# ============================================================================
+# Quote Templates CRUD
+# ============================================================================
+
+@router.get("/quote-templates/{template_id}", dependencies=[Depends(require_admin)])
+async def get_quote_template(template_id: str):
+    doc = await db.quote_templates.find_one({"id": template_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Quote template not found")
+    return doc
+
+@router.put("/quote-templates/{template_id}", dependencies=[Depends(require_admin)])
+async def update_quote_template(template_id: str, request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    data["id"] = template_id
+    data["updated_at"] = now_iso()
+    await db.quote_templates.update_one({"id": template_id}, {"$set": data}, upsert=True)
+    doc = await db.quote_templates.find_one({"id": template_id}, {"_id": 0})
+    return doc
+
+@router.delete("/quote-templates/{template_id}", dependencies=[Depends(require_admin)])
+async def delete_quote_template(template_id: str):
+    res = await db.quote_templates.delete_one({"id": template_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Quote template not found")
+    return {"success": True}
 # ============================================================================
 # Interior Library & Quote Templates
 # ============================================================================

@@ -53,7 +53,10 @@ const AdminCustomQuotes = lazy(() => import("@/pages/admin/AdminCustomQuotes"));
 const AdminQuoteTemplates = lazy(() => import("@/pages/admin/AdminQuoteTemplates"));
 const AdminProjects = lazy(() => import("@/pages/admin/AdminProjects"));
 const AdminClientUsers = lazy(() => import("@/pages/admin/AdminClientUsers"));
-
+const SuppliersPage = lazy(() => import("@/pages/SuppliersPage"));
+const EquipmentPage = lazy(() => import("@/pages/EquipmentPage"));
+const ContractorsPage = lazy(() => import("@/pages/ContractorsPage"));
+const ArchitectsPage = lazy(() => import("@/pages/ArchitectsPage"));
 /* =========================================================================
    STORYLINE JCB CONSTRUCTION LOADER (Mobile Responsive & Premium)
    ========================================================================= */
@@ -359,6 +362,10 @@ function App() {
                 <Route path="/blog/:slug" element={<BlogDetailPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/quote/:token" element={<PublicQuotePage />} />
+                <Route path="/marketplace/materials" element={<SuppliersPage />} />
+                <Route path="/marketplace/equipment" element={<EquipmentPage />} />
+                <Route path="/marketplace/contractors" element={<ContractorsPage />} />
+                <Route path="/marketplace/architects" element={<ArchitectsPage />} />
 
                 {/* Customer Portal */}
                 <Route path="/portal/login" element={<PortalLogin />} />

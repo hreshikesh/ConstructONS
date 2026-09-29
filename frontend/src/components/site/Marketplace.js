@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom"; // Import Link for routing
 import { motion } from "framer-motion";
 import { ArrowUpRight, Check } from "lucide-react";
 import LucideIcon from "@/components/site/LucideIcon";
@@ -175,15 +176,14 @@ function MarketCard({ item, index }) {
                 ))}
               </ul>
 
-              {/* CTA */}
-              <button
-                type="button"
-                onClick={(e) => e.preventDefault()}
+              {/* CTA LINK WITH SLUG */}
+              <Link
+                to={`/marketplace/${item.slug}`}
                 className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#FF5A00] hover:bg-[#E04F00] text-white text-xs font-semibold px-4 py-2.5 transition-colors"
               >
                 Explore
                 <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
