@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Building2, Clock, Camera, ShieldCheck, CheckSquare, Hammer, Bot } from "lucide-react";
+import { FileText, Building2, Clock, ShieldCheck, CheckSquare, Hammer, Bot } from "lucide-react";
 import PortalProjectAdvisorModal from "../PortalProjectAdvisorModal";
 
 export default function DashboardBottomRow({ project }) {
@@ -53,8 +53,8 @@ export default function DashboardBottomRow({ project }) {
       <div className="mt-5 pt-3 border-t border-black/5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 sm:gap-6">
           <FooterItem icon={FileText} text="PLAN WITH CLARITY" />
-          <FooterItem icon={Building2} text="BUILD WITH QUALITY" />
-          <FooterItem icon={Clock} text="TRACK WITH TRANSPARENCY" />
+          <BuildingFooterItem icon={Building2} text="BUILD WITH QUALITY" />
+          <ClockFooterItem icon={Clock} text="TRACK WITH TRANSPARENCY" />
         </div>
         <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-[0.2em] border-l-2 border-[#FF5A00] pl-3 hidden md:block">
           ConstructONS
@@ -65,6 +65,24 @@ export default function DashboardBottomRow({ project }) {
 }
 
 function FooterItem({ icon: Icon, text }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Icon className="w-3.5 h-3.5 text-[#111111]/40" />
+      <span className="text-[8px] font-bold text-[#111111]/50 uppercase tracking-widest leading-tight">{text}</span>
+    </div>
+  );
+}
+
+function BuildingFooterItem({ icon: Icon, text }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Icon className="w-3.5 h-3.5 text-[#111111]/40" />
+      <span className="text-[8px] font-bold text-[#111111]/50 uppercase tracking-widest leading-tight">{text}</span>
+    </div>
+  );
+}
+
+function ClockFooterItem({ icon: Icon, text }) {
   return (
     <div className="flex items-center gap-1.5">
       <Icon className="w-3.5 h-3.5 text-[#111111]/40" />

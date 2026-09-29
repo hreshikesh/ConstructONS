@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Calendar, Flag, CloudRain, Droplets, Wind, CheckCircle2,
-  Clock, ShieldAlert, ChevronRight, Building2, MapPin, Sun, Cloud
+  Calendar, Flag, CloudRain, Droplets, CheckCircle2,
+  Clock, ShieldAlert, Camera, Video, Sun, Cloud, Check
 } from "lucide-react";
 import axios from "axios";
 
@@ -17,14 +17,12 @@ export default function DashboardHeaders({ user, project }) {
   useEffect(() => {
     if (!lat || !lng) { setWeather(null); return; }
     setWeatherLoading(true);
-    axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min,weathercode&forecast_days=3&timezone=auto`)
+    axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m&current_weather=true&timezone=auto`)
       .then((res) => {
         setWeather({
-          ...res.data.current_weather,
-          rainChance: res.data.daily?.precipitation_probability_max?.[0] ?? 0,
-          days: (res.data.daily?.time || []).slice(0, 3).map((t, i) => ({
-            date: t, max: res.data.daily?.temperature_2m_max?.[i], min: res.data.daily?.temperature_2m_min?.[i], rain: res.data.daily?.precipitation_probability_max?.[i],
-          })),
+          temp: res.data.current?.temperature_2m ?? res.data.current_weather?.temperature,
+          humidity: res.data.current?.relative_humidity_2m ?? 65,
+          weathercode: res.data.current_weather?.weathercode ?? 0
         });
       })
       .catch(() => setWeather(null))
@@ -35,6 +33,7 @@ export default function DashboardHeaders({ user, project }) {
   const materials = project?.materials || [];
   const quality = project?.quality_inspections || [];
   const drawings = project?.drawings || [];
+  const cameras = project?.cctv_cameras || [];
   const today = new Date();
 
   const completedStages = stages.filter((s) => s.status === "completed").length;
@@ -42,12 +41,14 @@ export default function DashboardHeaders({ user, project }) {
   const currentStage = stages.find((s) => s.status === "in_progress");
   const expectedCompletionDate = project.expected_completion || (stages.length > 0 ? stages[stages.length - 1]?.expected_date : null);
 
+  // Consolidated Health Indicators - "Procurement" renamed to "Materials" for simplicity
   const healthData = [
     { key: "Schedule", status: stages.some((s) => s.status !== "completed" && s.expected_date && new Date(s.expected_date) < today) ? "At Risk" : "On Track" },
     { key: "Cost", status: project.amount_spent > project.contract_value && project.contract_value > 0 ? "At Risk" : "On Track" },
-    { key: "Procurement", status: materials.some((m) => m.status === "pending") ? "Attention" : "On Track" },
+    { key: "Materials", status: materials.some((m) => m.status === "pending") ? "Attention" : "On Track" }, // Simplified wording
     { key: "Quality", status: quality.some((q) => q.status === "rectification") ? "At Risk" : "On Track" },
     { key: "Approvals", status: drawings.some((d) => d.status === "pending") ? "Attention" : "On Track" },
+    { key: "Payments", status: (project.amount_spent > (project.contract_value || 0)) ? "At Risk" : "On Track" }
   ];
 
   const overallHealth = healthData.some((h) => h.status === "At Risk") ? "At Risk" : healthData.some((h) => h.status === "Attention") ? "Attention" : "On Track";
@@ -62,13 +63,32 @@ export default function DashboardHeaders({ user, project }) {
   return (
     <div className="space-y-3 font-['Poppins']">
       
-      {/* Ultra-compact Header */}
+      {/* 1. Welcome Strip */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-black/5 shadow-sm">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#000F1B] leading-none">Welcome back, {user?.name?.split(" ")[0]}!</h1>
-          <p className="text-[10px] text-[#111111]/60 mt-1">Here's how your dream home is progressing this week.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full md:w-auto gap-2">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#000F1B] leading-none">Welcome back, {user?.name?.split(" ")[0]}!</h1>
+            <p className="text-[10px] text-[#111111]/60 mt-1">Here's how your dream home is progressing this week.</p>
+          </div>
+          
+          {hasCoords && (weatherLoading ? (
+            <div className="animate-pulse text-[10px] bg-slate-50 border border-black/5 px-2.5 py-1 rounded-xl text-slate-400">Loading forecast...</div>
+          ) : weather ? (
+            <div className="flex items-center gap-2 bg-[#F9FAFB] border border-black/5 px-2.5 py-1 rounded-xl self-start sm:self-center">
+              <span className="text-[10px] font-bold text-[#000F1B] flex items-center gap-1">
+                {weather.weathercode === 0 ? <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" /> : <Cloud className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                {Math.round(weather.temp)}°C
+              </span>
+              <span className="w-px h-3 bg-black/10" />
+              <span className="text-[10px] font-bold text-[#111111]/60 flex items-center gap-1">
+                <Droplets className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                {weather.humidity}% Hum
+              </span>
+            </div>
+          ) : null)}
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center justify-between md:justify-end gap-4 border-t border-black/5 pt-2 md:pt-0 md:border-0">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-[#111111]/40" />
             <div>
@@ -84,17 +104,72 @@ export default function DashboardHeaders({ user, project }) {
               <div className="text-[11px] font-bold text-[#000F1B]">{formatDate(expectedCompletionDate)}</div>
             </div>
           </div>
-          <div className={`hidden sm:flex px-3 py-1 rounded-lg text-[10px] font-bold ${hColors[overallHealth].bg} ${hColors[overallHealth].text}`}>
-            {overallHealth}
+          <div className={`px-3 py-1 rounded-lg text-[10px] font-bold ${hColors[overallHealth].bg} ${hColors[overallHealth].text}`}>
+            {overallHealth === "On Track" ? "Healthy" : overallHealth}
           </div>
         </div>
       </div>
 
-      {/* Row 1 Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      {/* 2. New Horizontal Stages Progress Strip */}
+      {stages.length > 0 && (
+        <div className="bg-white rounded-2xl border border-black/5 p-3.5 shadow-sm">
+          <div className="text-[9px] font-bold text-[#111111]/50 uppercase tracking-widest mb-2.5">Project Roadmap</div>
+          
+          {/* Flex-nowrap with horizontal scrollbar hide support */}
+          <div className="overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="flex items-center min-w-[760px] md:min-w-0 justify-between relative py-1.5 px-2">
+              
+              {/* Connecting Background Line */}
+              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-100 -translate-y-1/2 z-0" />
+
+              {stages.map((stg, idx) => {
+                const isCompleted = stg.status === "completed";
+                const isCurrent = stg.status === "in_progress";
+                
+                return (
+                  <div key={idx} className="flex flex-col items-center flex-1 relative z-10 px-1">
+                    
+                    {/* Circle Indicator */}
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                      isCompleted ? "bg-emerald-500 text-white" : 
+                      isCurrent ? "bg-[#FF5A00] text-white ring-4 ring-[#FF5A00]/25 animate-pulse" : 
+                      "bg-white border-2 border-slate-200 text-slate-400"
+                    }`}>
+                      {isCompleted ? (
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      ) : (
+                        <span className="text-[10px] font-black">{idx + 1}</span>
+                      )}
+                    </div>
+
+                    {/* Stage Name */}
+                    <span className={`text-[9px] font-bold mt-2 text-center max-w-[110px] truncate leading-tight ${
+                      isCompleted ? "text-emerald-600" : 
+                      isCurrent ? "text-[#000F1B] font-black" : 
+                      "text-[#111111]/45"
+                    }`}>
+                      {stg.name}
+                    </span>
+
+                    {/* Stage mini-status badge */}
+                    <span className="text-[7px] font-semibold mt-0.5 uppercase tracking-wider opacity-60">
+                      {isCompleted ? "Completed" : isCurrent ? `${stg.progress_pct}% Done` : "Pending"}
+                    </span>
+
+                  </div>
+                );
+              })}
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Row 1 Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         
-        {/* Project Health */}
-        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[180px]">
+        {/* Project & Payment Health */}
+        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -110,27 +185,28 @@ export default function DashboardHeaders({ user, project }) {
             </div>
             <div>
               <div className={`flex items-center gap-1 text-sm font-bold ${hColors[overallHealth].text}`}>
-                <HealthIcon className="w-4 h-4" /> {overallHealth}
+                <HealthIcon className="w-4 h-4" /> {overallHealth === "On Track" ? "Healthy" : overallHealth}
               </div>
               <p className="text-[10px] text-[#111111]/60 mt-0.5 leading-tight">
-                {overallHealth === "On Track" ? "All key areas are within plan." : "Some areas require attention."}
+                {overallHealth === "On Track" ? "All core tracking metrics are healthy." : "Some areas require attention."}
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-5 gap-1 pt-2 mt-auto">
+          
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-2 mt-auto border-t border-black/5">
             {healthData.map((h, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
-                <div className={`w-full py-0.5 text-center rounded text-[8px] font-bold uppercase tracking-wider ${hColors[h.status].bg} ${hColors[h.status].text}`}>
-                  {h.status === "On Track" ? "OK" : "!"}
+                <div className={`w-full py-0.5 text-center rounded text-[7px] font-black uppercase tracking-normal ${hColors[h.status].bg} ${hColors[h.status].text}`}>
+                  {h.status === "On Track" ? "Healthy" : h.status === "Attention" ? "Review" : "Risk"}
                 </div>
-                <div className="text-[8px] font-semibold text-[#111111]/60 truncate w-full text-center">{h.key}</div>
+                <div className="text-[8px] font-semibold text-[#111111]/60 truncate w-full text-center leading-none">{h.key}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Overall Progress */}
-        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[180px]">
+        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -152,47 +228,54 @@ export default function DashboardHeaders({ user, project }) {
               {currentStage && <span className="inline-block mt-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded">In Progress</span>}
             </div>
           </div>
-          <div className="pt-2 mt-auto text-[9px] font-semibold text-[#111111]/60 flex justify-between">
+          <div className="pt-2 mt-auto text-[9px] font-semibold text-[#111111]/60 flex justify-between border-t border-black/5">
             <span>{completedStages} of {stages.length} stages completed</span>
           </div>
         </div>
 
-        {/* Site Weather */}
-        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[180px]">
-          <div className="flex items-center gap-1.5 mb-1">
-            <CloudRain className="w-4 h-4 text-blue-500" />
-            <h2 className="text-sm font-bold text-[#000F1B]">Site Weather</h2>
+        {/* CCTV Camera Grid */}
+        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px] md:col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Camera className="w-4 h-4 text-[#FF5A00]" />
+              <h2 className="text-sm font-bold text-[#000F1B]">CCTV Grid</h2>
+            </div>
+            <Link to="/portal/cctv" className="text-[10px] font-bold text-blue-600 hover:underline">View All</Link>
           </div>
-          {!hasCoords ? (
-            <div className="flex-1 flex flex-col justify-center text-[10px] text-[#111111]/50 text-center"><p>Weather unavailable.</p></div>
-          ) : weatherLoading ? (
-            <div className="flex-1 grid place-items-center text-[10px] text-[#111111]/50">Loading forecast...</div>
-          ) : weather ? (
-            <>
-              <div className="flex justify-between items-center flex-1">
-                <div className="flex items-center gap-2">
-                  {weather.rainChance > 40 ? <CloudRain className="w-10 h-10 text-blue-400" /> : weather.weathercode === 0 ? <Sun className="w-10 h-10 text-amber-400" /> : <Cloud className="w-10 h-10 text-slate-400" />}
-                  <div>
-                    <div className="text-2xl font-black text-[#000F1B] leading-none">{weather.temperature ?? "--"}°</div>
-                    <div className="text-[9px] font-semibold text-[#111111]/50 mt-0.5">Cloudy</div>
+          
+          <div className="flex-1 grid grid-cols-2 gap-1.5">
+            {cameras.slice(0, 4).map((cam, idx) => (
+              <div key={idx} className="relative rounded-lg overflow-hidden bg-[#000F1B] border border-black/10 flex items-center justify-center">
+                {cam.status === "online" ? (
+                  cam.camera_type === "youtube" ? (
+                    <iframe src={`${cam.url}?autoplay=0&mute=1&controls=0`} className="absolute inset-0 w-full h-full pointer-events-none opacity-80" title={`cctv-${idx}`} />
+                  ) : (
+                    <Video className="w-4 h-4 text-white/30" />
+                  )
+                ) : (
+                  <div className="text-center">
+                    <Video className="w-4 h-4 text-white/20 mx-auto" />
+                    <span className="text-[7px] text-white/40 block">Offline</span>
                   </div>
+                )}
+                <div className="absolute bottom-1 left-1 bg-black/60 px-1 py-0.5 rounded text-[6px] font-bold text-white uppercase tracking-wider truncate max-w-[80%]">
+                  {cam.name || `Cam ${idx + 1}`}
                 </div>
-                <div className="space-y-1 text-[9px] font-semibold text-[#111111]/60">
-                  <div className="flex items-center gap-1"><Droplets className="w-3 h-3 text-blue-400" /> {weather.rainChance ?? 0}% Rain</div>
-                  <div className="flex items-center gap-1"><Wind className="w-3 h-3 text-gray-400" /> {weather.windspeed ?? "--"} km/h</div>
+                <div className="absolute top-1 right-1 flex items-center gap-0.5 bg-red-600 text-white text-[5px] font-bold px-1 py-0.2 rounded">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  LIVE
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-1.5 mt-auto pt-2">
-                {weather.days?.length > 0 && weather.days.map((d) => (
-                  <div key={d.date} className="rounded bg-[#F9FAFB] border border-black/5 p-1 text-center">
-                    <div className="text-[8px] font-bold text-[#111111]/50 uppercase">{new Date(d.date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" })}</div>
-                    <div className="text-[10px] font-bold text-[#000F1B] leading-none my-0.5">{d.max}°</div>
-                  </div>
-                ))}
+            ))}
+            {cameras.length === 0 && (
+              <div className="col-span-2 flex flex-col items-center justify-center text-[#111111]/40 border border-dashed border-black/10 rounded-lg bg-[#F9FAFB]">
+                <Video className="w-6 h-6 mb-1 opacity-40" />
+                <span className="text-[10px] font-semibold">No Cameras Setup</span>
               </div>
-            </>
-          ) : null}
+            )}
+          </div>
         </div>
+
       </div>
     </div>
   );
