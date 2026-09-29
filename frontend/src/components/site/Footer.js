@@ -38,11 +38,14 @@ const COLUMNS = [
   {
     title: "Marketplace",
     links: [
-      { label: "Materials", to: "/#marketplace" },
-      { label: "Equipment", to: "/#marketplace" },
-      { label: "Contractors", to: "/#marketplace" },
-      { label: "Interiors", to: "/#marketplace" },
-      { label: "Smart Home", to: "/#marketplace" },
+      { label: "Materials", to: "/marketplace/materials" },
+      { label: "Equipment", to: "/marketplace/equipment" },
+      { label: "Contractors", to: "/marketplace/contractors" },
+      { label: "Architects", to: "/marketplace/architects" },
+      { label: "Engineers", to: "/marketplace/engineers" },
+      { label: "Interiors", to: "/marketplace/interior" },
+      { label: "Smart Home", to: "/marketplace/smart-home" },
+      { label: "Landscaping", to: "/marketplace/landscaping" },
     ],
   },
   {
@@ -143,9 +146,8 @@ function SocialLink({ href, icon: Icon, title }) {
       onClick={(e) => {
         if (!href) e.preventDefault();
       }}
-      className={`w-9 h-9 rounded-full grid place-items-center bg-white/5 transition ${
-        href ? "hover:bg-brand-orange cursor-pointer" : "opacity-60 cursor-default"
-      }`}
+      className={`w-9 h-9 rounded-full grid place-items-center bg-white/5 transition ${href ? "hover:bg-brand-orange cursor-pointer" : "opacity-60 cursor-default"
+        }`}
     >
       <Icon className="w-4 h-4" />
     </a>
