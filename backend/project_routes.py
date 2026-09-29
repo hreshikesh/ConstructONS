@@ -1,5 +1,5 @@
 """Project routes — customer view + admin management.
-Phase 3: Drawings, Materials, Financial Ledger, & Approvals Engine.
+Phase 3: Stages, Substages, Progress Engine & Comprehensive PDF Reporting.
 """
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
@@ -12,6 +12,7 @@ import random
 from db import db
 from auth import require_admin
 from customer_auth import get_current_customer
+from fastapi.responses import HTMLResponse
 
 proj_router = APIRouter(prefix="/api", tags=["projects"])
 
@@ -60,11 +61,13 @@ DEFAULT_STAGES = [
 
 def _default_stage_list() -> List[Dict[str, Any]]:
     return [{
+        "id": f"stg_{uuid.uuid4().hex[:8]}",
         "index": i, "name": name, "description": desc, "status": "pending",
-        "started_at": None, "completed_at": None, "expected_date": None,
+        "started_at": None, "completed_at": None, 
+        "start_date": None, "planned_end_date": None, "actual_end_date": None,
         "progress_pct": 0, "photos": [], "documents": [], "notes": "",
+        "substages": []
     } for i, (name, desc) in enumerate(DEFAULT_STAGES)]
-
 
 async def _log_activity(project_id: str, user_name: str, action: str, module: str):
     await db.projects.update_one(
@@ -150,16 +153,42 @@ class ProjectUpdateBody(BaseModel):
     expected_completion: Optional[str] = None   # ADD
     start_date: Optional[str] = None            # ADD if you want editable start
 
+class SubstageBody(BaseModel):
+    name: str = Field(..., min_length=2)
+    start_date: Optional[str] = None
+    planned_end_date: Optional[str] = None
+    actual_end_date: Optional[str] = None
+    status: str = "pending"
+    progress_pct: float = 0
+
+class StageAddBody(BaseModel):
+    name: str = Field(..., min_length=2)
+    description: Optional[str] = ""
+    start_date: Optional[str] = None
+    planned_end_date: Optional[str] = None
+    actual_end_date: Optional[str] = None
+    status: str = "pending"
+    progress_pct: float = 0
+    notes: Optional[str] = ""
+
 class StagePatchBody(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
     status: Optional[str] = None
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
     expected_date: Optional[str] = None
+    start_date: Optional[str] = None
+    planned_end_date: Optional[str] = None
+    actual_end_date: Optional[str] = None
     progress_pct: Optional[float] = None
     photos: Optional[List[str]] = None
     documents: Optional[List[Dict[str, Any]]] = None
     notes: Optional[str] = None
+    substages: Optional[List[Dict[str, Any]]] = None
 
+class ReorderStagesBody(BaseModel):
+    stage_ids: List[str]
 class TeamInviteBody(BaseModel):
     name: Optional[str] = ""
     email: Optional[str] = None
@@ -442,7 +471,713 @@ async def portal_mark_notification_read(body: NotificationMarkReadBody, customer
     await db.projects.update_one({"id": proj["id"], "notifications.id": body.notification_id}, {"$set": {"notifications.$.is_read": True}})
     return {"success": True}
 
+# ============================================================================
+# Admin CRUD + Stage/Substage Endpoints
+# ============================================================================
 
+@proj_router.get("/admin/projects", dependencies=[Depends(require_admin)])
+async def list_projects(q: Optional[str] = None):
+    query: Dict[str, Any] = {}
+    if q:
+        query["$or"] = [{"customer_email": {"$regex": q, "$options": "i"}}, {"customer_name": {"$regex": q, "$options": "i"}}, {"title": {"$regex": q, "$options": "i"}}]
+    docs = await db.projects.find(query, {"_id": 0}).sort("created_at", -1).limit(500).to_list(500)
+    return docs
+
+
+@proj_router.get("/admin/projects/{project_id}", dependencies=[Depends(require_admin)])
+async def get_project(project_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    return p
+
+
+@proj_router.post("/admin/projects", dependencies=[Depends(require_admin)])
+async def create_project(body: ProjectCreateBody):
+    email = body.customer_email.lower().strip()
+    if not email:
+        raise HTTPException(status_code=400, detail="customer_email required")
+    existing = await db.projects.find_one({"customer_email": email}, {"id": 1})
+    if existing:
+        raise HTTPException(status_code=409, detail="Project already exists for this customer")
+    now = datetime.now(timezone.utc).isoformat()
+    count = await db.projects.count_documents({})
+    proj_code = f"CON-{datetime.now(timezone.utc).year}-{(count + 1):04d}"
+    owner_name = body.customer_name or email.split("@")[0]
+    owner_record = {"id": f"usr_{uuid.uuid4().hex[:12]}", "name": owner_name, "email": email, "role": "Project Owner", "company": "Home Owner", "contact": "", "access": "Full Access", "status": "Active", "avatar": None}
+    init_activity = {"id": str(uuid.uuid4()), "user_name": "System Admin", "action": "Project initialized", "module": "System", "timestamp": now}
+    init_notif = {"id": str(uuid.uuid4()), "title": "Project Created", "message": f"Welcome to {body.title}! Your digital home tracker is active.", "link": "/portal", "icon": "system", "is_read": False, "timestamp": now}
+    doc = {
+        "id": str(uuid.uuid4()), "project_code": proj_code, "customer_email": email, "customer_name": owner_name,
+        "title": body.title, "address": body.address, "package_slug": body.package_slug, "quote_id": body.quote_id,
+        "status": "active", "stages": _default_stage_list(),
+        "contract_value": body.contract_value or 0, "amount_spent": body.amount_spent or 0,
+        "cover_image": body.cover_image, "team_ids": body.team_ids or [],
+        "team_directory": [owner_record], "activities": [init_activity], "notifications": [init_notif],
+        "drawings": [], "materials": [], "payments_log": [],
+        "attendance": [], "documents": [], "approvals": [], "cctv_cameras": [],
+        "created_at": now, "updated_at": now,
+        "site_lat": body.site_lat, "site_lng": body.site_lng,
+        "expected_completion": body.expected_completion,
+        "start_date": body.start_date or now[:10],
+    }
+    await db.projects.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@proj_router.put("/admin/projects/{project_id}", dependencies=[Depends(require_admin)])
+async def update_project(project_id: str, body: ProjectUpdateBody):
+    upd = {k: v for k, v in body.model_dump().items() if v is not None}
+    upd["updated_at"] = datetime.now(timezone.utc).isoformat()
+    if body.team_ids is not None:
+        await _log_activity(project_id, "System Admin", "Updated internal team assignments", "Team")
+        if len(body.team_ids) > 0:
+            asyncio.create_task(_push_notification(project_id, "Team Update", "New staff members have been assigned to your project.", "/portal/team", "team"))
+    res = await db.projects.update_one({"id": project_id}, {"$set": upd})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return await db.projects.find_one({"id": project_id}, {"_id": 0})
+
+
+# ---------------- Stages & Substages Management ----------------
+
+@proj_router.post("/admin/projects/{project_id}/stages", dependencies=[Depends(require_admin)])
+async def add_stage(project_id: str, body: StageAddBody):
+    """Admin adds a new main stage to the project."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    stages = p.get("stages") or []
+    
+    new_stage = {
+        "id": f"stg_{uuid.uuid4().hex[:8]}",
+        "index": len(stages),
+        "name": body.name.strip(),
+        "description": body.description or "",
+        "status": body.status or "pending",
+        "start_date": body.start_date,
+        "planned_end_date": body.planned_end_date,
+        "actual_end_date": body.actual_end_date,
+        "started_at": body.start_date,
+        "completed_at": body.actual_end_date if body.status == "completed" else None,
+        "expected_date": body.planned_end_date,
+        "progress_pct": body.progress_pct or 0,
+        "notes": body.notes or "",
+        "photos": [],
+        "documents": [],
+        "substages": []
+    }
+    
+    # Keep Handover & Maintenance locked at the end
+    handover_idx = next((i for i, s in enumerate(stages) if "handover" in s.get("name", "").lower()), -1)
+    if handover_idx != -1:
+        stages.insert(handover_idx, new_stage)
+    else:
+        stages.append(new_stage)
+        
+    for i, s in enumerate(stages):
+        s["index"] = i
+        
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Admin", f"Added new stage: {body.name}", "Stages")
+    return {"success": True, "stages": stages}
+
+
+@proj_router.put("/admin/projects/{project_id}/stages/reorder", dependencies=[Depends(require_admin)])
+async def reorder_stages(project_id: str, body: ReorderStagesBody):
+    """Reorder main stages, while strictly keeping Handover locked at the end."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    stages = p.get("stages") or []
+    stage_map = {s.get("id", str(s.get("index"))): s for s in stages}
+    
+    reordered = []
+    for sid in body.stage_ids:
+        if sid in stage_map:
+            reordered.append(stage_map[sid])
+            
+    # Include any missing ones
+    for s in stages:
+        if s not in reordered:
+            reordered.append(s)
+            
+    # Guarantee Handover / Maintenance remains last
+    handover_stage = next((s for s in reordered if "handover" in s.get("name", "").lower()), None)
+    if handover_stage:
+        reordered.remove(handover_stage)
+        reordered.append(handover_stage)
+        
+    for i, s in enumerate(reordered):
+        s["index"] = i
+        
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": reordered, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Admin", "Reordered project stages", "Stages")
+    return {"success": True, "stages": reordered}
+
+
+@proj_router.patch("/admin/projects/{project_id}/stages/{index}", dependencies=[Depends(require_admin)])
+async def patch_stage(project_id: str, index: int, body: StagePatchBody):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    stages = p.get("stages") or []
+    if index < 0 or index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+    
+    stage = stages[index]
+    old_status = stage.get("status")
+    old_progress = float(stage.get("progress_pct") or 0)
+    old_photos_count = len(stage.get("photos") or [])
+    
+    patch = body.model_dump(exclude_unset=True)
+    
+    if patch.get("status") == "in_progress" and not stage.get("started_at"):
+        patch["started_at"] = datetime.now(timezone.utc).isoformat()
+    if patch.get("status") == "completed" and not stage.get("completed_at"):
+        patch["completed_at"] = datetime.now(timezone.utc).isoformat()
+        patch["progress_pct"] = 100
+        
+    stage.update(patch)
+    stages[index] = stage
+
+    total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
+    overall_progress = round(total_pct / (len(stages) or 1))
+    
+    current_month_label = datetime.now(timezone.utc).strftime("%b %Y")
+    monthly_records = p.get("monthly_progress") or []
+    month_found = False
+    
+    for rec in monthly_records:
+        if rec.get("month") == current_month_label:
+            rec["actual_pct"] = overall_progress
+            month_found = True
+            break
+            
+    if not month_found:
+        monthly_records.append({
+            "month": current_month_label,
+            "actual_pct": overall_progress
+        })
+
+    await db.projects.update_one(
+        {"id": project_id}, 
+        {"$set": {
+            "stages": stages, 
+            "monthly_progress": monthly_records,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    new_status = stage.get("status")
+    new_progress = float(stage.get("progress_pct") or 0)
+    new_photos_count = len(stage.get("photos") or [])
+    
+    if old_status != "in_progress" and new_status == "in_progress":
+        await _log_activity(project_id, "Site Engineer", f"Started stage: {stage['name']}", "Progress")
+        asyncio.create_task(_push_notification(
+            project_id, "🚧 Stage Started",
+            f"Work on '{stage['name']}' has officially begun on your site.",
+            "/portal/progress", "progress"
+        ))
+    elif old_status != "completed" and new_status == "completed":
+        await _log_activity(project_id, "Site Engineer", f"Completed stage: {stage['name']} (100%)", "Progress")
+        asyncio.create_task(_push_notification(
+            project_id, "🎉 Milestone Achieved!",
+            f"Stage '{stage['name']}' has been completed. View the full progress update on your portal.",
+            "/portal/progress", "progress"
+        ))
+    
+    return stage
+
+
+@proj_router.delete("/admin/projects/{project_id}/stages/{index}", dependencies=[Depends(require_admin)])
+async def delete_stage(project_id: str, index: int):
+    """Delete a stage (unless it's Handover)."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    stages = p.get("stages") or []
+    if index < 0 or index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+        
+    target = stages[index]
+    if "handover" in target.get("name", "").lower():
+        raise HTTPException(status_code=400, detail="Handover stage is mandatory and cannot be deleted.")
+        
+    deleted = stages.pop(index)
+    for i, s in enumerate(stages):
+        s["index"] = i
+        
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Admin", f"Deleted stage: {deleted.get('name')}", "Stages")
+    return {"success": True, "stages": stages}
+
+
+# ---------------- Substages CRUD Endpoints ----------------
+
+@proj_router.post("/admin/projects/{project_id}/stages/{stage_index}/substages", dependencies=[Depends(require_admin)])
+async def add_substage(project_id: str, stage_index: int, body: SubstageBody):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    stages = p.get("stages") or []
+    if stage_index < 0 or stage_index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+        
+    stage = stages[stage_index]
+    substages = stage.get("substages") or []
+    
+    new_sub = {
+        "id": f"sub_{uuid.uuid4().hex[:8]}",
+        "name": body.name.strip(),
+        "start_date": body.start_date,  # Fixed once set
+        "planned_end_date": body.planned_end_date,
+        "actual_end_date": body.actual_end_date,
+        "status": body.status or "pending",
+        "progress_pct": body.progress_pct or 0
+    }
+    
+    substages.append(new_sub)
+    stage["substages"] = substages
+    
+    # Auto recalculate stage progress based on substages if available
+    if substages:
+        stage["progress_pct"] = round(sum(float(s.get("progress_pct") or 0) for s in substages) / len(substages))
+        
+    stages[stage_index] = stage
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"success": True, "stage": stage}
+
+
+@proj_router.patch("/admin/projects/{project_id}/stages/{stage_index}/substages/{sub_id}", dependencies=[Depends(require_admin)])
+async def patch_substage(project_id: str, stage_index: int, sub_id: str, body: SubstageBody):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    stages = p.get("stages") or []
+    if stage_index < 0 or stage_index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+        
+    stage = stages[stage_index]
+    substages = stage.get("substages") or []
+    sub_idx = next((i for i, s in enumerate(substages) if s.get("id") == sub_id), -1)
+    if sub_idx == -1:
+        raise HTTPException(status_code=404, detail="Substage not found")
+        
+    sub = substages[sub_idx]
+    
+    # Rule: start_date is fixed once initially uploaded
+    if not sub.get("start_date") and body.start_date:
+        sub["start_date"] = body.start_date
+        
+    sub["name"] = body.name
+    sub["planned_end_date"] = body.planned_end_date
+    sub["actual_end_date"] = body.actual_end_date
+    sub["status"] = body.status
+    sub["progress_pct"] = body.progress_pct
+    
+    substages[sub_idx] = sub
+    stage["substages"] = substages
+    
+    if substages:
+        stage["progress_pct"] = round(sum(float(s.get("progress_pct") or 0) for s in substages) / len(substages))
+        if all(s.get("status") == "completed" for s in substages):
+            stage["status"] = "completed"
+        elif any(s.get("status") in ["in_progress", "completed"] for s in substages):
+            stage["status"] = "in_progress"
+            
+    stages[stage_index] = stage
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"success": True, "stage": stage}
+
+
+@proj_router.delete("/admin/projects/{project_id}/stages/{stage_index}/substages/{sub_id}", dependencies=[Depends(require_admin)])
+async def delete_substage(project_id: str, stage_index: int, sub_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    stages = p.get("stages") or []
+    if stage_index < 0 or stage_index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+        
+    stage = stages[stage_index]
+    substages = [s for s in (stage.get("substages") or []) if s.get("id") != sub_id]
+    stage["substages"] = substages
+    
+    if substages:
+        stage["progress_pct"] = round(sum(float(s.get("progress_pct") or 0) for s in substages) / len(substages))
+        
+    stages[stage_index] = stage
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"success": True, "stage": stage}
+
+
+# ============================================================================
+# UNIFIED COMPREHENSIVE PROGRESS REPORT PDF
+# ============================================================================
+
+@proj_router.get("/portal/my-project/{project_id}/full-progress-report/pdf")
+async def download_full_progress_report_pdf(project_id: str):
+    """Full Progress Report PDF:
+    Overview + Stages/Substages + Monthly Progress + ALL Daily Reports.
+    """
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    stages = p.get("stages", []) or []
+    total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
+    overall = total_pct / (len(stages) or 1)
+
+    project_title = p.get("title") or "Unnamed Project"
+    project_address = p.get("address") or "N/A"
+    project_code = p.get("project_code") or "—"
+    customer_name = p.get("customer_name") or "Client"
+    generated_on = datetime.now(timezone.utc).strftime("%d %b %Y, %I:%M %p UTC")
+
+    # Days completed
+    start_dt = p.get("start_date") or p.get("created_at") or datetime.now(timezone.utc).isoformat()[:10]
+    try:
+        start_d = datetime.strptime(str(start_dt)[:10], "%Y-%m-%d")
+        days_completed = max(0, (datetime.now() - start_d).days)
+    except Exception:
+        days_completed = 0
+
+    stages_completed = sum(1 for s in stages if s.get("status") == "completed")
+    forecast = p.get("expected_completion") or "TBD"
+    contract_value = p.get("contract_value") or 0
+    amount_spent = p.get("amount_spent") or 0
+
+    # ---------- 1) STAGES + SUBSTAGES ----------
+    def _status_label(st):
+        return (st or "pending").replace("_", " ").title()
+
+    def _date_label(s):
+        return s.get("actual_end_date") or s.get("planned_end_date") or s.get("expected_date") or "—"
+
+    stages_rows = []
+    for i, s in enumerate(stages):
+        stages_rows.append(f"""
+        <tr class="stage-row">
+            <td style="font-weight:700; color:#000F1B;">{i + 1}. {s.get('name') or '—'}</td>
+            <td>{_status_label(s.get('status'))}</td>
+            <td>{s.get('start_date') or s.get('started_at') or '—'}</td>
+            <td>{_date_label(s)}</td>
+            <td style="text-align:right; font-weight:800; color:#FF5A00;">{float(s.get('progress_pct') or 0):.0f}%</td>
+        </tr>
+        """)
+        for j, sub in enumerate(s.get("substages") or []):
+            stages_rows.append(f"""
+            <tr class="sub-row">
+                <td style="padding-left:22px; color:#444;">↳ {sub.get('name') or 'Substage'}</td>
+                <td>{_status_label(sub.get('status'))}</td>
+                <td>{sub.get('start_date') or '—'}</td>
+                <td>{sub.get('actual_end_date') or sub.get('planned_end_date') or '—'}</td>
+                <td style="text-align:right; color:#FF5A00; font-weight:700;">{float(sub.get('progress_pct') or 0):.0f}%</td>
+            </tr>
+            """)
+
+    stages_html = "".join(stages_rows) or """
+        <tr><td colspan="5" style="text-align:center; color:#888; font-style:italic;">No stages configured</td></tr>
+    """
+
+    # ---------- 2) MONTHLY PROGRESS ----------
+    monthly = p.get("monthly_progress") or []
+    if monthly:
+        monthly_rows = "".join(
+            f"""
+            <tr>
+                <td><strong>{m.get('month') or '—'}</strong></td>
+                <td style="text-align:center;">{m.get('planned_pct', '—')}{'%' if m.get('planned_pct') is not None else ''}</td>
+                <td style="text-align:center; font-weight:800; color:#FF5A00;">{m.get('actual_pct', 0)}%</td>
+            </tr>
+            """
+            for m in monthly
+        )
+        monthly_html = f"""
+        <h2>2. Monthly Progress</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th style="text-align:center;">Planned %</th>
+              <th style="text-align:center;">Actual % (Verified)</th>
+            </tr>
+          </thead>
+          <tbody>{monthly_rows}</tbody>
+        </table>
+        """
+    else:
+        monthly_html = """
+        <h2>2. Monthly Progress</h2>
+        <p class="muted">No monthly progress snapshots recorded yet.</p>
+        """
+
+    # ---------- 3) ALL DAILY REPORTS ----------
+    daily_reports = p.get("daily_reports") or []
+    daily_reports = sorted(daily_reports, key=lambda r: r.get("date") or "", reverse=True)
+
+    def _photo_count(r):
+        return len(r.get("photos") or [])
+
+    def _list_html(items, empty="—"):
+        items = items or []
+        if not items:
+            return f"<em style='color:#999'>{empty}</em>"
+        return "<ul style='margin:4px 0 0 16px; padding:0;'>" + "".join(f"<li>{x}</li>" for x in items) + "</ul>"
+
+    if daily_reports:
+        reports_blocks = []
+        for idx, r in enumerate(daily_reports, start=1):
+            approved = bool(r.get("is_approved"))
+            badge = (
+                "<span class='badge ok'>Published to Client</span>"
+                if approved
+                else "<span class='badge pending'>Awaiting / Internal</span>"
+            )
+            photos = r.get("photos") or []
+            photo_bits = ""
+            if photos:
+                photo_bits = "<div class='photo-meta'><strong>Photos (" + str(len(photos)) + "):</strong> " + ", ".join(
+                    [
+                        (ph.get("caption") if isinstance(ph, dict) else "Site Photo")
+                        or "Site Photo"
+                        for ph in photos[:12]
+                    ]
+                ) + ("…" if len(photos) > 12 else "") + "</div>"
+
+            reports_blocks.append(f"""
+            <div class="report-card">
+              <div class="report-head">
+                <div>
+                  <div class="report-title">#{idx} · {r.get('date') or '—'} {badge}</div>
+                  <div class="report-sub">
+                    Status: <strong>{r.get('overall_status') or '—'}</strong>
+                    · Submitted by {r.get('submitted_by') or 'Site Engineer'}
+                    {(' · Approved ' + str(r.get('approved_at') or '')[:10]) if approved else ''}
+                  </div>
+                </div>
+                <div class="report-side">{_photo_count(r)} photo(s)</div>
+              </div>
+              {f"<p class='notes'>{r.get('status_notes')}</p>" if r.get('status_notes') else ''}
+              <div class="two-col">
+                <div>
+                  <div class="label">Work Completed</div>
+                  {_list_html(r.get('work_completed'), 'No items listed')}
+                </div>
+                <div>
+                  <div class="label">Planned Tomorrow</div>
+                  {_list_html(r.get('planned_tomorrow'), 'No items listed')}
+                </div>
+              </div>
+              {photo_bits}
+            </div>
+            """)
+        reports_html = f"""
+        <h2>3. Daily Progress Reports <span class="count">({len(daily_reports)} total)</span></h2>
+        <p class="muted">All logged daily reports are included below (newest first).</p>
+        {''.join(reports_blocks)}
+        """
+    else:
+        reports_html = """
+        <h2>3. Daily Progress Reports</h2>
+        <p class="muted">No daily progress reports have been logged yet.</p>
+        """
+
+    # Precise ConstructONS Power 'O' SVG
+    power_o_svg = """<svg viewBox="0 0 24 24" width="17" height="17" style="vertical-align:-1.5px; display:inline-block; margin:0 -1px;" xmlns="http://www.w3.org/2000/svg">
+      <path fill="none" stroke="#FF5A00" stroke-width="3.2" stroke-linecap="round" d="M12 2.5v7.5"/>
+      <path fill="none" stroke="#FF5A00" stroke-width="3.2" stroke-linecap="round" d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+    </svg>"""
+
+    brand_logo_html = f"""<span style="letter-spacing:0.04em;"><span style="color:#000F1B; font-weight:900;">CONSTRUCT</span>{power_o_svg}<span style="color:#FF5A00; font-weight:900;">NS</span><span style="font-size:11px; vertical-align:super; color:#000F1B; font-weight:700;">™</span></span>"""
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ConstructONS™ Full Progress Report — {project_code}</title>
+  <style>
+    :root {{
+      --orange:#FF5A00; --navy:#000F1B; --muted:#666; --line:#e5e5e5; --bg:#f7f8fa;
+    }}
+    * {{ box-sizing:border-box; }}
+    body {{
+      font-family: Arial, Helvetica, sans-serif;
+      color:#111; line-height:1.45;
+      padding: 28px 32px; margin:0; font-size:12px;
+    }}
+    .header {{
+      display:flex; justify-content:space-between; align-items:flex-end;
+      border-bottom:3px solid var(--orange); padding-bottom:10px; margin-bottom:18px;
+    }}
+    .brand {{ font-size:20px; font-family: Arial, sans-serif; }}
+    .meta {{ text-align:right; font-size:10px; color:var(--muted); line-height:1.4; }}
+    h1 {{ margin:0 0 4px; font-size:20px; color:var(--navy); }}
+    .sub {{ margin:0 0 14px; font-size:11px; color:var(--muted); }}
+    .kpi-grid {{
+      display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0 18px;
+    }}
+    .kpi {{
+      background:var(--bg); border:1px solid var(--line); border-radius:8px;
+      padding:10px 8px; text-align:center;
+    }}
+    .kpi-title {{ font-size:9px; font-weight:700; color:#777; text-transform:uppercase; letter-spacing:0.06em; }}
+    .kpi-val {{ font-size:18px; font-weight:900; color:var(--navy); margin-top:4px; }}
+    h2 {{
+      font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
+      color:var(--navy); border-bottom:1px solid var(--line);
+      padding-bottom:5px; margin:22px 0 10px;
+    }}
+    h2 .count {{ color:var(--orange); font-weight:800; }}
+    table {{ width:100%; border-collapse:collapse; margin-bottom:10px; font-size:11px; }}
+    th, td {{ border:1px solid var(--line); padding:7px 8px; text-align:left; vertical-align:top; }}
+    th {{ background:var(--navy); color:#fff; font-size:9px; text-transform:uppercase; letter-spacing:0.05em; }}
+    tr.sub-row td {{ background:#fafafa; font-size:10.5px; }}
+    .muted {{ color:#888; font-style:italic; margin:6px 0 12px; }}
+    .report-card {{
+      border:1px solid var(--line); border-radius:8px; background:#fff;
+      padding:12px; margin-bottom:12px; page-break-inside:avoid;
+    }}
+    .report-head {{ display:flex; justify-content:space-between; gap:10px; margin-bottom:6px; }}
+    .report-title {{ font-size:13px; font-weight:800; color:var(--navy); }}
+    .report-sub {{ font-size:10px; color:#666; margin-top:2px; }}
+    .report-side {{ font-size:10px; color:#888; white-space:nowrap; }}
+    .notes {{
+      background:#fff7f2; border-left:3px solid var(--orange);
+      padding:6px 8px; margin:6px 0 8px; font-size:11px; color:#333;
+    }}
+    .two-col {{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }}
+    .label {{ font-size:9px; font-weight:800; text-transform:uppercase; color:#777; margin-bottom:2px; }}
+    .badge {{
+      display:inline-block; font-size:9px; font-weight:800; padding:2px 7px;
+      border-radius:999px; margin-left:6px; vertical-align:middle;
+    }}
+    .badge.ok {{ background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }}
+    .badge.pending {{ background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }}
+    .photo-meta {{ margin-top:8px; font-size:10px; color:#555; }}
+    .footer {{
+      margin-top:28px; padding-top:10px; border-top:1px solid var(--line);
+      text-align:center; font-size:9px; color:#999;
+    }}
+    .info-box {{
+      background:var(--bg); border-left:4px solid var(--orange);
+      padding:10px 12px; border-radius:0 8px 8px 0; margin-bottom:8px; font-size:11px;
+    }}
+    @media print {{
+      body {{ padding:16px; }}
+      .report-card, table, .kpi {{ break-inside: avoid; }}
+      th {{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    }}
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="header">
+    <div class="brand">{brand_logo_html}</div>
+    <div class="meta">
+      Full Progress Report<br/>
+      Generated {generated_on}
+    </div>
+  </div>
+
+  <h1>{project_title}</h1>
+  <p class="sub">
+    Code: <strong>{project_code}</strong> · Client: <strong>{customer_name}</strong> · Site: {project_address}
+  </p>
+
+  <div class="info-box">
+    This document consolidates <strong>Overview</strong>, <strong>Stage / Substage progress</strong>,
+    <strong>Monthly progress</strong>, and <strong>all Daily Progress Reports</strong>
+    from the ConstructONS™ Client Portal.
+  </div>
+
+  <!-- ========== 1. OVERVIEW ========== -->
+  <h2>1. Project Overview</h2>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-title">Overall Progress</div>
+      <div class="kpi-val" style="color:#FF5A00;">{round(overall)}%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">Days Completed</div>
+      <div class="kpi-val">{days_completed}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">Stages Completed</div>
+      <div class="kpi-val">{stages_completed}/{len(stages)}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-title">Forecast Delivery</div>
+      <div class="kpi-val" style="font-size:13px;">{forecast}</div>
+    </div>
+  </div>
+  <table>
+    <tbody>
+      <tr><th style="width:30%; background:#000F1B; color:#fff;">Contract Value</th><td>₹ {float(contract_value):,.0f}</td></tr>
+      <tr><th style="background:#000F1B; color:#fff;">Amount Received</th><td>₹ {float(amount_spent):,.0f}</td></tr>
+      <tr><th style="background:#000F1B; color:#fff;">Project Start</th><td>{str(start_dt)[:10]}</td></tr>
+      <tr><th style="background:#000F1B; color:#fff;">Project Status</th><td>{(p.get('status') or 'active').title()}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>1b. Construction Stages &amp; Substages</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Stage / Substage</th>
+        <th>Status</th>
+        <th>Start</th>
+        <th>End (Actual / Planned)</th>
+        <th style="text-align:right;">Progress</th>
+      </tr>
+    </thead>
+    <tbody>
+      {stages_html}
+    </tbody>
+  </table>
+
+  <!-- ========== 2. MONTHLY ========== -->
+  {monthly_html}
+
+  <!-- ========== 3. ALL DAILY REPORTS ========== -->
+  {reports_html}
+
+  <div class="footer">
+    <div style="font-size:14px; margin-bottom:4px;">
+      {brand_logo_html}
+    </div>
+    Official Full Progress Report · Generated from ConstructONS Client Portal<br/>
+    Everything Construction. Always On.
+  </div>
+</body>
+</html>
+"""
+    return HTMLResponse(content=html_content)
 # ============================================================================
 # Drawings & Materials Approvals (Client Side)
 # ============================================================================

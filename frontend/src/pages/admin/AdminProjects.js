@@ -245,7 +245,10 @@ export default function AdminProjects() {
 
       {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />}
       {editInfo && <EditInfoModal project={editInfo} onClose={() => setEditInfo(null)} onSaved={() => { setEditInfo(null); load(); }} />}
-      {editing && <StagesEditor project={editing} onClose={() => setEditing(null)} onSaved={() => { load(); }} />}
+      {editing && <StagesEditor project={editing} onClose={() => setEditing(null)} onSaved={(fresh) => {
+        if (fresh) setEditing(fresh); // keep modal in sync
+        load();
+      }} />}
       {assigningTeam && <AssignTeamModal project={assigningTeam} onClose={() => setAssigningTeam(null)} onSaved={() => { setAssigningTeam(null); load(); }} />}
       {markingAttendance && <AttendanceModal project={markingAttendance} onClose={() => setMarkingAttendance(null)} onSaved={() => { setMarkingAttendance(null); load(); }} />}
       {managingDrawings && <DrawingsManagerModal project={managingDrawings} onClose={() => setManagingDrawings(null)} onSaved={() => { load(); }} />}
@@ -401,7 +404,7 @@ function DailyReportsManagerModal({ project, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 bg-[#000F1B]/70 backdrop-blur-sm z-[60] grid place-items-center p-4 font-['Poppins']">
       <div className="bg-[#F5F6F8] rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-        
+
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-black/5 flex items-center justify-between bg-white shrink-0">
           <div>
@@ -417,9 +420,8 @@ function DailyReportsManagerModal({ project, onClose, onSaved }) {
         <div className="flex border-b border-black/5 bg-white px-6 gap-6 shrink-0">
           <button
             onClick={() => setActiveTab("queue")}
-            className={`py-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
-              activeTab === "queue" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50"
-            }`}
+            className={`py-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${activeTab === "queue" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50"
+              }`}
           >
             <span>Report Queue & History ({reports.length})</span>
             {pendingCount > 0 && (
@@ -431,9 +433,8 @@ function DailyReportsManagerModal({ project, onClose, onSaved }) {
 
           <button
             onClick={() => setActiveTab("create")}
-            className={`py-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
-              activeTab === "create" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50"
-            }`}
+            className={`py-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${activeTab === "create" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50"
+              }`}
           >
             <Plus className="w-4 h-4" />
             <span>Log Daily Report (Site Engineer)</span>
@@ -442,7 +443,7 @@ function DailyReportsManagerModal({ project, onClose, onSaved }) {
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-          
+
           {/* TAB 1: CREATE REPORT (Site Engineer) */}
           {activeTab === "create" && (
             <form onSubmit={handleSubmitReport} className="bg-white rounded-2xl border border-black/5 p-6 shadow-sm space-y-5">
@@ -631,15 +632,13 @@ function DailyReportsManagerModal({ project, onClose, onSaved }) {
                   return (
                     <div
                       key={rep.id}
-                      className={`bg-white rounded-2xl border p-5 shadow-sm transition ${
-                        isApproved ? "border-emerald-200" : "border-amber-200 bg-amber-50/20"
-                      }`}
+                      className={`bg-white rounded-2xl border p-5 shadow-sm transition ${isApproved ? "border-emerald-200" : "border-amber-200 bg-amber-50/20"
+                        }`}
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-black/5 pb-3 mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl grid place-items-center font-bold text-xs ${
-                            isApproved ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                          }`}>
+                          <div className={`w-10 h-10 rounded-xl grid place-items-center font-bold text-xs ${isApproved ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                            }`}>
                             <HardHat className="w-5 h-5" />
                           </div>
                           <div>
@@ -647,9 +646,8 @@ function DailyReportsManagerModal({ project, onClose, onSaved }) {
                               <h4 className="font-bold text-[#000F1B] text-sm">
                                 {new Date(rep.date + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
                               </h4>
-                              <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                isApproved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                              }`}>
+                              <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${isApproved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                                }`}>
                                 {isApproved ? "Published to Client" : "Awaiting PM Approval"}
                               </span>
                             </div>
@@ -1552,8 +1550,8 @@ function CreateProjectModal({ onClose, onCreated }) {
     if (!form.customer_email.trim()) { toast.error("Client Google Email is required"); return; }
     setSaving(true);
     try {
-      const payload = { 
-        ...form, 
+      const payload = {
+        ...form,
         contract_value: Number(form.contract_value) || 0,
         site_lat: form.site_lat ? Number(form.site_lat) : null,
         site_lng: form.site_lng ? Number(form.site_lng) : null,
@@ -1619,7 +1617,7 @@ function CreateProjectModal({ onClose, onCreated }) {
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Client Name</label>
               <input value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} placeholder="e.g. Rajesh Kumar" className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5A00]" />
             </div>
-            
+
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Project Start Date</label>
               <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5A00]" />
@@ -1667,9 +1665,9 @@ function CreateProjectModal({ onClose, onCreated }) {
 // ------------------------------------------------------------------
 function EditInfoModal({ project, onClose, onSaved }) {
   const [form, setForm] = useState({
-    title: project.title || "", 
+    title: project.title || "",
     address: project.address || "",
-    contract_value: project.contract_value || 0, 
+    contract_value: project.contract_value || 0,
     amount_spent: project.amount_spent || 0,
     site_lat: project.site_lat || "",
     site_lng: project.site_lng || "",
@@ -1681,19 +1679,19 @@ function EditInfoModal({ project, onClose, onSaved }) {
   const save = async () => {
     setSaving(true);
     try {
-      await PR.update(project.id, { 
-        ...form, 
-        contract_value: Number(form.contract_value) || 0, 
+      await PR.update(project.id, {
+        ...form,
+        contract_value: Number(form.contract_value) || 0,
         amount_spent: Number(form.amount_spent) || 0,
         site_lat: form.site_lat ? Number(form.site_lat) : null,
         site_lng: form.site_lng ? Number(form.site_lng) : null,
         start_date: form.start_date || null,
         expected_completion: form.expected_completion || null
       });
-      toast.success("Project settings updated"); 
+      toast.success("Project settings updated");
       onSaved();
-    } catch { 
-      toast.error("Update failed"); 
+    } catch {
+      toast.error("Update failed");
     } finally { setSaving(false); }
   };
 
@@ -1888,25 +1886,112 @@ function MaterialsManagerModal({ project, onClose, onSaved }) {
   );
 }
 
-// ------------------------------------------------------------------
-// STAGES EDITOR
-// ------------------------------------------------------------------
+// Replace the StagesEditor component inside AdminProjects.jsx with this:
+
 function StagesEditor({ project, onClose, onSaved }) {
-  const [stages, setStages] = useState(project.stages);
+  const [stages, setStages] = useState(() => {
+    // Normalize photos on init: convert strings → {url, uploaded_at} objects
+    return (project.stages || []).map(s => ({
+      ...s,
+      photos: (s.photos || []).map(p => 
+        typeof p === "string" 
+          ? { url: p, uploaded_at: null } 
+          : p
+      )
+    }));
+  });
   const [saving, setSaving] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(null);
+  const [expandedStage, setExpandedStage] = useState(null);
+  const [showAddStage, setShowAddStage] = useState(false);
+  const [newStageName, setNewStageName] = useState("");
+
+  // Keep in sync when parent passes fresh project
+  React.useEffect(() => {
+    setStages((project.stages || []).map(s => ({
+      ...s,
+      photos: (s.photos || []).map(p => 
+        typeof p === "string" 
+          ? { url: p, uploaded_at: null } 
+          : p
+      )
+    })));
+  }, [project]);
+
+  // Extract plain URL string for API
+  const toUrl = (p) => typeof p === "string" ? p : p?.url || "";
+
+  // Format date for display
+  const fmtDate = (dateStr) => {
+    if (!dateStr) return "Uploaded";
+    try {
+      return new Date(dateStr).toLocaleDateString("en-IN", {
+        day: "numeric", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+    } catch {
+      return "Uploaded";
+    }
+  };
+
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      const p = await PR.get(project.id);
+      // Normalize photos from server response
+      const normalized = (p.stages || []).map(s => ({
+        ...s,
+        photos: (s.photos || []).map(p => 
+          typeof p === "string" 
+            ? { url: p, uploaded_at: null } 
+            : p
+        )
+      }));
+      setStages(normalized);
+      // Push fresh project back to parent so editing state stays current
+      onSaved(p);
+      toast.success("Refreshed");
+    } catch {
+      toast.error("Refresh failed");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const patchStage = (idx, patch) => {
+    setStages(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...patch };
+      return next;
+    });
+  };
 
   const saveStage = async (idx) => {
     setSaving(idx);
     try {
       const s = stages[idx];
-      const updated = await PR.patchStage(project.id, idx, {
-        status: s.status, expected_date: s.expected_date, progress_pct: Number(s.progress_pct) || 0,
-        photos: s.photos, documents: s.documents, notes: s.notes,
+      await PR.patchStage(project.id, idx, {
+        name: s.name,
+        description: s.description,
+        status: s.status,
+        start_date: s.start_date,
+        planned_end_date: s.planned_end_date || s.expected_date,
+        actual_end_date: s.actual_end_date,
+        expected_date: s.planned_end_date || s.expected_date,
+        progress_pct: Number(s.progress_pct) || 0,
+        notes: s.notes,
+        photos: (s.photos || []).map(toUrl), // Send plain URLs to API
+        documents: s.documents || [],
+        substages: s.substages || [],
       });
-      const next = [...stages]; next[idx] = updated; setStages(next);
-      toast.success(`"${s.name}" saved`); onSaved();
-    } catch { toast.error("Save failed"); } finally { setSaving(null); }
+      toast.success(`"${s.name}" saved`);
+      await refresh();
+    } catch {
+      toast.error("Save failed");
+    } finally {
+      setSaving(null);
+    }
   };
 
   const uploadPhoto = async (idx, file) => {
@@ -1915,86 +2000,420 @@ function StagesEditor({ project, onClose, onSaved }) {
     try {
       const res = await adminApi.uploadImage(file, "project-photos");
       const photoUrl = res.url || res.absoluteUrl;
-      const next = [...stages];
-      next[idx] = { ...next[idx], photos: [...(next[idx].photos || []), photoUrl] };
-      setStages(next);
-      toast.success("Photo uploaded — click Save Stage to publish to portal");
-    } catch { toast.error("Upload failed"); } finally { setUploading(null); }
+      if (!photoUrl) throw new Error("No URL returned");
+
+      const photoObj = {
+        url: photoUrl,
+        uploaded_at: new Date().toISOString(),
+      };
+
+      setStages(prev => {
+        const next = [...prev];
+        next[idx] = {
+          ...next[idx],
+          photos: [...(next[idx].photos || []), photoObj],
+        };
+        return next;
+      });
+      toast.success("Photo uploaded — click Save Stage to publish");
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploading(null);
+    }
   };
 
-  const patchStage = (idx, patch) => {
-    const next = [...stages]; next[idx] = { ...next[idx], ...patch }; setStages(next);
+  const removePhoto = (stageIdx, photoIdx) => {
+    setStages(prev => {
+      const next = [...prev];
+      next[stageIdx] = {
+        ...next[stageIdx],
+        photos: (next[stageIdx].photos || []).filter((_, j) => j !== photoIdx),
+      };
+      return next;
+    });
+  };
+
+  const addStage = async () => {
+    if (!newStageName.trim()) return;
+    try {
+      await api.post(`/admin/projects/${project.id}/stages`, {
+        name: newStageName.trim(),
+        status: "pending",
+        progress_pct: 0,
+      });
+      toast.success("Stage added");
+      setNewStageName("");
+      setShowAddStage(false);
+      await refresh();
+    } catch {
+      toast.error("Failed to add");
+    }
+  };
+
+  const moveStage = async (idx, dir) => {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= stages.length) return;
+    if (
+      stages[idx].name.toLowerCase().includes("handover") ||
+      stages[newIdx].name.toLowerCase().includes("handover")
+    ) {
+      toast.error("Handover must stay at the end");
+      return;
+    }
+    const reordered = [...stages];
+    const [moved] = reordered.splice(idx, 1);
+    reordered.splice(newIdx, 0, moved);
+    try {
+      await api.put(`/admin/projects/${project.id}/stages/reorder`, {
+        stage_ids: reordered.map(s => s.id || String(s.index)),
+      });
+      await refresh();
+    } catch {
+      toast.error("Reorder failed");
+    }
+  };
+
+  const deleteStage = async (idx) => {
+    if (stages[idx].name.toLowerCase().includes("handover")) {
+      toast.error("Handover cannot be deleted");
+      return;
+    }
+    if (!window.confirm(`Delete "${stages[idx].name}"?`)) return;
+    try {
+      await api.delete(`/admin/projects/${project.id}/stages/${idx}`);
+      toast.success("Deleted");
+      setExpandedStage(null);
+      await refresh();
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  const addSubstage = async (stageIdx) => {
+    const name = window.prompt("Substage name:");
+    if (!name?.trim()) return;
+    try {
+      await api.post(`/admin/projects/${project.id}/stages/${stageIdx}/substages`, {
+        name: name.trim(),
+        status: "pending",
+        progress_pct: 0,
+      });
+      await refresh();
+    } catch {
+      toast.error("Failed");
+    }
+  };
+
+  const saveSubstage = async (stageIdx, sub) => {
+    try {
+      await api.patch(
+        `/admin/projects/${project.id}/stages/${stageIdx}/substages/${sub.id}`,
+        sub
+      );
+      toast.success("Substage saved");
+      await refresh();
+    } catch {
+      toast.error("Failed to save");
+    }
+  };
+
+  const deleteSubstage = async (stageIdx, subId) => {
+    if (!window.confirm("Delete substage?")) return;
+    try {
+      await api.delete(
+        `/admin/projects/${project.id}/stages/${stageIdx}/substages/${subId}`
+      );
+      await refresh();
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  const patchSub = (stageIdx, subIdx, patch) => {
+    setStages(prev => {
+      const next = [...prev];
+      const subs = [...(next[stageIdx].substages || [])];
+      subs[subIdx] = { ...subs[subIdx], ...patch };
+      next[stageIdx] = { ...next[stageIdx], substages: subs };
+      return next;
+    });
   };
 
   return (
-    <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-sm z-[60] grid place-items-center p-4 font-['Poppins']">
-      <div className="bg-[#F5F6F8] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl" data-testid="proj-stages-editor">
-        <div className="p-5 border-b border-black/5 flex items-center justify-between bg-white">
-          <div>
-            <div className="text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider">Manage Stages</div>
-            <div className="font-bold text-[#000F1B] text-base">{project.title} · {project.customer_email}</div>
+    <div className="fixed inset-0 bg-[#000F1B]/70 backdrop-blur-sm z-[60] grid place-items-center p-2 sm:p-4 font-['Poppins']">
+      <div className="bg-[#F5F6F8] rounded-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden shadow-2xl">
+        
+        {/* HEADER */}
+        <div className="p-4 sm:p-5 border-b border-black/5 flex items-center justify-between bg-white gap-3 shrink-0">
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider mb-0.5">Project Pipeline</div>
+            <div className="font-bold text-[#000F1B] text-base truncate">{project.title}</div>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full grid place-items-center hover:bg-[#F2F2F2]"><X className="w-5 h-5 text-[#000F1B]" /></button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={refresh} disabled={refreshing}
+              className="px-3 py-2 rounded-lg border border-black/10 bg-white hover:bg-[#F2F2F2] flex items-center gap-1.5 text-xs font-bold text-[#000F1B] transition shadow-sm disabled:opacity-60">
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#FF5A00]" : ""}`} />
+              <span className="hidden sm:inline">{refreshing ? "Syncing…" : "Refresh"}</span>
+            </button>
+            <button onClick={() => setShowAddStage(true)}
+              className="px-3 py-2 bg-[#FF5A00] hover:bg-[#FF2D00] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition shadow-sm">
+              <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Add Stage</span>
+            </button>
+            <button onClick={onClose} className="w-9 h-9 rounded-lg hover:bg-black/5 grid place-items-center transition">
+              <X className="w-5 h-5 text-[#000F1B]" />
+            </button>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+        {/* BODY */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3">
+
+          {showAddStage && (
+            <div className="bg-white border-2 border-[#FF5A00]/40 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center shadow-sm">
+              <div className="flex-1">
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">New Stage Name</label>
+                <input autoFocus type="text" placeholder="e.g. Waterproofing" value={newStageName}
+                  onChange={e => setNewStageName(e.target.value)} onKeyDown={e => e.key === "Enter" && addStage()}
+                  className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+              </div>
+              <div className="flex gap-2 sm:self-end">
+                <button onClick={() => { setShowAddStage(false); setNewStageName(""); }}
+                  className="flex-1 sm:flex-none px-4 py-2 text-xs font-bold border border-black/10 rounded-lg hover:bg-[#F2F2F2]">Cancel</button>
+                <button onClick={addStage}
+                  className="flex-1 sm:flex-none px-5 py-2 text-xs font-bold bg-[#000F1B] text-white rounded-lg hover:bg-[#FF5A00]">Create</button>
+              </div>
+            </div>
+          )}
+
+          {/* STAGES ACCORDION */}
           {stages.map((s, idx) => {
-            const StatusIcon = s.status === "completed" ? CheckCircle2 : s.status === "in_progress" ? PlayCircle : Circle;
-            const color = s.status === "completed" ? "text-emerald-500" : s.status === "in_progress" ? "text-[#FF5A00]" : "text-[#111111]/30";
+            const isExpanded = expandedStage === idx;
+            const isHandover = s.name.toLowerCase().includes("handover");
+            const substages = s.substages || [];
+            const photos = s.photos || [];
+
+            const statMap = {
+              completed: { color: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50", label: "Completed" },
+              in_progress: { color: "bg-[#FF5A00]", text: "text-[#FF5A00]", bg: "bg-[#FF5A00]/10", label: "In Progress" },
+              pending: { color: "bg-slate-300", text: "text-[#111111]/50", bg: "bg-slate-100", label: "Pending" },
+            };
+            const stat = statMap[s.status] || statMap.pending;
+
             return (
-              <div key={idx} className="rounded-xl bg-white border border-black/5 p-5 shadow-sm" data-testid={`proj-stage-edit-${idx}`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <StatusIcon className={`w-6 h-6 ${color}`} />
-                  <div className="flex-1">
-                    <div className="text-[10px] uppercase tracking-wider text-[#111111]/50 font-bold">Stage {idx + 1}</div>
-                    <div className="font-bold text-[#000F1B]">{s.name}</div>
+              <div key={s.id || idx} className={`bg-white rounded-xl border shadow-sm transition-all ${isExpanded ? "border-[#FF5A00] ring-1 ring-[#FF5A00]/20" : "border-black/5 hover:border-black/15"}`}>
+                
+                {/* HEADER ROW */}
+                <div className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <button onClick={() => moveStage(idx, -1)} disabled={idx === 0 || refreshing}
+                      className="text-[#111111]/30 hover:text-[#000F1B] disabled:opacity-20 w-5 h-4 grid place-items-center">
+                      <div className="w-0 h-0 border-l-4 border-r-4 border-b-[6px] border-l-transparent border-r-transparent border-b-current" />
+                    </button>
+                    <button onClick={() => moveStage(idx, 1)} disabled={idx === stages.length - 1 || isHandover || refreshing}
+                      className="text-[#111111]/30 hover:text-[#000F1B] disabled:opacity-20 w-5 h-4 grid place-items-center">
+                      <div className="w-0 h-0 border-l-4 border-r-4 border-t-[6px] border-l-transparent border-r-transparent border-t-current" />
+                    </button>
                   </div>
-                  <select value={s.status} onChange={e => patchStage(idx, { status: e.target.value })} className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00]" data-testid={`proj-status-${idx}`}>
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Target Date</label>
-                    <input type="date" value={s.expected_date || ""} onChange={e => patchStage(idx, { expected_date: e.target.value })} className="w-full rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Progress %</label>
-                    <input type="number" value={s.progress_pct || 0} onChange={e => patchStage(idx, { progress_pct: e.target.value })} className="w-full rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs" />
-                  </div>
-                  <div className="flex items-end">
-                    <label className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-black/10 bg-[#F2F2F2] px-3 py-2 text-xs font-semibold cursor-pointer hover:bg-black/5 transition">
-                      {uploading === idx ? <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" /> : <Camera className="w-4 h-4 text-[#FF5A00]" />}
-                      <span>Upload Photo</span>
-                      <input type="file" accept="image/*" className="hidden" onChange={e => uploadPhoto(idx, e.target.files?.[0])} />
-                    </label>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="block text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Engineer Notes</label>
-                  <textarea value={s.notes || ""} onChange={e => patchStage(idx, { notes: e.target.value })} rows={2} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs resize-y" placeholder="Notes visible to the customer on portal" />
-                </div>
-                {(s.photos || []).length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-black/5">
-                    <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-2">Stage Photos ({(s.photos || []).length})</div>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                      {s.photos.map((url, i) => (
-                        <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-black/10 bg-[#F2F2F2]">
-                          <img src={resolveMediaUrl(url)} alt="" className="w-full h-full object-cover" />
-                          <button onClick={() => patchStage(idx, { photos: s.photos.filter((_, j) => j !== i) })} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 grid place-items-center text-red-500 shadow-sm hover:bg-white transition">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
+
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpandedStage(isExpanded ? null : idx)}>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-[10px] font-black text-[#111111]/30">{(idx + 1).toString().padStart(2, '0')}</span>
+                      <span className="font-bold text-sm sm:text-base text-[#000F1B] truncate">{s.name}</span>
+                      {isHandover && <span className="text-[8px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">Locked</span>}
+                      {photos.length > 0 && (
+                        <span className="text-[8px] font-bold text-[#FF5A00] bg-[#FF5A00]/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <Camera className="w-2.5 h-2.5" /> {photos.length}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px]">
+                      <span className={`font-bold px-2 py-0.5 rounded ${stat.bg} ${stat.text}`}>{stat.label}</span>
+                      <span className="font-bold text-[#000F1B]">{s.progress_pct || 0}% Done</span>
+                      {substages.length > 0 && <span className="hidden sm:inline font-semibold text-[#111111]/50">• {substages.length} Substage{substages.length !== 1 ? "s" : ""}</span>}
                     </div>
                   </div>
-                )}
-                <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-end">
-                  <button onClick={() => saveStage(idx)} disabled={saving === idx} data-testid={`proj-save-stage-${idx}`} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-5 py-2 text-xs font-bold transition">
-                    {saving === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Stage
+
+                  <div className="hidden md:block w-32 h-2 bg-[#F2F2F2] rounded-full overflow-hidden shrink-0 mx-2">
+                    <div className={`h-full ${stat.color}`} style={{ width: `${s.progress_pct || 0}%` }} />
+                  </div>
+
+                  <button onClick={() => setExpandedStage(isExpanded ? null : idx)}
+                    className={`shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition ${isExpanded ? "bg-[#FF5A00] border-[#FF5A00] text-white" : "bg-white border-black/10 text-[#000F1B] hover:bg-black/5"}`}>
+                    <svg className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                   </button>
                 </div>
+
+                {/* EXPANDED BODY */}
+                {isExpanded && (
+                  <div className="border-t border-black/5 bg-[#F9FAFB] rounded-b-xl p-4 sm:p-5 space-y-5">
+
+                    {/* Edit Fields */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-black/5 shadow-sm">
+                      <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-black/5 pb-4">
+                        <div>
+                          <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">Stage Name</label>
+                          <input type="text" value={s.name} disabled={isHandover} onChange={e => patchStage(idx, { name: e.target.value })}
+                            className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100" />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">Overall Status</label>
+                          <select value={s.status} onChange={e => patchStage(idx, { status: e.target.value })}
+                            className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none bg-white cursor-pointer">
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">Start Date</label>
+                        <input type="date" value={s.start_date || s.started_at?.slice(0, 10) || ""} onChange={e => patchStage(idx, { start_date: e.target.value })}
+                          className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">Planned End</label>
+                        <input type="date" value={s.planned_end_date || s.expected_date || ""} onChange={e => patchStage(idx, { planned_end_date: e.target.value })}
+                          className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">Actual End</label>
+                        <input type="date" value={s.actual_end_date || s.completed_at?.slice(0, 10) || ""} onChange={e => patchStage(idx, { actual_end_date: e.target.value })}
+                          className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">Progress %</label>
+                        <div className="relative">
+                          <input type="number" min="0" max="100" value={s.progress_pct || 0} onChange={e => patchStage(idx, { progress_pct: e.target.value })}
+                            className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-black text-[#FF5A00] focus:ring-2 focus:ring-[#FF5A00] outline-none pr-8" />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#111111]/30">%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* PHOTOS SECTION */}
+                    <div className="bg-white border border-black/5 rounded-xl p-4 shadow-sm">
+                      <div className="flex items-center justify-between mb-3 border-b border-black/5 pb-2">
+                        <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider flex items-center gap-1.5">
+                          <Camera className="w-3.5 h-3.5 text-[#FF5A00]" /> Stage Photos ({photos.length})
+                        </div>
+                        <label className="cursor-pointer text-[10px] font-bold text-[#FF5A00] hover:text-[#FF2D00] flex items-center gap-1.5 transition px-2 py-1 rounded-lg hover:bg-[#FF5A00]/5">
+                          {uploading === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5" />}
+                          {uploading === idx ? "Uploading…" : "Upload Photo"}
+                          <input type="file" accept="image/*" className="hidden" disabled={uploading === idx}
+                            onChange={e => uploadPhoto(idx, e.target.files?.[0])} />
+                        </label>
+                      </div>
+
+                      {photos.length === 0 ? (
+                        <div className="text-center py-6 text-xs text-[#111111]/40 italic border-2 border-dashed border-black/5 rounded-lg">
+                          No photos yet — upload above, then click Save Stage
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {photos.map((p, i) => {
+                            const url = toUrl(p);
+                            const dateLabel = p?.uploaded_at ? fmtDate(p.uploaded_at) : "Uploaded";
+                            return (
+                              <div key={i} className="relative group rounded-xl overflow-hidden border border-black/10 bg-[#F2F2F2]">
+                                <div className="aspect-video">
+                                  <img src={resolveMediaUrl(url)} alt="" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="px-2 py-1.5 bg-white border-t border-black/5">
+                                  <div className="text-[9px] font-bold text-[#000F1B] flex items-center gap-1 truncate">
+                                    <CalendarCheck className="w-3 h-3 text-[#FF5A00] shrink-0" />
+                                    <span className="truncate">{dateLabel}</span>
+                                  </div>
+                                </div>
+                                <button onClick={() => removePhoto(idx, i)}
+                                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/95 grid place-items-center text-red-500 shadow hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SUBSTAGES */}
+                    <div className="bg-white border border-black/5 rounded-xl p-4 shadow-sm">
+                      <div className="flex items-center justify-between mb-4 border-b border-black/5 pb-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">Substages</h4>
+                          <span className="text-[10px] font-bold bg-[#F2F2F2] px-2 py-0.5 rounded">{substages.length}</span>
+                        </div>
+                        <button onClick={() => addSubstage(idx)}
+                          className="text-[10px] font-bold text-[#FF5A00] hover:text-[#FF2D00] flex items-center gap-1">
+                          <Plus className="w-3 h-3" /> Add
+                        </button>
+                      </div>
+
+                      {substages.length === 0 ? (
+                        <div className="text-center py-6 text-xs text-[#111111]/40 italic border-2 border-dashed border-black/5 rounded-lg">No substages yet.</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {substages.map((sub, sIdx) => (
+                            <div key={sub.id || sIdx} className="bg-[#F9FAFB] border border-black/10 rounded-xl p-3 flex flex-col lg:flex-row gap-3 items-start lg:items-center">
+                              <div className="flex-1 w-full flex items-center gap-2">
+                                <span className="text-[#111111]/30 font-mono text-[10px] shrink-0">{(sIdx + 1).toString().padStart(2, '0')}</span>
+                                <input type="text" value={sub.name}
+                                  onChange={e => patchSub(idx, sIdx, { name: e.target.value })}
+                                  className="flex-1 px-2 py-1.5 border border-black/10 bg-white rounded text-xs font-bold focus:ring-1 focus:ring-[#FF5A00] outline-none"
+                                  placeholder="Name" />
+                              </div>
+                              <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 w-full lg:w-auto">
+                                <input type="date" title="Start (locked)" disabled={Boolean(sub.start_date)} value={sub.start_date || ""}
+                                  onChange={e => patchSub(idx, sIdx, { start_date: e.target.value })}
+                                  className="w-[105px] border border-black/10 rounded px-2 py-1.5 text-[10px] disabled:bg-gray-100" />
+                                <input type="date" title="Planned End" value={sub.planned_end_date || ""}
+                                  onChange={e => patchSub(idx, sIdx, { planned_end_date: e.target.value })}
+                                  className="w-[105px] border border-black/10 rounded px-2 py-1.5 text-[10px]" />
+                                <input type="date" title="Actual End" value={sub.actual_end_date || ""}
+                                  onChange={e => patchSub(idx, sIdx, { actual_end_date: e.target.value })}
+                                  className="w-[105px] border border-black/10 rounded px-2 py-1.5 text-[10px]" />
+                                <select value={sub.status || "pending"}
+                                  onChange={e => patchSub(idx, sIdx, { status: e.target.value })}
+                                  className="w-[80px] border border-black/10 rounded px-2 py-1.5 text-[10px] font-bold bg-white outline-none">
+                                  <option value="pending">Pending</option>
+                                  <option value="in_progress">Active</option>
+                                  <option value="completed">Done</option>
+                                </select>
+                                <div className="relative w-[65px]">
+                                  <input type="number" min="0" max="100" value={sub.progress_pct || 0}
+                                    onChange={e => patchSub(idx, sIdx, { progress_pct: e.target.value })}
+                                    className="w-full border border-black/10 rounded px-2 py-1.5 text-[10px] font-bold text-[#FF5A00] pr-5 outline-none" />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px]">%</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 w-full lg:w-auto justify-end shrink-0">
+                                <button onClick={() => saveSubstage(idx, sub)}
+                                  className="px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] font-bold rounded-lg transition">Save</button>
+                                <button onClick={() => deleteSubstage(idx, sub.id)}
+                                  className="p-1.5 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white rounded-lg transition">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-black/10">
+                      <button onClick={() => deleteStage(idx)} disabled={isHandover}
+                        className="text-[10px] font-bold text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition disabled:opacity-30 flex items-center gap-1.5 w-full sm:w-auto justify-center sm:justify-start">
+                        <Trash2 className="w-3.5 h-3.5" /> Delete Stage
+                      </button>
+                      <button onClick={() => saveStage(idx)} disabled={saving === idx}
+                        className="w-full sm:w-auto px-6 py-2.5 bg-[#FF5A00] hover:bg-[#FF2D00] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-md disabled:opacity-60">
+                        {saving === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Stage Updates
+                      </button>
+                    </div>
+
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2003,7 +2422,6 @@ function StagesEditor({ project, onClose, onSaved }) {
     </div>
   );
 }
-
 // ------------------------------------------------------------------
 // TEAM & ATTENDANCE MODALS
 // ------------------------------------------------------------------
