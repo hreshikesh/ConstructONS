@@ -68,6 +68,105 @@ def _default_stage_list() -> List[Dict[str, Any]]:
         "progress_pct": 0, "photos": [], "documents": [], "notes": "",
         "substages": []
     } for i, (name, desc) in enumerate(DEFAULT_STAGES)]
+# ============================================================================
+# CANONICAL PROGRESS CALCULATION SERVICE (PRD Rule #9)
+# Single source of truth — used by ALL stage/substage mutations
+# ============================================================================
+
+def _recalculate_stage_from_substages(stage: dict) -> dict:
+    """
+    FROZEN PRD RULES:
+    - Parent Progress = arithmetic mean of active child progress percentages
+    - Parent Planned Start = earliest child planned_start
+    - Parent Planned End = latest child planned_end
+    - Parent Actual Start = earliest child actual_start (if all children have started)
+    - Parent Actual End = latest child actual_end (only if all children completed)
+    - When all children reach 100%, parent auto-becomes 100% + Completed
+    """
+    substages = stage.get("substages") or []
+    active_subs = [s for s in substages if not s.get("archived")]
+    
+    if not active_subs:
+        # No children → parent stays as-is (but warning shown in UI)
+        return stage
+    
+    # 1. Arithmetic mean progress
+    total = sum(float(s.get("progress_pct") or 0) for s in active_subs)
+    parent_progress = round(total / len(active_subs))
+    stage["progress_pct"] = parent_progress
+    
+    # 2. Auto status transitions
+    if parent_progress == 100:
+        stage["status"] = "completed"
+    elif parent_progress > 0:
+        stage["status"] = "in_progress"
+    else:
+        stage["status"] = "pending"
+    
+    # 3. Derived planned dates from children
+    planned_starts = [s.get("start_date") for s in active_subs if s.get("start_date")]
+    planned_ends = [s.get("planned_end_date") for s in active_subs if s.get("planned_end_date")]
+    
+    if planned_starts:
+        stage["start_date"] = min(planned_starts)
+    if planned_ends:
+        stage["planned_end_date"] = max(planned_ends)
+        stage["expected_date"] = max(planned_ends)  # legacy field sync
+    
+    # 4. Derived actual dates
+    actual_starts = [s.get("actual_start_date") for s in active_subs if s.get("actual_start_date")]
+    if actual_starts:
+        stage["actual_start_date"] = min(actual_starts)
+        stage["started_at"] = min(actual_starts)  # legacy field sync
+    
+    # Only set parent actual_end when ALL children completed
+    if all(s.get("progress_pct") == 100 for s in active_subs):
+        actual_ends = [s.get("actual_end_date") for s in active_subs if s.get("actual_end_date")]
+        if actual_ends:
+            stage["actual_end_date"] = max(actual_ends)
+            stage["completed_at"] = max(actual_ends)  # legacy field sync
+    else:
+        # If reverted from all-complete, clear parent actual_end
+        stage["actual_end_date"] = None
+        stage["completed_at"] = None
+    
+    return stage
+
+
+def _apply_progress_rules_to_substage(sub: dict, new_progress: float) -> dict:
+    """
+    FROZEN PRD RULES for substage progress transitions:
+    - 0 → >0: auto-set actual_start_date if blank, status = in_progress
+    - Reaches 100: auto-set actual_end_date if blank, status = completed
+    - 100 → <100: CLEAR actual_end_date, status = in_progress
+    """
+    old_progress = float(sub.get("progress_pct") or 0)
+    new_progress = max(0, min(100, round(float(new_progress))))
+    today_iso = datetime.now(timezone.utc).date().isoformat()
+    
+    sub["progress_pct"] = new_progress
+    
+    # Rule: 0 → >0 : auto actual_start_date
+    if old_progress == 0 and new_progress > 0:
+        if not sub.get("actual_start_date"):
+            sub["actual_start_date"] = today_iso
+    
+    # Rule: reaches 100: auto actual_end_date + status
+    if new_progress == 100:
+        if not sub.get("actual_end_date"):
+            sub["actual_end_date"] = today_iso
+        sub["status"] = "completed"
+    # Rule: 100 → <100 : clear actual_end_date + revert status
+    elif old_progress == 100 and new_progress < 100:
+        sub["actual_end_date"] = None
+        sub["status"] = "in_progress" if new_progress > 0 else "pending"
+    # Rule: normal in-progress transitions
+    elif new_progress > 0 and new_progress < 100:
+        sub["status"] = "in_progress"
+    elif new_progress == 0:
+        sub["status"] = "pending"
+    
+    return sub
 
 async def _log_activity(project_id: str, user_name: str, action: str, module: str):
     await db.projects.update_one(
@@ -157,6 +256,7 @@ class SubstageBody(BaseModel):
     name: str = Field(..., min_length=2)
     start_date: Optional[str] = None
     planned_end_date: Optional[str] = None
+    actual_start_date: Optional[str] = None  # NEW - explicit field per PRD
     actual_end_date: Optional[str] = None
     status: str = "pending"
     progress_pct: float = 0
@@ -197,7 +297,8 @@ class TeamInviteBody(BaseModel):
     access: str = "View Access"
     company: Optional[str] = ""
     contact: Optional[str] = None
-
+class RejectStageBody(BaseModel):
+    reason: str
 class AttendanceBody(BaseModel):
     member_ids: List[str] = Field(default_factory=list)
 
@@ -382,6 +483,25 @@ async def portal_my_project(project_id: Optional[str] = None, customer=Depends(g
     materials = proj.get("materials") or []
     proj["unread_notifications"] = len([n for n in notifs if not n.get("is_read")])
     proj["pending_approvals"] = len([d for d in drawings if d.get("status") == "pending"]) + len([m for m in materials if m.get("status") == "pending"])
+    # PRD Rule 6: Client only sees approved snapshot
+    client_stages = []
+    for s in (proj.get("stages") or []):
+        if s.get("published_data"):
+            # Has been approved before -> show the last approved snapshot
+            client_stages.append(s["published_data"])
+        else:
+            # Never approved -> show structure but zero out progress/dates
+            safe_s = dict(s)
+            safe_s["progress_pct"] = 0
+            safe_s["status"] = "pending"
+            safe_s["actual_end_date"] = None
+            safe_s["started_at"] = None
+            for sub in safe_s.get("substages", []):
+                sub["progress_pct"] = 0
+                sub["status"] = "pending"
+                sub["actual_end_date"] = None
+            client_stages.append(safe_s)
+    proj["stages"] = client_stages
     return {"project": proj}
 
 
@@ -579,7 +699,7 @@ async def add_stage(project_id: str, body: StageAddBody):
         
     for i, s in enumerate(stages):
         s["index"] = i
-        
+    
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -627,6 +747,11 @@ async def reorder_stages(project_id: str, body: ReorderStagesBody):
 
 @proj_router.patch("/admin/projects/{project_id}/stages/{index}", dependencies=[Depends(require_admin)])
 async def patch_stage(project_id: str, index: int, body: StagePatchBody):
+    """
+    FROZEN PRD: Parent stage cannot have progress/dates independently edited when substages exist.
+    Only name, description, notes, photos are directly editable.
+    Progress/dates are always derived from children.
+    """
     p = await db.projects.find_one({"id": project_id}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Not found")
@@ -635,40 +760,60 @@ async def patch_stage(project_id: str, index: int, body: StagePatchBody):
         raise HTTPException(status_code=400, detail="Invalid stage index")
     
     stage = stages[index]
-    old_status = stage.get("status")
-    old_progress = float(stage.get("progress_pct") or 0)
+    substages = stage.get("substages") or []
+    has_active_children = len([s for s in substages if not s.get("archived")]) > 0
     old_photos_count = len(stage.get("photos") or [])
     
     patch = body.model_dump(exclude_unset=True)
     
-    if patch.get("status") == "in_progress" and not stage.get("started_at"):
-        patch["started_at"] = datetime.now(timezone.utc).isoformat()
-    if patch.get("status") == "completed" and not stage.get("completed_at"):
-        patch["completed_at"] = datetime.now(timezone.utc).isoformat()
-        patch["progress_pct"] = 100
+    # ═══════════════════════════════════════════════════════
+    # FROZEN PRD RULES ENFORCEMENT
+    # ═══════════════════════════════════════════════════════
+    if has_active_children:
+        # STRIP fields that must be derived from children — cannot be manually set
+        patch.pop("progress_pct", None)
+        patch.pop("start_date", None)
+        patch.pop("planned_end_date", None)
+        patch.pop("expected_date", None)
+        patch.pop("actual_end_date", None)
+        patch.pop("actual_start_date", None)
+        patch.pop("status", None)  # status also derived from children progress
+        patch.pop("started_at", None)
+        patch.pop("completed_at", None)
+    else:
+        # No children → parent is a leaf; apply PRD progress rules directly
+        if "progress_pct" in patch:
+            stage = _apply_progress_rules_to_substage(stage, patch["progress_pct"])
+            patch.pop("progress_pct", None)  # already applied
+            patch.pop("status", None)  # derived
         
+        # If admin sets planned dates on childless parent, allow
+        if patch.get("status") == "in_progress" and not stage.get("started_at"):
+            patch["started_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Apply remaining allowed edits (name, description, notes, photos, documents)
     stage.update(patch)
+    
+    # Always recompute from children if they exist
+    if has_active_children:
+        stage = _recalculate_stage_from_substages(stage)
+    
     stages[index] = stage
-
+    
+    # Update monthly progress snapshot
     total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
     overall_progress = round(total_pct / (len(stages) or 1))
-    
     current_month_label = datetime.now(timezone.utc).strftime("%b %Y")
     monthly_records = p.get("monthly_progress") or []
     month_found = False
-    
     for rec in monthly_records:
         if rec.get("month") == current_month_label:
             rec["actual_pct"] = overall_progress
             month_found = True
             break
-            
     if not month_found:
-        monthly_records.append({
-            "month": current_month_label,
-            "actual_pct": overall_progress
-        })
-
+        monthly_records.append({"month": current_month_label, "actual_pct": overall_progress})
+    stages[index]["approval_status"] = "draft"
     await db.projects.update_one(
         {"id": project_id}, 
         {"$set": {
@@ -678,22 +823,14 @@ async def patch_stage(project_id: str, index: int, body: StagePatchBody):
         }}
     )
     
-    new_status = stage.get("status")
-    new_progress = float(stage.get("progress_pct") or 0)
+    # Notification triggers
     new_photos_count = len(stage.get("photos") or [])
-    
-    if old_status != "in_progress" and new_status == "in_progress":
-        await _log_activity(project_id, "Site Engineer", f"Started stage: {stage['name']}", "Progress")
+    if new_photos_count > old_photos_count:
+        photos_added = new_photos_count - old_photos_count
+        await _log_activity(project_id, "Site Engineer", f"Uploaded {photos_added} photo(s) for {stage['name']}", "Progress")
         asyncio.create_task(_push_notification(
-            project_id, "🚧 Stage Started",
-            f"Work on '{stage['name']}' has officially begun on your site.",
-            "/portal/progress", "progress"
-        ))
-    elif old_status != "completed" and new_status == "completed":
-        await _log_activity(project_id, "Site Engineer", f"Completed stage: {stage['name']} (100%)", "Progress")
-        asyncio.create_task(_push_notification(
-            project_id, "🎉 Milestone Achieved!",
-            f"Stage '{stage['name']}' has been completed. View the full progress update on your portal.",
+            project_id, "📸 New Site Photos",
+            f"{photos_added} progress photo{'s' if photos_added > 1 else ''} for '{stage['name']}'.",
             "/portal/progress", "progress"
         ))
     
@@ -743,22 +880,26 @@ async def add_substage(project_id: str, stage_index: int, body: SubstageBody):
     new_sub = {
         "id": f"sub_{uuid.uuid4().hex[:8]}",
         "name": body.name.strip(),
-        "start_date": body.start_date,  # Fixed once set
+        "start_date": body.start_date,
         "planned_end_date": body.planned_end_date,
-        "actual_end_date": body.actual_end_date,
-        "status": body.status or "pending",
-        "progress_pct": body.progress_pct or 0
+        "actual_start_date": None,
+        "actual_end_date": None,
+        "status": "pending",
+        "progress_pct": 0,
+        "archived": False,
     }
+    
+    # Apply progress rules if creating with non-zero progress
+    if body.progress_pct and float(body.progress_pct) > 0:
+        new_sub = _apply_progress_rules_to_substage(new_sub, body.progress_pct)
     
     substages.append(new_sub)
     stage["substages"] = substages
     
-    # Auto recalculate stage progress based on substages if available
-    if substages:
-        stage["progress_pct"] = round(sum(float(s.get("progress_pct") or 0) for s in substages) / len(substages))
-        
+    # Recompute parent from all children (canonical)
+    stage = _recalculate_stage_from_substages(stage)
     stages[stage_index] = stage
-    
+    stages[stage_index]["approval_status"] = "draft"
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -782,35 +923,44 @@ async def patch_substage(project_id: str, stage_index: int, sub_id: str, body: S
         raise HTTPException(status_code=404, detail="Substage not found")
         
     sub = substages[sub_idx]
+    old_progress = float(sub.get("progress_pct") or 0)
     
-    # Rule: start_date is fixed once initially uploaded
     if not sub.get("start_date") and body.start_date:
         sub["start_date"] = body.start_date
-        
+    
     sub["name"] = body.name
     sub["planned_end_date"] = body.planned_end_date
-    sub["actual_end_date"] = body.actual_end_date
-    sub["status"] = body.status
-    sub["progress_pct"] = body.progress_pct
+    
+    new_progress = float(body.progress_pct or 0)
+    sub = _apply_progress_rules_to_substage(sub, new_progress)
+    
+    if new_progress == 100 and body.actual_end_date:
+        sub["actual_end_date"] = body.actual_end_date
     
     substages[sub_idx] = sub
     stage["substages"] = substages
     
-    if substages:
-        stage["progress_pct"] = round(sum(float(s.get("progress_pct") or 0) for s in substages) / len(substages))
-        if all(s.get("status") == "completed" for s in substages):
-            stage["status"] = "completed"
-        elif any(s.get("status") in ["in_progress", "completed"] for s in substages):
-            stage["status"] = "in_progress"
-            
+    # RECALCULATE PARENT
+    stage = _recalculate_stage_from_substages(stage)
     stages[stage_index] = stage
+    stages[stage_index]["approval_status"] = "draft" 
     
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
+    
+    if old_progress < 100 and new_progress == 100:
+        await _log_activity(project_id, "Site Engineer", f"Completed substage: {sub['name']}", "Progress")
+        asyncio.create_task(_push_notification(
+            project_id, "✅ Task Completed",
+            f"'{sub['name']}' is now 100% complete.",
+            "/portal/progress", "progress"
+        ))
+    elif old_progress == 0 and new_progress > 0:
+        await _log_activity(project_id, "Site Engineer", f"Started substage: {sub['name']}", "Progress")
+    
     return {"success": True, "stage": stage}
-
 
 @proj_router.delete("/admin/projects/{project_id}/stages/{stage_index}/substages/{sub_id}", dependencies=[Depends(require_admin)])
 async def delete_substage(project_id: str, stage_index: int, sub_id: str):
@@ -825,17 +975,154 @@ async def delete_substage(project_id: str, stage_index: int, sub_id: str):
     substages = [s for s in (stage.get("substages") or []) if s.get("id") != sub_id]
     stage["substages"] = substages
     
-    if substages:
-        stage["progress_pct"] = round(sum(float(s.get("progress_pct") or 0) for s in substages) / len(substages))
-        
+    # Recompute parent — canonical
+    stage = _recalculate_stage_from_substages(stage)
     stages[stage_index] = stage
-    
+    stages[stage_index]["approval_status"] = "draft"
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"success": True, "stage": stage}
+@proj_router.post("/admin/projects/{project_id}/stages/{stage_index}/substages/{sub_id}/mark-complete", dependencies=[Depends(require_admin)])
+async def mark_substage_complete(project_id: str, stage_index: int, sub_id: str):
+    """PRD Rule: Mark Complete sets child to 100% after confirmation."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    stages = p.get("stages") or []
+    if stage_index < 0 or stage_index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+    
+    stage = stages[stage_index]
+    substages = stage.get("substages") or []
+    sub_idx = next((i for i, s in enumerate(substages) if s.get("id") == sub_id), -1)
+    if sub_idx == -1:
+        raise HTTPException(status_code=404, detail="Substage not found")
+    
+    substages[sub_idx] = _apply_progress_rules_to_substage(substages[sub_idx], 100)
+    stage["substages"] = substages
+    stage = _recalculate_stage_from_substages(stage)
+    stages[stage_index] = stage
+    stages[stage_index]["approval_status"] = "draft"
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Site Engineer", f"Marked complete: {substages[sub_idx]['name']}", "Progress")
+    return {"success": True, "stage": stage}
 
+
+@proj_router.post("/admin/projects/{project_id}/stages/{stage_index}/mark-all-complete", dependencies=[Depends(require_admin)])
+async def mark_stage_all_complete(project_id: str, stage_index: int):
+    """PRD Rule: Mark Parent Complete cascades 100% to all children."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    stages = p.get("stages") or []
+    if stage_index < 0 or stage_index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+    
+    stage = stages[stage_index]
+    substages = stage.get("substages") or []
+    
+    if not substages:
+        raise HTTPException(status_code=400, detail="Cannot mark parent complete: no substages exist (invalid configuration per PRD)")
+    
+    # Cascade 100% to all active children
+    for i, sub in enumerate(substages):
+        if not sub.get("archived"):
+            substages[i] = _apply_progress_rules_to_substage(sub, 100)
+    
+    stage["substages"] = substages
+    stage = _recalculate_stage_from_substages(stage)
+    stages[stage_index] = stage
+    stages[stage_index]["approval_status"] = "draft"
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Site Engineer", f"Marked all substages complete for: {stage['name']}", "Progress")
+    asyncio.create_task(_push_notification(
+        project_id, "🎉 Stage Completed",
+        f"'{stage['name']}' is fully complete — all sub-tasks done.",
+        "/portal/progress", "progress"
+    ))
+    return {"success": True, "stage": stage}
+
+# ============================================================================
+# PM APPROVAL WORKFLOW FOR STAGES (FROZEN PRD RULE #6)
+# ============================================================================
+
+@proj_router.post("/admin/projects/{project_id}/stages/{index}/submit", dependencies=[Depends(require_admin)])
+async def submit_stage_for_approval(project_id: str, index: int):
+    """Site Engineer submits draft changes to PM for approval."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    stages = p.get("stages") or []
+    if index < 0 or index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+    
+    stages[index]["approval_status"] = "submitted"
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Site Engineer", f"Submitted stage '{stages[index]['name']}' for PM approval", "Progress")
+    return {"success": True, "stage": stages[index]}
+
+
+@proj_router.post("/admin/projects/{project_id}/stages/{index}/approve", dependencies=[Depends(require_admin)])
+async def approve_stage_changes(project_id: str, index: int):
+    """Project Manager approves changes. Copies current state to 'published_data' for client view."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    stages = p.get("stages") or []
+    if index < 0 or index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+    
+    stage = stages[index]
+    stage["approval_status"] = "approved"
+    stage["reject_reason"] = None
+    
+    # Create a snapshot for the client portal
+    snapshot = dict(stage)
+    snapshot.pop("published_data", None) # Don't nest infinitely
+    stage["published_data"] = snapshot
+    
+    stages[index] = stage
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Project Manager", f"Approved & Published stage '{stage['name']}'", "Progress")
+    
+    # Notify client
+    asyncio.create_task(_push_notification(
+        project_id, "📊 Progress Verified",
+        f"New progress updates for '{stage['name']}' have been verified and published.",
+        "/portal/progress", "progress"
+    ))
+    return {"success": True, "stage": stage}
+
+
+@proj_router.post("/admin/projects/{project_id}/stages/{index}/reject", dependencies=[Depends(require_admin)])
+async def reject_stage_changes(project_id: str, index: int, body: RejectStageBody):
+    """Project Manager rejects draft changes back to Site Engineer."""
+    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
+    stages = p.get("stages") or []
+    if index < 0 or index >= len(stages):
+        raise HTTPException(status_code=400, detail="Invalid stage index")
+    
+    stages[index]["approval_status"] = "rejected"
+    stages[index]["reject_reason"] = body.reason
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await _log_activity(project_id, "Project Manager", f"Rejected stage '{stages[index]['name']}' updates", "Progress")
+    return {"success": True, "stage": stages[index]}
 
 # ============================================================================
 # UNIFIED COMPREHENSIVE PROGRESS REPORT PDF

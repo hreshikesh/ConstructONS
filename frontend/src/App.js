@@ -61,6 +61,7 @@ const EngineersPage = lazy(() => import("@/pages/EngineersPage"));
 const InteriorDesignersPage = lazy(() => import("@/pages/InteriorDesignersPage"));
 const SmartHomePage = lazy(() => import("@/pages/SmartHomePage"));
 const LandscapingPage = lazy(() => import("@/pages/LandscapingPage"));
+const AdminProjectDetail = lazy(() => import("@/pages/admin/AdminProjectDetail"));
 /* =========================================================================
    STORYLINE JCB CONSTRUCTION LOADER (Mobile Responsive & Premium)
    ========================================================================= */
@@ -410,6 +411,7 @@ function App() {
                   <Route path="projects" element={<AdminProjects />} />
                   <Route path=":entity" element={<AdminEntity />} />
                   <Route path="client-users" element={<AdminClientUsers />} />
+                  <Route path="projects/:projectId" element={<AdminProjectDetail />} />
                 </Route>
 
                 <Route path="*" element={<NotFoundPage />} />
