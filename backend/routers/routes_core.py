@@ -209,11 +209,11 @@ async def create_project(body: ProjectCreateBody):
     count = await db.projects.count_documents({})
     proj_code = f"CON-{datetime.now(timezone.utc).year}-{(count + 1):04d}"
     owner_name = body.customer_name or email.split("@")[0]
-    owner_record = {"id": f"usr_{uuid.uuid4().hex[:12]}", "name": owner_name, "email": email, "role": "Project Owner", "company": "Home Owner", "contact": "", "access": "Full Access", "status": "Active", "avatar": None}
+    owner_record = {"id": f"usr_{uuid.uuid4().hex[:12]}", "name": owner_name, "email": email, "phone": body.customer_phone or "", "role": "Project Owner", "company": "Home Owner","contact": body.customer_phone or "",  "access": "Full Access", "status": "Active", "avatar": None}
     init_activity = {"id": str(uuid.uuid4()), "user_name": "System Admin", "action": "Project initialized", "module": "System", "timestamp": now}
     init_notif = {"id": str(uuid.uuid4()), "title": "Project Created", "message": f"Welcome to {body.title}! Your digital home tracker is active.", "link": "/portal", "icon": "system", "is_read": False, "timestamp": now}
     doc = {
-        "id": str(uuid.uuid4()), "project_code": proj_code, "customer_email": email, "customer_name": owner_name,
+        "id": str(uuid.uuid4()), "project_code": proj_code, "customer_email": email, "customer_name": owner_name,"customer_phone": body.customer_phone,
         "title": body.title, "address": body.address, "package_slug": body.package_slug, "quote_id": body.quote_id,
         "status": "active", "stages": _default_stage_list(),
         "contract_value": body.contract_value or 0, "amount_spent": body.amount_spent or 0,

@@ -53,8 +53,9 @@ export default function DrawingsPage() {
   const [requestForm, setRequestForm] = useState({ category: "", title: "", reason: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const drawings = project?.drawings || [];
-  const requestsHistory = project?.drawing_requests || [];
+  // Wrapped logical expressions in useMemo to prevent Vercel compile warnings
+  const drawings = useMemo(() => project?.drawings || [], [project?.drawings]);
+  const requestsHistory = useMemo(() => project?.drawing_requests || [], [project?.drawing_requests]);
 
   const sortedDrawings = useMemo(() => {
     return [...drawings].sort((a, b) => {

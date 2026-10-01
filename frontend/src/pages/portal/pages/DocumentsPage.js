@@ -25,7 +25,8 @@ export default function DocumentsPage() {
   const [selectedId, setSelectedId] = useState(null);
   const [drawerTab, setDrawerTab] = useState("Details"); // Details | Revisions
 
-  const documents = project?.documents || [];
+  // Fixed Vercel ESLint Error by wrapping the documents fallback in useMemo
+  const documents = useMemo(() => project?.documents || [], [project?.documents]);
   
   // Dynamically load stages
   const projectStages = useMemo(() => {

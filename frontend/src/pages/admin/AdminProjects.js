@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { adminApi } from "@/lib/api";
 import {
   Plus, Trash2, Save, X, Loader2, RefreshCw, Building2, Search,
-  Eye, IndianRupee, TrendingUp, Link as LinkIcon
+  Eye, Link as LinkIcon, Pencil
 } from "lucide-react";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
@@ -14,13 +14,14 @@ const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 const PR = {
   list: () => api.get("/admin/projects").then(r => r.data),
   create: (body) => api.post("/admin/projects", body).then(r => r.data),
+  update: (id, body) => api.put(`/admin/projects/${id}`, body).then(r => r.data),
   remove: (id) => api.delete(`/admin/projects/${id}`).then(r => r.data),
 };
 
 export default function AdminProjects() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const [modalState, setModalState] = useState({ isOpen: false, project: null });
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
@@ -47,6 +48,7 @@ export default function AdminProjects() {
       (p.title || "").toLowerCase().includes(q) ||
       (p.customer_name || "").toLowerCase().includes(q) ||
       (p.customer_email || "").toLowerCase().includes(q) ||
+      (p.customer_phone || "").toLowerCase().includes(q) ||
       (p.project_code || "").toLowerCase().includes(q) ||
       (p.address || "").toLowerCase().includes(q)
     );
@@ -69,10 +71,10 @@ export default function AdminProjects() {
           <p className="text-sm text-[#111111]/60 mt-1">Click any project to open its full detail workspace.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={load} className="px-4 py-2 text-xs font-semibold text-[#000F1B] bg-white border border-black/10 rounded-xl hover:bg-[#F2F2F2] flex items-center gap-1.5">
+          <button onClick={load} className="px-4 py-2 text-xs font-semibold text-[#000F1B] bg-white border border-black/10 rounded-xl hover:bg-[#F2F2F2] flex items-center gap-1.5 shadow-sm transition">
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
-          <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF5A00] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#FF2D00] transition shadow-sm">
+          <button onClick={() => setModalState({ isOpen: true, project: null })} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF5A00] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#FF2D00] transition shadow-sm">
             <Plus className="w-4 h-4" /> New Project
           </button>
         </div>
@@ -84,7 +86,7 @@ export default function AdminProjects() {
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search by name, email, project code, or location..."
+          placeholder="Search by name, email, phone, project code, or location..."
           className="w-full bg-white border border-black/10 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF5A00] shadow-sm"
         />
       </div>
@@ -130,7 +132,7 @@ export default function AdminProjects() {
                               {p.project_code}
                             </span>
                           )}
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                             {p.status || "Active"}
                           </span>
                         </div>
@@ -140,6 +142,7 @@ export default function AdminProjects() {
                       <td className="px-4 py-3">
                         <div className="font-bold text-[#000F1B] truncate max-w-[180px]">{p.customer_name || "—"}</div>
                         <div className="text-[10px] text-[#FF5A00] font-semibold truncate max-w-[180px]">{p.customer_email}</div>
+                        {p.customer_phone && <div className="text-[10px] text-gray-500 font-medium mt-0.5">{p.customer_phone}</div>}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="font-black text-emerald-600">₹{cv.toLocaleString('en-IN')}</div>
@@ -166,9 +169,16 @@ export default function AdminProjects() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/admin/projects/${p.id}`); }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] font-bold rounded-lg transition shadow-sm"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] font-bold rounded-lg transition shadow-sm"
                           >
-                            <Eye className="w-3 h-3" /> View
+                            <Eye className="w-3.5 h-3.5" /> View
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setModalState({ isOpen: true, project: p }); }}
+                            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#FF5A00] text-gray-700 hover:text-white grid place-items-center transition"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => remove(p, e)}
@@ -204,28 +214,42 @@ export default function AdminProjects() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         {p.project_code && (
-                          <span className="text-[9px] font-mono font-bold bg-[#F2F2F2] text-[#000F1B] px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-mono font-bold bg-[#F2F2F2] text-[#000F1B] px-1.5 py-0.5 rounded border border-gray-200">
                             {p.project_code}
                           </span>
                         )}
-                        <span className="text-[9px] font-bold uppercase text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] font-bold uppercase text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                           {p.status || "Active"}
                         </span>
                       </div>
                       <div className="font-bold text-[#000F1B] text-sm truncate">{p.title}</div>
-                      <div className="text-[10px] text-[#FF5A00] font-semibold truncate mt-0.5">{p.customer_email}</div>
+                      <div className="text-[10px] text-[#FF5A00] font-semibold truncate mt-0.5">
+                        {p.customer_name} • {p.customer_email} {p.customer_phone && `• ${p.customer_phone}`}
+                      </div>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/projects/${p.id}`); }}
-                      className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#000F1B] text-white text-[10px] font-bold rounded-lg">
-                      <Eye className="w-3 h-3" /> Open
-                    </button>
+                    
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setModalState({ isOpen: true, project: p }); }}
+                        className="w-7 h-7 rounded-lg bg-gray-100 text-[#000F1B] grid place-items-center shadow-sm"
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/admin/projects/${p.id}`); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#000F1B] text-white text-[10px] font-bold rounded-lg shadow-sm"
+                      >
+                        <Eye className="w-3 h-3" /> Open
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 bg-[#F9FAFB] rounded-lg p-2.5 border border-black/5">
                     <div>
                       <div className="text-[8px] font-bold uppercase text-[#111111]/50 mb-0.5">Progress</div>
                       <div className="flex items-center gap-1.5">
-                        <div className="flex-1 h-1 bg-white rounded-full overflow-hidden">
+                        <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
                           <div className="h-full bg-[#FF5A00] rounded-full" style={{ width: `${overall}%` }} />
                         </div>
                         <span className="text-[10px] font-black text-[#000F1B]">{overall}%</span>
@@ -243,31 +267,62 @@ export default function AdminProjects() {
         </>
       )}
 
-      {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />}
+      {modalState.isOpen && (
+        <ProjectFormModal 
+          project={modalState.project} 
+          onClose={() => setModalState({ isOpen: false, project: null })} 
+          onSaved={() => { setModalState({ isOpen: false, project: null }); load(); }} 
+        />
+      )}
     </div>
   );
 }
 
 // ============================================================================
-// CREATE PROJECT MODAL (kept from original)
+// DYNAMIC PROJECT FORM MODAL (CREATE & EDIT)
 // ============================================================================
-function CreateProjectModal({ onClose, onCreated }) {
+function ProjectFormModal({ project, onClose, onSaved }) {
+  const isEdit = !!project;
   const [form, setForm] = useState({
-    customer_email: "", customer_name: "", title: "My Home Project", address: "", contract_value: 0,
+    customer_email: "", customer_name: "", customer_phone: "", 
+    title: "My Home Project", address: "", contract_value: "",
     start_date: "", expected_completion: "", site_lat: "", site_lng: ""
   });
   const [saving, setSaving] = useState(false);
   const [proposals, setProposals] = useState([]);
   const [loadingProps, setLoadingProps] = useState(true);
 
+  // Initialize form with project details if in edit mode
   useEffect(() => {
+    if (project) {
+      setForm({
+        customer_email: project.customer_email || "",
+        customer_name: project.customer_name || "",
+        customer_phone: project.customer_phone || "",
+        title: project.title || "",
+        address: project.address || "",
+        contract_value: project.contract_value ? String(project.contract_value) : "",
+        start_date: project.start_date ? String(project.start_date).slice(0, 10) : "",
+        expected_completion: project.expected_completion ? String(project.expected_completion).slice(0, 10) : "",
+        site_lat: project.site_lat ? String(project.site_lat) : "",
+        site_lng: project.site_lng ? String(project.site_lng) : ""
+      });
+    }
+  }, [project]);
+
+  // Load active proposals (only needed for creation workflow)
+  useEffect(() => {
+    if (isEdit) {
+      setLoadingProps(false);
+      return;
+    }
     adminApi.list("proposals")
       .then(res => {
         if (Array.isArray(res)) setProposals(res.filter(p => p.status === "accepted"));
       })
       .catch(() => console.error("Failed to load proposals"))
       .finally(() => setLoadingProps(false));
-  }, []);
+  }, [isEdit]);
 
   const handleProposalSelect = (e) => {
     const propId = e.target.value;
@@ -285,8 +340,9 @@ function CreateProjectModal({ onClose, onCreated }) {
       quote_id: p.id,
       customer_email: p.client_email?.trim() || prev.customer_email,
       customer_name: p.client_name?.trim() || prev.customer_name,
+      customer_phone: p.client_phone ? p.client_phone.replace(/\D/g, "").slice(0, 10) : prev.customer_phone,
       address: p.site_address?.trim() || prev.address,
-      contract_value: trueTotal > 0 ? trueTotal : prev.contract_value,
+      contract_value: trueTotal > 0 ? String(trueTotal) : prev.contract_value,
       title: `${p.client_name?.split(" ")[0] || "Client"}'s ${p.package_name || "Home"} Build`,
       start_date: p.expected_start ? String(p.expected_start).slice(0, 10) : prev.start_date,
       expected_completion: p.expected_completion ? String(p.expected_completion).slice(0, 10) : prev.expected_completion
@@ -294,8 +350,22 @@ function CreateProjectModal({ onClose, onCreated }) {
     toast.success("Client details auto-filled from proposal");
   };
 
-  const create = async () => {
-    if (!form.customer_email.trim()) { toast.error("Client Google Email is required"); return; }
+  const handlePhoneChange = (e) => {
+    // Only allow digits up to 10 characters
+    const numericValue = e.target.value.replace(/\D/g, "");
+    setForm(prev => ({ ...prev, customer_phone: numericValue }));
+  };
+
+  const save = async () => {
+    if (!form.customer_email.trim()) { 
+      toast.error("Client Email is required"); 
+      return; 
+    }
+    if (form.customer_phone && form.customer_phone.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
+    
     setSaving(true);
     try {
       const payload = { 
@@ -306,83 +376,132 @@ function CreateProjectModal({ onClose, onCreated }) {
         start_date: form.start_date || null,
         expected_completion: form.expected_completion || null
       };
-      await PR.create(payload);
-      toast.success("Live Project Created!");
-      onCreated();
+
+      if (isEdit) {
+        await PR.update(project.id, payload);
+        toast.success("Project updated successfully!");
+      } else {
+        await PR.create(payload);
+        toast.success("Live Project Created!");
+      }
+      onSaved();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Create failed");
+      toast.error(e?.response?.data?.detail || "Save failed");
     } finally { setSaving(false); }
   };
 
   return (
     <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-sm z-[60] grid place-items-center p-4 font-['Poppins']">
-      <div className="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl relative overflow-hidden">
+      <div className="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF5A00]" />
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-bold text-[#000F1B] text-xl">New Project Tracker</div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 grid place-items-center transition"><X className="w-4 h-4" /></button>
-        </div>
-        <p className="text-xs text-[#111111]/60 mb-5">Convert an accepted proposal into a live project, or create one from scratch.</p>
-
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-          <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50">
-            <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <LinkIcon className="w-3.5 h-3.5" /> Auto-Fill from Proposal
-            </label>
-            {loadingProps ? (
-              <div className="text-xs text-blue-600 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Loading...</div>
-            ) : (
-              <select onChange={handleProposalSelect} className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-[#000F1B] cursor-pointer">
-                <option value="">-- Select Accepted Proposal --</option>
-                {proposals.map(p => {
-                  const baseCost = (Number(p.built_up_area) || 0) * (Number(p.package_price_per_sqft) || 0);
-                  const addonsCost = (p.addons_selected || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-                  const total = baseCost + addonsCost - (Number(p.discount_amount) || 0);
-                  return <option key={p.id} value={p.id}>{p.ref_number} : {p.client_name} (₹{total.toLocaleString('en-IN')})</option>;
-                })}
-              </select>
-            )}
+        
+        <div className="flex items-center justify-between mb-2 shrink-0">
+          <div className="font-bold text-[#000F1B] text-xl">
+            {isEdit ? "Edit Project Details" : "New Project Tracker"}
           </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 grid place-items-center transition">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <p className="text-xs text-[#111111]/60 mb-5 shrink-0">
+          {isEdit ? "Make necessary alterations to the operational data metrics below." : "Convert an accepted proposal into a live project, or create one from scratch."}
+        </p>
+
+        <div className="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1 pb-4">
+          
+          {/* Hide Proposal Import selector during Edit mode */}
+          {!isEdit && (
+            <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 shadow-sm">
+              <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <LinkIcon className="w-3.5 h-3.5" /> Auto-Fill from Proposal
+              </label>
+              {loadingProps ? (
+                <div className="text-xs text-blue-600 flex items-center gap-2">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                </div>
+              ) : (
+                <select onChange={handleProposalSelect} className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-[#000F1B] cursor-pointer outline-none focus:border-blue-500 shadow-sm">
+                  <option value="">-- Select Accepted Proposal --</option>
+                  {proposals.map(p => {
+                    const baseCost = (Number(p.built_up_area) || 0) * (Number(p.package_price_per_sqft) || 0);
+                    const addonsCost = (p.addons_selected || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+                    const total = baseCost + addonsCost - (Number(p.discount_amount) || 0);
+                    return <option key={p.id} value={p.id}>{p.ref_number} : {p.client_name} (₹{total.toLocaleString('en-IN')})</option>;
+                  })}
+                </select>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Project Title</label>
-              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none" />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Google Email *</label>
-              <input type="email" value={form.customer_email} onChange={e => setForm({ ...form, customer_email: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Project Title *</label>
+              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold focus:border-[#FF5A00] outline-none shadow-sm" />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Name</label>
-              <input value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+              <input value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF5A00] outline-none shadow-sm" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Email *</label>
+              <input type="email" value={form.customer_email} onChange={e => setForm({ ...form, customer_email: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF5A00] outline-none shadow-sm" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Phone Number (10 Digits)</label>
+              <input 
+                type="tel" 
+                value={form.customer_phone} 
+                onChange={handlePhoneChange} 
+                maxLength={10}
+                placeholder="e.g. 9876543210" 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF5A00] outline-none shadow-sm" 
+              />
+              <div className="text-[10px] text-gray-400 mt-1">Must be exactly 10 digits without country code</div>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Site Location / Address</label>
+              <textarea 
+                value={form.address} 
+                onChange={e => setForm({ ...form, address: e.target.value })} 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm focus:border-[#FF5A00] outline-none shadow-sm min-h-[60px]" 
+                placeholder="Enter full physical address details..."
+              />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Start Date</label>
-              <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none" />
+              <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Forecast Completion</label>
-              <input type="date" value={form.expected_completion} onChange={e => setForm({ ...form, expected_completion: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none" />
+              <input type="date" value={form.expected_completion} onChange={e => setForm({ ...form, expected_completion: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Total Contract Value (₹)</label>
-              <input type="number" value={form.contract_value} onChange={e => setForm({ ...form, contract_value: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <input 
+                type="text" 
+                value={form.contract_value} 
+                onChange={e => {
+                  const numericValue = e.target.value.replace(/[^0-9]/g, "");
+                  setForm({ ...form, contract_value: numericValue });
+                }} 
+                placeholder="0"
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold text-emerald-600 focus:border-[#FF5A00] outline-none shadow-sm" 
+              />
             </div>
-            <div className="sm:col-span-2 pt-2 border-t border-black/5">
+            <div className="sm:col-span-2 pt-3 border-t border-black/5 mt-1">
               <div className="text-[11px] font-bold text-[#000F1B] uppercase mb-2">Live Weather Coordinates</div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" step="any" value={form.site_lat} onChange={e => setForm({ ...form, site_lat: e.target.value })} placeholder="Latitude (12.9716)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none" />
-                <input type="number" step="any" value={form.site_lng} onChange={e => setForm({ ...form, site_lng: e.target.value })} placeholder="Longitude (77.5946)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none" />
+                <input type="number" step="any" value={form.site_lat} onChange={e => setForm({ ...form, site_lat: e.target.value })} placeholder="Latitude (e.g. 12.9716)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
+                <input type="number" step="any" value={form.site_lng} onChange={e => setForm({ ...form, site_lng: e.target.value })} placeholder="Longitude (e.g. 77.5946)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-black/5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-xl border border-black/10 bg-white px-5 py-2.5 text-xs font-semibold hover:bg-[#F2F2F2] transition">Cancel</button>
-          <button onClick={create} disabled={saving} className="inline-flex items-center gap-1.5 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white px-6 py-2.5 text-sm font-bold transition disabled:opacity-60">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Create Project
+        <div className="mt-4 pt-4 border-t border-black/5 flex justify-end gap-2 shrink-0">
+          <button onClick={onClose} className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white px-6 py-2.5 text-sm font-bold transition shadow-sm disabled:opacity-60">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {isEdit ? "Update Changes" : "Create Project"}
           </button>
         </div>
       </div>

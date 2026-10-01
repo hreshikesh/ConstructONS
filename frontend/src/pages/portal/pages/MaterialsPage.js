@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { 
   Search, Package, Truck, Box, ChevronLeft, 
-  X, Image as ImageIcon, Info, Calendar,CheckCircle2
+  X, Image as ImageIcon, Info, Calendar, CheckCircle2
 } from "lucide-react";
 import { usePortal } from "../context/PortalContext";
 import { resolveMediaUrl } from "../../../lib/mediaUrl";
@@ -40,7 +40,8 @@ export default function MaterialsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
-  const materials = project?.materials || [];
+  // Fixed Vercel ESLint Error by wrapping the materials fallback in useMemo
+  const materials = useMemo(() => project?.materials || [], [project?.materials]);
 
   // ==========================================
   // DATA PREPARATION & LOGIC

@@ -810,7 +810,12 @@ export default function StagesTab({ project, onSaved }) {
                               disabled={hasChildren}
                               value={s.start_date || ""}
                               onChange={(e) => patchStageLocal(idx, { start_date: e.target.value })}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100"
+                              onClick={(e) => {
+                                if (!hasChildren) {
+                                  try { e.target.showPicker(); } catch {}
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                           <div>
@@ -824,7 +829,12 @@ export default function StagesTab({ project, onSaved }) {
                               onChange={(e) =>
                                 patchStageLocal(idx, { planned_end_date: e.target.value })
                               }
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100"
+                              onClick={(e) => {
+                                if (!hasChildren) {
+                                  try { e.target.showPicker(); } catch {}
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                           <div>
@@ -838,7 +848,12 @@ export default function StagesTab({ project, onSaved }) {
                               onChange={(e) =>
                                 patchStageLocal(idx, { actual_end_date: e.target.value })
                               }
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100"
+                              onClick={(e) => {
+                                if (!hasChildren) {
+                                  try { e.target.showPicker(); } catch {}
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                           <div>
@@ -1003,7 +1018,12 @@ export default function StagesTab({ project, onSaved }) {
                                           autoSaveSub(idx, sIdx, { start_date: e.target.value });
                                         }
                                       }}
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100"
+                                      onClick={(e) => {
+                                        if (!sub.start_date) {
+                                          try { e.target.showPicker(); } catch {}
+                                        }
+                                      }}
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                                     />
                                   </div>
                                   <div>
@@ -1015,7 +1035,10 @@ export default function StagesTab({ project, onSaved }) {
                                       value={sub.planned_end_date || ""}
                                       onChange={(e) => patchSubLocal(idx, sIdx, { planned_end_date: e.target.value })}
                                       onBlur={(e) => autoSaveSub(idx, sIdx, { planned_end_date: e.target.value || null })}
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px]"
+                                      onClick={(e) => {
+                                        try { e.target.showPicker(); } catch {}
+                                      }}
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] cursor-pointer"
                                     />
                                   </div>
                                   <div>
@@ -1027,7 +1050,10 @@ export default function StagesTab({ project, onSaved }) {
                                       value={sub.actual_end_date || ""}
                                       onChange={(e) => patchSubLocal(idx, sIdx, { actual_end_date: e.target.value })}
                                       onBlur={(e) => autoSaveSub(idx, sIdx, { actual_end_date: e.target.value || null })}
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px]"
+                                      onClick={(e) => {
+                                        try { e.target.showPicker(); } catch {}
+                                      }}
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] cursor-pointer"
                                     />
                                   </div>
                                 </div>
@@ -1094,7 +1120,7 @@ export default function StagesTab({ project, onSaved }) {
                                         onClick={() =>
                                           markSubComplete(idx, sub.id, sub.name)
                                         }
-                                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg flex items-center gap-1"
+                                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-[10px] font-bold rounded-lg flex items-center gap-1 text-white"
                                       >
                                         <CheckCircle2 className="w-3 h-3" /> Mark Complete
                                       </button>

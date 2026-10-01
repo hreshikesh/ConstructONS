@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Optional
 class ProjectCreateBody(BaseModel):
     customer_email: str
     customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None 
     title: str = "My Home Project"
     address: Optional[str] = None
     package_slug: Optional[str] = None
@@ -21,6 +22,8 @@ class ProjectCreateBody(BaseModel):
 
 class ProjectUpdateBody(BaseModel):
     title: Optional[str] = None
+    customer_name: Optional[str] = None # <--- ADD THIS LINE
+    customer_phone: Optional[str] = None
     address: Optional[str] = None
     status: Optional[str] = None
     package_slug: Optional[str] = None
