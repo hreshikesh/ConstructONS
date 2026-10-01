@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import {
   ShieldCheck, Wrench, Video, HardHat, Settings, X, Save
 } from "lucide-react";
 
-// Import Tab Components
+// Tab Imports
 import OverviewTab from "./project-tabs/OverviewTab";
 import StagesTab from "./project-tabs/StagesTab";
 import ReportsTab from "./project-tabs/ReportsTab";
@@ -25,7 +25,13 @@ import CctvTab from "./project-tabs/CctvTab";
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 
-// Flat, SaaS-style tab list mapping exactly to modules
+const TAB_COMPONENTS = {
+  overview: OverviewTab, stages: StagesTab, reports: ReportsTab,
+  finance: FinanceTab, team: TeamTab, attendance: AttendanceTab,
+  drawings: DrawingsTab, documents: DocumentsTab, materials: MaterialsTab,
+  quality: QualityTab, maintenance: MaintenanceTab, cctv: CctvTab
+};
+
 const TABS = [
   { key: "overview", label: "Overview", icon: Activity },
   { key: "stages", label: "Stages & Schedule", icon: ClipboardList },
@@ -64,9 +70,7 @@ export default function AdminProjectDetail() {
     }
   }, [projectId]);
 
-  useEffect(() => {
-    loadProject();
-  }, [loadProject]);
+  useEffect(() => { loadProject(); }, [loadProject]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -74,14 +78,18 @@ export default function AdminProjectDetail() {
     toast.success("Project data refreshed");
   };
 
-  const switchTab = (key) => {
-    setSearchParams({ tab: key });
-  };
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "TBD";
+
+  const badgeCounts = useMemo(() => ({
+    reports: project?.daily_reports?.filter(r => !r.is_approved).length || 0,
+    drawings: project?.drawings?.filter(d => d.status === "pending").length || 0,
+    materials: project?.materials?.filter(m => m.status === "pending").length || 0,
+  }), [project]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F6F8]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#FF5A00]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" />
       </div>
     );
   }
@@ -89,97 +97,75 @@ export default function AdminProjectDetail() {
   if (!project) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F8]">
-        <h1 className="text-xl font-bold text-[#000F1B] mb-4">Project not found</h1>
-        <button onClick={() => navigate("/admin/projects")} className="px-5 py-2 bg-[#FF5A00] text-white text-sm font-bold rounded-lg transition hover:bg-[#FF2D00]">
+        <h1 className="text-lg font-bold text-[#000F1B] mb-2">Project not found</h1>
+        <button onClick={() => navigate("/admin/projects")} className="px-4 py-1.5 bg-[#FF5A00] text-white text-xs font-bold rounded-md hover:bg-[#FF2D00] transition">
           Return to Dashboard
         </button>
       </div>
     );
   }
 
-  // Formatting helpers
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "TBD";
-  
-  // Notification counts
-  const pendingReports = (project.daily_reports || []).filter(r => !r.is_approved).length;
-  const pendingDrawings = (project.drawings || []).filter(d => d.status === "pending").length;
-  const pendingMaterials = (project.materials || []).filter(m => m.status === "pending").length;
-
-  const getBadgeCount = (key) => {
-    if (key === "reports") return pendingReports;
-    if (key === "drawings") return pendingDrawings;
-    if (key === "materials") return pendingMaterials;
-    return 0;
-  };
+  const ActiveComponent = TAB_COMPONENTS[activeTab] || OverviewTab;
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] font-['Poppins'] flex flex-col">
-      
-      {/* ============================================
-          SAAS-STYLE SEAMLESS HEADER
-      ============================================ */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        
-        {/* Top Utility Bar */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-b border-gray-100 bg-gray-50/50">
-          <button onClick={() => navigate("/admin/projects")} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-[#FF5A00] transition">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Project List
+    <div className="min-h-screen bg-[#F9FAFB] font-['Poppins'] flex flex-col text-xs">
+      {/* HEADER */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-xs">
+        <div className="flex items-center justify-between px-3 sm:px-5 py-1.5 border-b border-gray-100 bg-gray-50/50">
+          <button onClick={() => navigate("/admin/projects")} className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[#FF5A00] transition">
+            <ArrowLeft className="w-3 h-3" /> Back
           </button>
           
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowEditInfo(true)} className="px-3 py-1.5 rounded bg-white border border-gray-200 hover:bg-gray-50 flex items-center gap-1.5 text-[10px] font-bold text-gray-700 transition shadow-sm">
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => setShowEditInfo(true)} className="px-2 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 flex items-center gap-1 text-[10px] font-semibold text-gray-700 shadow-2xs">
               <Settings className="w-3 h-3" /> Edit Settings
             </button>
-            <button onClick={handleRefresh} disabled={refreshing} className="px-3 py-1.5 rounded bg-white border border-gray-200 hover:bg-gray-50 flex items-center gap-1.5 text-[10px] font-bold text-gray-700 transition shadow-sm disabled:opacity-60">
+            <button onClick={handleRefresh} disabled={refreshing} className="px-2 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 flex items-center gap-1 text-[10px] font-semibold text-gray-700 shadow-2xs disabled:opacity-60">
               <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin text-[#FF5A00]" : ""}`} />
               {refreshing ? "Syncing..." : "Sync"}
             </button>
           </div>
         </div>
 
-        <div className="px-4 sm:px-6 pt-5">
-          {/* Title & Status */}
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{project.title}</h1>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${project.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+        <div className="px-3 sm:px-5 pt-2.5">
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight leading-none">{project.title}</h1>
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border bg-emerald-50 text-emerald-700 border-emerald-200">
               {project.status || "Active"}
             </span>
           </div>
 
-          {/* Project Meta Data Strip (Matches reference image) */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 font-medium mb-6">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 font-medium mb-2.5">
             <span className="font-mono text-gray-400">{project.project_code || "No Code"}</span>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-300">•</span>
             <span className="text-gray-700 font-semibold">{project.customer_name || "No Client Assigned"}</span>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-300">•</span>
             <span>{project.address || "Location pending"}</span>
-            <span className="text-gray-300">|</span>
-            <span>Start: <strong className="text-gray-700 font-semibold">{fmtDate(project.start_date || project.created_at)}</strong></span>
-            <span className="text-gray-300">|</span>
-            <span>Expected: <strong className="text-gray-700 font-semibold">{fmtDate(project.expected_completion)}</strong></span>
+            <span className="text-gray-300">•</span>
+            <span>Start: <strong className="text-gray-700">{fmtDate(project.start_date || project.created_at)}</strong></span>
+            <span className="text-gray-300">•</span>
+            <span>Expected: <strong className="text-gray-700">{fmtDate(project.expected_completion)}</strong></span>
           </div>
 
-          {/* Flat Horizontal Tabs */}
-          <div className="flex overflow-x-auto no-scrollbar gap-1">
+          {/* TABS */}
+          <div className="flex overflow-x-auto no-scrollbar gap-0.5">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.key;
-              const badge = getBadgeCount(tab.key);
+              const badge = badgeCounts[tab.key] || 0;
 
               return (
                 <button
                   key={tab.key}
-                  onClick={() => switchTab(tab.key)}
-                  className={`flex items-center gap-2 px-4 pb-3 border-b-2 transition-colors whitespace-nowrap ${
-                    isActive 
-                      ? "border-[#FF5A00] text-[#000F1B]" 
-                      : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-200"
+                  onClick={() => setSearchParams({ tab: tab.key })}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 border-b-2 transition-colors whitespace-nowrap text-xs ${
+                    isActive ? "border-[#FF5A00] text-[#000F1B] font-bold" : "border-transparent text-gray-500 font-medium hover:text-gray-800 hover:border-gray-200"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-[#FF5A00]" : ""}`} />
-                  <span className="text-sm font-semibold">{tab.label}</span>
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#FF5A00]" : ""}`} />
+                  <span>{tab.label}</span>
                   {badge > 0 && (
-                    <span className="ml-1 bg-red-500 text-white text-[10px] font-black rounded-full px-1.5 py-0.5 grid place-items-center shadow-sm">
+                    <span className="ml-0.5 bg-red-500 text-white text-[9px] font-black rounded-full px-1.5 py-0.2 grid place-items-center">
                       {badge}
                     </span>
                   )}
@@ -190,27 +176,12 @@ export default function AdminProjectDetail() {
         </div>
       </header>
 
-      {/* ============================================
-          MAIN WORKSPACE
-      ============================================ */}
-      <main className="flex-1 p-4 sm:p-6 w-full max-w-[1600px] mx-auto min-w-0">
-        {activeTab === "overview" && <OverviewTab project={project} onSaved={loadProject} />}
-        {activeTab === "stages" && <StagesTab project={project} onSaved={loadProject} />}
-        {activeTab === "reports" && <ReportsTab project={project} onSaved={loadProject} />}
-        {activeTab === "finance" && <FinanceTab project={project} onSaved={loadProject} />}
-        {activeTab === "team" && <TeamTab project={project} onSaved={loadProject} />}
-        {activeTab === "attendance" && <AttendanceTab project={project} onSaved={loadProject} />}
-        {activeTab === "drawings" && <DrawingsTab project={project} onSaved={loadProject} />}
-        {activeTab === "documents" && <DocumentsTab project={project} onSaved={loadProject} />}
-        {activeTab === "materials" && <MaterialsTab project={project} onSaved={loadProject} />}
-        {activeTab === "quality" && <QualityTab project={project} onSaved={loadProject} />}
-        {activeTab === "maintenance" && <MaintenanceTab project={project} onSaved={loadProject} />}
-        {activeTab === "cctv" && <CctvTab project={project} onSaved={loadProject} />}
+      {/* WORKSPACE */}
+      <main className="flex-1 p-3 sm:p-5 w-full max-w-[1600px] mx-auto min-w-0">
+        <ActiveComponent project={project} onSaved={loadProject} />
       </main>
 
-      {/* ============================================
-          MODALS
-      ============================================ */}
+      {/* EDIT MODAL */}
       {showEditInfo && (
         <EditInfoModal 
           project={project} 
@@ -222,9 +193,7 @@ export default function AdminProjectDetail() {
   );
 }
 
-// ------------------------------------------------------------------
-// Edit Basic Info Modal Component
-// ------------------------------------------------------------------
+// EDIT MODAL COMPONENT
 function EditInfoModal({ project, onClose, onSaved }) {
   const [form, setForm] = useState({
     title: project.title || "", 
@@ -258,28 +227,35 @@ function EditInfoModal({ project, onClose, onSaved }) {
     } finally { setSaving(false); }
   };
 
+  const Field = ({ label, name, type = "text", ...props }) => (
+    <div>
+      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{label}</label>
+      <input
+        type={type}
+        value={form[name]}
+        onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
+        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1 text-xs focus:border-blue-500 outline-none transition"
+        {...props}
+      />
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-sm z-[100] grid place-items-center p-4 font-['Poppins']">
-      <div className="bg-white rounded-2xl w-full max-w-lg p-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-          <div className="font-bold text-gray-900 text-lg">Edit Project Metadata</div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-gray-100 grid place-items-center text-gray-500 transition"><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-xs z-[100] grid place-items-center p-3 font-['Poppins']">
+      <div className="bg-white rounded-xl w-full max-w-md p-4 shadow-xl relative max-h-[90vh] overflow-y-auto text-xs">
+        <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+          <span className="font-bold text-gray-900 text-sm">Edit Project Metadata</span>
+          <button onClick={onClose} className="w-6 h-6 rounded hover:bg-gray-100 grid place-items-center text-gray-500 transition"><X className="w-3.5 h-3.5" /></button>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Project Title</label>
-            <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-900 focus:border-blue-500 outline-none transition" />
-          </div>
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Site Address</label>
-            <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 outline-none transition" />
-          </div>
+        <div className="space-y-2.5">
+          <Field label="Project Title" name="title" />
+          <Field label="Site Address" name="address" />
 
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Project Status</label>
-              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold focus:border-blue-500 outline-none cursor-pointer">
+              <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Status</label>
+              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium focus:border-blue-500 outline-none cursor-pointer">
                 <option value="active">Active</option>
                 <option value="on_hold">On Hold</option>
                 <option value="completed">Completed</option>
@@ -287,45 +263,27 @@ function EditInfoModal({ project, onClose, onSaved }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Project Start</label>
-              <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Forecast Completion</label>
-              <input type="date" value={form.expected_completion} onChange={e => setForm({ ...form, expected_completion: e.target.value })} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 outline-none" />
-            </div>
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
+            <Field label="Project Start" name="start_date" type="date" />
+            <Field label="Forecast Completion" name="expected_completion" type="date" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Total Contract (₹)</label>
-              <input type="number" value={form.contract_value} onChange={e => setForm({ ...form, contract_value: e.target.value })} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-900 focus:border-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Amount Paid (₹)</label>
-              <input type="number" value={form.amount_spent} onChange={e => setForm({ ...form, amount_spent: e.target.value })} className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 focus:border-emerald-500 outline-none" />
-            </div>
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
+            <Field label="Total Contract (₹)" name="contract_value" type="number" />
+            <Field label="Amount Paid (₹)" name="amount_spent" type="number" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 bg-gray-50 p-3 rounded-lg border border-gray-200">
-            <div className="col-span-2"><span className="text-[10px] font-bold uppercase text-gray-700">Live Weather Coordinates</span></div>
-            <div>
-              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Latitude</label>
-              <input type="number" step="any" value={form.site_lat} onChange={e => setForm({ ...form, site_lat: e.target.value })} placeholder="12.9716" className="w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none" />
-            </div>
-            <div>
-              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Longitude</label>
-              <input type="number" step="any" value={form.site_lng} onChange={e => setForm({ ...form, site_lng: e.target.value })} placeholder="77.5946" className="w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none" />
-            </div>
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 bg-gray-50 p-2 rounded border border-gray-200">
+            <span className="col-span-2 text-[9px] font-bold uppercase text-gray-700">Live Weather Coordinates</span>
+            <Field label="Latitude" name="site_lat" type="number" step="any" placeholder="12.9716" />
+            <Field label="Longitude" name="site_lng" type="number" step="any" placeholder="77.5946" />
           </div>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-bold transition shadow-sm disabled:opacity-60">
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Updates
+        <div className="mt-4 pt-2.5 border-t border-gray-100 flex items-center justify-end gap-1.5">
+          <button onClick={onClose} className="rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 text-xs font-semibold transition disabled:opacity-60">
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save Updates
           </button>
         </div>
       </div>

@@ -11,7 +11,7 @@ import {
   X,
   CheckCircle2,
   Loader2,
-  AlertCircle
+  AlertTriangle
 } from "lucide-react";
 import { usePortal } from "../context/PortalContext";
 import { Link } from "react-router-dom";
@@ -49,12 +49,12 @@ export default function ApprovalsPage() {
         bg: "bg-blue-50",
         timestamp: d.uploaded_at,
         link: "/portal/drawings",
-        isMaterial: false
+        actionText: "Review Drawing"
       });
     }
   });
 
-  // B. Pending Materials
+  // B. Pending Materials (Legacy Support)
   const materials = project.materials || [];
   materials.forEach((m) => {
     if (m.status === "pending") {
@@ -64,11 +64,54 @@ export default function ApprovalsPage() {
         category: "Material",
         details: `${m.quantity} ${m.unit} • ${m.brand || "Standard"}`,
         icon: Package,
-        color: "text-amber-600",
-        bg: "bg-amber-50",
+        color: "text-[#FF5A00]",
+        bg: "bg-[#FF5A00]/10",
         timestamp: m.created_at,
         isMaterial: true,
-        rawData: m
+        rawData: m,
+        actionText: "View & Decide"
+      });
+    }
+  });
+
+  // C. Pending Quality Stages (PRD Phase 1)
+  const qualityStages = project.quality_stage_reviews || [];
+  qualityStages.forEach((stage) => {
+    if (stage.status === "released") {
+      const pendingChecks = (stage.checks || []).filter(c => c.client_status === "pending_review");
+      if (pendingChecks.length > 0) {
+        pendingApprovals.push({
+          id: stage.id,
+          title: stage.name,
+          category: "Quality Stage",
+          details: `${pendingChecks.length} checks require approval`,
+          icon: ShieldCheck,
+          color: "text-emerald-600",
+          bg: "bg-emerald-50",
+          timestamp: stage.released_at || stage.created_at,
+          link: "/portal/quality",
+          actionText: "Review Stage"
+        });
+      }
+    }
+  });
+  
+
+  // D. Pending Issue Resolutions (PRD Phase 2)
+ const issues = project.issues || [];
+  issues.forEach((issue) => {
+    if (issue.status === "ready_for_client_review") {
+      pendingApprovals.push({
+        id: issue.id,
+        title: issue.check_text_snapshot,
+        category: "Issue Resolution",
+        details: `Area: ${issue.area}`,
+        icon: AlertTriangle,
+        color: "text-amber-600",
+        bg: "bg-amber-50",
+        timestamp: issue.ready_for_review_at || issue.updated_at,
+        link: "/portal/quality", // Now links directly to the unified Quality/Issues page
+        actionText: "Review Fix"
       });
     }
   });
@@ -139,20 +182,20 @@ export default function ApprovalsPage() {
           ) : (
             <div className="space-y-3">
               {pendingApprovals.map((item, i) => (
-                <div key={item.id || i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl border border-amber-200 bg-amber-50/30 hover:bg-amber-50/50 transition group gap-4">
+                <div key={item.id || i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 transition group gap-4 shadow-sm">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={`w-12 h-12 rounded-xl grid place-items-center shrink-0 border border-white shadow-sm ${item.bg} ${item.color}`}>
                       <item.icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A00] mb-1">
-                        Review {item.category}
+                      <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${item.color}`}>
+                        {item.category}
                       </div>
                       <h3 className="text-base font-bold text-[#000F1B] truncate">{item.title}</h3>
                       <div className="flex items-center gap-2 text-xs text-[#111111]/60 mt-1 font-medium">
                         <span className="font-semibold text-[#000F1B]">{item.details}</span>
                         <span>•</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.timestamp).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Just now'}</span>
                       </div>
                     </div>
                   </div>
@@ -162,14 +205,14 @@ export default function ApprovalsPage() {
                       onClick={() => setSelectedMaterial(item.rawData)}
                       className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF5A00] transition shadow-sm"
                     >
-                      View & Decide <ArrowRight className="w-4 h-4" />
+                      {item.actionText} <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : (
                     <Link 
                       to={item.link} 
                       className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF5A00] transition shadow-sm"
                     >
-                      Go to Drawings <ArrowRight className="w-4 h-4" />
+                      {item.actionText} <ArrowRight className="w-4 h-4" />
                     </Link>
                   )}
                 </div>
@@ -185,8 +228,8 @@ export default function ApprovalsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <LockedModule title="Milestone Payments" icon={IndianRupee} />
           <LockedModule title="Design Changes" icon={PencilRuler} />
-          <LockedModule title="Quality Sign-offs" icon={ShieldCheck} />
           <LockedModule title="Contract Add-ons" icon={Building2} />
+          <LockedModule title="Variations" icon={CheckSquare} />
         </div>
       </div>
 
@@ -259,7 +302,7 @@ export default function ApprovalsPage() {
                 Reject Order
               </button>
               <button 
-                onClick={() => handleMaterialDecision("approved")}
+                onClick={() => handleMaterialDecision("ordered")}
                 disabled={submitting}
                 className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition shadow-sm"
               >

@@ -13,7 +13,8 @@ from db import db
 from auth import require_admin
 from customer_auth import get_current_customer
 from fastapi.responses import HTMLResponse
-
+from fastapi import File, UploadFile
+from media_service import put_object, build_storage_path 
 proj_router = APIRouter(prefix="/api", tags=["projects"])
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -304,7 +305,13 @@ class AttendanceBody(BaseModel):
 
 class NotificationMarkReadBody(BaseModel):
     notification_id: str
+class DrawingRequestBody(BaseModel):
+    category: str
+    title: str
+    reason: Optional[str] = None
 
+class DrawingRequestUpdateBody(BaseModel):
+    status: str  # 'fulfilled' or 'dismissed'
 class DrawingCreateBody(BaseModel):
     name: str
     category: str
@@ -347,8 +354,22 @@ class PaymentLogBody(BaseModel):
 
 class DocumentCreateBody(BaseModel):
     name: str
-    category: str  # Contracts | Reports | Invoices | Handover | Approvals | General
+    category: str  
+    stage: Optional[str] = None
+    status: str = "Current"
+    description: Optional[str] = None
     url: str
+
+class DocumentRevisionBody(BaseModel):
+    url: str
+    status: Optional[str] = "Current"
+
+class DocumentPatchBody(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    stage: Optional[str] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
 class WarrantyUpdateBody(BaseModel):
     warranty_start_date: Optional[str] = None
     warranty_years: Optional[int] = None
@@ -386,6 +407,44 @@ class DailyReportUpdateBody(BaseModel):
     work_completed: Optional[List[str]] = None
     planned_tomorrow: Optional[List[str]] = None
     photos: Optional[List[DailyReportPhotoBody]] = None
+class QualityStageCreate(BaseModel):
+    name: str = Field(..., min_length=2)
+
+class QualityCheckCreate(BaseModel):
+    area: str = Field(..., min_length=1)
+    check_text: str = Field(..., min_length=2)
+    pm_remark: Optional[str] = ""
+    photo_urls: List[str] = Field(default_factory=list)
+
+class ClientApproveCheckBody(BaseModel):
+    remark: Optional[str] = None
+
+class ClientRaiseIssueBody(BaseModel):
+    description: str = Field(..., min_length=3)
+    photo_urls: List[str] = Field(default_factory=list)
+
+class IssueAdminUpdateBody(BaseModel):
+    assigned_to: Optional[str] = None
+    target_date: Optional[str] = None
+    status: str  # 'open', 'in_progress', 'ready_for_client_review'
+    resolution_remark: Optional[str] = None
+    resolution_photos: List[str] = Field(default_factory=list)
+
+class IssueClientReviewBody(BaseModel):
+    approved: bool
+    remark: Optional[str] = None
+# ---------- PORTAL UPLOAD (client-safe, same storage as admin) ----------
+@proj_router.post("/portal/upload/image")
+async def portal_upload_image(
+    file: UploadFile = File(...), 
+    folder: str = "issues",
+    customer=Depends(get_current_customer)
+):
+    """Allows authenticated clients to upload issue photos."""
+    data = await file.read()
+    path = build_storage_path(folder, file.filename, file.content_type)
+    res = put_object(path, data, file.content_type)
+    return {"url": res.get("url") or res.get("secure_url")}
 
 async def _build_unified_team(proj: dict) -> List[Dict[str, Any]]:
     unified: List[Dict[str, Any]] = []
@@ -1469,6 +1528,86 @@ async def download_full_progress_report_pdf(project_id: str):
 # Drawings & Materials Approvals (Client Side)
 # ============================================================================
 
+# 1. Add this Schema at the top with your other schemas
+class DrawingRequestBody(BaseModel):
+    category: str
+    title: str
+    reason: Optional[str] = None
+
+# 2. Add this Route (Client Side)
+@proj_router.post("/portal/my-project/drawings/request")
+async def portal_request_new_drawing(body: DrawingRequestBody, customer=Depends(get_current_customer)):
+    """Client requests a new drawing from the design team."""
+    email = (customer.get("email") or "").lower()
+    proj = await db.projects.find_one(
+        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
+        {"id": 1, "customer_email": 1, "team_directory": 1}
+    )
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    _enforce_full_access(proj, email)
+
+    await db.projects.update_one(
+        {"id": proj["id"], "$or": [{"drawing_requests": {"$exists": False}}, {"drawing_requests": None}]},
+        {"$set": {"drawing_requests": []}}
+    )
+
+    now = datetime.now(timezone.utc).isoformat()
+    client_name = customer.get("name") or "Client"
+    
+    req_entry = {
+        "id": f"dreq_{uuid.uuid4().hex[:10]}",
+        "title": body.title.strip(),
+        "category": body.category,
+        "reason": body.reason,
+        "status": "pending",
+        "requested_at": now,
+        "requested_by": client_name
+    }
+
+    await db.projects.update_one(
+        {"id": proj["id"]},
+        {"$push": {"drawing_requests": {"$each": [req_entry], "$position": 0}}, "$set": {"updated_at": now}}
+    )
+
+    await _log_activity(proj["id"], client_name, f"Requested new drawing: {body.title}", "Drawings")
+    asyncio.create_task(_push_notification(
+        proj["id"], "Drawing Request Submitted 📐", 
+        f"Your request for a new {body.category} drawing '{body.title}' has been successfully sent to the design team.", 
+        "/portal/drawings", "system"
+    ))
+
+    return {"success": True, "request": req_entry}
+@proj_router.patch("/admin/projects/{project_id}/drawings/requests/{request_id}", dependencies=[Depends(require_admin)])
+async def admin_update_drawing_request(project_id: str, request_id: str, body: DrawingRequestUpdateBody):
+    """Admin marks a drawing request as fulfilled or dismissed."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "drawing_requests": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    requests = p.get("drawing_requests") or []
+    idx = next((i for i, r in enumerate(requests) if r["id"] == request_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    requests[idx]["status"] = body.status
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"drawing_requests": requests, "updated_at": now}}
+    )
+
+    # Notify client if fulfilled
+    if body.status == "fulfilled":
+        asyncio.create_task(_push_notification(
+            project_id, "Drawing Request Fulfilled ✅", 
+            f"Your request for '{requests[idx]['title']}' has been fulfilled. The new drawing is available.", 
+            "/portal/drawings", "system"
+        ))
+
+    return {"success": True, "request": requests[idx]}
+
 @proj_router.post("/portal/my-project/drawings/{drawing_id}/decision")
 async def portal_submit_drawing_decision(drawing_id: str, body: DrawingDecisionBody, customer=Depends(get_current_customer)):
     email = (customer.get("email") or "").lower()
@@ -1797,10 +1936,9 @@ async def create_material(project_id: str, body: MaterialCreateBody):
     mat_data["updated_at"] = now
     await db.projects.update_one({"id": project_id}, {"$push": {"materials": {"$each": [mat_data], "$position": 0}}, "$set": {"updated_at": now}})
     await _log_activity(project_id, "Procurement", f"Logged material: {body.quantity} {body.unit} of {body.item_name}", "Materials")
-    if body.status == "pending":
-        asyncio.create_task(_push_notification(project_id, "Action Required: Material Approval", f"Please approve the procurement of {body.item_name}.", "/portal/approvals", "materials"))
-    elif body.status in ["delivered", "installed"]:
+    if body.status in ["delivered", "installed", "inspected"]:
         asyncio.create_task(_push_notification(project_id, "Material Delivered", f"{body.quantity} {body.unit} of {body.item_name} arrived on site.", "/portal/materials", "system"))
+    
     return {"success": True, "material": mat_data}
 
 
@@ -1809,34 +1947,50 @@ async def update_material(project_id: str, material_id: str, body: MaterialUpdat
     p = await db.projects.find_one({"id": project_id}, {"id": 1, "materials": 1})
     if not p:
         raise HTTPException(status_code=404, detail="Project not found")
+        
     materials = p.get("materials") or []
     idx = next((i for i, m in enumerate(materials) if m["id"] == material_id), -1)
     if idx == -1:
         raise HTTPException(status_code=404, detail="Material not found")
+        
     mat = materials[idx]
     old_status = mat.get("status")
+    
     update_data = body.model_dump()
     update_data["id"] = mat["id"]
     update_data["total_cost"] = body.quantity * body.unit_price
     now = datetime.now(timezone.utc).isoformat()
+    
+    # 1. Track Ordered Date
     if old_status == "pending" and body.status == "ordered":
         update_data["ordered_on"] = now
     else:
         update_data["ordered_on"] = mat.get("ordered_on")
+        
+    # 2. Track Delivered/Received Date & Notify Client on Arrival
     if old_status not in ["delivered", "inspected", "installed"] and body.status in ["delivered", "inspected", "installed"]:
         update_data["delivered_on"] = now
         await _log_activity(project_id, "Procurement", f"Material Delivered: {body.item_name}", "Materials")
-        asyncio.create_task(_push_notification(project_id, "Material Arrived", f"{body.quantity} {body.unit} of {body.item_name} has been delivered to your site.", "/portal/materials", "system"))
+        asyncio.create_task(_push_notification(
+            project_id, 
+            "Material Delivered", 
+            f"{body.quantity} {body.unit} of {body.item_name} has arrived on site.", 
+            "/portal/materials", 
+            "system"
+        ))
     else:
         update_data["delivered_on"] = mat.get("delivered_on")
+        
     update_data["created_at"] = mat.get("created_at", now)
     update_data["updated_at"] = now
     materials[idx] = update_data
+    
     await db.projects.update_one({"id": project_id}, {"$set": {"materials": materials, "updated_at": now}})
-    if old_status != "pending" and body.status == "pending":
-        asyncio.create_task(_push_notification(project_id, "Action Required: Material Approval", f"Please approve the procurement of {body.item_name}.", "/portal/approvals", "materials"))
+    
+    # ❌ REMOVED: "Action Required: Material Approval" notification trigger
+    # Per PRD: Materials MVP is read-only for clients with no approval workflow.
+    
     return {"success": True, "material": update_data}
-
 
 @proj_router.delete("/admin/projects/{project_id}/materials/{material_id}", dependencies=[Depends(require_admin)])
 async def delete_material(project_id: str, material_id: str):
@@ -2060,6 +2214,95 @@ async def toggle_camera_status(project_id: str, camera_id: str):
 
     await _log_activity(project_id, "Admin", f"Camera '{cameras[idx]['name']}' marked as {new_status}", "CCTV")
     return {"success": True, "status": new_status}
+
+# Document
+@proj_router.post("/admin/projects/{project_id}/documents", dependencies=[Depends(require_admin)])
+async def create_document(project_id: str, body: DocumentCreateBody):
+    p = await db.projects.find_one({"id": project_id}, {"id": 1})
+    if not p: raise HTTPException(status_code=404, detail="Project not found")
+
+    await db.projects.update_one(
+        {"id": project_id, "$or": [{"documents": {"$exists": False}}, {"documents": None}]},
+        {"$set": {"documents": []}}
+    )
+
+    now = datetime.now(timezone.utc).isoformat()
+    doc_entry = {
+        "id": f"doc_{uuid.uuid4().hex[:10]}",
+        "name": body.name.strip(),
+        "category": body.category,
+        "stage": body.stage,
+        "status": body.status,
+        "description": body.description,
+        "current_version": 1,
+        "uploaded_at": now,
+        "uploaded_by": "Admin",
+        "versions": [{
+            "version": 1, 
+            "url": body.url, 
+            "uploaded_at": now,
+            "uploaded_by": "Admin"
+        }]
+    }
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"documents": {"$each": [doc_entry], "$position": 0}}, "$set": {"updated_at": now}}
+    )
+    await _log_activity(project_id, "Admin", f"Uploaded Document: {body.name}", "Documents")
+    return {"success": True, "document": doc_entry}
+
+@proj_router.post("/admin/projects/{project_id}/documents/{document_id}/revision", dependencies=[Depends(require_admin)])
+async def revise_document(project_id: str, document_id: str, body: DocumentRevisionBody):
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "documents": 1})
+    if not p: raise HTTPException(status_code=404, detail="Not found")
+    
+    docs = p.get("documents") or []
+    idx = next((i for i, d in enumerate(docs) if d["id"] == document_id), -1)
+    if idx == -1: raise HTTPException(status_code=404, detail="Document not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    doc = docs[idx]
+    new_version = doc.get("current_version", 1) + 1
+    
+    revision = {
+        "version": new_version,
+        "url": body.url,
+        "uploaded_at": now,
+        "uploaded_by": "Admin"
+    }
+    
+    doc["versions"].append(revision)
+    doc["current_version"] = new_version
+    doc["status"] = body.status
+    doc["uploaded_at"] = now
+    
+    await db.projects.update_one({"id": project_id}, {"$set": {f"documents.{idx}": doc, "updated_at": now}})
+    await _log_activity(project_id, "Admin", f"Uploaded Revision R{new_version:02d} for {doc['name']}", "Documents")
+    return {"success": True, "document": doc}
+
+@proj_router.patch("/admin/projects/{project_id}/documents/{document_id}", dependencies=[Depends(require_admin)])
+async def patch_document(project_id: str, document_id: str, body: DocumentPatchBody):
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "documents": 1})
+    if not p: raise HTTPException(status_code=404, detail="Not found")
+    
+    docs = p.get("documents") or []
+    idx = next((i for i, d in enumerate(docs) if d["id"] == document_id), -1)
+    if idx == -1: raise HTTPException(status_code=404, detail="Document not found")
+    
+    patch_data = body.model_dump(exclude_unset=True)
+    docs[idx].update(patch_data)
+    
+    await db.projects.update_one({"id": project_id}, {"$set": {f"documents.{idx}": docs[idx], "updated_at": datetime.now(timezone.utc).isoformat()}})
+    return {"success": True, "document": docs[idx]}
+
+@proj_router.delete("/admin/projects/{project_id}/documents/{document_id}", dependencies=[Depends(require_admin)])
+async def delete_document(project_id: str, document_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"id": 1, "documents": 1})
+    if not p: raise HTTPException(status_code=404, detail="Not found")
+    await db.projects.update_one({"id": project_id}, {"$pull": {"documents": {"id": document_id}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}})
+    return {"success": True}
+
 @proj_router.post("/admin/projects/{project_id}/documents", dependencies=[Depends(require_admin)])
 async def create_document(project_id: str, body: DocumentCreateBody):
     p = await db.projects.find_one({"id": project_id}, {"id": 1})
@@ -2122,7 +2365,431 @@ async def delete_document(project_id: str, document_id: str):
 # ============================================================================
 # QUALITY INSPECTIONS MANAGEMENT
 # ============================================================================
+@proj_router.put("/admin/projects/{project_id}/issues/{issue_id}", dependencies=[Depends(require_admin)])
+async def admin_update_quality_issue(project_id: str, issue_id: str, body: IssueAdminUpdateBody):
+    """Admin updates issue details (assignment, resolution, sends to client)."""
+    p = await db.projects.find_one({"id": project_id}, {"issues": 1})
+    if not p: raise HTTPException(404, "Project not found")
+    
+    issues = p.get("issues") or []
+    idx = next((i for i, iss in enumerate(issues) if iss["id"] == issue_id), -1)
+    if idx < 0: raise HTTPException(404, "Issue not found")
 
+    old_status = issues[idx].get("status")
+    now = datetime.now(timezone.utc).isoformat()
+
+    issues[idx]["assigned_to"] = body.assigned_to
+    issues[idx]["target_date"] = body.target_date
+    issues[idx]["resolution_remark"] = body.resolution_remark
+    issues[idx]["resolution_photos"] = body.resolution_photos
+    issues[idx]["status"] = body.status
+    
+    if body.status == "ready_for_client_review" and old_status != "ready_for_client_review":
+        issues[idx]["ready_for_review_at"] = now
+        asyncio.create_task(_push_notification(
+            project_id, "Issue Ready for Review 🔍", 
+            f"The issue regarding '{issues[idx]['check_text_snapshot']}' has been rectified. Please review it.", 
+            "/portal/issues", "quality"
+        ))
+
+    await db.projects.update_one({"id": project_id}, {"$set": {"issues": issues}})
+    return {"success": True, "issue": issues[idx]}
+
+
+@proj_router.patch("/admin/projects/{project_id}/issues/{issue_id}/close", dependencies=[Depends(require_admin)])
+async def admin_close_quality_issue(project_id: str, issue_id: str):
+    """Admin officially closes the issue (PRD Rule: Must be client_approved first)."""
+    p = await db.projects.find_one({"id": project_id}, {"issues": 1})
+    issues = p.get("issues") or []
+    idx = next((i for i, iss in enumerate(issues) if iss["id"] == issue_id), -1)
+    if idx < 0: raise HTTPException(404, "Issue not found")
+
+    if issues[idx].get("client_review_status") != "approved":
+        raise HTTPException(400, "Cannot close issue until Client approves the resolution.")
+
+    issues[idx]["status"] = "closed"
+    issues[idx]["closed_at"] = datetime.now(timezone.utc).isoformat()
+
+    await db.projects.update_one({"id": project_id}, {"$set": {"issues": issues}})
+    return {"success": True}
+
+
+@proj_router.post("/portal/my-project/issues/{issue_id}/client-review")
+async def client_review_issue_resolution(issue_id: str, body: IssueClientReviewBody, customer=Depends(get_current_customer)):
+    """Client approves or rejects the team's resolution."""
+    email = (customer.get("email") or "").lower()
+    proj = await db.projects.find_one(
+        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
+        {"id": 1, "issues": 1, "quality_stage_reviews": 1}
+    )
+    if not proj: raise HTTPException(404, "Project not found")
+    
+    issues = proj.get("issues") or []
+    idx = next((i for i, iss in enumerate(issues) if iss["id"] == issue_id), -1)
+    if idx < 0: raise HTTPException(404, "Issue not found")
+
+    if issues[idx]["status"] != "ready_for_client_review":
+        raise HTTPException(400, "Issue is not pending your review.")
+
+    now = datetime.now(timezone.utc).isoformat()
+    client_name = customer.get("name") or "Client"
+
+    issues[idx]["client_reviewed_at"] = now
+    issues[idx]["client_review_remark"] = body.remark
+
+    if body.approved:
+        issues[idx]["client_review_status"] = "approved"
+        issues[idx]["status"] = "client_approved"
+        
+        # Auto-update the underlying quality check status to 'approved'
+        reviews = proj.get("quality_stage_reviews") or []
+        for r in reviews:
+            for c in r.get("checks", []):
+                if c["open_issue_id"] == issue_id:
+                    c["client_status"] = "approved"
+                    c["open_issue_id"] = None # Issue resolved, disconnect block
+        await db.projects.update_one({"id": proj["id"]}, {"$set": {"quality_stage_reviews": reviews}})
+        
+        await _log_activity(proj["id"], client_name, f"Approved resolution for issue: {issues[idx]['check_text_snapshot']}", "Issues")
+    else:
+        # PRD Rule: Returns to In Progress
+        issues[idx]["client_review_status"] = "not_approved"
+        issues[idx]["status"] = "in_progress" 
+        await _log_activity(proj["id"], client_name, f"Rejected resolution for issue: {issues[idx]['check_text_snapshot']}", "Issues")
+
+    await db.projects.update_one({"id": proj["id"]}, {"$set": {"issues": issues}})
+    return {"success": True}
+# ---------- ALLOW ADD CHECK AFTER RELEASE (new checks = pending_review) ----------
+@proj_router.post("/admin/projects/{project_id}/quality-reviews/{review_id}/checks", dependencies=[Depends(require_admin)])
+async def admin_add_quality_check(project_id: str, review_id: str, body: QualityCheckCreate):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    reviews = p.get("quality_stage_reviews") or []
+    idx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Stage review not found")
+
+    # PRD: PM can add checks after release; new check awaits client
+    check = {
+        "id": f"qchk_{uuid.uuid4().hex[:10]}",
+        "area": body.area.strip(),
+        "check_text": body.check_text.strip(),
+        "pm_remark": (body.pm_remark or "Verified on site.").strip(),
+        "photo_urls": body.photo_urls or [],
+        "client_status": "pending_review",
+        "client_remark": None,
+        "client_responded_at": None,
+        "open_issue_id": None,
+    }
+    if "checks" not in reviews[idx] or reviews[idx]["checks"] is None:
+        reviews[idx]["checks"] = []
+    reviews[idx]["checks"].append(check)
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"quality_stage_reviews": reviews, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"success": True, "check": check}
+
+
+# ---------- ALLOW EDIT AFTER RELEASE + re-review if client already acted ----------
+@proj_router.patch("/admin/projects/{project_id}/quality-reviews/{review_id}/checks/{check_id}", dependencies=[Depends(require_admin)])
+async def admin_patch_quality_check(project_id: str, review_id: str, check_id: str, body: QualityCheckCreate):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    reviews = p.get("quality_stage_reviews") or []
+    ridx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if ridx < 0:
+        raise HTTPException(status_code=404, detail="Stage not found")
+
+    checks = reviews[ridx].get("checks") or []
+    cidx = next((i for i, c in enumerate(checks) if c["id"] == check_id), -1)
+    if cidx < 0:
+        raise HTTPException(status_code=404, detail="Check not found")
+
+    prev = checks[cidx]
+    # Material edit after client response → invalidate client decision (PRD edge case)
+    had_client_action = prev.get("client_status") in ("approved", "issue_raised", "rereview_required")
+
+    checks[cidx]["area"] = body.area.strip()
+    checks[cidx]["check_text"] = body.check_text.strip()
+    checks[cidx]["pm_remark"] = (body.pm_remark or "").strip()
+    checks[cidx]["photo_urls"] = body.photo_urls or []
+
+    if had_client_action or reviews[ridx].get("status") == "released":
+        # Send back for client re-review when PM updates released/reviewed check
+        if had_client_action:
+            checks[cidx]["client_status"] = "pending_review"
+            checks[cidx]["client_remark"] = None
+            checks[cidx]["client_responded_at"] = None
+            # keep open_issue_id history; do not auto-close issues here
+
+    reviews[ridx]["checks"] = checks
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"quality_stage_reviews": reviews, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"success": True, "check": checks[cidx]}
+
+
+# ---------- Delete check: only if not approved/issue (or draft stage) ----------
+@proj_router.delete("/admin/projects/{project_id}/quality-reviews/{review_id}/checks/{check_id}", dependencies=[Depends(require_admin)])
+async def admin_delete_quality_check(project_id: str, review_id: str, check_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    reviews = p.get("quality_stage_reviews") or []
+    ridx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if ridx < 0:
+        raise HTTPException(status_code=404, detail="Stage not found")
+
+    checks = reviews[ridx].get("checks") or []
+    target = next((c for c in checks if c["id"] == check_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Check not found")
+
+    if target.get("client_status") in ("approved", "issue_raised"):
+        raise HTTPException(status_code=400, detail="Cannot delete a check the client already acted on")
+
+    reviews[ridx]["checks"] = [c for c in checks if c["id"] != check_id]
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"quality_stage_reviews": reviews, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"success": True}
+
+@proj_router.patch("/admin/projects/{project_id}/quality-reviews/{review_id}", dependencies=[Depends(require_admin)])
+async def admin_patch_quality_stage(project_id: str, review_id: str, body: QualityStageCreate):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    if not p: raise HTTPException(404, "Not found")
+    reviews = p.get("quality_stage_reviews") or []
+    idx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if idx < 0: raise HTTPException(404, "Stage not found")
+    if body.name: reviews[idx]["name"] = body.name.strip()
+    await db.projects.update_one({"id": project_id}, {"$set": {"quality_stage_reviews": reviews}})
+    return {"success": True, "stage_review": reviews[idx]}
+
+@proj_router.delete("/admin/projects/{project_id}/quality-reviews/{review_id}", dependencies=[Depends(require_admin)])
+async def admin_delete_quality_stage(project_id: str, review_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    reviews = p.get("quality_stage_reviews") or []
+    target = next((r for r in reviews if r["id"] == review_id), None)
+    if not target: raise HTTPException(404, "Not found")
+    if target.get("status") == "released":
+        raise HTTPException(400, "Cannot delete released stage")
+    reviews = [r for r in reviews if r["id"] != review_id]
+    await db.projects.update_one({"id": project_id}, {"$set": {"quality_stage_reviews": reviews}})
+    return {"success": True}
+
+@proj_router.patch("/admin/projects/{project_id}/quality-reviews/{review_id}/checks/{check_id}", dependencies=[Depends(require_admin)])
+async def admin_patch_quality_check(project_id: str, review_id: str, check_id: str, body: QualityCheckCreate):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    reviews = p.get("quality_stage_reviews") or []
+    ridx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if ridx < 0: raise HTTPException(404, "Stage not found")
+    if reviews[ridx].get("status") == "released":
+        raise HTTPException(400, "Cannot edit checks on released stage")
+    checks = reviews[ridx].get("checks") or []
+    cidx = next((i for i, c in enumerate(checks) if c["id"] == check_id), -1)
+    if cidx < 0: raise HTTPException(404, "Check not found")
+    checks[cidx]["area"] = body.area
+    checks[cidx]["check_text"] = body.check_text
+    checks[cidx]["pm_remark"] = body.pm_remark
+    checks[cidx]["photo_urls"] = body.photo_urls or []
+    reviews[ridx]["checks"] = checks
+    await db.projects.update_one({"id": project_id}, {"$set": {"quality_stage_reviews": reviews}})
+    return {"success": True, "check": checks[cidx]}
+
+@proj_router.delete("/admin/projects/{project_id}/quality-reviews/{review_id}/checks/{check_id}", dependencies=[Depends(require_admin)])
+async def admin_delete_quality_check(project_id: str, review_id: str, check_id: str):
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    reviews = p.get("quality_stage_reviews") or []
+    ridx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if ridx < 0: raise HTTPException(404, "Stage not found")
+    if reviews[ridx].get("status") == "released":
+        raise HTTPException(400, "Cannot delete checks on released stage")
+    reviews[ridx]["checks"] = [c for c in (reviews[ridx].get("checks") or []) if c["id"] != check_id]
+    await db.projects.update_one({"id": project_id}, {"$set": {"quality_stage_reviews": reviews}})
+    return {"success": True}
+
+@proj_router.post("/admin/projects/{project_id}/quality-reviews", dependencies=[Depends(require_admin)])
+async def admin_create_quality_stage_review(project_id: str, body: QualityStageCreate):
+    """Admin creates a new Quality Stage Review (Draft)."""
+    p = await db.projects.find_one({"id": project_id}, {"id": 1})
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    await db.projects.update_one(
+        {"id": project_id, "$or": [{"quality_stage_reviews": {"$exists": False}}, {"quality_stage_reviews": None}]},
+        {"$set": {"quality_stage_reviews": []}}
+    )
+
+    stage_review = {
+        "id": f"qsr_{uuid.uuid4().hex[:10]}",
+        "name": body.name,
+        "status": "draft",
+        "released_at": None,
+        "checks": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$push": {"quality_stage_reviews": {"$each": [stage_review], "$position": 0}}}
+    )
+    return {"success": True, "stage_review": stage_review}
+
+@proj_router.post("/admin/projects/{project_id}/quality-reviews/{review_id}/checks", dependencies=[Depends(require_admin)])
+async def admin_add_quality_check(project_id: str, review_id: str, body: QualityCheckCreate):
+    """Admin adds a check to a draft stage review."""
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    reviews = p.get("quality_stage_reviews") or []
+    idx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Stage review not found")
+
+    if reviews[idx]["status"] == "released":
+        raise HTTPException(status_code=400, detail="Cannot add checks to a released stage")
+
+    check = {
+        "id": f"qchk_{uuid.uuid4().hex[:10]}",
+        "area": body.area,
+        "check_text": body.check_text,
+        "pm_remark": body.pm_remark,
+        "photo_urls": body.photo_urls,
+        "client_status": "pending_review",
+        "client_remark": None,
+        "client_responded_at": None,
+        "open_issue_id": None
+    }
+
+    reviews[idx]["checks"].append(check)
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"quality_stage_reviews": reviews}}
+    )
+    return {"success": True, "check": check}
+
+@proj_router.patch("/admin/projects/{project_id}/quality-reviews/{review_id}/release", dependencies=[Depends(require_admin)])
+async def admin_release_quality_stage(project_id: str, review_id: str):
+    """Admin explicitly releases the stage to the client."""
+    p = await db.projects.find_one({"id": project_id}, {"quality_stage_reviews": 1})
+    reviews = p.get("quality_stage_reviews") or []
+    idx = next((i for i, r in enumerate(reviews) if r["id"] == review_id), -1)
+    if idx == -1:
+        raise HTTPException(status_code=404, detail="Stage not found")
+
+    reviews[idx]["status"] = "released"
+    reviews[idx]["released_at"] = datetime.now(timezone.utc).isoformat()
+
+    await db.projects.update_one(
+        {"id": project_id},
+        {"$set": {"quality_stage_reviews": reviews}}
+    )
+    
+    asyncio.create_task(_push_notification(
+        project_id, "Quality Review Required 🔍", 
+        f"The '{reviews[idx]['name']}' quality checks have been released for your review.", 
+        "/portal/quality", "quality"
+    ))
+    return {"success": True}
+
+@proj_router.post("/portal/my-project/quality-checks/{check_id}/approve")
+async def client_approve_quality_check(check_id: str, body: ClientApproveCheckBody, customer=Depends(get_current_customer)):
+    """Client approves a specific quality check."""
+    email = (customer.get("email") or "").lower()
+    proj = await db.projects.find_one(
+        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
+        {"id": 1, "quality_stage_reviews": 1}
+    )
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    reviews = proj.get("quality_stage_reviews") or []
+    found = False
+    for r in reviews:
+        for c in r.get("checks", []):
+            if c["id"] == check_id:
+                if c["client_status"] != "pending_review":
+                    raise HTTPException(status_code=400, detail="Check already reviewed")
+                c["client_status"] = "approved"
+                c["client_remark"] = body.remark
+                c["client_responded_at"] = datetime.now(timezone.utc).isoformat()
+                found = True
+                break
+        if found: break
+
+    if not found:
+        raise HTTPException(status_code=404, detail="Check not found")
+
+    await db.projects.update_one({"id": proj["id"]}, {"$set": {"quality_stage_reviews": reviews}})
+    await _log_activity(proj["id"], customer.get("name") or "Client", "Approved a quality check", "Quality")
+    return {"success": True}
+
+@proj_router.post("/portal/my-project/quality-checks/{check_id}/raise-issue")
+async def client_raise_quality_issue(check_id: str, body: ClientRaiseIssueBody, customer=Depends(get_current_customer)):
+    """Client rejects a check and creates an Issue stub."""
+    email = (customer.get("email") or "").lower()
+    proj = await db.projects.find_one(
+        {"$or": [{"customer_email": email}, {"team_directory.email": email}]},
+        {"id": 1, "quality_stage_reviews": 1}
+    )
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    reviews = proj.get("quality_stage_reviews") or []
+    found_check = None
+    found_review = None
+    
+    for r in reviews:
+        for c in r.get("checks", []):
+            if c["id"] == check_id:
+                if c["client_status"] != "pending_review":
+                    raise HTTPException(status_code=400, detail="Check already reviewed")
+                found_check = c
+                found_review = r
+                break
+        if found_check: break
+
+    if not found_check:
+        raise HTTPException(status_code=404, detail="Check not found")
+
+    now = datetime.now(timezone.utc).isoformat()
+    issue_id = f"iss_{uuid.uuid4().hex[:10]}"
+
+    found_check["client_status"] = "issue_raised"
+    found_check["client_remark"] = body.description
+    found_check["client_responded_at"] = now
+    found_check["open_issue_id"] = issue_id
+
+    issue_stub = {
+        "id": issue_id,
+        "quality_check_id": check_id,
+        "stage_review_id": found_review["id"],
+        "area": found_check["area"],
+        "check_text_snapshot": found_check["check_text"],
+        "description": body.description,
+        "photos": body.photo_urls,
+        "status": "open",
+        "raised_by": customer.get("name") or "Client",
+        "raised_at": now
+    }
+
+    await db.projects.update_one(
+        {"id": proj["id"], "$or": [{"issues": {"$exists": False}}, {"issues": None}]},
+        {"$set": {"issues": []}}
+    )
+
+    await db.projects.update_one(
+        {"id": proj["id"]},
+        {
+            "$set": {"quality_stage_reviews": reviews},
+            "$push": {"issues": {"$each": [issue_stub], "$position": 0}}
+        }
+    )
+
+    await _log_activity(proj["id"], customer.get("name") or "Client", f"Raised an issue for {found_check['check_text']}", "Issues")
+    return {"success": True, "issue_id": issue_id}
 class QualityInspectionBody(BaseModel):
     name: str = Field(..., min_length=3, max_length=100)
     category: str  # 'Foundation', 'Structure', 'MEP', 'Finishing', 'General'

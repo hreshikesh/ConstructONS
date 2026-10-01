@@ -1,389 +1,616 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 import { 
-  PencilRuler, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle, 
-  Clock, 
-  Search, 
-  Maximize2,
-  X,
-  Loader2,
-  History,
-  FileText,
-  ExternalLink
+  Plus, Search, Download, CheckCircle2, AlertTriangle, 
+  X, ChevronLeft, FileBox, Home, Grid, Zap, Droplet, Wind, 
+  Armchair, TreePine, FileText, Clock, Loader2, History, ListTodo, PenTool
 } from "lucide-react";
 import { usePortal } from "../context/PortalContext";
 import { resolveMediaUrl } from "../../../lib/mediaUrl";
-import ComingSoon from "../components/ComingSoon";
-import axios from "axios";
-import { toast } from "sonner";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
+const api = axios.create({ baseURL: API_BASE, withCredentials: true });
+
+const fmtDate = (dateStr) => {
+  if (!dateStr) return "—";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
+  } catch { return "—"; }
+};
+
+const getCategoryIcon = (cat) => {
+  const map = {
+    "Architectural": Home, "Structural": Grid, "Electrical": Zap,
+    "Plumbing": Droplet, "HVAC": Wind, "Interior": Armchair, "Landscape": TreePine,
+  };
+  return map[cat] || FileText;
+};
+
+const CATEGORIES = [
+  "All Drawings", "Architectural", "Structural", "Electrical", 
+  "Plumbing", "HVAC", "Interior", "Landscape", "Others"
+];
 
 export default function DrawingsPage() {
-  const { project, reload } = usePortal();
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const { project, refreshProject } = usePortal();
   
-  const [selectedDrawing, setSelectedDrawing] = useState(null);
-  const [decisionComment, setDecisionComment] = useState("");
+  // Navigation View State
+  const [currentView, setCurrentView] = useState("library"); // "library" | "requests"
+  
+  // Filter & Search
+  const [activeTab, setActiveTab] = useState("All Drawings");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  
+  const [selectedId, setSelectedId] = useState(null);
+  
+  // Modals & Forms
+  const [modalType, setModalType] = useState(null); // 'approve' | 'reject' | 'new_request'
+  const [comment, setComment] = useState("");
+  const [requestForm, setRequestForm] = useState({ category: "", title: "", reason: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  if (!project) return <ComingSoon title="Drawings & Plans" icon={PencilRuler} />;
+  const drawings = project?.drawings || [];
+  const requestsHistory = project?.drawing_requests || [];
 
-  const drawings = project.drawings || [];
+  const sortedDrawings = useMemo(() => {
+    return [...drawings].sort((a, b) => {
+      if (a.status === "pending" && b.status !== "pending") return -1;
+      if (b.status === "pending" && a.status !== "pending") return 1;
+      return new Date(b.uploaded_at) - new Date(a.uploaded_at);
+    });
+  }, [drawings]);
 
-  // Categorize drawings dynamically
-  const categories = ["All", ...new Set(drawings.map(d => d.category || "General"))];
+  const filteredDrawings = useMemo(() => {
+    return sortedDrawings.filter(d => {
+      const matchSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchTab = activeTab === "All Drawings" || (d.category || "Others") === activeTab;
+      const matchStatus = statusFilter === "All" || d.status === statusFilter.toLowerCase();
+      return matchSearch && matchTab && matchStatus;
+    });
+  }, [sortedDrawings, searchQuery, activeTab, statusFilter]);
 
-  const filteredDrawings = drawings.filter(d => {
-    const matchSearch = !search || d.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = activeCategory === "All" || d.category === activeCategory;
-    return matchSearch && matchCat;
-  });
-
-  const handleDecision = async (drawingId, decision) => {
-    if (decision === "changes_required" && !decisionComment.trim()) {
-      toast.error("Please add a comment explaining what needs to be changed.");
-      return;
+  // Keep selected drawing in sync (Auto-select first on Desktop)
+  useEffect(() => {
+    if (currentView === "library" && window.innerWidth >= 768) {
+      if (filteredDrawings.length > 0 && !selectedId) {
+        setSelectedId(filteredDrawings[0].id);
+      } else if (filteredDrawings.length === 0) {
+        setSelectedId(null);
+      }
     }
+  }, [filteredDrawings, selectedId, currentView]);
 
+  const selectedDrawing = drawings.find(d => d.id === selectedId);
+  const pendingCount = drawings.filter(d => d.status === "pending").length;
+
+  const handleDecision = async (decision) => {
+    if (!selectedDrawing) return;
     setSubmitting(true);
     try {
-      await axios.post(
-        `${API_BASE}/portal/my-project/drawings/${drawingId}/decision`,
-        { decision, comment: decisionComment.trim() },
-        { withCredentials: true }
-      );
-      toast.success(`Drawing marked as ${decision.replace("_", " ")}`);
-      setSelectedDrawing(null);
-      setDecisionComment("");
-      reload(true); // Refresh portal data
+      await api.post(`/portal/my-project/drawings/${selectedDrawing.id}/decision`, {
+        decision: decision,
+        comment: comment
+      });
+      toast.success(decision === "approved" ? "Drawing Approved" : "Changes Requested");
+      await refreshProject?.();
+      setModalType(null);
+      setComment("");
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to submit decision");
+      toast.error(err?.response?.data?.detail || "Action failed");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleRequestNew = async () => {
+    if (!requestForm.category || !requestForm.title) {
+      toast.error("Please fill required fields");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post(`/portal/my-project/drawings/request`, requestForm);
+      toast.success("Drawing request submitted to design team.");
+      setModalType(null);
+      setRequestForm({ category: "", title: "", reason: "" });
+      await refreshProject?.();
+      setCurrentView("requests"); // Switch to requests tab automatically
+    } catch {
+      toast.error("Failed to submit request");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getStatusConfig = (status) => {
+    const map = {
+      approved: { label: "APPROVED", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: CheckCircle2 },
+      pending: { label: "UNDER REVIEW", color: "text-amber-700 bg-amber-50 border-amber-200", icon: Clock },
+      rejected: { label: "CHANGES REQ.", color: "text-red-700 bg-red-50 border-red-200", icon: AlertTriangle },
+    };
+    return map[status] || { label: "UNKNOWN", color: "text-gray-600 bg-gray-100 border-gray-200", icon: FileText };
+  };
+
+  if (!project) return null;
+
   return (
-    <div className="max-w-[1200px] mx-auto space-y-6 font-['Poppins'] pb-12">
+    <div className="flex flex-col h-[calc(100vh-80px)] font-['Poppins'] bg-[#F5F6F8]">
       
-      {/* 1. Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#000F1B] grid place-items-center shrink-0">
-            <PencilRuler className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">Project Drawings</h1>
-            <p className="text-sm text-[#111111]/60 mt-0.5">Review, approve, and track visual revisions for all architectural and structural plans.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Filter & Search Ribbon */}
-      <div className="bg-white rounded-2xl border border-black/5 shadow-sm p-3 sticky top-16 z-20 flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#111111]/40" />
-          <input 
-            type="text" 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search drawing titles..." 
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 bg-[#F5F6F8] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:bg-white transition"
-          />
-        </div>
+      {/* 1. HEADER */}
+      <div className={`shrink-0 bg-white border-b border-gray-200 px-4 md:px-6 pt-5 pb-0 shadow-sm z-10 ${selectedId && currentView === "library" ? 'hidden md:block' : 'block'}`}>
         
-        <div className="w-full sm:w-auto overflow-x-auto no-scrollbar pb-1">
-          <div className="inline-flex bg-[#F2F2F2] rounded-xl p-1 w-max border border-black/5">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`relative px-4 py-2 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-200 select-none ${
-                  activeCategory === cat 
-                    ? "text-[#000F1B] bg-white shadow-sm ring-1 ring-black/5" 
-                    : "text-[#111111]/60 hover:text-[#000F1B] hover:bg-black/5"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+        {/* Top Title & View Toggle */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-[#000F1B]">Drawings</h1>
+            <p className="text-[10px] md:text-xs text-gray-500 mt-1">Access approved drawings or request new designs from the team.</p>
+          </div>
+          
+          <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner w-full md:w-auto">
+            <button 
+              onClick={() => setCurrentView("library")}
+              className={`flex-1 md:flex-none px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currentView === "library" ? "bg-white text-[#000F1B] shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+            >
+              <Grid className="w-4 h-4" /> Library & Approvals
+            </button>
+            <button 
+              onClick={() => setCurrentView("requests")}
+              className={`flex-1 md:flex-none px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${currentView === "requests" ? "bg-white text-[#000F1B] shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+            >
+              <ListTodo className="w-4 h-4" /> My Requests
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* 3. Drawing Gallery */}
-      <div className="pt-2">
-        {filteredDrawings.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-black/5 shadow-sm">
-            <PencilRuler className="w-12 h-12 text-[#111111]/20 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-[#000F1B]">No Drawings Found</h3>
-            <p className="text-xs text-[#111111]/50 mt-1">Admin has not uploaded any plans to this category yet.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredDrawings.map(d => <DrawingCard key={d.id} drawing={d} onSelect={() => setSelectedDrawing(d)} />)}
+        {/* Category Ribbon */}
+        {currentView === "library" && (
+          <div className="flex overflow-x-auto no-scrollbar gap-4 md:gap-6 border-b border-transparent">
+            {CATEGORIES.map(cat => {
+              const Icon = getCategoryIcon(cat);
+              const count = cat === "All Drawings" ? drawings.length : drawings.filter(d => (d.category || "Others") === cat).length;
+              const isActive = activeTab === cat;
+              
+              return (
+                <button
+                  key={cat} onClick={() => setActiveTab(cat)}
+                  className={`flex items-center gap-2 pb-3 border-b-2 transition-colors whitespace-nowrap ${isActive ? "border-[#FF5A00] text-[#000F1B]" : "border-transparent text-gray-500 hover:text-gray-800"}`}
+                >
+                  <Icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isActive ? "text-[#FF5A00]" : ""}`} />
+                  <span className="text-xs md:text-sm font-semibold">{cat}</span>
+                  <span className="text-[9px] md:text-[10px] font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* 4. Decision & History Modal */}
-      {selectedDrawing && (
-        <DecisionModal 
-          drawing={selectedDrawing} 
-          onClose={() => { setSelectedDrawing(null); setDecisionComment(""); }}
-          onDecide={handleDecision}
-          comment={decisionComment}
-          setComment={setDecisionComment}
-          submitting={submitting}
-        />
-      )}
-    </div>
-  );
-}
-
-
-/* ---------- Sub Components ---------- */
-
-function DrawingCard({ drawing, onSelect }) {
-  const isPending = drawing.status === "pending";
-  const isApproved = drawing.status === "approved";
-  const needsChanges = drawing.status === "changes_required";
-  const isRejected = drawing.status === "rejected";
-
-  const versions = drawing.versions || [];
-  const latestVersion = versions[versions.length - 1] || {};
-  const url = resolveMediaUrl(latestVersion.url);
-  
-  let BadgeIcon = Clock; let bg = "bg-amber-50"; let text = "text-amber-600"; let border = "border-amber-200";
-  if (isApproved) { BadgeIcon = CheckCircle2; bg = "bg-emerald-50"; text = "text-emerald-700"; border = "border-emerald-200"; }
-  if (needsChanges) { BadgeIcon = AlertCircle; bg = "bg-blue-50"; text = "text-blue-700"; border = "border-blue-200"; }
-  if (isRejected) { BadgeIcon = XCircle; bg = "bg-red-50"; text = "text-red-600"; border = "border-red-200"; }
-
-  const formattedDate = latestVersion.uploaded_at ? new Date(latestVersion.uploaded_at).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }) : "—";
-
-  return (
-    <div className={`bg-white rounded-2xl border ${isPending ? "border-amber-300 ring-1 ring-amber-300 shadow-md" : "border-black/5 shadow-sm"} overflow-hidden flex flex-col group transition hover:-translate-y-1 hover:shadow-lg`}>
-      
-      {/* Image Preview Area */}
-      <div className="relative aspect-[4/3] bg-[#F5F6F8] cursor-pointer overflow-hidden border-b border-black/5" onClick={onSelect}>
-        <img src={url} alt={drawing.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-300 group-hover:scale-105" />
+      {/* 2. MAIN CONTENT AREA */}
+      <div className="flex-1 flex overflow-hidden p-0 md:p-4 gap-4">
         
-        {/* Status Badge overlay */}
-        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg border ${bg} ${border} flex items-center gap-1.5 shadow-sm`}>
-          <BadgeIcon className={`w-3.5 h-3.5 ${text}`} />
-          <span className={`text-[9px] font-bold uppercase tracking-wider ${text}`}>
-            {drawing.status.replace("_", " ")}
-          </span>
-        </div>
-
-        {/* Version Badge overlay */}
-        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">
-          V{drawing.current_version}
-        </div>
-        
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
-          <div className="w-10 h-10 rounded-full bg-white/90 shadow-lg grid place-items-center opacity-0 group-hover:opacity-100 transition translate-y-4 group-hover:translate-y-0 text-[#000F1B]">
-            <Maximize2 className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Info Area */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-3">
-        <div>
-          <div className="text-[9px] font-bold text-[#FF5A00] uppercase tracking-wider mb-1">{drawing.category}</div>
-          <h3 className="text-sm font-bold text-[#000F1B] leading-snug line-clamp-2">{drawing.name}</h3>
-        </div>
-        
-        <div className="pt-3 border-t border-black/5 flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-[#111111]/50">
-            {formattedDate}
-          </span>
-          <button onClick={onSelect} className={`text-[10px] font-bold uppercase tracking-wider hover:underline ${isPending ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>
-            {isPending ? "Action Required →" : "View & History"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DecisionModal({ drawing, onClose, onDecide, comment, setComment, submitting }) {
-  const versions = drawing.versions || [];
-  const [selectedVersionNum, setSelectedVersionNum] = useState(drawing.current_version);
-
-  const activeVersion = versions.find(v => v.version === selectedVersionNum) || versions[versions.length - 1] || {};
-  const isViewingLatest = selectedVersionNum === drawing.current_version;
-  const isPending = drawing.status === "pending" && isViewingLatest;
-  const activeUrl = resolveMediaUrl(activeVersion.url);
-
-  return (
-    <div className="fixed inset-0 bg-[#000F1B]/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 font-['Poppins']">
-      <div className="bg-white rounded-3xl w-full max-w-6xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
-        {/* Modal Top Header */}
-        <div className="p-4 sm:p-5 border-b border-black/5 flex items-center justify-between shrink-0 bg-[#F9FAFB]">
-          <div className="flex items-center gap-3">
-            <div className="text-xs font-bold text-white bg-[#000F1B] px-3 py-1 rounded-lg uppercase tracking-wider">
-              V{activeVersion.version || drawing.current_version}
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-[#000F1B] leading-tight">{drawing.name}</h2>
-              <span className="text-xs text-[#111111]/50 font-medium">{drawing.category} Category</span>
-            </div>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full grid place-items-center hover:bg-black/5 text-[#000F1B] transition">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto flex flex-col md:flex-row bg-[#F2F2F2]">
-          
-          {/* Main Image Canvas */}
-          <div className="flex-1 p-4 grid place-items-center relative">
-            <a href={activeUrl} target="_blank" rel="noreferrer" className="block max-w-full max-h-full rounded-xl overflow-hidden shadow-sm border border-black/10 relative group">
-              <img src={activeUrl} alt={drawing.name} className="max-h-[60vh] md:max-h-[70vh] object-contain bg-white" />
-              <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-semibold opacity-0 group-hover:opacity-100 transition flex items-center gap-1.5 shadow-lg">
-                <Maximize2 className="w-3.5 h-3.5" /> Click to view full scale
-              </div>
-            </a>
-          </div>
-
-          {/* Sidebar / Version History Log */}
-          <div className="w-full md:w-96 bg-white border-l border-black/5 shrink-0 flex flex-col">
-            
-            <div className="p-5 flex-1 overflow-y-auto space-y-6">
+        {/* =======================================================
+            VIEW A: DRAWING LIBRARY & APPROVALS (Split Pane)
+        ======================================================= */}
+        {currentView === "library" && (
+          <>
+            {/* LEFT PANE: LIST */}
+            <div className={`flex-1 flex-col bg-white md:border border-gray-200 md:rounded-xl shadow-sm overflow-hidden ${selectedId ? 'hidden md:flex' : 'flex'}`}>
               
-              {/* Overall Status Badge */}
-              <div>
-                <h3 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider mb-2">Current Overall Status</h3>
-                <span className={`inline-block px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${
-                  drawing.status === "pending" ? "bg-amber-50 text-amber-600 border-amber-200" :
-                  drawing.status === "approved" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                  drawing.status === "changes_required" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                  "bg-red-50 text-red-600 border-red-200"
-                }`}>
-                  {drawing.status.replace("_", " ")}
-                </span>
+              <div className="p-3 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50/50 shrink-0">
+                <div className="relative w-full sm:max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input 
+                    type="text" placeholder="Search drawings..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg outline-none focus:border-[#FF5A00] transition shadow-sm"
+                  />
+                </div>
+                <select 
+                  value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full sm:w-auto text-xs font-semibold bg-white border border-gray-200 rounded-lg px-2 py-1.5 outline-none cursor-pointer"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="pending">Under Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Changes Requested</option>
+                </select>
               </div>
 
-              {/* Version History Visual Timeline */}
-              <div>
-                <div className="flex items-center gap-2 text-xs font-bold text-[#000F1B] uppercase tracking-wider mb-3">
-                  <History className="w-4 h-4 text-[#FF5A00]" /> Version Log ({versions.length})
-                </div>
-
-                <div className="space-y-3">
-                  {[...versions].reverse().map((v) => {
-                    const isSelected = v.version === selectedVersionNum;
-                    const vUrl = resolveMediaUrl(v.url);
-                    const vDate = v.uploaded_at ? new Date(v.uploaded_at).toLocaleDateString("en-IN", { day: 'numeric', month: 'short' }) : "";
-
+              <div className="flex-1 overflow-auto p-3 space-y-2.5 bg-[#F5F6F8] md:bg-white">
+                {filteredDrawings.length === 0 ? (
+                  <div className="text-center py-12 text-sm text-gray-400">No drawings found matching your filters.</div>
+                ) : (
+                  filteredDrawings.map((d) => {
+                    const conf = getStatusConfig(d.status);
+                    const isSelected = selectedId === d.id;
+                    const dwgNo = `DWG-${d.id.substring(4, 7).toUpperCase()}`;
+                    
                     return (
                       <div 
-                        key={v.version} 
-                        onClick={() => setSelectedVersionNum(v.version)}
-                        className={`p-3 rounded-2xl border transition cursor-pointer flex gap-3 ${
-                          isSelected 
-                            ? "bg-[#FF5A00]/5 border-[#FF5A00] ring-1 ring-[#FF5A00]/30 shadow-sm" 
-                            : "bg-white border-black/10 hover:border-black/20 hover:bg-[#FAFAFA]"
+                        key={d.id} onClick={() => setSelectedId(d.id)}
+                        className={`bg-white p-3.5 rounded-xl border cursor-pointer transition-all ${
+                          isSelected ? "border-[#FF5A00] shadow-md ring-1 ring-[#FF5A00]/20" : "border-gray-200 shadow-sm hover:border-[#FF5A00]/40"
                         }`}
                       >
-                        {/* Thumbnail */}
-                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-[#F2F2F2] border border-black/10 shrink-0 relative">
-                          <img src={vUrl} alt={`V${v.version}`} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[8px] font-bold text-center py-0.5">
-                            V{v.version}
-                          </span>
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#000F1B]">
-                              Version {v.version} {v.version === drawing.current_version && "(Latest)"}
-                            </span>
-                            <span className="text-[10px] font-semibold text-[#111111]/40">{vDate}</span>
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="text-[10px] font-black text-gray-400">{dwgNo}</span>
+                              <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${conf.color}`}>
+                                {conf.label}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-[#000F1B] text-sm truncate">{d.name}</h4>
                           </div>
-
-                          {v.client_decision ? (
-                            <span className={`inline-block w-max px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                              v.client_decision === "approved" ? "bg-emerald-100 text-emerald-700" :
-                              v.client_decision === "changes_required" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
-                            }`}>
-                              {v.client_decision.replace("_", " ")}
-                            </span>
-                          ) : (
-                            <span className="text-[9px] font-bold text-amber-600 uppercase">Pending Review</span>
-                          )}
-
-                          {v.client_comment && (
-                            <p className="text-[10px] text-[#111111]/70 italic truncate mt-1">
-                              "{v.client_comment}"
-                            </p>
-                          )}
+                          <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden shrink-0 hidden sm:block">
+                            <img src={resolveMediaUrl(d.versions?.[d.versions.length-1]?.url)} alt="" className="w-full h-full object-cover opacity-80" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] font-semibold text-gray-500">
+                          <span className="text-[#FF5A00] uppercase tracking-wider">{d.category || "General"}</span>
+                          <span>•</span>
+                          <span>Rev: V{d.current_version}</span>
+                          <span>•</span>
+                          <span>{fmtDate(d.uploaded_at)}</span>
                         </div>
                       </div>
                     );
-                  })}
-                </div>
+                  })
+                )}
               </div>
-
+              
+              <div className="p-3 border-t border-gray-100 bg-white text-[10px] sm:text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
+                <span>Showing {filteredDrawings.length} of {drawings.length}</span>
+                {pendingCount > 0 && <span className="text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded">{pendingCount} Awaiting Approval</span>}
+              </div>
             </div>
 
-            {/* Action Bar for Client Decision (Only on Latest Pending Version) */}
-            {isPending ? (
-              <div className="p-5 border-t border-black/5 bg-[#F9FAFB]">
-                <h3 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider mb-2 text-center">Your Decision for V{drawing.current_version}</h3>
-                
-                <textarea 
-                  value={comment}
-                  onChange={e => setComment(e.target.value)}
-                  placeholder="Add a comment (required if requesting changes)..."
-                  className="w-full h-20 px-3 py-2 text-xs rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] resize-none mb-3 bg-white"
-                />
+            {/* RIGHT PANE: VIEWER & DETAILS (SCROLL FIXED) */}
+            <div className={`w-full md:w-[400px] lg:w-[500px] xl:w-[650px] flex-col bg-white md:border border-gray-200 md:rounded-xl shadow-sm overflow-hidden shrink-0 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
+              {selectedDrawing ? (
+                <>
+                  {/* Fixed Header */}
+                  <div className="p-3 sm:p-4 border-b border-gray-100 shrink-0 bg-white z-10 shadow-sm relative">
+                    <button 
+                      onClick={() => setSelectedId(null)} 
+                      className="md:hidden flex items-center gap-1 text-[11px] font-bold text-gray-500 hover:text-[#FF5A00] mb-3 bg-gray-50 px-2 py-1 rounded w-max"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Back to List
+                    </button>
 
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <button 
-                    onClick={() => onDecide(drawing.id, "changes_required")}
-                    disabled={submitting}
-                    className="w-full px-3 py-2.5 bg-white border border-blue-200 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-50 transition"
-                  >
-                    Change Req.
-                  </button>
-                  <button 
-                    onClick={() => onDecide(drawing.id, "rejected")}
-                    disabled={submitting}
-                    className="w-full px-3 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl text-xs font-bold hover:bg-red-50 transition"
-                  >
-                    Reject Plan
-                  </button>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="pr-2">
+                        <h2 className="text-base sm:text-lg font-bold text-[#000F1B] leading-tight flex flex-wrap items-center gap-2">
+                          {`DWG-${selectedDrawing.id.substring(4, 7).toUpperCase()}`} - {selectedDrawing.name}
+                          {selectedDrawing.status === "approved" && (
+                            <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">Current Approved</span>
+                          )}
+                        </h2>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1 font-medium">
+                          {selectedDrawing.category || "General"} &nbsp;|&nbsp; 
+                          Revision V{selectedDrawing.current_version} &nbsp;|&nbsp; 
+                          {fmtDate(selectedDrawing.uploaded_at)}
+                        </p>
+                      </div>
+                      
+                      {selectedDrawing.versions?.length > 0 && (
+                        <a 
+                          href={resolveMediaUrl(selectedDrawing.versions[selectedDrawing.versions.length-1].url)} 
+                          target="_blank" rel="noreferrer"
+                          className="p-2 sm:px-3 sm:py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 transition shadow-sm shrink-0"
+                        >
+                          <Download className="w-4 h-4" /> <span className="hidden sm:block">Download</span>
+                        </a>
+                      )}
+                    </div>
+
+                    {selectedDrawing.status === "pending" && (
+                      <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-amber-800">
+                          <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                          <div>
+                            <div className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Awaiting Your Approval</div>
+                            <div className="text-[9px] sm:text-[10px] opacity-80">Please review this drawing and provide your decision.</div>
+                          </div>
+                        </div>
+                        <div className="flex w-full sm:w-auto items-center gap-2">
+                          <button onClick={() => setModalType("reject")} className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white border border-amber-300 text-amber-700 text-[10px] sm:text-xs font-bold rounded shadow-sm hover:bg-amber-100 transition text-center">Request Changes</button>
+                          <button onClick={() => setModalType("approve")} className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-emerald-600 text-white text-[10px] sm:text-xs font-bold rounded shadow-sm hover:bg-emerald-700 transition text-center">Approve Drawing</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Scrollable Content Body (Image + History combined so it scrolls naturally) */}
+                  <div className="flex-1 overflow-y-auto bg-white flex flex-col">
+                    
+                    {/* Viewer Area */}
+                    <div className="h-[250px] sm:h-[400px] shrink-0 bg-gray-100 border-b border-gray-200 relative flex items-center justify-center p-2">
+                      {selectedDrawing.versions?.length > 0 ? (
+                        (() => {
+                          const url = resolveMediaUrl(selectedDrawing.versions[selectedDrawing.versions.length-1].url);
+                          if (url.toLowerCase().includes('.pdf')) {
+                            return <iframe src={`${url}#toolbar=0&navpanes=0`} className="w-full h-full rounded shadow-sm border border-gray-200 bg-white" title="viewer" />
+                          } else {
+                            return <img src={url} alt="drawing preview" className="max-w-full max-h-full object-contain drop-shadow-md rounded" />
+                          }
+                        })()
+                      ) : (
+                        <div className="text-gray-400 text-sm font-semibold flex flex-col items-center gap-2">
+                          <FileBox className="w-10 h-10 opacity-30" /> No file uploaded yet
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Metadata & History */}
+                    <div className="p-4 sm:p-5 space-y-6">
+                      <div>
+                        <div className="flex justify-between items-end mb-2.5 border-b border-gray-100 pb-1.5">
+                          <h3 className="text-[11px] font-bold text-[#000F1B] uppercase tracking-wider flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-[#FF5A00]" /> Revision Logs</h3>
+                        </div>
+                        <div className="space-y-2">
+                          {[...(selectedDrawing.versions || [])].reverse().map((v, i) => (
+                            <div key={i} className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-bold text-gray-900">Version {v.version}</span>
+                                  <span className="text-[10px] font-semibold text-gray-500">• {fmtDate(v.uploaded_at)}</span>
+                                </div>
+                                {v.client_comment ? (
+                                  <p className="text-[10px] text-gray-600 italic border-l-2 border-[#FF5A00]/50 pl-2 mt-1">"{v.client_comment}"</p>
+                                ) : (
+                                  <span className="text-[9px] text-gray-400 italic">No feedback provided</span>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-200">
+                                {v.client_decision === "approved" ? <span className="text-[9px] font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Approved</span> :
+                                 v.client_decision === "rejected" ? <span className="text-[9px] font-bold uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">Rejected</span> :
+                                 <span className="text-[9px] font-bold uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">Pending</span>}
+                                
+                                <a href={resolveMediaUrl(v.url)} target="_blank" rel="noreferrer" className="p-1.5 rounded bg-white border border-gray-300 text-gray-600 hover:text-[#1A73E8] hover:border-blue-400 transition shadow-sm">
+                                  <Download className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-[11px] font-bold text-[#000F1B] uppercase tracking-wider mb-2 border-b border-gray-100 pb-1.5">Drawing Information</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-xs">
+                          <div className="flex justify-between border-b border-gray-50 pb-1.5"><span className="text-gray-500 font-medium">Drawing No.</span><span className="font-bold text-gray-900">{`DWG-${selectedDrawing.id.substring(4, 7).toUpperCase()}`}</span></div>
+                          <div className="flex justify-between border-b border-gray-50 pb-1.5"><span className="text-gray-500 font-medium">Discipline</span><span className="font-bold text-gray-900">{selectedDrawing.category}</span></div>
+                          <div className="flex justify-between border-b border-gray-50 pb-1.5 col-span-1 sm:col-span-2"><span className="text-gray-500 font-medium">Title</span><span className="font-bold text-gray-900">{selectedDrawing.name}</span></div>
+                          <div className="flex justify-between border-b border-gray-50 pb-1.5"><span className="text-gray-500 font-medium">Upload Date</span><span className="font-bold text-gray-900">{fmtDate(selectedDrawing.uploaded_at)}</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-[#F9FAFB]">
+                  <FileBox className="w-16 h-16 opacity-20 mb-4" />
+                  <p className="text-lg font-bold text-gray-600 mb-1">No Drawing Selected</p>
+                  <p className="text-xs max-w-xs">Select a drawing from the list on the left to view its details and provide approval.</p>
                 </div>
-                <button 
-                  onClick={() => onDecide(drawing.id, "approved")}
-                  disabled={submitting}
-                  className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition shadow-sm"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  Approve Drawing V{drawing.current_version}
-                </button>
-              </div>
-            ) : (
-              <div className="p-4 border-t border-black/5 bg-[#F9FAFB] text-center">
-                <span className="text-xs font-semibold text-[#111111]/50">
-                  {!isViewingLatest ? `Viewing historical Version V${selectedVersionNum}` : "Drawing decision recorded."}
-                </span>
-              </div>
-            )}
+              )}
+            </div>
+          </>
+        )}
 
+        {/* =======================================================
+            VIEW B: MY REQUESTS HISTORY (TABLE LEDGER FORMAT)
+        ======================================================= */}
+        {currentView === "requests" && (
+          <div className="flex-1 bg-white md:border border-gray-200 md:rounded-xl shadow-sm overflow-hidden flex flex-col animate-in fade-in duration-300">
+            
+            <div className="p-4 md:p-5 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#000F1B] flex items-center justify-center shadow-sm shrink-0">
+                  <PenTool className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#000F1B]">Drawing Requests History</h2>
+                  <p className="text-[10px] text-gray-500">Track the status of drawings you have requested from the design team.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setModalType("new_request")}
+                className="w-full sm:w-auto px-5 py-2 bg-[#1A73E8] hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Plus className="w-4 h-4" /> Request New Drawing
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              {requestsHistory.length === 0 ? (
+                <div className="text-center py-20 max-w-lg mx-auto">
+                  <FileBox className="w-12 h-12 mx-auto mb-3 opacity-20 text-gray-500" />
+                  <p className="text-sm font-bold text-gray-700 mb-1">No requests yet</p>
+                  <p className="text-xs text-gray-500">If you need a specific drawing that isn't in your library, request it here.</p>
+                </div>
+              ) : (
+                <div className="min-w-[600px]">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                      <tr>
+                        <th className="py-3 px-5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Date requested</th>
+                        <th className="py-3 px-5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Request Details</th>
+                        <th className="py-3 px-5 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {[...requestsHistory].reverse().map(req => (
+                        <tr key={req.id} className="hover:bg-gray-50/80 transition-colors bg-white">
+                          <td className="py-4 px-5 align-top w-40">
+                            <div className="text-xs font-bold text-gray-900">{new Date(req.requested_at).toLocaleDateString("en-GB", {day: '2-digit', month: 'short', year: 'numeric'})}</div>
+                          </td>
+                          <td className="py-4 px-5 align-top">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">{req.category}</span>
+                              <h4 className="text-xs font-bold text-[#000F1B]">{req.title}</h4>
+                            </div>
+                            {req.reason && <p className="text-[11px] text-gray-600 mt-1 max-w-lg">"{req.reason}"</p>}
+                          </td>
+                          <td className="py-4 px-5 align-top text-center w-48">
+                            {req.status === "pending" && <span className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg w-full"><Clock className="w-3.5 h-3.5"/> Pending Design</span>}
+                            {req.status === "fulfilled" && <span className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg w-full"><CheckCircle2 className="w-3.5 h-3.5"/> Fulfilled</span>}
+                            {req.status === "dismissed" && <span className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-gray-600 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg w-full"><X className="w-3.5 h-3.5"/> Dismissed</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
-
-        </div>
+        )}
       </div>
+
+      {/* ==========================================
+          MODALS
+      ========================================== */}
+      
+      {/* 1. APPROVE MODAL */}
+      {modalType === "approve" && selectedDrawing && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden font-['Poppins']">
+            <div className="p-4 bg-[#10B981] flex justify-between items-center text-white">
+              <h3 className="font-bold flex items-center gap-2"><CheckCircle2 className="w-5 h-5"/> Approve Drawing</h3>
+              <button onClick={() => setModalType(null)} className="p-1 hover:bg-black/10 rounded-full transition"><X className="w-4 h-4"/></button>
+            </div>
+            <div className="p-5 sm:p-6 space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+                <div className="font-bold text-[#000F1B] mb-1">{selectedDrawing.name}</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">Revision: V{selectedDrawing.current_version} &nbsp;|&nbsp; Date: {fmtDate(selectedDrawing.uploaded_at)}</div>
+              </div>
+              <p className="text-[10px] sm:text-xs font-semibold text-emerald-800 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                By approving this drawing, you confirm that you have reviewed the current revision and are agreeable to proceed with execution based on this design.
+              </p>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Approval Comments (Optional)</label>
+                <textarea 
+                  rows="3" 
+                  value={comment} onChange={e => setComment(e.target.value)}
+                  placeholder="Add any specific notes or conditions for this approval..."
+                  className="w-full border border-gray-200 rounded-lg p-3 text-xs sm:text-sm focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none transition resize-none bg-gray-50 focus:bg-white"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50">
+              <button onClick={() => setModalType(null)} className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200 rounded-lg transition">Cancel</button>
+              <button onClick={() => handleDecision("approved")} disabled={submitting} className="px-5 py-2 text-xs font-bold bg-[#10B981] hover:bg-emerald-600 text-white rounded-lg shadow-sm transition flex items-center gap-2">
+                {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Confirm Approval
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. REQUEST CHANGES MODAL */}
+      {modalType === "reject" && selectedDrawing && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden font-['Poppins']">
+            <div className="p-4 bg-red-600 flex justify-between items-center text-white">
+              <h3 className="font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5"/> Request Changes</h3>
+              <button onClick={() => setModalType(null)} className="p-1 hover:bg-black/10 rounded-full transition"><X className="w-4 h-4"/></button>
+            </div>
+            <div className="p-5 sm:p-6 space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+                <div className="font-bold text-[#000F1B] mb-1">{selectedDrawing.name}</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">Revision: V{selectedDrawing.current_version} &nbsp;|&nbsp; Date: {fmtDate(selectedDrawing.uploaded_at)}</div>
+              </div>
+              <p className="text-[10px] sm:text-xs font-medium text-red-800 bg-red-50 p-3 rounded-lg border border-red-100">
+                Please specify what changes are required. This will be sent directly to the design team for revision.
+              </p>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Required Changes <span className="text-red-500">*</span></label>
+                <textarea 
+                  rows="4" 
+                  value={comment} onChange={e => setComment(e.target.value)}
+                  placeholder="e.g. Increase bedroom 2 wardrobe width to 600mm..."
+                  className="w-full border border-gray-200 rounded-lg p-3 text-xs sm:text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition resize-none bg-gray-50 focus:bg-white"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50">
+              <button onClick={() => setModalType(null)} className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200 rounded-lg transition">Cancel</button>
+              <button 
+                onClick={() => handleDecision("rejected")} 
+                disabled={submitting || !comment.trim()} 
+                className="px-5 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+              >
+                {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Submit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. REQUEST NEW DRAWING MODAL */}
+      {modalType === "new_request" && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden font-['Poppins']">
+            <div className="p-4 bg-[#1A73E8] flex justify-between items-center text-white">
+              <h3 className="font-bold flex items-center gap-2"><Plus className="w-5 h-5"/> Request New Drawing</h3>
+              <button onClick={() => setModalType(null)} className="p-1 hover:bg-black/10 rounded-full transition"><X className="w-4 h-4"/></button>
+            </div>
+            <div className="p-5 sm:p-6 space-y-4">
+              <p className="text-[10px] sm:text-xs text-gray-500 mb-2">Can't find what you need? Request a new drawing from the design team.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Drawing Category <span className="text-red-500">*</span></label>
+                  <select 
+                    value={requestForm.category} onChange={e => setRequestForm({...requestForm, category: e.target.value})}
+                    className="w-full border border-gray-200 rounded-lg p-2.5 text-xs sm:text-sm focus:border-blue-500 outline-none cursor-pointer bg-gray-50 focus:bg-white"
+                  >
+                    <option value="">Select category...</option>
+                    {CATEGORIES.filter(c => c !== "All Drawings").map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Drawing Title / Description <span className="text-red-500">*</span></label>
+                <input 
+                  type="text" 
+                  value={requestForm.title} onChange={e => setRequestForm({...requestForm, title: e.target.value})}
+                  placeholder="e.g. Wardrobe detail for Bedroom 2"
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs sm:text-sm focus:border-blue-500 outline-none bg-gray-50 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Reason for Request (Optional)</label>
+                <textarea 
+                  rows="3" 
+                  value={requestForm.reason} onChange={e => setRequestForm({...requestForm, reason: e.target.value})}
+                  placeholder="Please describe what you need..."
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs sm:text-sm focus:border-blue-500 outline-none resize-none bg-gray-50 focus:bg-white"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50">
+              <button onClick={() => setModalType(null)} className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200 rounded-lg transition">Cancel</button>
+              <button 
+                onClick={handleRequestNew} 
+                disabled={submitting || !requestForm.category || !requestForm.title} 
+                className="px-5 py-2 text-xs font-bold bg-[#1A73E8] hover:bg-blue-700 text-white rounded-lg shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+              >
+                {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Submit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
