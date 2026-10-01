@@ -10,8 +10,20 @@ from starlette.middleware.cors import CORSMiddleware
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-from routes import router as api_router  # noqa: E402
-from project_routes import proj_router  # noqa: E402
+# 1. Main Website & Admin Login Router (from routes.py)
+from routes import router as api_router
+
+# 2. 10 Modular Project Routers (from backend/routers/)
+from routers.routes_core import router as core_router
+from routers.routes_stages import router as stages_router
+from routers.routes_drawings import router as drawings_router
+from routers.routes_materials import router as materials_router
+from routers.routes_payments import router as payments_router
+from routers.routes_cctv import router as cctv_router
+from routers.routes_documents import router as documents_router
+from routers.routes_quality import router as quality_router
+from routers.routes_maintenance import router as maintenance_router
+from routers.routes_reports import router as reports_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -132,5 +144,17 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": f"Server Error: {str(exc)}"},
     )
 
+# 1. Main Website & Auth Router
 app.include_router(api_router)
-app.include_router(proj_router)
+
+# 2. The 10 Modular Project Routers
+app.include_router(core_router)
+app.include_router(stages_router)
+app.include_router(drawings_router)
+app.include_router(materials_router)
+app.include_router(payments_router)
+app.include_router(cctv_router)
+app.include_router(documents_router)
+app.include_router(quality_router)
+app.include_router(maintenance_router)
+app.include_router(reports_router)

@@ -35,18 +35,18 @@ export default function ProgressPage() {
   const approvedReports = (project.daily_reports || []).filter(r => r.is_approved).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-3 font-['Poppins'] pb-10 px-2 sm:px-0">
+    <div className="max-w-[1200px] mx-auto space-y-2.5 font-['Poppins'] pb-8 px-2 sm:px-4 mt-2">
       
       {/* ORIGINAL CLEAN TABS */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-[#000F1B] mb-2">Project Progress</h1>
+      <div className="mb-2">
+        <h1 className="text-lg font-bold text-[#000F1B] mb-1.5">Project Progress</h1>
         <div className="flex overflow-x-auto no-scrollbar border-b border-black/5">
           {TABS.map(tab => (
             <button
               key={tab} 
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-[11px] font-bold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === tab ? "border-[#FF5A00] text-[#000F1B]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"
+              className={`px-3 py-1.5 text-[9px] uppercase tracking-wider font-bold transition-all border-b-2 whitespace-nowrap ${
+                activeTab === tab ? "border-[#FF5A00] text-[#000F1B]" : "border-transparent text-gray-400 hover:text-[#000F1B]"
               }`}
             >
               {tab}
@@ -59,9 +59,9 @@ export default function ProgressPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <KpiBlock title="Overall Progress" value={`${overallProgress}%`} subtitle={overallProgress >= 100 ? "Completed" : "On Track"} accent="#FF5A00" icon={Target} />
         <KpiBlock title="Stages Done" value={`${stagesCompleted}/${stages.length}`} subtitle="Milestones" accent="#10B981" icon={CheckCircle2} />
-        <KpiBlock title="Days Completed" value={daysCompleted} subtitle={`of ${totalDays} total`} accent="#3B82F6" icon={Clock} />
-        <KpiBlock title="Days Remaining" value={daysRemaining} subtitle="Estimated" accent="#F59E0B" icon={Calendar} />
-        <KpiBlock title="Forecast Handover" value={expectedDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} subtitle={expectedDate.getFullYear()} accent="#000F1B" icon={TrendingUp} />
+        <KpiBlock title="Days Completed" value={daysCompleted} subtitle={`of ${totalDays} total`} accent="#FF8C00" icon={Clock} />
+        <KpiBlock title="Days Remaining" value={daysRemaining} subtitle="Estimated" accent="#EAB308" icon={Calendar} />
+        <KpiBlock title="Forecast Handover" value={expectedDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} subtitle={expectedDate.getFullYear()} accent="#000F1B" icon={TrendingUp} />
       </div>
 
       {/* Tab Content */}
@@ -87,28 +87,21 @@ function OverviewTab({ project, stages }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5">
-      
-      {/* 
-        Responsive Ordering: 
-        On Mobile (order-2): Stages list goes below Current Stage
-        On Desktop (lg:order-1): Stages list goes left, Sidebar goes right
-      */}
-      <div className="lg:col-span-8 order-2 lg:order-1 bg-white rounded-xl border border-black/5 shadow-sm p-3">
-        <div className="flex items-center justify-between mb-2 border-b border-black/5 pb-2">
-          <h3 className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Construction Master Plan</h3>
+      <div className="lg:col-span-8 order-2 lg:order-1 bg-white rounded-lg border border-black/5 shadow-sm p-2.5">
+        <div className="flex items-center justify-between mb-2 border-b border-black/5 pb-1.5">
+          <h3 className="text-[9px] font-bold text-[#000F1B] uppercase tracking-wider">Construction Master Plan</h3>
           <span className="text-[8px] font-bold bg-[#F2F2F2] px-1.5 py-0.5 rounded text-[#000F1B]">{stages.length} Stages</span>
         </div>
         
-        {/* Desktop Table View */}
         <div className="hidden sm:block overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left text-[9px]">
-            <thead className="text-[#111111]/50 border-b border-black/5 bg-[#F9FAFB]">
+          <table className="w-full text-left text-[8px]">
+            <thead className="text-gray-500 border-b border-black/5 bg-[#F9FAFB]">
               <tr>
-                <th className="py-1.5 px-2 font-bold uppercase tracking-wider rounded-tl-md w-6">#</th>
+                <th className="py-1.5 px-2 font-bold uppercase tracking-wider w-6">#</th>
                 <th className="py-1.5 px-2 font-bold uppercase tracking-wider">Stage</th>
-                <th className="py-1.5 px-2 font-bold uppercase tracking-wider">Status</th>
-                <th className="py-1.5 px-2 font-bold uppercase tracking-wider w-[100px]">Progress</th>
-                <th className="py-1.5 px-2 font-bold uppercase tracking-wider text-right rounded-tr-md">Actual End</th>
+                <th className="py-1.5 px-2 font-bold uppercase tracking-wider text-center">Status</th>
+                <th className="py-1.5 px-2 font-bold uppercase tracking-wider w-[90px]">Progress</th>
+                <th className="py-1.5 px-2 font-bold uppercase tracking-wider text-right">Actual End</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
@@ -117,23 +110,23 @@ function OverviewTab({ project, stages }) {
                 const isCompleted = stage.status === "completed";
                 const pct = Number(stage.progress_pct) || 0;
                 const actualEnd = stage.actual_end_date 
-                  ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) 
+                  ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) 
                   : "—";
 
                 return (
                   <tr key={i} className={`transition-colors ${isActive ? "bg-[#FF5A00]/5" : "hover:bg-[#F9FAFB]"}`}>
-                    <td className="py-2 px-2 text-[#111111]/40 font-mono font-bold">{(i + 1).toString().padStart(2, '0')}</td>
-                    <td className={`py-2 px-2 font-bold text-[10px] ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{stage.name}</td>
-                    <td className="py-2 px-2"><StatusBadge status={stage.status} /></td>
-                    <td className="py-2 px-2">
+                    <td className="py-1.5 px-2 text-gray-400 font-mono font-bold">{(i + 1).toString().padStart(2, '0')}</td>
+                    <td className={`py-1.5 px-2 font-bold text-[9px] ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{stage.name}</td>
+                    <td className="py-1.5 px-2 text-center"><StatusBadge status={stage.status} /></td>
+                    <td className="py-1.5 px-2">
                       <div className="flex items-center gap-1.5">
                         <div className="flex-1 h-1 bg-[#F2F2F2] rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 ${isCompleted ? "bg-emerald-500" : "bg-gradient-to-r from-[#FF5A00] to-[#FFA500]"}`} style={{ width: `${pct}%` }} />
+                          <div className={`h-full rounded-full ${isCompleted ? "bg-emerald-500" : "bg-gradient-to-r from-[#FF5A00] to-[#FFA500]"}`} style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="text-[8px] font-black w-6 text-right text-[#000F1B]">{pct}%</span>
+                        <span className="text-[7px] font-black w-5 text-right text-[#000F1B]">{pct}%</span>
                       </div>
                     </td>
-                    <td className="py-2 px-2 text-right text-[#111111]/60 font-semibold">{actualEnd}</td>
+                    <td className="py-1.5 px-2 text-right text-gray-500 font-semibold">{actualEnd}</td>
                   </tr>
                 );
               })}
@@ -146,24 +139,24 @@ function OverviewTab({ project, stages }) {
           {stages.map((stage, i) => {
             const isActive = stage.status === "in_progress";
             const pct = Number(stage.progress_pct) || 0;
-            const actualEnd = stage.actual_end_date ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—";
+            const actualEnd = stage.actual_end_date ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—";
             
             return (
-              <div key={i} className={`p-2.5 rounded-lg border transition-all ${isActive ? "border-[#FF5A00] bg-[#FF5A00]/5 shadow-sm ring-1 ring-[#FF5A00]/20" : "border-black/5 bg-white"}`}>
-                <div className="flex items-center justify-between mb-1.5">
+              <div key={i} className={`p-2 rounded border ${isActive ? "border-[#FF5A00] bg-[#FF5A00]/5 shadow-sm" : "border-black/5 bg-white"}`}>
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5 min-w-0 pr-1">
-                    <span className="text-[8px] font-mono font-bold text-[#111111]/40 shrink-0">#{(i + 1).toString().padStart(2, '0')}</span>
-                    <span className={`text-[10px] font-bold truncate ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{stage.name}</span>
+                    <span className="text-[8px] font-mono font-bold text-gray-400 shrink-0">#{(i + 1).toString().padStart(2, '0')}</span>
+                    <span className={`text-[9px] font-bold truncate ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{stage.name}</span>
                   </div>
                   <StatusBadge status={stage.status} />
                 </div>
-                <div className="flex items-center gap-2 bg-white p-1.5 rounded-md border border-black/5">
+                <div className="flex items-center gap-1.5 bg-white p-1 rounded border border-black/5">
                   <div className="flex-1 h-1 bg-[#F2F2F2] rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${stage.status === "completed" ? "bg-emerald-500" : "bg-[#FF5A00]"}`} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-[8px] font-black text-[#000F1B] shrink-0">{pct}%</span>
-                  <span className="text-[7px] text-[#111111]/20">|</span>
-                  <span className="text-[7px] font-bold text-[#111111]/60 shrink-0">End: {actualEnd}</span>
+                  <span className="text-[7px] font-black text-[#000F1B] shrink-0">{pct}%</span>
+                  <span className="text-[6px] text-gray-300">|</span>
+                  <span className="text-[7px] font-bold text-gray-500 shrink-0">End: {actualEnd}</span>
                 </div>
               </div>
             );
@@ -171,57 +164,52 @@ function OverviewTab({ project, stages }) {
         </div>
       </div>
 
-      {/* Sidebar: Current Stage & Team */}
       <div className="lg:col-span-4 order-1 lg:order-2 space-y-2.5">
         
-        {/* Sleek Current Active Stage Card */}
-        <div className="bg-gradient-to-br from-[#000F1B] via-[#0F1E30] to-[#000F1B] rounded-xl shadow-md p-3 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#000F1B] via-[#0F1E30] to-[#000F1B] rounded-lg shadow-sm p-3 text-white relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-0.5 bg-[#FF5A00]" />
-          <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#FF5A00]/15 blur-[20px] rounded-full" />
+          <div className="absolute -top-10 -right-10 w-20 h-20 bg-[#FF5A00]/20 blur-[15px] rounded-full" />
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[8px] font-bold text-white/50 uppercase tracking-widest flex items-center gap-1">
-                <Target className="w-3 h-3 text-[#FF5A00]" /> Active Stage
+              <h3 className="text-[7px] font-bold text-white/60 uppercase tracking-widest flex items-center gap-1">
+                <Target className="w-2.5 h-2.5 text-[#FF5A00]" /> Active Stage
               </h3>
               {activeStage && (
-                <span className="text-[9px] font-black bg-[#FF5A00] text-white px-2 py-0.5 rounded shadow-sm">{activeStage.progress_pct || 0}%</span>
+                <span className="text-[8px] font-black bg-[#FF5A00] text-white px-1.5 py-0.5 rounded">{activeStage.progress_pct || 0}%</span>
               )}
             </div>
             
             {activeStage ? (
-              <div className="space-y-2">
-                <h4 className="text-sm font-bold text-white leading-tight">{activeStage.name}</h4>
-                
+              <div className="space-y-1.5">
+                <h4 className="text-[11px] font-bold text-white leading-tight">{activeStage.name}</h4>
                 <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#FF5A00] to-[#FFA500] rounded-full transition-all duration-1000" style={{ width: `${activeStage.progress_pct || 0}%` }} />
+                  <div className="h-full bg-gradient-to-r from-[#FF5A00] to-[#FFA500] rounded-full" style={{ width: `${activeStage.progress_pct || 0}%` }} />
                 </div>
-
                 {activeStage.description && (
-                  <p className="text-[9px] text-white/70 leading-relaxed bg-white/5 p-2 rounded-md border border-white/10 italic">
+                  <p className="text-[8px] text-white/70 bg-white/5 p-1.5 rounded border border-white/10 italic leading-snug">
                     "{activeStage.description}"
                   </p>
                 )}
               </div>
             ) : (
-              <div className="text-[9px] text-white/40 italic py-4 text-center">No active stage currently in progress.</div>
+              <div className="text-[8px] text-white/40 italic py-3 text-center">No active stage currently in progress.</div>
             )}
           </div>
         </div>
 
-        {/* Project Team */}
-        <div className="bg-white rounded-xl border border-black/5 shadow-sm p-3">
-          <h3 className="text-[8px] font-bold text-[#111111]/40 uppercase tracking-widest mb-2 border-b border-black/5 pb-1.5">Project Team</h3>
-          <div className="space-y-2">
+        <div className="bg-white rounded-lg border border-black/5 shadow-sm p-2.5">
+          <h3 className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 border-b border-black/5 pb-1">Project Team</h3>
+          <div className="space-y-1.5">
             {team.filter(t => t.status !== "Pending").slice(0, 5).map((member, idx) => (
-              <div key={idx} className="flex items-center gap-2">
+              <div key={idx} className="flex items-center gap-1.5">
                 {member.avatar || member.photo 
-                  ? <img src={resolveMediaUrl(member.avatar || member.photo)} alt="" className="w-6 h-6 rounded-full object-cover border border-black/10" /> 
-                  : <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#F5F6F8] to-[#E5E7EB] border border-black/5 flex items-center justify-center text-[#000F1B] font-bold text-[9px]">{member.name?.[0] || "?"}</div>
+                  ? <img src={resolveMediaUrl(member.avatar || member.photo)} alt="" className="w-5 h-5 rounded-full object-cover border border-black/10" /> 
+                  : <div className="w-5 h-5 rounded-full bg-gray-100 border border-black/5 flex items-center justify-center text-[#000F1B] font-bold text-[8px]">{member.name?.[0] || "?"}</div>
                 }
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-bold text-[#000F1B] truncate">{member.name}</div>
-                  <div className="text-[8px] text-[#111111]/50 font-semibold truncate">{member.role}</div>
+                  <div className="text-[9px] font-bold text-[#000F1B] truncate">{member.name}</div>
+                  <div className="text-[7px] text-gray-500 font-semibold truncate">{member.role}</div>
                 </div>
               </div>
             ))}
@@ -250,42 +238,40 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-black/5 shadow-sm p-3 overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2 border-b border-black/5 pb-2">
+    <div className="bg-white rounded-lg border border-black/5 shadow-sm p-2.5 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1.5 border-b border-black/5 pb-1.5">
         <div>
-          <h3 className="text-xs font-bold text-[#000F1B]">Master Gantt Schedule</h3>
-          <p className="text-[8px] text-[#111111]/50 font-medium mt-0.5">Dynamic timeline of stages & substages</p>
+          <h3 className="text-[10px] font-bold text-[#000F1B]">Master Gantt Schedule</h3>
+          <p className="text-[7px] text-gray-500 font-medium mt-0.5">Timeline of stages & substages</p>
         </div>
-        <div className="flex items-center gap-2 text-[7px] font-bold text-[#111111]/60 uppercase tracking-wider bg-[#F9FAFB] p-1 rounded border border-black/5 flex-wrap">
-          <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-sm" /> Done</div>
-          <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-[#FF5A00] rounded-sm" /> Active</div>
-          <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-slate-300 rounded-sm" /> Pending</div>
+        <div className="flex items-center gap-1.5 text-[6px] font-bold text-gray-500 uppercase tracking-wider bg-[#F9FAFB] p-1 rounded border border-black/5 flex-wrap">
+          <div className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-[1px]" /> Done</div>
+          <div className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 bg-[#FF5A00] rounded-[1px]" /> Active</div>
+          <div className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 bg-slate-300 rounded-[1px]" /> Pending</div>
           <div className="w-px h-2 bg-black/10 mx-0.5" />
-          <div className="flex items-center gap-1"><div className="w-0.5 h-2 bg-red-500 rounded-full" /> Today</div>
+          <div className="flex items-center gap-0.5"><div className="w-0.5 h-2 bg-red-500 rounded-full" /> Today</div>
         </div>
       </div>
 
       <div className="overflow-x-auto custom-scrollbar pb-1">
-        <div className="min-w-[650px]">
+        <div className="min-w-[600px]">
           
-          <div className="flex mb-1.5">
-            <div className="w-[35%] shrink-0 border-r border-black/10 pr-2 flex items-end pb-0.5">
-              <div className="text-[8px] font-bold text-[#111111]/40 uppercase tracking-wider">Task Breakdown</div>
+          <div className="flex mb-1">
+            <div className="w-[35%] shrink-0 border-r border-black/10 pr-1.5 flex items-end pb-0.5">
+              <div className="text-[7px] font-bold text-gray-400 uppercase tracking-wider">Task Breakdown</div>
             </div>
-            <div className="w-[65%] shrink-0 pl-1.5 relative h-5 border-b border-black/10">
+            <div className="w-[65%] shrink-0 pl-1.5 relative h-4 border-b border-black/10">
               {monthMarkers.map((m, i) => (
-                <div key={i} className="absolute top-0 border-l border-black/10 pl-1 h-full flex flex-col justify-end pb-0.5" style={{ left: `${m.pct}%` }}>
-                  <div className="text-[8px] font-bold text-[#000F1B] leading-none">{m.label}</div>
-                  {i === 0 || m.year !== monthMarkers[i-1].year ? <div className="text-[6px] font-bold text-[#111111]/40">{m.year}</div> : null}
+                <div key={i} className="absolute top-0 border-l border-black/10 pl-0.5 h-full flex flex-col justify-end pb-0.5" style={{ left: `${m.pct}%` }}>
+                  <div className="text-[7px] font-bold text-[#000F1B] leading-none">{m.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative space-y-0.5">
+          <div className="relative space-y-[1px]">
             <div className="absolute top-0 bottom-0 pointer-events-none z-20" style={{ left: `calc(35% + 6px + ${todayPct}% * 0.65)` }}>
               <div className="w-[1px] h-full bg-red-500/80 shadow-[0_0_4px_rgba(239,68,68,0.5)]" />
-              <div className="absolute -top-0.5 -translate-x-1/2 bg-red-500 text-white text-[6px] font-black px-1 py-0.5 rounded shadow-sm">TODAY</div>
             </div>
 
             {stages.map((stage, idx) => {
@@ -301,63 +287,47 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
 
               return (
                 <div key={idx} className="group pb-1">
-                  
-                  {/* MAIN STAGE */}
-                  <div className="flex items-center py-1 bg-white hover:bg-[#F9FAFB] rounded transition border border-transparent hover:border-black/5">
-                    <div className="w-[35%] shrink-0 px-2 flex items-center gap-1.5 min-w-0 border-r border-black/5">
-                      <div className="text-[8px] font-black text-white bg-[#000F1B] w-3.5 h-3.5 rounded-sm grid place-items-center shrink-0">{(idx + 1)}</div>
+                  <div className="flex items-center py-0.5 bg-white hover:bg-[#F9FAFB] rounded border border-transparent hover:border-black/5 transition">
+                    <div className="w-[35%] shrink-0 px-1.5 flex items-center gap-1 min-w-0 border-r border-black/5">
+                      <div className="text-[7px] font-black text-white bg-[#000F1B] w-3 h-3 rounded-[2px] grid place-items-center shrink-0">{(idx + 1)}</div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-bold text-[9px] text-[#000F1B] truncate">{stage.name}</div>
-                        {hasDates ? (
-                          <div className="text-[7px] text-[#111111]/50 font-medium">
-                            {sStart.toLocaleDateString("en-GB", { day: '2-digit', month: 'short' })} → {sEnd.toLocaleDateString("en-GB", { day: '2-digit', month: 'short' })}
-                          </div>
-                        ) : <div className="text-[7px] text-amber-500 italic">Dates pending</div>}
+                        <div className="font-bold text-[8px] text-[#000F1B] truncate">{stage.name}</div>
                       </div>
-                      <div className="text-[8px] font-black w-5 text-right text-[#000F1B]">{stage.progress_pct || 0}%</div>
+                      <div className="text-[7px] font-black w-4 text-right text-[#000F1B]">{stage.progress_pct || 0}%</div>
                     </div>
 
-                    <div className="w-[65%] shrink-0 pl-1.5 relative h-4 flex items-center">
+                    <div className="w-[65%] shrink-0 pl-1.5 relative h-3 flex items-center">
                       {hasDates && (
-                        <div className="absolute h-2.5 rounded-sm shadow-sm overflow-hidden" style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: '3px' }}>
+                        <div className="absolute h-2 rounded-[2px] shadow-sm overflow-hidden" style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: '2px' }}>
                           <div className={`h-full ${barColor} relative`}>
-                            {isActive && stage.progress_pct > 0 && <div className="absolute top-0 left-0 h-full bg-white/25" style={{ width: `${stage.progress_pct}%` }} />}
+                            {isActive && stage.progress_pct > 0 && <div className="absolute top-0 left-0 h-full bg-white/30" style={{ width: `${stage.progress_pct}%` }} />}
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* SUBSTAGES */}
                   {substages.length > 0 && (
-                    <div className="ml-3 border-l border-black/10 mb-1 space-y-[1px]">
+                    <div className="ml-2 border-l border-black/10 space-y-[1px]">
                       {substages.map((sub, sIdx) => {
                         const subStart = sub.start_date ? new Date(sub.start_date) : sStart;
                         const subEnd = sub.actual_end_date ? new Date(sub.actual_end_date) : sub.planned_end_date ? new Date(sub.planned_end_date) : sEnd;
                         const subHasDates = subStart && subEnd;
                         const subLeft = subHasDates ? Math.max(0, ((subStart - startDate) / totalMs) * 100) : 0;
                         const subWidth = subHasDates ? Math.max(0.5, ((subEnd - subStart) / totalMs) * 100) : 0;
-                        const subColor = sub.status === "completed" ? "bg-emerald-400" : sub.status === "in_progress" ? "bg-amber-500" : "bg-slate-200";
+                        const subColor = sub.status === "completed" ? "bg-emerald-400" : sub.status === "in_progress" ? "bg-[#FFA500]" : "bg-slate-200";
 
                         return (
-                          <div key={sIdx} className="flex items-center hover:bg-[#F9FAFB] transition relative py-0.5">
-                            <div className="absolute top-1/2 left-0 w-1.5 border-t border-black/10 -translate-y-1/2" />
-                            {sIdx === substages.length - 1 && <div className="absolute top-1/2 bottom-0 left-[-1px] w-1 bg-white" />}
-
-                            <div className="w-[35%] shrink-0 pl-2.5 pr-1.5 flex items-center gap-1 min-w-0">
+                          <div key={sIdx} className="flex items-center hover:bg-[#F9FAFB] transition relative">
+                            <div className="absolute top-1/2 left-0 w-1 border-t border-black/10" />
+                            <div className="w-[35%] shrink-0 pl-2 pr-1 flex items-center gap-1 min-w-0">
                               <div className="min-w-0 flex-1">
-                                <div className="font-semibold text-[8px] text-[#111111]/70 truncate">{sub.name}</div>
-                                {subHasDates && (
-                                  <div className="text-[6px] text-[#111111]/40 font-medium">
-                                    {subStart.toLocaleDateString("en-GB", { day: '2-digit', month: 'short' })} → {subEnd.toLocaleDateString("en-GB", { day: '2-digit', month: 'short' })}
-                                  </div>
-                                )}
+                                <div className="font-semibold text-[7px] text-gray-500 truncate">{sub.name}</div>
                               </div>
-                              <span className="text-[7px] font-bold text-[#111111]/50">{sub.progress_pct || 0}%</span>
+                              <span className="text-[6px] font-bold text-gray-400">{sub.progress_pct || 0}%</span>
                             </div>
-
-                            <div className="w-[65%] shrink-0 pl-1.5 relative h-2.5 flex items-center">
-                              {subHasDates && <div className={`absolute h-1.5 rounded-[1px] ${subColor} opacity-90`} style={{ left: `${subLeft}%`, width: `${subWidth}%`, minWidth: '2px' }} />}
+                            <div className="w-[65%] shrink-0 pl-1.5 relative h-2 flex items-center">
+                              {subHasDates && <div className={`absolute h-[3px] rounded-[1px] ${subColor} opacity-90`} style={{ left: `${subLeft}%`, width: `${subWidth}%`, minWidth: '1px' }} />}
                             </div>
                           </div>
                         );
@@ -410,72 +380,72 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
 
   return (
     <div className="space-y-2.5">
-      <div className="bg-white rounded-xl border border-black/5 shadow-sm p-3 sm:p-4">
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 className="font-bold text-xs text-[#000F1B]">Planned vs Actual Progression</h3>
-          <div className="flex gap-2 text-[8px] font-bold uppercase tracking-wider text-[#111111]/60">
-            <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-slate-200 rounded-sm" /> Planned Target</div>
-            <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-[#FF5A00] rounded-sm" /> Actual Achieved</div>
+      <div className="bg-white rounded-lg border border-black/5 shadow-sm p-3">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <h3 className="font-bold text-[10px] text-[#000F1B]">Planned vs Actual Progression</h3>
+          <div className="flex gap-2 text-[7px] font-bold uppercase tracking-wider text-gray-500">
+            <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-slate-200 rounded-sm" /> Planned</div>
+            <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-[#FF5A00] rounded-sm" /> Actual</div>
           </div>
         </div>
 
-        {/* Shrunk Chart Height (h-40) */}
-        <div className="relative h-40 w-full mt-2 border-l border-b border-black/10 pb-4 pl-5">
-          <div className="absolute left-0 top-0 bottom-4 w-4 flex flex-col justify-between text-[7px] font-bold text-[#111111]/40 text-right pr-1">
+        {/* Shrunk Chart Height */}
+        <div className="relative h-32 w-full mt-2 border-l border-b border-black/10 pb-3 pl-4">
+          <div className="absolute left-0 top-0 bottom-3 w-3 flex flex-col justify-between text-[6px] font-bold text-gray-400 text-right pr-0.5">
             <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
           </div>
-          <div className="absolute left-5 right-0 top-0 bottom-4 flex flex-col justify-between pointer-events-none z-0">
+          <div className="absolute left-4 right-0 top-0 bottom-3 flex flex-col justify-between pointer-events-none z-0">
             {[100, 75, 50, 25].map(val => <div className="w-full border-t border-black/5 border-dashed" key={val}></div>)}
           </div>
 
-          <div className="absolute left-5 right-0 top-0 bottom-4 flex items-end justify-around px-2 z-10">
+          <div className="absolute left-4 right-0 top-0 bottom-3 flex items-end justify-around px-1 z-10">
             {chartData.map((d, i) => (
-              <div key={i} className="flex gap-1 h-full items-end group relative w-full justify-center cursor-pointer">
-                <div className="absolute -top-10 bg-[#000F1B] text-white text-[8px] font-bold px-2 py-1 rounded shadow-lg hidden group-hover:block z-20 whitespace-nowrap text-center">
+              <div key={i} className="flex gap-0.5 h-full items-end group relative w-full justify-center cursor-pointer">
+                <div className="absolute -top-8 bg-[#000F1B] text-white text-[7px] font-bold px-1.5 py-0.5 rounded shadow-lg hidden group-hover:block z-20 whitespace-nowrap text-center">
                   <div className="text-white/60 mb-0.5">{d.fullLabel}</div>
                   <span className="text-slate-300">Plan: {d.planned}%</span> | <span className="text-[#FF5A00]">Act: {d.actual}%</span>
                 </div>
-                <div className="w-2.5 sm:w-4 md:w-5 bg-slate-200 rounded-t-sm transition-all duration-700 ease-out group-hover:bg-slate-300" style={{ height: `${d.planned}%` }}></div>
-                <div className="w-2.5 sm:w-4 md:w-5 bg-gradient-to-t from-[#FF5A00] to-[#FFA500] rounded-t-sm shadow-[0_-2px_6px_rgba(255,90,0,0.2)] transition-all duration-700 ease-out group-hover:brightness-110" style={{ height: `${d.actual}%` }}></div>
+                <div className="w-2 sm:w-3 md:w-4 bg-slate-200 rounded-t-sm transition-all duration-700 ease-out group-hover:bg-slate-300" style={{ height: `${d.planned}%` }}></div>
+                <div className="w-2 sm:w-3 md:w-4 bg-gradient-to-t from-[#FF5A00] to-[#FFA500] rounded-t-sm shadow-[0_-1px_4px_rgba(255,90,0,0.2)] transition-all duration-700 ease-out group-hover:brightness-110" style={{ height: `${d.actual}%` }}></div>
               </div>
             ))}
           </div>
 
-          <div className="absolute left-5 right-0 bottom-[-4px] h-4 flex justify-around items-end text-[7px] sm:text-[8px] font-bold text-[#111111]/50 uppercase tracking-wider">
+          <div className="absolute left-4 right-0 bottom-[-4px] h-3 flex justify-around items-end text-[6px] font-bold text-gray-500 uppercase tracking-wider">
             {chartData.map((d, i) => <div key={i} className="text-center w-full">{d.label}</div>)}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-black/5 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-black/5 shadow-sm overflow-hidden">
         <div className="p-2 border-b border-black/5 bg-[#F9FAFB]">
-          <h3 className="text-[10px] font-bold text-[#000F1B] px-1">Monthly Archive</h3>
+          <h3 className="text-[9px] font-bold text-[#000F1B] px-1">Monthly Archive</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[9px]">
-            <thead className="text-[#111111]/40 border-b border-black/5 bg-white">
+          <table className="w-full text-left text-[8px]">
+            <thead className="text-gray-400 border-b border-black/5 bg-white">
               <tr>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider">Month</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider text-center">Planned</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider text-center">Actual</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider text-center hidden sm:table-cell">Status</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider text-right">Report</th>
+                <th className="px-2 py-1.5 font-bold uppercase tracking-wider">Month</th>
+                <th className="px-2 py-1.5 font-bold uppercase tracking-wider text-center">Planned</th>
+                <th className="px-2 py-1.5 font-bold uppercase tracking-wider text-center">Actual</th>
+                <th className="px-2 py-1.5 font-bold uppercase tracking-wider text-center hidden sm:table-cell">Status</th>
+                <th className="px-2 py-1.5 font-bold uppercase tracking-wider text-right">Report</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
               {[...chartData].reverse().map((d) => (
                 <tr key={d.fullLabel} className="hover:bg-black/[0.02]">
-                  <td className="px-3 py-2 font-bold text-[#000F1B]">{d.fullLabel}</td>
-                  <td className="px-3 py-2 text-center font-medium text-[#111111]/60">{d.planned}%</td>
-                  <td className="px-3 py-2 text-center font-black text-[#FF5A00]">{d.actual}%</td>
-                  <td className="px-3 py-2 text-center hidden sm:table-cell">
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${d.status === 'On Track' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                  <td className="px-2 py-1.5 font-bold text-[#000F1B]">{d.fullLabel}</td>
+                  <td className="px-2 py-1.5 text-center font-medium text-gray-500">{d.planned}%</td>
+                  <td className="px-2 py-1.5 text-center font-black text-[#FF5A00]">{d.actual}%</td>
+                  <td className="px-2 py-1.5 text-center hidden sm:table-cell">
+                    <span className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider ${d.status === 'On Track' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                       <Circle className="w-1.5 h-1.5 fill-current" /> {d.status}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-right">
-                    <button onClick={() => handleDownloadReport(d.fullLabel)} className="inline-flex items-center gap-1 text-[8px] font-bold text-white bg-[#000F1B] hover:bg-[#FF5A00] px-2 py-1 rounded transition shadow-sm">
-                      <Download className="w-2.5 h-2.5" /> PDF
+                  <td className="px-2 py-1.5 text-right">
+                    <button onClick={() => handleDownloadReport(d.fullLabel)} className="inline-flex items-center gap-1 text-[7px] font-bold text-white bg-[#000F1B] hover:bg-[#FF5A00] px-1.5 py-1 rounded transition shadow-sm">
+                      <Download className="w-2 h-2" /> PDF
                     </button>
                   </td>
                 </tr>
@@ -489,56 +459,73 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
 }
 
 // ============================================================================
-// PROJECT PHOTOS
+// PROJECT PHOTOS (FIXED AGGREGATION & URL EXTRACT)
 // ============================================================================
 
 function ProjectPhotosTab({ reports, stages }) {
   const [viewMode, setViewMode] = useState("card");
   
   let photos = [];
-  reports.forEach(rep => { (rep.photos || []).forEach(p => photos.push({ url: p.url, caption: p.caption || "Site Update", date: rep.date, category: "Daily Update" })); });
-  if (photos.length === 0) {
-    stages.forEach(stg => { (stg.photos || []).forEach(p => photos.push({ url: p, caption: `${stg.name} Progress`, date: stg.updated_at, category: stg.name })); });
-  }
+  
+  // 1. Get Daily Report Photos
+  reports.forEach(rep => { 
+    (rep.photos || []).forEach(p => {
+      // Backend might save string or object. Handle both.
+      const imgUrl = typeof p === 'string' ? p : (p.url || p.absoluteUrl);
+      if (imgUrl) {
+        photos.push({ url: imgUrl, caption: p.caption || "Site Update", date: rep.date, category: "Daily Update" });
+      }
+    }); 
+  });
+  
+  // 2. Get Stage Photos (ALWAYS, do not use length === 0 check)
+  stages.forEach(stg => { 
+    (stg.photos || []).forEach(p => {
+      const imgUrl = typeof p === 'string' ? p : (p.url || p.absoluteUrl);
+      if (imgUrl) {
+        photos.push({ url: imgUrl, caption: `${stg.name} Progress`, date: stg.updated_at || stg.start_date, category: stg.name });
+      }
+    }); 
+  });
 
   if (photos.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-black/5 shadow-sm p-8 flex flex-col items-center justify-center text-center">
-        <div className="w-10 h-10 rounded-full bg-black/5 grid place-items-center mb-2">
-          <ImageIcon className="w-5 h-5 text-[#111111]/30" />
+      <div className="bg-white rounded-lg border border-black/5 shadow-sm p-6 flex flex-col items-center justify-center text-center">
+        <div className="w-8 h-8 rounded-full bg-black/5 grid place-items-center mb-2">
+          <ImageIcon className="w-4 h-4 text-gray-300" />
         </div>
-        <h3 className="font-bold text-xs text-[#000F1B]">No photos available</h3>
-        <p className="text-[9px] text-[#111111]/50 mt-1">Images will appear here once uploaded.</p>
+        <h3 className="font-bold text-[10px] text-[#000F1B]">No photos available</h3>
+        <p className="text-[8px] text-gray-400 mt-0.5">Images will appear here once uploaded.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-black/5 shadow-sm p-3 space-y-3">
-      <div className="flex items-center justify-between border-b border-black/5 pb-2 mb-2">
+    <div className="bg-white rounded-lg border border-black/5 shadow-sm p-2 space-y-2">
+      <div className="flex items-center justify-between border-b border-black/5 pb-1.5 mb-1.5 px-1">
         <div>
-          <h3 className="text-xs font-bold text-[#000F1B]">Site Gallery</h3>
-          <p className="text-[8px] text-[#111111]/50 font-medium">{photos.length} photos</p>
+          <h3 className="text-[10px] font-bold text-[#000F1B]">Site Gallery</h3>
+          <p className="text-[7px] text-gray-400 font-medium">{photos.length} photos</p>
         </div>
         
-        <div className="flex items-center gap-1 bg-[#F5F6F8] p-0.5 rounded border border-black/5">
-          <button onClick={() => setViewMode("card")} className={`p-1 rounded-sm transition ${viewMode === "card" ? "bg-white shadow-sm text-[#FF5A00]" : "text-[#111111]/50 hover:text-[#000F1B]"}`} title="Grid">
-            <LayoutGrid className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-0.5 bg-[#F5F6F8] p-0.5 rounded border border-black/5">
+          <button onClick={() => setViewMode("card")} className={`p-1 rounded-[2px] transition ${viewMode === "card" ? "bg-white shadow-sm text-[#FF5A00]" : "text-gray-400 hover:text-[#000F1B]"}`} title="Grid">
+            <LayoutGrid className="w-3 h-3" />
           </button>
-          <button onClick={() => setViewMode("list")} className={`p-1 rounded-sm transition ${viewMode === "list" ? "bg-white shadow-sm text-[#FF5A00]" : "text-[#111111]/50 hover:text-[#000F1B]"}`} title="List">
-            <List className="w-3.5 h-3.5" />
+          <button onClick={() => setViewMode("list")} className={`p-1 rounded-[2px] transition ${viewMode === "list" ? "bg-white shadow-sm text-[#FF5A00]" : "text-gray-400 hover:text-[#000F1B]"}`} title="List">
+            <List className="w-3 h-3" />
           </button>
         </div>
       </div>
 
       {viewMode === "card" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5">
           {photos.map((img, idx) => (
-            <div key={idx} className="group rounded-lg border border-black/10 overflow-hidden bg-black/5 relative aspect-square hover:shadow-md transition-all duration-300">
+            <div key={idx} className="group rounded border border-black/5 overflow-hidden bg-black/5 relative aspect-square hover:shadow-sm transition-all duration-300">
               <img src={resolveMediaUrl(img.url)} alt="Site Progress" className="w-full h-full object-cover transition duration-700 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2">
-                <span className="text-white text-[8px] font-bold truncate mb-0.5">{img.caption}</span>
-                <div className="flex items-center justify-between text-white/70 text-[7px] font-semibold">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-1.5">
+                <span className="text-white text-[7px] font-bold truncate">{img.caption}</span>
+                <div className="flex items-center justify-between text-white/80 text-[6px] font-semibold mt-0.5">
                   <span className="truncate pr-1">{img.category}</span>
                   <span className="shrink-0">{img.date ? new Date(img.date).toLocaleDateString("en-IN") : "Recent"}</span>
                 </div>
@@ -548,26 +535,26 @@ function ProjectPhotosTab({ reports, stages }) {
         </div>
       ) : (
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left text-[9px]">
-            <thead className="bg-[#F9FAFB] text-[#111111]/50 uppercase tracking-wider text-[8px]">
+          <table className="w-full text-left text-[8px]">
+            <thead className="bg-[#F9FAFB] text-gray-400 uppercase tracking-wider">
               <tr>
-                <th className="px-3 py-2 font-bold rounded-tl-md w-12">Image</th>
-                <th className="px-3 py-2 font-bold">Caption</th>
-                <th className="px-3 py-2 font-bold">Category</th>
-                <th className="px-3 py-2 font-bold text-right rounded-tr-md">Date</th>
+                <th className="px-2 py-1.5 font-bold rounded-tl w-10">Image</th>
+                <th className="px-2 py-1.5 font-bold">Caption</th>
+                <th className="px-2 py-1.5 font-bold">Category</th>
+                <th className="px-2 py-1.5 font-bold text-right rounded-tr">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
               {photos.map((img, idx) => (
                 <tr key={idx} className="hover:bg-[#F9FAFB] transition">
-                  <td className="px-3 py-1.5">
-                    <div className="w-8 h-8 rounded overflow-hidden border border-black/10 bg-gray-100">
+                  <td className="px-2 py-1">
+                    <div className="w-6 h-6 rounded overflow-hidden border border-black/10 bg-gray-100">
                       <img src={resolveMediaUrl(img.url)} alt="" className="w-full h-full object-cover" />
                     </div>
                   </td>
-                  <td className="px-3 py-1.5 font-bold text-[#000F1B]">{img.caption}</td>
-                  <td className="px-3 py-1.5 text-[#FF5A00] font-semibold text-[8px] uppercase tracking-wider">{img.category}</td>
-                  <td className="px-3 py-1.5 text-right font-medium text-[#111111]/50">{img.date ? new Date(img.date).toLocaleDateString("en-IN") : "—"}</td>
+                  <td className="px-2 py-1 font-bold text-[#000F1B]">{img.caption}</td>
+                  <td className="px-2 py-1 text-[#FF5A00] font-semibold text-[7px] uppercase tracking-wider">{img.category}</td>
+                  <td className="px-2 py-1 text-right font-medium text-gray-500">{img.date ? new Date(img.date).toLocaleDateString("en-IN") : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -593,94 +580,97 @@ function DailyProgressTab({ project, reports }) {
 
   if (reports.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-black/5 shadow-sm p-8 flex flex-col items-center justify-center text-center">
-        <div className="w-10 h-10 rounded-full bg-[#FF5A00]/10 grid place-items-center mb-2">
-          <FileText className="w-5 h-5 text-[#FF5A00]" />
+      <div className="bg-white rounded-lg border border-black/5 shadow-sm p-6 flex flex-col items-center justify-center text-center">
+        <div className="w-8 h-8 rounded-full bg-[#FF5A00]/10 grid place-items-center mb-2">
+          <FileText className="w-4 h-4 text-[#FF5A00]" />
         </div>
-        <h3 className="font-bold text-xs text-[#000F1B]">No verified reports</h3>
-        <p className="text-[9px] text-[#111111]/50 mt-1">Check back later when updates are published.</p>
+        <h3 className="font-bold text-[10px] text-[#000F1B]">No verified reports</h3>
+        <p className="text-[8px] text-gray-400 mt-0.5">Check back later when updates are published.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       
       {/* Header Controls */}
-      <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+      <div className="bg-white p-2.5 rounded-lg border border-black/5 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
         <div>
-          <h3 className="font-bold text-xs text-[#000F1B] flex items-center gap-1.5">
-            <HardHat className="w-3.5 h-3.5 text-[#FF5A00]" /> Progress Report
+          <h3 className="font-bold text-[10px] text-[#000F1B] flex items-center gap-1">
+            <HardHat className="w-3 h-3 text-[#FF5A00]" /> Progress Report
           </h3>
-          <p className="text-[8px] text-[#111111]/50 font-medium mt-0.5">PM-verified daily site updates</p>
+          <p className="text-[7px] text-gray-500 font-medium mt-0.5">PM-verified daily site updates</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="flex-1 sm:flex-none bg-[#F5F6F8] border border-black/10 rounded-md px-2 py-1.5 text-[9px] font-bold text-[#000F1B] focus:outline-none cursor-pointer">
+        <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+          <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="flex-1 sm:flex-none bg-[#F5F6F8] border border-black/10 rounded px-1.5 py-1 text-[8px] font-bold text-[#000F1B] focus:outline-none cursor-pointer">
             {reports.map(r => <option key={r.id} value={r.date}>{new Date(r.date).toLocaleDateString("en-IN", { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}</option>)}
           </select>
-          <button onClick={handleDownloadFullPDF} className="flex-1 sm:flex-none px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[9px] font-bold rounded-md transition flex items-center justify-center gap-1 shadow-sm whitespace-nowrap">
-            <Download className="w-3 h-3" /> <span className="hidden xs:inline">Full</span> PDF
+          <button onClick={handleDownloadFullPDF} className="flex-1 sm:flex-none px-2 py-1 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[8px] font-bold rounded transition flex items-center justify-center gap-1 shadow-sm whitespace-nowrap">
+            <Download className="w-2.5 h-2.5" /> <span className="hidden xs:inline">Full</span> PDF
           </button>
         </div>
       </div>
 
       {/* Report Body */}
       {report && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
           
-          <div className="space-y-3">
-            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-              <h4 className="text-[8px] font-bold text-emerald-800 uppercase tracking-wider mb-1">Site Status</h4>
-              <div className="flex items-center gap-1 text-emerald-700 font-black text-[11px]">
-                <CheckCircle2 className="w-3 h-3 fill-current" /> {report.overall_status}
+          <div className="space-y-2.5">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-0.5 h-full bg-emerald-500" />
+              <h4 className="text-[7px] font-bold text-emerald-800 uppercase tracking-wider mb-1">Site Status</h4>
+              <div className="flex items-center gap-1 text-emerald-700 font-black text-[9px]">
+                <CheckCircle2 className="w-2.5 h-2.5 fill-current" /> {report.overall_status}
               </div>
-              {report.status_notes && <p className="text-[9px] text-emerald-700 mt-1.5 font-medium leading-relaxed bg-emerald-100/50 p-1.5 rounded border border-emerald-200/50">"{report.status_notes}"</p>}
+              {report.status_notes && <p className="text-[8px] text-emerald-700 mt-1 font-medium leading-relaxed bg-emerald-100/50 p-1.5 rounded border border-emerald-200/50">"{report.status_notes}"</p>}
             </div>
             
-            <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3.5">
-              <h4 className="font-bold text-[9px] text-[#000F1B] mb-2 uppercase tracking-wide border-b border-black/5 pb-1.5">Work Completed</h4>
-              <ul className="space-y-1.5">
+            <div className="bg-white border border-black/5 shadow-sm rounded-lg p-2.5">
+              <h4 className="font-bold text-[8px] text-[#000F1B] mb-1.5 uppercase tracking-wide border-b border-black/5 pb-1">Work Completed</h4>
+              <ul className="space-y-1">
                 {(report.work_completed || []).map((work, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[9px] font-semibold text-[#111111]/70">
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500 shrink-0 mt-0.5" /> <span className="leading-snug">{work}</span>
+                  <li key={i} className="flex items-start gap-1 text-[8px] font-semibold text-gray-600">
+                    <CheckCircle2 className="w-2 h-2 text-emerald-500 shrink-0 mt-[1px]" /> <span className="leading-snug">{work}</span>
                   </li>
                 ))}
               </ul>
             </div>
             
-            <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3.5">
-              <h4 className="font-bold text-[9px] text-[#000F1B] mb-2 uppercase tracking-wide border-b border-black/5 pb-1.5">Planned Tomorrow</h4>
-              <ul className="space-y-1.5">
+            <div className="bg-white border border-black/5 shadow-sm rounded-lg p-2.5">
+              <h4 className="font-bold text-[8px] text-[#000F1B] mb-1.5 uppercase tracking-wide border-b border-black/5 pb-1">Planned Tomorrow</h4>
+              <ul className="space-y-1">
                 {(report.planned_tomorrow || []).map((work, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[9px] font-semibold text-[#111111]/60">
-                    <Circle className="w-2.5 h-2.5 text-[#111111]/30 shrink-0 mt-0.5" /> <span className="leading-snug">{work}</span>
+                  <li key={i} className="flex items-start gap-1 text-[8px] font-semibold text-gray-500">
+                    <Circle className="w-2 h-2 text-gray-300 shrink-0 mt-[1px]" /> <span className="leading-snug">{work}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-white border border-black/5 shadow-sm rounded-xl p-3.5">
-            <div className="flex items-center justify-between mb-3 border-b border-black/5 pb-1.5">
-              <h4 className="font-bold text-[9px] text-[#000F1B] uppercase tracking-wider">Site Execution Images</h4>
-              <span className="text-[8px] font-bold text-[#111111]/40 bg-[#F5F6F8] px-1.5 py-0.5 rounded">{(report.photos || []).length} photos</span>
+          <div className="lg:col-span-2 bg-white border border-black/5 shadow-sm rounded-lg p-2.5">
+            <div className="flex items-center justify-between mb-2 border-b border-black/5 pb-1">
+              <h4 className="font-bold text-[8px] text-[#000F1B] uppercase tracking-wider">Site Execution Images</h4>
+              <span className="text-[7px] font-bold text-gray-400 bg-[#F5F6F8] px-1 py-0.5 rounded">{(report.photos || []).length} photos</span>
             </div>
             
             {(report.photos || []).length === 0 ? (
-              <div className="text-center py-8 text-[9px] italic text-[#111111]/40 border border-dashed border-black/5 rounded-lg">No photos attached.</div>
+              <div className="text-center py-6 text-[8px] italic text-gray-400 border border-dashed border-black/5 rounded-md">No photos attached.</div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {(report.photos || []).map((p, i) => (
-                  <div key={i} className="group rounded-lg border border-black/5 bg-[#F9FAFB] overflow-hidden hover:shadow-md transition">
-                    <div className="aspect-video bg-black/5 overflow-hidden relative">
-                      <img src={resolveMediaUrl(p.url)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                      {p.time && <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[7px] font-bold px-1.5 py-0.5 rounded backdrop-blur-sm">{p.time}</div>}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                {(report.photos || []).map((p, i) => {
+                   const u = typeof p === 'string' ? p : p.url;
+                   return (
+                    <div key={i} className="group rounded border border-black/5 bg-[#F9FAFB] overflow-hidden hover:shadow-sm transition">
+                      <div className="aspect-video bg-black/5 overflow-hidden relative">
+                        <img src={resolveMediaUrl(u)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                        {p.time && <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[6px] font-bold px-1 py-0.5 rounded backdrop-blur-sm">{p.time}</div>}
+                      </div>
+                      <div className="p-1 text-[7px] font-bold text-[#000F1B] truncate" title={p.caption}>{p.caption || "Site update"}</div>
                     </div>
-                    <div className="p-1.5 text-[8px] font-bold text-[#000F1B] truncate" title={p.caption}>{p.caption || "Site update"}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -698,11 +688,11 @@ function StatusBadge({ status }) {
   const config = {
     completed: { label: "Completed", color: "text-emerald-700 bg-emerald-50 border-emerald-200", Icon: CheckCircle2 },
     in_progress: { label: "Active", color: "text-[#FF5A00] bg-[#FF5A00]/10 border-[#FF5A00]/30", Icon: PlayCircle },
-    pending: { label: "Pending", color: "text-[#111111]/50 bg-[#F5F6F8] border-black/10", Icon: Circle }
+    pending: { label: "Pending", color: "text-gray-500 bg-[#F5F6F8] border-black/10", Icon: Circle }
   };
   const c = config[status] || config.pending;
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${c.color}`}>
+    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider border ${c.color}`}>
       <c.Icon className="w-2 h-2" />
       {c.label}
     </span>
@@ -711,15 +701,15 @@ function StatusBadge({ status }) {
 
 function KpiBlock({ title, value, subtitle, icon: Icon, accent }) {
   return (
-    <div className="bg-white rounded-lg border border-black/5 p-2 shadow-sm hover:shadow-md transition relative overflow-hidden group">
+    <div className="bg-white rounded-md border border-black/5 p-1.5 shadow-sm hover:shadow transition relative overflow-hidden group">
       <div className="absolute top-0 left-0 w-1 h-full transition-all group-hover:w-1.5" style={{ background: accent }} />
-      <div className="flex items-start justify-between gap-1 mb-1 pl-1.5">
-        <div className="text-[7px] sm:text-[8px] font-bold text-[#111111]/50 uppercase tracking-wider leading-tight">{title}</div>
-        <Icon className="w-3 h-3 shrink-0 opacity-80" style={{ color: accent }} />
+      <div className="flex items-start justify-between gap-1 mb-0.5 pl-1.5">
+        <div className="text-[6px] sm:text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-tight">{title}</div>
+        <Icon className="w-2.5 h-2.5 shrink-0 opacity-80" style={{ color: accent }} />
       </div>
       <div className="pl-1.5">
-        <div className="text-sm sm:text-base font-black text-[#000F1B] leading-none mb-0.5">{value}</div>
-        <div className="text-[7px] font-semibold text-[#111111]/40">{subtitle}</div>
+        <div className="text-xs sm:text-sm font-black text-[#000F1B] leading-none mb-0.5">{value}</div>
+        <div className="text-[6px] font-semibold text-gray-400">{subtitle}</div>
       </div>
     </div>
   );

@@ -16,13 +16,16 @@ try {
   }
 } catch (_) {}
 
-// Redirect 401s on admin pages only
-const ADMIN_PATH_RE = /^\/(admin|leads$|quiz-submissions|media\/upload|ai\/rewrite|ai\/generate-image|packages\/[^/]+\/versions|custom-quotes|quote-templates|exports|interior-library)/;
+// Redirect 401s on admin pages ONLY
+const ADMIN_PATH_RE = /^\/admin\//;
+
 api.interceptors.response.use(
   (r) => r,
   (error) => {
     const status = error?.response?.status;
     const url = error?.config?.url || "";
+    
+    // Only redirect to admin login if the request was an admin API AND user is currently on an admin page
     if (status === 401 && ADMIN_PATH_RE.test(url) && typeof window !== "undefined") {
       const isAdminPage = window.location.pathname.startsWith("/admin");
       const onLoginPage = window.location.pathname.startsWith("/admin/login");
@@ -60,14 +63,13 @@ export const publicApi = {
 };
 
 export const customerApi = {
-  uploadImage: (file, category = "site-onboarding", onProgress) => {
+  // Client-Safe Upload hitting /portal/upload/image
+  uploadImage: (file, folder = "issues", onProgress) => {
     const form = new FormData();
     form.append("file", file);
-    form.append("category", category);
+    form.append("folder", folder);
     return api
-      .post("/media/upload", form, {
-        // DO NOT set "Content-Type": "multipart/form-data" manually!
-        // Axios/Browser automatically generates boundary headers when Content-Type is omitted.
+      .post(`/portal/upload/image?folder=${encodeURIComponent(folder)}`, form, {
         onUploadProgress: (evt) => {
           if (onProgress && evt.total) onProgress(Math.round((evt.loaded / evt.total) * 100));
         },
@@ -83,11 +85,28 @@ export const customerApi = {
         };
       });
   },
+
+  // Portal Projects & Modules
+  getProjectsList: () => api.get("/portal/my-projects-list").then((r) => r.data),
+  getProject: (projectId) => api.get(`/portal/my-project${projectId ? `?project_id=${projectId}` : ""}`).then((r) => r.data),
+  getTeamData: (projectId) => api.get(`/portal/my-project/team-data${projectId ? `?project_id=${projectId}` : ""}`).then((r) => r.data),
+  inviteTeamMember: (payload) => api.post("/portal/my-project/team/invite", payload).then((r) => r.data),
+  removeTeamMember: (memberId) => api.delete(`/portal/my-project/team/${memberId}`).then((r) => r.data),
+  markNotificationRead: (notificationId) => api.patch("/portal/my-project/notifications/read", { notification_id: notificationId }).then((r) => r.data),
+
+  // Customer Module Actions
+  submitDrawingDecision: (drawingId, decision, comment) => api.post(`/portal/my-project/drawings/${drawingId}/decision`, { decision, comment }).then((r) => r.data),
+  requestNewDrawing: (payload) => api.post("/portal/my-project/drawings/request", payload).then((r) => r.data),
+  submitMaterialDecision: (materialId, decision, comment) => api.post(`/portal/my-project/materials/${materialId}/decision`, { decision, comment }).then((r) => r.data),
+  approveQualityCheck: (checkId, remark) => api.post(`/portal/my-project/quality-checks/${checkId}/approve`, { remark }).then((r) => r.data),
+  raiseQualityIssue: (checkId, description, photoUrls) => api.post(`/portal/my-project/quality-checks/${checkId}/raise-issue`, { description, photo_urls: photoUrls }).then((r) => r.data),
+  reviewIssueResolution: (issueId, approved, remark) => api.post(`/portal/my-project/issues/${issueId}/client-review`, { approved, remark }).then((r) => r.data),
+  raiseMaintenanceTicket: (payload) => api.post("/portal/my-project/maintenance", payload).then((r) => r.data),
 };
 
 export const adminApi = {
   login: (email, password) => api.post("/admin/login", { email, password }).then((r) => r.data),
-  logout: () => api.post("/admin/logout").then((r) => r.data).catch(() => ({ success: true })),
+  logout: () => api.post("/admin/logout", {}).then((r) => r.data).catch(() => ({ success: true })),
   me: () => api.get("/admin/me").then((r) => r.data),
   list: (path) => api.get(`/${path}`).then((r) => r.data),
   get: (path, id) => api.get(`/${path}/${id}`).then((r) => r.data),
@@ -105,13 +124,13 @@ export const adminApi = {
   updateQuizSubmission: (id, body) => api.put(`/quiz-submissions/${id}`, body).then((r) => r.data),
   removeQuizSubmission: (id) => api.delete(`/quiz-submissions/${id}`).then((r) => r.data),
 
+  // Admin Upload hitting /media/upload
   uploadImage: (file, category = "general", onProgress) => {
     const form = new FormData();
     form.append("file", file);
     form.append("category", category);
     return api
       .post("/media/upload", form, {
-        // DO NOT set "Content-Type": "multipart/form-data" manually!
         onUploadProgress: (evt) => {
           if (onProgress && evt.total) onProgress(Math.round((evt.loaded / evt.total) * 100));
         },

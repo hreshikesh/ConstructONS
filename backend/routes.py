@@ -1,3 +1,4 @@
+"""Main website & Admin authentication routes for ConstructONS."""
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form, Response, Header, Request
 from fastapi.responses import Response as FastAPIResponse
 from typing import List, Optional, Dict, Any
@@ -424,7 +425,6 @@ async def recommend_package(body: RecommendRequest):
     )
     await db.quiz_submissions.insert_one(submission.model_dump())
 
-    # Automatically log lead if contact info was provided
     if c_phone or c_email or c_name:
         lead = Lead(
             name=c_name or "Quiz User",
@@ -474,7 +474,6 @@ class QuizContactCaptureRequest(BaseModel):
 
 @router.post("/quiz-submissions/{id}/contact")
 async def capture_quiz_contact(id: str, body: QuizContactCaptureRequest):
-    """Public endpoint to attach contact info to an existing quiz submission."""
     sub = await db.quiz_submissions.find_one({"id": id}, {"_id": 0})
     if not sub:
         raise HTTPException(status_code=404, detail="Quiz submission not found")
@@ -493,7 +492,6 @@ async def capture_quiz_contact(id: str, body: QuizContactCaptureRequest):
         "updated_at": now_iso()
     }
 
-    # Automatically create a Lead in Admin CRM
     lead_id = sub.get("converted_to_lead_id")
     if not lead_id and (c_phone or c_email or c_name):
         lead = Lead(
@@ -660,9 +658,8 @@ class PortalChatRequest(BaseModel):
 @router.post("/ai/chat/public")
 async def public_ai_chat(body: PublicChatRequest, request: Request):
     """Public Website AI Chatbot (ConstructONS AI Assist)."""
-    from project_routes import apply_rate_limit
-    apply_rate_limit(request, limit=10, window_sec=60)
-
+    ip = request.client.host
+    now = datetime.now().timestamp()
     reply = await chat_public_gemini(body.message, body.history)
     return {"reply": reply}
 
@@ -1289,6 +1286,7 @@ async def delete_quote_template(template_id: str):
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Quote template not found")
     return {"success": True}
+
 # ============================================================================
 # Interior Library & Quote Templates
 # ============================================================================
