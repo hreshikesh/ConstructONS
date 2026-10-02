@@ -8,7 +8,6 @@ import {
   ShieldCheck, Wrench, Video, HardHat, Settings, X, Save
 } from "lucide-react";
 
-// Tab Imports
 import OverviewTab from "./project-tabs/OverviewTab";
 import StagesTab from "./project-tabs/StagesTab";
 import ReportsTab from "./project-tabs/ReportsTab";
@@ -25,14 +24,13 @@ import CctvTab from "./project-tabs/CctvTab";
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 
-// Auto-corrects typed years like 0027 -> 2027 or 26 -> 2026
 const sanitizeDateYear = (dateStr) => {
   if (!dateStr) return "";
-  const parts = dateStr.split("-"); // YYYY-MM-DD
+  const parts = dateStr.split("-");
   if (parts.length === 3) {
     let year = parseInt(parts[0], 10);
     if (year > 0 && year < 100) {
-      year += 2000; // e.g. 26 -> 2026, 27 -> 2027
+      year += 2000;
       return `${year}-${parts[1]}-${parts[2]}`;
     } else if (year >= 100 && year < 1000) {
       const yearStr = String(parts[0]).padStart(4, "0");
@@ -96,7 +94,7 @@ export default function AdminProjectDetail() {
     toast.success("Project data refreshed");
   };
 
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "TBD";
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "TBD";
 
   const badgeCounts = useMemo(() => ({
     reports: project?.daily_reports?.filter(r => !r.is_approved).length || 0,
@@ -127,7 +125,6 @@ export default function AdminProjectDetail() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-['Poppins'] flex flex-col text-xs">
-      {/* HEADER */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-xs">
         <div className="flex items-center justify-between px-3 sm:px-5 py-1.5 border-b border-gray-100 bg-gray-50/50">
           <button onClick={() => navigate("/admin/projects")} className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[#FF5A00] transition">
@@ -165,7 +162,6 @@ export default function AdminProjectDetail() {
             <span>Expected: <strong className="text-gray-700">{fmtDate(project.expected_completion)}</strong></span>
           </div>
 
-          {/* TABS */}
           <div className="flex overflow-x-auto no-scrollbar gap-0.5">
             {TABS.map(tab => {
               const Icon = tab.icon;
@@ -194,12 +190,10 @@ export default function AdminProjectDetail() {
         </div>
       </header>
 
-      {/* WORKSPACE */}
       <main className="flex-1 p-3 sm:p-5 w-full max-w-[1600px] mx-auto min-w-0">
         <ActiveComponent project={project} onSaved={loadProject} />
       </main>
 
-      {/* EDIT MODAL */}
       {showEditInfo && (
         <EditInfoModal 
           project={project} 
@@ -211,78 +205,147 @@ export default function AdminProjectDetail() {
   );
 }
 
-// EDIT MODAL COMPONENT
-function EditInfoModal({ project, onClose, onSaved }) {
-  const [form, setForm] = useState({
-    title: project.title || "", 
-    address: project.address || "",
-    status: project.status || "active",
-    contract_value: project.contract_value || 0, 
-    amount_spent: project.amount_spent || 0,
-    site_lat: project.site_lat || "",
-    site_lng: project.site_lng || "",
-    start_date: project.start_date ? String(project.start_date).slice(0, 10) : (project.created_at ? String(project.created_at).slice(0, 10) : ""),
-    expected_completion: project.expected_completion ? String(project.expected_completion).slice(0, 10) : ""
-  });
-  const [saving, setSaving] = useState(false);
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      await api.put(`/admin/projects/${project.id}`, { 
-        ...form, 
-        contract_value: Number(form.contract_value) || 0, 
-        amount_spent: Number(form.amount_spent) || 0,
-        site_lat: form.site_lat ? Number(form.site_lat) : null,
-        site_lng: form.site_lng ? Number(form.site_lng) : null,
-        start_date: sanitizeDateYear(form.start_date) || null,
-        expected_completion: sanitizeDateYear(form.expected_completion) || null
-      });
-      toast.success("Project settings updated"); 
-      onSaved();
-    } catch { 
-      toast.error("Update failed"); 
-    } finally { setSaving(false); }
-  };
-
-  const Field = ({ label, name, type = "text", ...props }) => (
+/* =========================================================
+   Field MUST live outside the modal so it doesn't remount
+   on every keystroke (that was killing focus).
+========================================================= */
+function Field({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  onBlur,
+  numericOnly = false,
+  ...props
+}) {
+  return (
     <div>
-      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{label}</label>
+      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
+        {label}
+      </label>
       <input
         type={type}
-        value={form[name]}
-        onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-        onBlur={type === "date" ? (e) => {
-          const corrected = sanitizeDateYear(e.target.value);
-          if (corrected !== e.target.value) {
-            setForm(f => ({ ...f, [name]: corrected }));
-          }
-        } : undefined}
-        onClick={type === "date" ? (e) => { try { e.target.showPicker(); } catch {} } : undefined}
+        name={name}
+        value={value ?? ""}
+        onChange={(e) => {
+          let v = e.target.value;
+          if (numericOnly) v = v.replace(/[^0-9]/g, "");
+          onChange(name, v);
+        }}
+        onBlur={
+          type === "date"
+            ? (e) => {
+                const corrected = sanitizeDateYear(e.target.value);
+                if (corrected !== e.target.value) onChange(name, corrected);
+                onBlur?.(e);
+              }
+            : onBlur
+        }
+        onClick={
+          type === "date"
+            ? (e) => {
+                try {
+                  e.target.showPicker();
+                } catch {}
+              }
+            : undefined
+        }
         min={type === "date" ? "2020-01-01" : undefined}
         max={type === "date" ? "2099-12-31" : undefined}
-        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1 text-xs focus:border-blue-500 outline-none transition cursor-pointer"
+        inputMode={numericOnly ? "numeric" : type === "number" ? "decimal" : undefined}
+        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1 text-xs focus:border-blue-500 outline-none transition no-spinner"
         {...props}
       />
     </div>
   );
+}
+
+function EditInfoModal({ project, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    title: project.title || "",
+    address: project.address || "",
+    status: project.status || "active",
+    // keep as STRINGS so typing 1000000 works smoothly
+    contract_value: project.contract_value != null ? String(project.contract_value) : "",
+    amount_spent: project.amount_spent != null ? String(project.amount_spent) : "",
+    site_lat: project.site_lat != null ? String(project.site_lat) : "",
+    site_lng: project.site_lng != null ? String(project.site_lng) : "",
+    start_date: project.start_date
+      ? String(project.start_date).slice(0, 10)
+      : project.created_at
+      ? String(project.created_at).slice(0, 10)
+      : "",
+    expected_completion: project.expected_completion
+      ? String(project.expected_completion).slice(0, 10)
+      : "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const setField = useCallback((name, value) => {
+    setForm((f) => ({ ...f, [name]: value }));
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.put(`/admin/projects/${project.id}`, {
+        ...form,
+        contract_value: Number(form.contract_value) || 0,
+        amount_spent: Number(form.amount_spent) || 0,
+        site_lat: form.site_lat === "" ? null : Number(form.site_lat),
+        site_lng: form.site_lng === "" ? null : Number(form.site_lng),
+        start_date: sanitizeDateYear(form.start_date) || null,
+        expected_completion: sanitizeDateYear(form.expected_completion) || null,
+      });
+      toast.success("Project settings updated");
+      onSaved();
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-xs z-[100] grid place-items-center p-3 font-['Poppins']">
+      <style>{`
+        .no-spinner::-webkit-outer-spin-button,
+        .no-spinner::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .no-spinner[type=number] {
+          -moz-appearance: textfield;
+          appearance: textfield;
+        }
+      `}</style>
+
       <div className="bg-white rounded-xl w-full max-w-md p-4 shadow-xl relative max-h-[90vh] overflow-y-auto text-xs">
         <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
           <span className="font-bold text-gray-900 text-sm">Edit Project Metadata</span>
-          <button onClick={onClose} className="w-6 h-6 rounded hover:bg-gray-100 grid place-items-center text-gray-500 transition"><X className="w-3.5 h-3.5" /></button>
+          <button
+            onClick={onClose}
+            className="w-6 h-6 rounded hover:bg-gray-100 grid place-items-center text-gray-500 transition"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         <div className="space-y-2.5">
-          <Field label="Project Title" name="title" />
-          <Field label="Site Address" name="address" />
+          <Field label="Project Title" name="title" value={form.title} onChange={setField} />
+          <Field label="Site Address" name="address" value={form.address} onChange={setField} />
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Status</label>
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium focus:border-blue-500 outline-none cursor-pointer">
+              <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
+                Status
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) => setField("status", e.target.value)}
+                className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-xs font-medium focus:border-blue-500 outline-none cursor-pointer"
+              >
                 <option value="active">Active</option>
                 <option value="on_hold">On Hold</option>
                 <option value="completed">Completed</option>
@@ -291,26 +354,85 @@ function EditInfoModal({ project, onClose, onSaved }) {
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
-            <Field label="Project Start" name="start_date" type="date" />
-            <Field label="Forecast Completion" name="expected_completion" type="date" />
+            <Field
+              label="Project Start"
+              name="start_date"
+              type="date"
+              value={form.start_date}
+              onChange={setField}
+            />
+            <Field
+              label="Forecast Completion"
+              name="expected_completion"
+              type="date"
+              value={form.expected_completion}
+              onChange={setField}
+            />
           </div>
 
+          {/* Money: text + digits only — no spinner, no focus loss */}
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
-            <Field label="Total Contract (₹)" name="contract_value" type="number" />
-            <Field label="Amount Paid (₹)" name="amount_spent" type="number" />
+            <Field
+              label="Total Contract (₹)"
+              name="contract_value"
+              type="text"
+              numericOnly
+              value={form.contract_value}
+              onChange={setField}
+              placeholder="0"
+            />
+            <Field
+              label="Amount Paid (₹)"
+              name="amount_spent"
+              type="text"
+              numericOnly
+              value={form.amount_spent}
+              onChange={setField}
+              placeholder="0"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 bg-gray-50 p-2 rounded border border-gray-200">
-            <span className="col-span-2 text-[9px] font-bold uppercase text-gray-700">Live Weather Coordinates</span>
-            <Field label="Latitude" name="site_lat" type="number" step="any" placeholder="12.9716" />
-            <Field label="Longitude" name="site_lng" type="number" step="any" placeholder="77.5946" />
+            <span className="col-span-2 text-[9px] font-bold uppercase text-gray-700">
+              Live Weather Coordinates
+            </span>
+            <Field
+              label="Latitude"
+              name="site_lat"
+              type="text"
+              value={form.site_lat}
+              onChange={(name, v) =>
+                setField(name, v.replace(/[^0-9.\-]/g, ""))
+              }
+              placeholder="12.9716"
+            />
+            <Field
+              label="Longitude"
+              name="site_lng"
+              type="text"
+              value={form.site_lng}
+              onChange={(name, v) =>
+                setField(name, v.replace(/[^0-9.\-]/g, ""))
+              }
+              placeholder="77.5946"
+            />
           </div>
         </div>
 
         <div className="mt-4 pt-2.5 border-t border-gray-100 flex items-center justify-end gap-1.5">
-          <button onClick={onClose} className="rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 text-xs font-semibold transition disabled:opacity-60">
-            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save Updates
+          <button
+            onClick={onClose}
+            className="rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            disabled={saving}
+            className="inline-flex items-center gap-1 rounded bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 text-xs font-semibold transition disabled:opacity-60"
+          >
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}{" "}
+            Save Updates
           </button>
         </div>
       </div>
