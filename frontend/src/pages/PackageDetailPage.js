@@ -8,10 +8,11 @@ import {
 import LucideIcon from "@/components/site/LucideIcon";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
-import { publicApi, API_BASE } from "@/lib/api";
+import { publicApi } from "@/lib/api";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 import { useBrochureModal } from "@/components/site/BrochureModalProvider";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
+import SEO from "@/components/site/SEO";
 
 const TABS = [
   { key: "overview", label: "Overview" },
@@ -70,6 +71,61 @@ export default function PackageDetailPage() {
     return pkg.price_per_sqft * area;
   }, [pkg, area]);
 
+  // Combined Product Schema and Breadcrumb List for dynamic index indexing
+  const structuredData = useMemo(() => {
+    if (!pkg || !pkg.id) return null;
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Product",
+          "name": pkg.name,
+          "image": pkg.hero_image || "https://constructons.com/logo.webp",
+          "description": pkg.description || pkg.tagline,
+          "brand": {
+            "@type": "Brand",
+            "name": "ConstructONS"
+          },
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "INR",
+            "price": pkg.price_per_sqft || "1499",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": pkg.price_per_sqft || "1499",
+              "priceCurrency": "INR",
+              "unitText": "SQFT"
+            },
+            "url": `https://constructons.com/packages/${pkg.slug}`
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://constructons.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Packages",
+              "item": "https://constructons.com/packages"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": pkg.name,
+              "item": `https://constructons.com/packages/${pkg.slug}`
+            }
+          ]
+        }
+      ]
+    };
+  }, [pkg]);
+
   if (!pkg) return <div className="min-h-screen grid place-items-center"><div className="w-8 h-8 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" /></div>;
   if (!pkg.id) return (<>
       <Header />
@@ -86,6 +142,14 @@ export default function PackageDetailPage() {
 
   return (
     <>
+      <SEO
+        title={`${pkg.name} - Turnkey Home Construction Plan`}
+        description={`${pkg.tagline || pkg.description}. Discover complete material specs, architectural scope, milestone schedules, and cost calculator for our ${pkg.name}.`}
+        canonical={`/packages/${pkg.slug}`}
+        keywords={`home construction ${pkg.name}, construction rates per square foot, standard home specification, home building cost calculator, building material lists, house plan details`}
+        structuredData={structuredData}
+      />
+
       <Header />
 
       {/* HERO */}

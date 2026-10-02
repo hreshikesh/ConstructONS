@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SunPathSimulator from "@/components/site/SunPathSimulator";
+import SEO from "@/components/site/SEO";
 
 /* ============================================================================
    DATA
@@ -56,9 +57,54 @@ export default function ArchitectsPage() {
 
   const totalProjects = ARCHITECTS.reduce((n, p) => n + p.projects, 0);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/architects#webpage",
+        "url": "https://constructons.com/marketplace/architects",
+        "name": "Elite Residential Architects & Design Studios | ConstructONS",
+        "description": "Browse and connect with vetted residential architects, Vastu planning specialists, and luxury villa designers."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/architects"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Architects",
+            "item": "https://constructons.com/marketplace/architects"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF5A00] selection:text-white flex flex-col">
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none} .no-scrollbar{scrollbar-width:none}`}</style>
+      
+      <SEO
+        title="Residential Architects, Elevation Designers & Vastu Planners"
+        description="Connect with verified residential architects, interior designers, and elevation specialists. Filter by Tropical Modernism, Minimalist, Luxury, and custom planning styles."
+        canonical="/marketplace/architects"
+        keywords="home architects India, luxury villa designer, modular house planners, residential design studio, elevation designs, Vastu home design"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="flex-1">

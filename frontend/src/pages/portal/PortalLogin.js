@@ -10,6 +10,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import axios from "axios";
+import SEO from "@/components/site/SEO";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 
@@ -135,6 +136,13 @@ export default function PortalLogin() {
       className="min-h-screen bg-[#F2F2F2] flex flex-col md:grid md:grid-cols-2 font-['Poppins'] relative selection:bg-[#FF5A00]/20 selection:text-[#000F1B]"
       data-testid="portal-login"
     >
+      <SEO
+        title="Client Portal Login"
+        description="Sign in to your ConstructONS Client Portal to access live site updates, drawings, and quality milestones."
+        canonical="/portal/login"
+        noindex={true}
+      />
+
       {/* 📱 Mobile Top Header */}
       <header className="md:hidden bg-[#000F1B] border-b border-white/10 px-4 py-3 flex items-center justify-between z-10">
         <Link

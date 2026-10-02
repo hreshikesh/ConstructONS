@@ -7,6 +7,7 @@ import {
   Plus, Trash2, Save, X, Loader2, RefreshCw, Building2, Search,
   Eye, Link as LinkIcon, Pencil
 } from "lucide-react";
+import SEO from "@/components/site/SEO";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 const api = axios.create({ baseURL: API_BASE, withCredentials: true });
@@ -16,6 +17,24 @@ const PR = {
   create: (body) => api.post("/admin/projects", body).then(r => r.data),
   update: (id, body) => api.put(`/admin/projects/${id}`, body).then(r => r.data),
   remove: (id) => api.delete(`/admin/projects/${id}`).then(r => r.data),
+};
+
+// Auto-corrects typed years like 0027 -> 2027 or 0002 -> 2026
+const sanitizeDateYear = (dateStr) => {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-"); // YYYY-MM-DD
+  if (parts.length === 3) {
+    let year = parseInt(parts[0], 10);
+    if (year > 0 && year < 100) {
+      year += 2000; // e.g. 26 -> 2026, 27 -> 2027
+      return `${year}-${parts[1]}-${parts[2]}`;
+    } else if (year >= 100 && year < 1000) {
+      const yearStr = String(parts[0]).padStart(4, "0");
+      const lastTwo = yearStr.slice(-2);
+      return `20${lastTwo}-${parts[1]}-${parts[2]}`;
+    }
+  }
+  return dateStr;
 };
 
 export default function AdminProjects() {
@@ -62,6 +81,7 @@ export default function AdminProjects() {
 
   return (
     <div className="max-w-[1400px] mx-auto font-['Poppins'] pb-12">
+      <SEO title="Admin Projects" description="Manage projects" canonical="/admin/projects" noindex={true} />
       
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -351,7 +371,6 @@ function ProjectFormModal({ project, onClose, onSaved }) {
   };
 
   const handlePhoneChange = (e) => {
-    // Only allow digits up to 10 characters
     const numericValue = e.target.value.replace(/\D/g, "");
     setForm(prev => ({ ...prev, customer_phone: numericValue }));
   };
@@ -363,7 +382,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
     }
     if (form.customer_phone && form.customer_phone.length !== 10) {
       toast.error("Phone number must be exactly 10 digits");
-      return;
+      return; 
     }
     
     setSaving(true);
@@ -373,8 +392,8 @@ function ProjectFormModal({ project, onClose, onSaved }) {
         contract_value: Number(form.contract_value) || 0,
         site_lat: form.site_lat ? Number(form.site_lat) : null,
         site_lng: form.site_lng ? Number(form.site_lng) : null,
-        start_date: form.start_date || null,
-        expected_completion: form.expected_completion || null
+        start_date: sanitizeDateYear(form.start_date) || null,
+        expected_completion: sanitizeDateYear(form.expected_completion) || null
       };
 
       if (isEdit) {
@@ -409,7 +428,6 @@ function ProjectFormModal({ project, onClose, onSaved }) {
 
         <div className="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1 pb-4">
           
-          {/* Hide Proposal Import selector during Edit mode */}
           {!isEdit && (
             <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 shadow-sm">
               <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -467,14 +485,47 @@ function ProjectFormModal({ project, onClose, onSaved }) {
                 placeholder="Enter full physical address details..."
               />
             </div>
+
+            {/* DATE INPUT 1: START DATE */}
             <div>
-              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Start Date</label>
-              <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
+              <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Project Start</label>
+              <input 
+                type="date" 
+                min="2020-01-01"
+                max="2099-12-31"
+                value={form.start_date || ""} 
+                onChange={e => setForm({ ...form, start_date: e.target.value })}
+                onBlur={e => {
+                  const corrected = sanitizeDateYear(e.target.value);
+                  if (corrected !== e.target.value) {
+                    setForm(prev => ({ ...prev, start_date: corrected }));
+                  }
+                }}
+                onClick={(e) => { try { e.target.showPicker(); } catch {} }}
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm cursor-pointer" 
+              />
             </div>
+
+            {/* DATE INPUT 2: FORECAST COMPLETION */}
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Forecast Completion</label>
-              <input type="date" value={form.expected_completion} onChange={e => setForm({ ...form, expected_completion: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
+              <input 
+                type="date" 
+                min="2020-01-01"
+                max="2099-12-31"
+                value={form.expected_completion || ""} 
+                onChange={e => setForm({ ...form, expected_completion: e.target.value })} 
+                onBlur={e => {
+                  const corrected = sanitizeDateYear(e.target.value);
+                  if (corrected !== e.target.value) {
+                    setForm(prev => ({ ...prev, expected_completion: corrected }));
+                  }
+                }}
+                onClick={(e) => { try { e.target.showPicker(); } catch {} }}
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm cursor-pointer" 
+              />
             </div>
+
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Total Contract Value (₹)</label>
               <input 

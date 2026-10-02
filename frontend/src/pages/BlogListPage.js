@@ -4,16 +4,57 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import { ArrowRight } from "lucide-react";
+import SEO from "@/components/site/SEO";
 
 export default function BlogListPage() {
   const [blogs, setBlogs] = useState([]);
   const [settings, setSettings] = useState(null);
+
   useEffect(() => {
     publicApi.getBlogs().then(setBlogs);
     publicApi.getSiteSettings().then(setSettings);
   }, []);
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Blog",
+        "@id": "https://constructons.com/blog#blog",
+        "url": "https://constructons.com/blog",
+        "name": "ConstructONS Construction & Architecture Blog",
+        "description": "Insights, guides, and practical advice on residential construction, budgeting, Vastu, and modern architecture in India."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Blog",
+            "item": "https://constructons.com/blog"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <>
+      <SEO
+        title="Construction Insights, Tips & Home Building Blog"
+        description="Read expert guides, architectural design trends, budgeting tips, and step-by-step home construction advice in India on the ConstructONS blog."
+        canonical="/blog"
+        keywords="construction blog India, home building tips, house construction costs, architectural trends, turnkey construction guide, vastu planning tips"
+        structuredData={structuredData}
+      />
+
       <Header />
       <main className="pt-28 pb-24">
         <div className="container-wide">

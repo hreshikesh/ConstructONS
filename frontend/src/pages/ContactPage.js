@@ -19,6 +19,7 @@ import {
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
+import SEO from "@/components/site/SEO";
 
 /* =========================================================
    CUSTOM POWER BUTTON O SVG (Matches ConstructONS Logo)
@@ -151,8 +152,45 @@ export default function ContactPage() {
     },
   ];
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ContactPage",
+        "@id": "https://constructons.com/contact#webpage",
+        "url": "https://constructons.com/contact",
+        "name": "Contact ConstructONS",
+        "description": "Contact India's premium residential builders for standard and luxury pricing estimators."
+      },
+      {
+        "@type": "LocalBusiness",
+        "name": "ConstructONS",
+        "image": "https://constructons.com/logo.webp",
+        "telephone": phone || "+91-XXXXXXXXXX",
+        "email": email || "support@constructons.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Bengaluru Head Office",
+          "addressLocality": "Bengaluru",
+          "addressRegion": "Karnataka",
+          "postalCode": "560001",
+          "addressCountry": "IN"
+        },
+        "url": "https://constructons.com"
+      }
+    ]
+  };
+
   return (
     <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+      <SEO
+        title="Contact Us - Free Construction Consultation"
+        description="Have questions about house construction packages? Get in touch with ConstructONS headquarters in Bengaluru. Call directly, WhatsApp, email, or visit our design studio."
+        canonical="/contact"
+        keywords="contact constructons, home builder phone number, modular house consult, modular construction studio Bangalore, cost estimation quote"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="pt-0">

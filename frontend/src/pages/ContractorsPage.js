@@ -11,10 +11,7 @@ import { toast } from "sonner";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { PROFESSIONALS } from "./data/ContractorData";
-// ============================================================================
-// REALISTIC SAMPLE CONTRACTOR DATA
-// ============================================================================
-
+import SEO from "@/components/site/SEO";
 
 const CATEGORIES = ["All", "Architecture", "Structural", "Civil Works", "Interior Design", "Electrical & Plumbing"];
 const LOCATIONS = ["All Locations", "Bangalore South", "Bangalore East", "Bangalore Central", "Bangalore North", "Bangalore West"];
@@ -185,8 +182,52 @@ export default function ContractorsPage() {
     window.open(`https://wa.me/${pro.phone}?text=${text}`, "_blank");
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/contractors#webpage",
+        "url": "https://constructons.com/marketplace/contractors",
+        "name": "Verified Contractors, Civil Masons & Turnkey Builders",
+        "description": "Browse profiles of verified, background-checked civil contractors, structural engineers, and modular builders."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/contractors"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Contractors",
+            "item": "https://constructons.com/marketplace/contractors"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white flex flex-col">
+      <SEO
+        title="Verified Civil Contractors & Structural Builders"
+        description="Find elite, background-checked construction professionals near you. Match with civil contractors, master masons, and turnkey builders using our AI Talent Matcher."
+        canonical="/marketplace/contractors"
+        keywords="civil contractors India, house construction company, certified masonry builders, licensed structural engineers, turnkey builders, renovation contractor"
+        structuredData={structuredData}
+      />
+
       <Header />
       
       <main className="flex-1">
@@ -486,7 +527,7 @@ export default function ContractorsPage() {
                         <div className="flex flex-col">
                           <span className="text-[9px] uppercase text-[#111111]/40 font-bold mb-0.5">Rating</span>
                           <div className="flex items-center gap-1 text-xs font-bold text-[#000F1B]">
-                            <Star className="w-3 h-3 text-[#F59E0B] fill-current" /> {pro.rating}
+                            <Star className="w-3.5 h-3.5 text-[#F59E0B] fill-current" /> {pro.rating}
                           </div>
                         </div>
                         <div className="w-px h-6 bg-black/10" />

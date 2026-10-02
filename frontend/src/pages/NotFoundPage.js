@@ -6,6 +6,7 @@ import { ArrowLeft, Home, Construction } from "lucide-react";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
+import SEO from "@/components/site/SEO";
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
@@ -17,6 +18,13 @@ export default function NotFoundPage() {
 
   return (
     <div className="not-found-page min-h-screen flex flex-col bg-[#000F1B] font-['Poppins',sans-serif] text-white selection:bg-[#FF5A00] selection:text-white">
+      <SEO
+        title="404 - Page Under Construction"
+        description="The page you are looking for has been moved or does not exist."
+        canonical="/404"
+        noindex={true}
+      />
+
       <Header />
 
       <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-4 py-30 md:py-30 lg:py-32">
@@ -32,9 +40,6 @@ export default function NotFoundPage() {
         />
 
         <div className="relative z-10 w-full max-w-3xl mx-auto text-center mt-20">
-          {/* Eyebrow */}
-        
-
           {/* Animated SVG scene */}
           <div className="w-full max-w-2xl mx-auto not_found_container">
             <svg
@@ -318,9 +323,6 @@ export default function NotFoundPage() {
           0%, 100% { transform: translate(370px, 120px) translateY(0); }
           50%      { transform: translate(370px, 120px) translateY(-1.5px); }
         }
-
-        /* Note: car already has transform="translate(370,120)" in markup.
-           Re-apply base translate inside keyframes so jig doesn't wipe it. */
 
         #not_found_bracefront {
           animation: nf_braces 0.6s ease-in-out infinite;

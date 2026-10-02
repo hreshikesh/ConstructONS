@@ -5,11 +5,13 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
+import SEO from "@/components/site/SEO";
 
 export default function BlogDetailPage() {
   const { slug } = useParams();
   const [b, setB] = useState(null);
   const [settings, setSettings] = useState(null);
+
   useEffect(() => {
     publicApi.getBlog(slug).then(setB).catch(() => setB({}));
     publicApi.getSiteSettings().then(setSettings);
@@ -25,9 +27,71 @@ export default function BlogDetailPage() {
     });
   }, [b]);
 
+  const structuredData = useMemo(() => {
+    if (!b || !b.id) return null;
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BlogPosting",
+          "headline": b.title,
+          "image": b.cover_image || "https://constructons.com/logo.webp",
+          "author": {
+            "@type": "Person",
+            "name": b.author || "ConstructONS Team"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "ConstructONS",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://constructons.com/logo.webp"
+            }
+          },
+          "description": b.excerpt || b.title,
+          "mainEntityOfPage": `https://constructons.com/blog/${b.slug}`
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://constructons.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Blog",
+              "item": "https://constructons.com/blog"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": b.title,
+              "item": `https://constructons.com/blog/${b.slug}`
+            }
+          ]
+        }
+      ]
+    };
+  }, [b]);
+
   if (!b) return <div className="min-h-screen grid place-items-center"><div className="w-8 h-8 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" /></div>;
+
   return (
     <>
+      <SEO
+        title={b.title ? `${b.title}` : "Blog Article"}
+        description={b.excerpt || `${b.title} — insights from the ConstructONS team on modern home construction.`}
+        canonical={`/blog/${b.slug || slug}`}
+        image={b.cover_image}
+        type="article"
+        keywords="home construction article, architecture design guide, building cost insights, house building tips"
+        structuredData={structuredData}
+      />
+
       <Header />
       <main className="pt-28 pb-24">
         <div className="container-wide max-w-3xl">

@@ -24,6 +24,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import SEO from "@/components/site/SEO";
 
 /* ──────────────────────────────────────────────────────────────
    CURATED UNSPLASH IMAGES (per-option only)
@@ -222,6 +223,7 @@ function LogoMark({ className = "w-6 h-6" }) {
   );
 }
 
+// Brand Logo text updated with static presentation formatting
 function BrandLogoText({ size = "md" }) {
   const sizes = {
     sm: "text-xs",
@@ -232,7 +234,6 @@ function BrandLogoText({ size = "md" }) {
   return (
     <span className={`font-bold tracking-tight text-white inline-flex items-center ${sizes}`}>
       Construct
-      {/* The 'O' rendered as a darker, bolder power button */}
       <span className="inline-flex items-center justify-center relative mx-[1px] w-[0.8em] h-[0.8em] rounded-full border-[2.5px] border-[#D44A00] align-middle bg-[#FF5A00]/10">
         <span className="absolute top-0 w-[2.5px] h-[48%] bg-[#D44A00] rounded-full -translate-y-0.5" />
       </span>
@@ -287,8 +288,35 @@ export default function FindMyPackagePage() {
     setScreen("intro");
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://constructons.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Find My Package",
+        "item": "https://constructons.com/find-my-package"
+      }
+    ]
+  };
+
   return (
     <div className="bg-[#FBF9F6] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+      <SEO
+        title="Find My Package - Construction Matching Tool"
+        description="Not sure which house specification package matches your budget and requirements? Answer 4 basic style, structural, and tech preference questions to find your layout."
+        canonical="/find-my-package"
+        keywords="construction cost calculator, home specification match, building budget estimator, house design builder, home packages India, custom construction selector"
+        structuredData={breadcrumbSchema}
+      />
+
       <Header />
 
       <main className="pt-24">
@@ -557,7 +585,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                                 exit={{ scale: 0, opacity: 0 }}
                                 className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-[#FF5A00] grid place-items-center shadow-lg"
                               >
-                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -802,7 +830,6 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
             <div className="relative z-10">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                  {/* BrandPill with logoOnly enabled to display ONLY the logo mark */}
                   <BrandPill size="sm" logoOnly={true} />
                   <div className="mt-5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF8A4C]">
                     Recommended Package
@@ -1042,7 +1069,7 @@ function SmallHomeCard({ home, isBest }) {
           </div>
           <span className="text-[10px] font-bold text-[#FF5A00] inline-flex items-center gap-0.5 group-hover:gap-1 transition-all">
             View
-            <ArrowRight className="w-3 h-3" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </div>
       </div>

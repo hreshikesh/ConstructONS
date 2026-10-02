@@ -11,6 +11,7 @@ import {
   Route, ImageIcon, LayoutDashboard, Settings, LogOut, Star, Inbox, GitCompareArrows,
   BarChart3, ClipboardList, Menu, X, Bell, CheckCheck, FileText, Calculator, BookOpen, Building2
 } from "lucide-react";
+import SEO from "@/components/site/SEO";
 
 // Removed "Hero Sections" from this list
 const NAV = [
@@ -89,6 +90,13 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-brand-bg">
+      <SEO
+        title="Admin Control Center"
+        description="ConstructONS Internal Content Management System"
+        canonical="/admin"
+        noindex={true}
+      />
+
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-black/5 shadow-soft">
         <div className="flex items-center justify-between px-3 py-2.5">
           <button onClick={() => setDrawerOpen(true)} className="w-10 h-10 rounded-full grid place-items-center border border-black/10 bg-white">

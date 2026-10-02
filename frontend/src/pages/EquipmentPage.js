@@ -9,10 +9,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 import { FLEET } from "./data/Equipment";
-// ============================================================================
-// PREMIUM FLEET DATA (Using High-Res Photography)
-// ============================================================================
-
+import SEO from "@/components/site/SEO";
 
 export default function EquipmentPage() {
   const { open: openLead } = useLeadModal();
@@ -27,8 +24,52 @@ export default function EquipmentPage() {
     return () => clearInterval(timer);
   }, []);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/equipment#webpage",
+        "url": "https://constructons.com/marketplace/equipment",
+        "name": "Heavy Machinery Fleet & Construction Equipment",
+        "description": "Inspect and book our heavy machinery fleet, transit mixers, concrete pumps, and excavators."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/equipment"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Equipment",
+            "item": "https://constructons.com/marketplace/equipment"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white flex flex-col">
+      <SEO
+        title="Heavy Construction Equipment & Fleet Machinery"
+        description="Operate heavy construction machinery with certified operators. Request GPS-enabled transit mixers, concrete pumps, and excavators with IoT telemetry."
+        canonical="/marketplace/equipment"
+        keywords="construction machinery rental, transit mixers, concrete pumps, heavy excavators India, builder crane booking, site preparation equipment"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="flex-1">
@@ -173,7 +214,7 @@ export default function EquipmentPage() {
                           <div className={`font-bold text-sm md:text-base truncate transition-colors ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>
                             {machine.name}
                           </div>
-                          <div className="text-[10px] md:text-xs uppercase tracking-wider font-semibold opacity-60 truncate mt-0.5">
+                          <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 truncate mt-0.5">
                             {machine.category}
                           </div>
                         </div>

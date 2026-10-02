@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SmartHomeBuilder from "@/components/site/SmartHomeBuilder";
+import SEO from "@/components/site/SEO";
 
 import { SMART_HOME_BUNDLES } from "./data/SmartHomeBundleData";
 
@@ -60,9 +61,54 @@ export default function SmartHomePage() {
   const totalBundles = SMART_HOME_BUNDLES.length;
   const totalDevices = SMART_HOME_BUNDLES.reduce((n, b) => n + b.deviceCount, 0);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/smart-home#webpage",
+        "url": "https://constructons.com/marketplace/smart-home",
+        "name": "Smart Home Automation Bundles & Integrations",
+        "description": "Explore certified and pre-configured smart home ecosystems, voice lighting bundles, and complete home automation suites."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/smart-home"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Smart Home",
+            "item": "https://constructons.com/marketplace/smart-home"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF5A00] selection:text-white flex flex-col">
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none} .no-scrollbar{scrollbar-width:none}`}</style>
+      
+      <SEO
+        title="Smart Home Automation Bundles & Custom Configurator"
+        description="Integrate certified smart home systems into your layout. Pick Google, Alexa, or HomeKit compatible pre-built bundles, or map room-by-room tech requirements with our builder."
+        canonical="/marketplace/smart-home"
+        keywords="home automation packages, smart home devices India, google home lighting, smart locks and surveillance, full home automated systems, smart home builders"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="flex-1">

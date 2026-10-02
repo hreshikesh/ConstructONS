@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import PlantRecommender from "@/components/site/PlantRecommender";
+import SEO from "@/components/site/SEO";
 
 import { LANDSCAPING_SHOWCASE } from "./data/LandscapingShowcaseData";
 
@@ -44,9 +45,54 @@ export default function LandscapingPage() {
   const totalGardens = LANDSCAPING_SHOWCASE.length;
   const totalSqft = LANDSCAPING_SHOWCASE.reduce((n, i) => n + parseInt(i.coverage.replace(/[^0-9]/g, "")), 0);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/landscaping#webpage",
+        "url": "https://constructons.com/marketplace/landscaping",
+        "name": "Garden, Terrace, & Balcony Landscaping Services",
+        "description": "Browse premium landscaping portfolios. Discover custom vertical green walls, drip irrigation setups, terrace gardens, and water features."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/landscaping"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Landscaping",
+            "item": "https://constructons.com/marketplace/landscaping"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF5A00] selection:text-white flex flex-col">
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none} .no-scrollbar{scrollbar-width:none}`}</style>
+      
+      <SEO
+        title="Lush Landscape Design, Terrace Gardens & Verticals"
+        description="Design your estate, terrace garden, or balcony space. View custom landscaping portfolios, smart irrigation specs, and discover ideal plants with our smart discovery tool."
+        canonical="/marketplace/landscaping"
+        keywords="landscaping design India, rooftop terrace gardens, vertical living walls, balcony planters, custom backyard garden, drip irrigation installers"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="flex-1">

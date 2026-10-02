@@ -25,6 +25,24 @@ import CctvTab from "./project-tabs/CctvTab";
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 
+// Auto-corrects typed years like 0027 -> 2027 or 26 -> 2026
+const sanitizeDateYear = (dateStr) => {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-"); // YYYY-MM-DD
+  if (parts.length === 3) {
+    let year = parseInt(parts[0], 10);
+    if (year > 0 && year < 100) {
+      year += 2000; // e.g. 26 -> 2026, 27 -> 2027
+      return `${year}-${parts[1]}-${parts[2]}`;
+    } else if (year >= 100 && year < 1000) {
+      const yearStr = String(parts[0]).padStart(4, "0");
+      const lastTwo = yearStr.slice(-2);
+      return `20${lastTwo}-${parts[1]}-${parts[2]}`;
+    }
+  }
+  return dateStr;
+};
+
 const TAB_COMPONENTS = {
   overview: OverviewTab, stages: StagesTab, reports: ReportsTab,
   finance: FinanceTab, team: TeamTab, attendance: AttendanceTab,
@@ -217,8 +235,8 @@ function EditInfoModal({ project, onClose, onSaved }) {
         amount_spent: Number(form.amount_spent) || 0,
         site_lat: form.site_lat ? Number(form.site_lat) : null,
         site_lng: form.site_lng ? Number(form.site_lng) : null,
-        start_date: form.start_date || null,
-        expected_completion: form.expected_completion || null
+        start_date: sanitizeDateYear(form.start_date) || null,
+        expected_completion: sanitizeDateYear(form.expected_completion) || null
       });
       toast.success("Project settings updated"); 
       onSaved();
@@ -234,7 +252,16 @@ function EditInfoModal({ project, onClose, onSaved }) {
         type={type}
         value={form[name]}
         onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1 text-xs focus:border-blue-500 outline-none transition"
+        onBlur={type === "date" ? (e) => {
+          const corrected = sanitizeDateYear(e.target.value);
+          if (corrected !== e.target.value) {
+            setForm(f => ({ ...f, [name]: corrected }));
+          }
+        } : undefined}
+        onClick={type === "date" ? (e) => { try { e.target.showPicker(); } catch {} } : undefined}
+        min={type === "date" ? "2020-01-01" : undefined}
+        max={type === "date" ? "2099-12-31" : undefined}
+        className="w-full rounded border border-gray-200 bg-white px-2.5 py-1 text-xs focus:border-blue-500 outline-none transition cursor-pointer"
         {...props}
       />
     </div>

@@ -9,6 +9,7 @@ import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from "@react-google-m
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import SEO from "@/components/site/SEO";
 
 import { SAMPLE_VENDORS } from "./data/SupplierData";
 
@@ -28,8 +29,6 @@ const CLEAN_MAP_STYLE = [
   { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#ffe0b2" }] },
 ];
 
-// Reusable Brand Logo component adhering to branding rules:
-// "Construct" text + "O" as Power button icon + "NS" in uppercase, with "ONS" in Orange (#FF5A00)
 function BrandName({ constructClass = "text-white", onsClass = "text-[#FF5A00]", iconSize = "w-[0.7em] h-[0.7em]" }) {
   return (
     <span className="inline-flex items-center font-black tracking-tight">
@@ -85,8 +84,52 @@ export default function SuppliersPage() {
     });
   }, [searchQuery, activeCategory, sortBy, verifiedOnly]);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/materials#webpage",
+        "url": "https://constructons.com/marketplace/materials",
+        "name": "Wholesale Building Materials & Certified Supplier Network",
+        "description": "Source directly from verified suppliers for TMT steel, cement, vitrified tiles, electricals, and plumbing fittings across India."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/materials"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Materials & Suppliers",
+            "item": "https://constructons.com/marketplace/materials"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] font-['Poppins',sans-serif] text-[#000F1B] flex flex-col selection:bg-[#FF5A00] selection:text-white overflow-x-hidden">
+      <SEO
+        title="Wholesale Building Materials, Cement & TMT Steel Suppliers"
+        description="Source construction materials directly at guaranteed wholesale rates. Locate verified distributors for cement, TMT steel, tiles, sanitaryware, and electricals on our live vendor map."
+        canonical="/marketplace/materials"
+        keywords="construction material wholesale, TMT steel distributors India, cement suppliers Bangalore, vitrified flooring tiles vendor, electrical wiring distributors, plumbing wholesale depot"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       {/* Hero Banner */}

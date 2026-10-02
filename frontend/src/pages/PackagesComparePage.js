@@ -18,6 +18,7 @@ import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import { useBrochureModal } from "@/components/site/BrochureModalProvider";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import SEO from "@/components/site/SEO";
 
 /* ──────────────────────────────────────────────────────────────
    Brand pill — Uses /logo.webp directly with ConstructONS branding
@@ -107,6 +108,42 @@ export default function PackagesComparePage() {
     return out;
   }, [packages, category_order]);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://constructons.com/packages/compare#webpage",
+        "url": "https://constructons.com/packages/compare",
+        "name": "Compare House Construction Packages & Material Specs",
+        "description": "Side-by-side comparison of construction tiers: pricing per sq.ft, steel and cement brands, fittings, structural warranties, and timeline milestones."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Packages",
+            "item": "https://constructons.com/packages"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Compare",
+            "item": "https://constructons.com/packages/compare"
+          }
+        ]
+      }
+    ]
+  };
+
   // Conditional early return comes AFTER all Hooks are defined
   if (!data) {
     return (
@@ -150,6 +187,14 @@ export default function PackagesComparePage() {
 
   return (
     <div className="bg-[#FBF9F6] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+      <SEO
+        title="Compare Construction Packages Side by Side"
+        description="Compare Basic, Essential, Standard, and Luxury home construction packages. Inspect verified material brands, structural specifications, and warranties before building."
+        canonical="/packages/compare"
+        keywords="compare construction packages, house construction pricing comparison, building material comparison, turnkey home package matrix, rate per sqft comparison"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="pt-24 pb-20">

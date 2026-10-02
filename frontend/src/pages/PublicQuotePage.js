@@ -18,6 +18,7 @@ import {
   Home as HomeIcon, MapPin, Calendar, User, Phone, Mail, IndianRupee,
   MessageSquare, Shield, Star,
 } from "lucide-react";
+import SEO from "@/components/site/SEO";
 
 const rupees = (n) =>
   `\u20b9${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
@@ -142,6 +143,13 @@ export default function PublicQuotePage() {
 
   return (
     <div className="min-h-screen bg-brand-bg pb-20" data-testid="public-quote-page">
+      <SEO
+        title="Custom Home Quotation"
+        description="Confidential custom construction quotation prepared by ConstructONS."
+        canonical={`/quote/${token}`}
+        noindex={true}
+      />
+
       {/* Top bar */}
       <header className="bg-brand-navy text-white">
         <div className="max-w-4xl mx-auto px-5 md:px-8 py-5 flex items-center justify-between gap-3">

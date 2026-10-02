@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,6 +28,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import FloatingActions from "@/components/site/FloatingActions";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import SEO from "@/components/site/SEO";
 
 export default function HomeDetailPage() {
   const { slug } = useParams();
@@ -42,6 +43,48 @@ export default function HomeDetailPage() {
     publicApi.getHome(slug).then(setHome).catch(() => setHome({}));
     publicApi.getSiteSettings().then(setSettings).catch(() => {});
   }, [slug]);
+
+  const structuredData = useMemo(() => {
+    if (!home || !home.id) return null;
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SingleFamilyResidence",
+          "name": home.name,
+          "numberOfRooms": home.bedrooms,
+          "floorSize": {
+            "@type": "QuantitativeValue",
+            "value": home.area_sqft || ""
+          },
+          "description": home.tagline || home.description
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://constructons.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Collection",
+              "item": "https://constructons.com/#home-collection"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": home.name,
+              "item": `https://constructons.com/homes/${home.slug}`
+            }
+          ]
+        }
+      ]
+    };
+  }, [home]);
 
   if (!home) {
     return (
@@ -95,6 +138,14 @@ export default function HomeDetailPage() {
 
   return (
     <div className="bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+      <SEO
+        title={`${home.name} - Custom House Design Blueprint`}
+        description={`Explore the ${home.name} floorplan layout. ${home.bedrooms} BHK style specification, with ${home.area_sqft} details and architectural features.`}
+        canonical={`/homes/${home.slug}`}
+        keywords={`${home.name} house plan, modern ${home.bedrooms} BHK elevation, vastu compliant floor layout, modular villa architecture, custom design construct`}
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="pt-24 pb-20">
@@ -242,7 +293,7 @@ export default function HomeDetailPage() {
                   </div>
                   {home.vastu_compliant && (
                     <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-500/15 backdrop-blur px-2 py-0.5 rounded-full border border-emerald-500/20">
-                      <ShieldCheck className="w-3 h-3" /> Vastu
+                      <ShieldCheck className="w-3.5 h-3.5" /> Vastu
                     </div>
                   )}
                 </div>
@@ -624,7 +675,7 @@ function AboutModal({ open, onClose, home }) {
                     {home.features.map((f, i) => (
                       <div key={`modal-feat-${i}`} className="flex items-start gap-2.5 text-sm text-[#000F1B]/85">
                         <span className="w-5 h-5 rounded-full bg-[#FF5A00]/10 grid place-items-center shrink-0 mt-0.5">
-                          <Check className="w-3 h-3 text-[#FF5A00]" />
+                          <Check className="w-3.5 h-3.5 text-[#FF5A00]" />
                         </span>
                         <span>{f}</span>
                       </div>

@@ -15,6 +15,7 @@ import PortalSidebar from "./components/PortalSidebar";
 import PortalTopBar from "./components/PortalTopBar";
 import OnboardingWizard from "../../components/site/OnboardingWizard";
 import PortalAIChatWidget from "./components/PortalAIChatWidget";
+import SEO from "@/components/site/SEO";
 
 function NoProjectView() {
   const { user, logout, reload, loading } = usePortal();
@@ -30,7 +31,6 @@ function NoProjectView() {
       <header className="h-16 bg-white border-b border-black/5 px-4 sm:px-8 flex items-center justify-between shrink-0">
         <Link to="/" className="flex items-center gap-2.5 group">
           <img src="/logo.webp" alt="ConstructONS Logo" className="h-7 w-auto object-contain" />
-          
         </Link>
         
         <div className="flex items-center gap-3">
@@ -153,8 +153,14 @@ function PortalShell() {
 
   // 3. FULL PORTAL ACCESS
   return (
-
     <div className="h-screen bg-[#F5F6F8] font-['Poppins'] text-[#111111] flex overflow-hidden">
+      <SEO
+        title="Client Workspace"
+        description="ConstructONS Live Project Tracking & Management Portal"
+        canonical="/portal"
+        noindex={true}
+      />
+
       <Toaster richColors position="top-right" />
       
       <PortalSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -164,11 +170,10 @@ function PortalShell() {
         
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <Outlet />
-            <PortalAIChatWidget />
+          <PortalAIChatWidget />
         </main>
       </div>
     </div>
-
   );
 }
 

@@ -25,6 +25,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import LogoMark from "@/components/site/LogoMark";
 import { publicApi } from "@/lib/api";
+import SEO from "@/components/site/SEO";
 
 
 /* =========================================================
@@ -165,9 +166,46 @@ export default function AboutPage() {
     accent: "#FF5A00",
   }));
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "AboutPage",
+        "@id": "https://constructons.com/about#webpage",
+        "url": "https://constructons.com/about",
+        "name": "About ConstructONS",
+        "description": "Learn about India's most advanced transparent residential construction platform."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "About Us",
+            "item": "https://constructons.com/about"
+          }
+        ]
+      }
+    ]
+  };
 
   return (
     <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+      <SEO
+        title="About Us - Intelligent & Transparent Builders"
+        description="We are India's premium tech-enabled construction platform. Read our mission to bring complete structural transparency and AI-driven efficiency to your dream home."
+        canonical="/about"
+        keywords="about constructons, house building platform, construction company Bangalore, premium home developers India, civil engineers architectural studio"
+        structuredData={structuredData}
+      />
+
       <Header />
       <main>
 

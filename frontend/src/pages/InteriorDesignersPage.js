@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import StylePersonalityQuiz from "@/components/site/StylePersonalityQuiz";
+import SEO from "@/components/site/SEO";
 
 import { INTERIOR_DESIGNERS } from "./data/InteriorDesignerData";
 const STYLES = ["Minimalist", "Bohemian", "Modern Indian", "Scandinavian", "Luxe Contemporary", "Rustic"];
@@ -55,9 +56,54 @@ export default function InteriorDesignersPage() {
   const totalProjects = INTERIOR_DESIGNERS.reduce((n, p) => n + p.projects, 0);
   const avgTurnaround = "8–12 wks";
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/interior#webpage",
+        "url": "https://constructons.com/marketplace/interior",
+        "name": "Residential Interior Designers & Design Studios",
+        "description": "Discover verified residential interior designers, modular kitchen planners, and full home styling studios."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/interior"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Interior Designers",
+            "item": "https://constructons.com/marketplace/interior"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF5A00] selection:text-white flex flex-col">
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none} .no-scrollbar{scrollbar-width:none}`}</style>
+      
+      <SEO
+        title="Residential Interior Designers & Studio Stylists"
+        description="Hire vetted interior designers and modular kitchen specialists. Filter by Minimalist, Scandinavian, and Modern Indian styles with our interactive mood board selector."
+        canonical="/marketplace/interior"
+        keywords="interior designers India, modular kitchen planners, living room styling, luxury home decorators, scandinavian interior design, custom home decor"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="flex-1">
@@ -249,7 +295,7 @@ function FilterRow({ label, options, value, onChange }) {
 }
 
 /* ============================================================================
-   DESIGNER CARD (with palette strip — 3rd distinct identity)
+   DESIGNER CARD
 ============================================================================ */
 function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
   return (
@@ -277,7 +323,7 @@ function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
         </div>
       </button>
 
-      {/* SIGNATURE COLOR PALETTE STRIP (unique to interior designers) */}
+      {/* SIGNATURE COLOR PALETTE STRIP */}
       <div className="flex h-2">
         {pro.palette.map((c, i) => (
           <div key={i} className="flex-1" style={{ background: c }} title={c} />
@@ -285,7 +331,6 @@ function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
       </div>
 
       <div className="p-6 md:p-8 flex-1 flex flex-col relative">
-        {/* Rounded-square avatar (warm middle between architect rect & engineer circle) */}
         <div className="absolute -top-10 left-6 w-20 h-20 rounded-3xl overflow-hidden border-4 border-white shadow-lg bg-white z-10">
           <img src={pro.avatar} alt="" className="w-full h-full object-cover" />
         </div>

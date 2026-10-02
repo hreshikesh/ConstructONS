@@ -4,7 +4,7 @@ import { publicApi } from "@/lib/api";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import Hero from "@/components/site/Hero";
-import VideoShowcase from "@/components/site/VideoShowcase"; // <--- 1. Import new component
+import VideoShowcase from "@/components/site/VideoShowcase";
 import HomeCollection from "@/components/site/HomeCollection";
 import AIPlatform from "@/components/site/AIPlatform";
 import Marketplace from "@/components/site/Marketplace";
@@ -15,6 +15,7 @@ import Testimonials from "@/components/site/Testimonials";
 import ContactCTA from "@/components/site/ContactCTA";
 import FloatingActions from "@/components/site/FloatingActions";
 import { RefreshCw, AlertTriangle, ArrowRight } from "lucide-react";
+import SEO, { organizationSchema } from "@/components/site/SEO";
 
 export default function HomePage() {
   const [data, setData] = useState(null);
@@ -86,11 +87,18 @@ export default function HomePage() {
 
   return (
     <>
+      <SEO
+        title="AI-Powered Home Construction Platform"
+        description="Build your dream home with ConstructONS. India's premium tech-enabled construction platform. Get transparent pricing from ₹1,499/sqft, real-time live site tracking, and AI design modules."
+        canonical="/"
+        keywords="home construction India, house construction cost, civil contractors, transparent pricing, turnkey home building, custom home builder, AI floor plans, live CCTV tracking"
+        structuredData={organizationSchema}
+      />
+
       <Header />
       <main>
         <Hero />
 
-        {/* <--- 2. Add the Video TV Showcase exactly here ---> */}
         <VideoShowcase />
 
         <HomeCollection homes={data.homes} />

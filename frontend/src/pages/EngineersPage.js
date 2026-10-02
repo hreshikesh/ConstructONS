@@ -8,7 +8,11 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SeismicZoneChecker from "@/components/site/SeismicZoneChecker";
+import SEO from "@/components/site/SEO";
 
+/* ============================================================================
+   DATA
+============================================================================ */
 import { ENGINEERS } from "./data/EngineerData";
 const SPECIALIZATIONS = ["Structural", "MEP", "Geotechnical", "Site Supervision", "Civil"];
 const CERTIFICATIONS = ["IIT Alumnus", "PE Licensed", "Chartered", "ISO Auditor"];
@@ -60,9 +64,54 @@ export default function EngineersPage() {
   const totalProjects = ENGINEERS.reduce((n, p) => n + p.projects, 0);
   const avgExp = Math.round(ENGINEERS.reduce((n, p) => n + parseInt(p.experience), 0) / ENGINEERS.length);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://constructons.com/marketplace/engineers#webpage",
+        "url": "https://constructons.com/marketplace/engineers",
+        "name": "Structural, Geotechnical & MEP Civil Engineers",
+        "description": "Discover chartered structural engineers, soil test specialists, and MEP advisors for stable residential construction."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://constructons.com"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Marketplace",
+            "item": "https://constructons.com/marketplace/engineers"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Engineers",
+            "item": "https://constructons.com/marketplace/engineers"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF5A00] selection:text-white flex flex-col">
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none} .no-scrollbar{scrollbar-width:none}`}</style>
+      
+      <SEO
+        title="Chartered Structural Engineers & MEP Consultants"
+        description="Hire certified structural engineers, MEP planners, and geotechnical surveyors. Match by PE License, IIT Alumnus credentials, and use our seismic zone validator tool."
+        canonical="/marketplace/engineers"
+        keywords="structural engineers India, geotechnical soil testing, MEP designers, chartered civil engineer, residential structural blueprints, seismic code analysis"
+        structuredData={structuredData}
+      />
+
       <Header />
 
       <main className="flex-1">
@@ -260,7 +309,7 @@ function FilterRow({ label, options, value, onChange }) {
 }
 
 /* ============================================================================
-   ENGINEER CARD (Credential-focused, differs from Architect Card)
+   ENGINEER CARD
 ============================================================================ */
 function EngineerCard({ pro, index, reduce, onOpen, onChat }) {
   return (
@@ -269,7 +318,7 @@ function EngineerCard({ pro, index, reduce, onOpen, onChat }) {
       exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.45, delay: index * 0.04 }}
       className="bg-white rounded-3xl overflow-hidden border border-black/5 flex flex-col group shadow-sm hover:shadow-xl hover:border-black/15 transition-all duration-300">
 
-      {/* Technical Stat Band (Instead of Big Photo) */}
+      {/* Technical Stat Band */}
       <div className="relative bg-[#000F1B] p-5 md:p-6 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px)", backgroundSize: "25px 25px" }} />
         
@@ -300,7 +349,6 @@ function EngineerCard({ pro, index, reduce, onOpen, onChat }) {
 
       <div className="p-6 md:p-7 flex-1 flex flex-col">
         <div className="flex items-start gap-4 mb-5">
-          {/* CIRCULAR Avatar (differs from architect rectangular) */}
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#FF5A00]/20 shadow-md shrink-0">
             <img src={pro.avatar} alt="" className="w-full h-full object-cover" />
           </div>
@@ -365,7 +413,7 @@ function EngineerCard({ pro, index, reduce, onOpen, onChat }) {
 }
 
 /* ============================================================================
-   CREDENTIALS MODAL (Adapted from Portfolio — Technical Focus)
+   CREDENTIALS MODAL
 ============================================================================ */
 function CredentialsModal({ view, setView, onChat }) {
   const pro = view?.pro;
