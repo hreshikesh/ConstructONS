@@ -221,14 +221,28 @@ export default function DrawingsTab({ project, onSaved }) {
                     pending: { color: "bg-amber-50 text-amber-600 border-amber-200", label: "Pending Approval" }
                   };
                   const stat = statusConfig[d.status] || statusConfig.pending;
+                  
+                  // PDF check logic identical to client portal
+                  const isPdf = latest.url?.toLowerCase().includes('.pdf');
 
                   return (
                     <div key={d.id} className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden hover:border-[#FF5A00]/40 transition">
                       <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#F9FAFB]/50">
                         <div className="flex items-center gap-4 min-w-0">
-                          <a href={resolveMediaUrl(latest.url)} target="_blank" rel="noreferrer" className="w-16 h-16 rounded-xl bg-white border border-black/10 overflow-hidden shrink-0 group relative block shadow-sm">
-                            <img src={resolveMediaUrl(latest.url)} alt="" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                          
+                          {/* UPDATED PREVIEW BLOCK FOR PDF FIX */}
+                          <a href={resolveMediaUrl(latest.url)} target="_blank" rel="noreferrer" className="w-16 h-16 rounded-xl bg-white border border-black/10 overflow-hidden shrink-0 group relative block shadow-sm flex items-center justify-center">
+                            {isPdf ? (
+                              <div className="flex flex-col items-center justify-center text-[#1A73E8]">
+                                <FileText className="w-6 h-6 opacity-70" />
+                                <span className="text-[7px] font-bold mt-1 uppercase tracking-widest">PDF</span>
+                              </div>
+                            ) : (
+                              <img src={resolveMediaUrl(latest.url)} alt="" className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                            )}
                           </a>
+                          {/* END PREVIEW BLOCK */}
+
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-[#FF5A00] uppercase tracking-wider">{d.category}</span>
@@ -261,39 +275,49 @@ export default function DrawingsTab({ project, onSaved }) {
                         <div className="bg-white border-t border-black/5 p-5 space-y-3">
                           <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-3">Revision & Feedback History</div>
                           <div className="space-y-2.5">
-                            {[...versions].reverse().map((v) => (
-                              <div key={v.version} className="bg-[#F9FAFB] border border-black/5 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <a href={resolveMediaUrl(v.url)} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg bg-white overflow-hidden border border-black/10 shrink-0">
-                                    <img src={resolveMediaUrl(v.url)} alt="" className="w-full h-full object-cover" />
-                                  </a>
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs font-bold text-[#000F1B]">Version {v.version}</span>
-                                      <span className="text-[10px] text-[#111111]/40 font-medium">• {v.uploaded_at ? new Date(v.uploaded_at).toLocaleDateString() : ""}</span>
+                            {[...versions].reverse().map((v) => {
+                              const isRevPdf = v.url?.toLowerCase().includes('.pdf');
+                              return (
+                                <div key={v.version} className="bg-[#F9FAFB] border border-black/5 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <a href={resolveMediaUrl(v.url)} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg bg-white overflow-hidden border border-black/10 shrink-0 flex items-center justify-center">
+                                      {isRevPdf ? (
+                                        <div className="flex flex-col items-center justify-center text-[#1A73E8]">
+                                          <FileText className="w-4 h-4 opacity-70" />
+                                          <span className="text-[5px] font-bold uppercase tracking-widest mt-0.5">PDF</span>
+                                        </div>
+                                      ) : (
+                                        <img src={resolveMediaUrl(v.url)} alt="" className="w-full h-full object-cover" />
+                                      )}
+                                    </a>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold text-[#000F1B]">Version {v.version}</span>
+                                        <span className="text-[10px] text-[#111111]/40 font-medium">• {v.uploaded_at ? new Date(v.uploaded_at).toLocaleDateString() : ""}</span>
+                                      </div>
+                                      {v.client_comment ? (
+                                        <p className="text-xs text-[#111111]/70 italic truncate mt-0.5">"{v.client_comment}"</p>
+                                      ) : (
+                                        <span className="text-[10px] text-[#111111]/30 italic">No comments left</span>
+                                      )}
                                     </div>
-                                    {v.client_comment ? (
-                                      <p className="text-xs text-[#111111]/70 italic truncate mt-0.5">"{v.client_comment}"</p>
+                                  </div>
+
+                                  <div className="shrink-0">
+                                    {v.client_decision ? (
+                                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded border ${
+                                        v.client_decision === "approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+                                        v.client_decision === "changes_required" ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-red-50 text-red-600 border-red-200"
+                                      }`}>
+                                        {v.client_decision.replace("_", " ")}
+                                      </span>
                                     ) : (
-                                      <span className="text-[10px] text-[#111111]/30 italic">No comments left</span>
+                                      <span className="text-[9px] font-bold text-amber-600 uppercase bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">Pending Approval</span>
                                     )}
                                   </div>
                                 </div>
-
-                                <div className="shrink-0">
-                                  {v.client_decision ? (
-                                    <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded border ${
-                                      v.client_decision === "approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
-                                      v.client_decision === "changes_required" ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-red-50 text-red-600 border-red-200"
-                                    }`}>
-                                      {v.client_decision.replace("_", " ")}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[9px] font-bold text-amber-600 uppercase bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">Pending Approval</span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
