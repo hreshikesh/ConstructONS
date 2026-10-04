@@ -75,7 +75,7 @@ export default function AdminProjects() {
 
   if (loading) return (
     <div className="grid place-items-center py-24">
-      <Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" />
+      <Loader2 className="w-6 h-6 animate-spin text-[#FF6600]" />
     </div>
   );
 
@@ -86,7 +86,7 @@ export default function AdminProjects() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <div className="text-xs font-semibold text-[#FF5A00] uppercase tracking-wider">Operations · Project Tracker</div>
+          <div className="text-xs font-semibold text-[#FF6600] uppercase tracking-wider">Operations · Project Tracker</div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#000F1B] mt-1">Customer Projects</h1>
           <p className="text-sm text-[#111111]/60 mt-1">Click any project to open its full detail workspace.</p>
         </div>
@@ -94,7 +94,7 @@ export default function AdminProjects() {
           <button onClick={load} className="px-4 py-2 text-xs font-semibold text-[#000F1B] bg-white border border-black/10 rounded-xl hover:bg-[#F2F2F2] flex items-center gap-1.5 shadow-sm transition">
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
-          <button onClick={() => setModalState({ isOpen: true, project: null })} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF5A00] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#FF2D00] transition shadow-sm">
+          <button onClick={() => setModalState({ isOpen: true, project: null })} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF6600] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#FF0000] transition shadow-sm">
             <Plus className="w-4 h-4" /> New Project
           </button>
         </div>
@@ -107,14 +107,14 @@ export default function AdminProjects() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search by name, email, phone, project code, or location..."
-          className="w-full bg-white border border-black/10 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF5A00] shadow-sm"
+          className="w-full bg-white border border-black/10 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF6600] shadow-sm"
         />
       </div>
 
       {items.length === 0 ? (
         <div className="rounded-3xl bg-white border border-black/5 shadow-sm p-12 text-center">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-4">
-            <Building2 className="w-8 h-8 text-[#FF5A00]" />
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-4">
+            <Building2 className="w-8 h-8 text-[#FF6600]" />
           </div>
           <div className="text-lg font-bold text-[#000F1B]">No active projects yet</div>
           <p className="text-sm text-[#111111]/60 mt-1 max-w-sm mx-auto">Click "New Project" to convert an accepted proposal into a live project tracker.</p>
@@ -161,7 +161,7 @@ export default function AdminProjects() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-bold text-[#000F1B] truncate max-w-[180px]">{p.customer_name || "—"}</div>
-                        <div className="text-[10px] text-[#FF5A00] font-semibold truncate max-w-[180px]">{p.customer_email}</div>
+                        <div className="text-[10px] text-[#FF6600] font-semibold truncate max-w-[180px]">{p.customer_email}</div>
                         {p.customer_phone && <div className="text-[10px] text-gray-500 font-medium mt-0.5">{p.customer_phone}</div>}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -179,7 +179,7 @@ export default function AdminProjects() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-[#F2F2F2] rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-[#FF5A00] to-[#FFA500] rounded-full" style={{ width: `${overall}%` }} />
+                            <div className="h-full bg-gradient-to-r from-[#FF6600] to-[#FFA500] rounded-full" style={{ width: `${overall}%` }} />
                           </div>
                           <span className="text-xs font-black text-[#000F1B] w-9 text-right">{overall}%</span>
                         </div>
@@ -189,13 +189,13 @@ export default function AdminProjects() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/admin/projects/${p.id}`); }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] font-bold rounded-lg transition shadow-sm"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#000F1B] hover:bg-[#FF6600] text-white text-[10px] font-bold rounded-lg transition shadow-sm"
                           >
                             <Eye className="w-3.5 h-3.5" /> View
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setModalState({ isOpen: true, project: p }); }}
-                            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#FF5A00] text-gray-700 hover:text-white grid place-items-center transition"
+                            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#FF6600] text-gray-700 hover:text-white grid place-items-center transition"
                             title="Edit"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function AdminProjects() {
                         </span>
                       </div>
                       <div className="font-bold text-[#000F1B] text-sm truncate">{p.title}</div>
-                      <div className="text-[10px] text-[#FF5A00] font-semibold truncate mt-0.5">
+                      <div className="text-[10px] text-[#FF6600] font-semibold truncate mt-0.5">
                         {p.customer_name} • {p.customer_email} {p.customer_phone && `• ${p.customer_phone}`}
                       </div>
                     </div>
@@ -270,7 +270,7 @@ export default function AdminProjects() {
                       <div className="text-[8px] font-bold uppercase text-[#111111]/50 mb-0.5">Progress</div>
                       <div className="flex items-center gap-1.5">
                         <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#FF5A00] rounded-full" style={{ width: `${overall}%` }} />
+                          <div className="h-full bg-[#FF6600] rounded-full" style={{ width: `${overall}%` }} />
                         </div>
                         <span className="text-[10px] font-black text-[#000F1B]">{overall}%</span>
                       </div>
@@ -412,7 +412,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-sm z-[60] grid place-items-center p-4 font-['Poppins']">
       <div className="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF5A00]" />
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF6600]" />
         
         <div className="flex items-center justify-between mb-2 shrink-0">
           <div className="font-bold text-[#000F1B] text-xl">
@@ -454,15 +454,15 @@ function ProjectFormModal({ project, onClose, onSaved }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Project Title *</label>
-              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold focus:border-[#FF5A00] outline-none shadow-sm" />
+              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold focus:border-[#FF6600] outline-none shadow-sm" />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Name</label>
-              <input value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF5A00] outline-none shadow-sm" />
+              <input value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF6600] outline-none shadow-sm" />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Email *</label>
-              <input type="email" value={form.customer_email} onChange={e => setForm({ ...form, customer_email: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF5A00] outline-none shadow-sm" />
+              <input type="email" value={form.customer_email} onChange={e => setForm({ ...form, customer_email: e.target.value })} className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF6600] outline-none shadow-sm" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase mb-1">Client Phone Number (10 Digits)</label>
@@ -472,7 +472,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
                 onChange={handlePhoneChange} 
                 maxLength={10}
                 placeholder="e.g. 9876543210" 
-                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF5A00] outline-none shadow-sm" 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm focus:border-[#FF6600] outline-none shadow-sm" 
               />
               <div className="text-[10px] text-gray-400 mt-1">Must be exactly 10 digits without country code</div>
             </div>
@@ -481,7 +481,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
               <textarea 
                 value={form.address} 
                 onChange={e => setForm({ ...form, address: e.target.value })} 
-                className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm focus:border-[#FF5A00] outline-none shadow-sm min-h-[60px]" 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm focus:border-[#FF6600] outline-none shadow-sm min-h-[60px]" 
                 placeholder="Enter full physical address details..."
               />
             </div>
@@ -502,7 +502,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
                   }
                 }}
                 onClick={(e) => { try { e.target.showPicker(); } catch {} }}
-                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm cursor-pointer" 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF6600] shadow-sm cursor-pointer" 
               />
             </div>
 
@@ -522,7 +522,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
                   }
                 }}
                 onClick={(e) => { try { e.target.showPicker(); } catch {} }}
-                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF5A00] shadow-sm cursor-pointer" 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm outline-none focus:border-[#FF6600] shadow-sm cursor-pointer" 
               />
             </div>
 
@@ -536,14 +536,14 @@ function ProjectFormModal({ project, onClose, onSaved }) {
                   setForm({ ...form, contract_value: numericValue });
                 }} 
                 placeholder="0"
-                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold text-emerald-600 focus:border-[#FF5A00] outline-none shadow-sm" 
+                className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-bold text-emerald-600 focus:border-[#FF6600] outline-none shadow-sm" 
               />
             </div>
             <div className="sm:col-span-2 pt-3 border-t border-black/5 mt-1">
               <div className="text-[11px] font-bold text-[#000F1B] uppercase mb-2">Live Weather Coordinates</div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" step="any" value={form.site_lat} onChange={e => setForm({ ...form, site_lat: e.target.value })} placeholder="Latitude (e.g. 12.9716)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
-                <input type="number" step="any" value={form.site_lng} onChange={e => setForm({ ...form, site_lng: e.target.value })} placeholder="Longitude (e.g. 77.5946)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none focus:border-[#FF5A00] shadow-sm" />
+                <input type="number" step="any" value={form.site_lat} onChange={e => setForm({ ...form, site_lat: e.target.value })} placeholder="Latitude (e.g. 12.9716)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none focus:border-[#FF6600] shadow-sm" />
+                <input type="number" step="any" value={form.site_lng} onChange={e => setForm({ ...form, site_lng: e.target.value })} placeholder="Longitude (e.g. 77.5946)" className="w-full rounded-xl border border-black/10 px-3.5 py-2 text-sm outline-none focus:border-[#FF6600] shadow-sm" />
               </div>
             </div>
           </div>
@@ -551,7 +551,7 @@ function ProjectFormModal({ project, onClose, onSaved }) {
 
         <div className="mt-4 pt-4 border-t border-black/5 flex justify-end gap-2 shrink-0">
           <button onClick={onClose} className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white px-6 py-2.5 text-sm font-bold transition shadow-sm disabled:opacity-60">
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white px-6 py-2.5 text-sm font-bold transition shadow-sm disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {isEdit ? "Update Changes" : "Create Project"}
           </button>
         </div>

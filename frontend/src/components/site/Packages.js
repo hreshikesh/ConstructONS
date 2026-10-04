@@ -37,13 +37,13 @@ export default function PackagesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[#FF5A00]" />
+        <Loader2 className="w-10 h-10 animate-spin text-[#FF6600]" />
       </div>
     );
   }
 
   return (
-    <div className="font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white bg-[#F5F6F8]">
+    <div className="font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white bg-[#F5F6F8]">
      
       
       {/* 
@@ -61,7 +61,7 @@ export default function PackagesPage() {
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
             <motion.div 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-[#FF5A00]/15 blur-[120px] rounded-full"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-[#FF6600]/15 blur-[120px] rounded-full"
               animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -79,7 +79,7 @@ export default function PackagesPage() {
             >
               <img src="/logo.webp" alt="Logo" className="h-6 w-auto object-contain shrink-0" />
               <div className="flex items-center gap-0.5 text-sm sm:text-base font-extrabold tracking-[0.15em]  shrink-0 leading-none select-none">
-                <span className="text-white">CONSTRUCT</span><Power className="w-4 h-4 text-[#FF5A00] stroke-[3]" /><span className="text-[#FF5A00]">NS</span><span className="text-[9px] text-[#FF5A00] self-start mt-0.5 ml-0.5">™</span>
+                <span className="text-white">CONSTRUCT</span><Power className="w-4 h-4 text-[#FF6600] stroke-[3]" /><span className="text-[#FF6600]">NS</span><span className="text-[9px] text-[#FF6600] self-start mt-0.5 ml-0.5">™</span>
               </div>
             </motion.div>
 
@@ -88,7 +88,7 @@ export default function PackagesPage() {
               className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight leading-[1.1] max-w-4xl mx-auto"
             >
               Transparent Pricing.<br/>
-              <span className="text-[#FF5A00]">Uncompromising Quality.</span>
+              <span className="text-[#FF6600]">Uncompromising Quality.</span>
             </motion.h1>
 
             <motion.p 
@@ -102,13 +102,13 @@ export default function PackagesPage() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
               className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Link to="/find-my-package" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-8 py-4 text-sm font-bold text-white hover:bg-[#E04F00] transition shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:-translate-y-0.5">
+              <Link to="/find-my-package" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6600] px-8 py-4 text-sm font-bold text-white hover:bg-[#E04F00] transition shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:-translate-y-0.5">
                 <Compass className="w-5 h-5 shrink-0" />
                 Find My Perfect Package
               </Link>
               
               {/* FIX 3: Replaced transparent hover with Solid Orange Hover */}
-              <Link to="/packages/compare" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 hover:bg-[#FF5A00] hover:border-[#FF5A00] px-8 py-4 text-sm font-bold text-white transition backdrop-blur-sm">
+              <Link to="/packages/compare" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 hover:bg-[#FF6600] hover:border-[#FF6600] px-8 py-4 text-sm font-bold text-white transition backdrop-blur-sm">
                 <Scale className="w-5 h-5 shrink-0" />
                 Compare Specifications
               </Link>
@@ -121,9 +121,9 @@ export default function PackagesPage() {
         ========================================= */}
         <div className="bg-white border-b border-black/5">
           <div className="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-6 md:gap-12 lg:gap-24 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#000F1B]">
-            <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#FF5A00]" /> <span>Zero Hidden Costs</span></div>
-            <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#FF5A00]" /> <span>Branded Materials Only</span></div>
-            <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#FF5A00]" /> <span>On-Time Delivery Guarantee</span></div>
+            <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#FF6600]" /> <span>Zero Hidden Costs</span></div>
+            <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#FF6600]" /> <span>Branded Materials Only</span></div>
+            <div className="flex items-center gap-2"><Check className="w-4 h-4 text-[#FF6600]" /> <span>On-Time Delivery Guarantee</span></div>
           </div>
         </div>
 
@@ -194,23 +194,23 @@ function PackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
     >
       <div className={`relative flex w-full flex-col overflow-hidden rounded-3xl border transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02] ${
           isPopular
-            ? "border-white/10 bg-gradient-to-b from-[#000F1B] to-[#0B1E30] text-white shadow-2xl hover:border-[#FF5A00]/50 hover:shadow-[0_20px_50px_rgba(255,90,0,0.25)]"
-            : "border-black/5 bg-white text-[#000F1B] shadow-lg hover:border-[#FF5A00]/30 hover:shadow-2xl"
+            ? "border-white/10 bg-gradient-to-b from-[#000F1B] to-[#0B1E30] text-white shadow-2xl hover:border-[#FF6600]/50 hover:shadow-[0_20px_50px_rgba(255,90,0,0.25)]"
+            : "border-black/5 bg-white text-[#000F1B] shadow-lg hover:border-[#FF6600]/30 hover:shadow-2xl"
         }`}
       >
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
           <div className="absolute inset-0 -translate-x-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-[200%]" />
-          {isPopular && <div className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#FF5A00]/30 blur-[80px] transition-opacity duration-700 group-hover:opacity-100" />}
+          {isPopular && <div className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#FF6600]/30 blur-[80px] transition-opacity duration-700 group-hover:opacity-100" />}
         </div>
 
         {isPopular && (
-          <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 rounded-b-xl bg-[#FF5A00] px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+          <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 rounded-b-xl bg-[#FF6600] px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
             Most Popular
           </div>
         )}
 
         <div className="relative z-10 flex h-full flex-col p-6 sm:p-8">
-          <div className={`text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] ${isPopular ? "text-[#FF8A4C]" : "text-[#FF5A00]"}`}>
+          <div className={`text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] ${isPopular ? "text-[#FF8A4C]" : "text-[#FF6600]"}`}>
             {pkg.name}
           </div>
 
@@ -231,25 +231,25 @@ function PackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
           <ul className="mt-6 flex-1 space-y-3">
             {(pkg.highlights || []).slice(0, 5).map((h, i) => (
               <li key={i} className={`flex items-start gap-2.5 text-xs sm:text-sm font-medium ${isPopular ? "text-white/90" : "text-[#000F1B]/80"}`}>
-                <Check className={`mt-0.5 h-4 w-4 shrink-0 stroke-[3] ${isPopular ? "text-[#FF8A4C]" : "text-[#FF5A00]"}`} />
+                <Check className={`mt-0.5 h-4 w-4 shrink-0 stroke-[3] ${isPopular ? "text-[#FF8A4C]" : "text-[#FF6600]"}`} />
                 <span className="line-clamp-2">{h}</span>
               </li>
             ))}
           </ul>
 
-          <div className="mt-6 mb-6 h-0.5 w-10 rounded-full bg-[#FF5A00] transition-all duration-500 group-hover:w-16" />
+          <div className="mt-6 mb-6 h-0.5 w-10 rounded-full bg-[#FF6600] transition-all duration-500 group-hover:w-16" />
 
           <div className="mt-auto flex flex-col gap-3">
             <div className="flex items-center gap-2">
               {/* FIX 3: Replaced transparent hover with solid orange hovers */}
-              <button onClick={onPreview} className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition inline-flex items-center justify-center gap-1.5 ${isPopular ? "text-white/90 hover:bg-[#FF5A00] hover:text-white" : "text-[#000F1B]/80 hover:bg-[#FF5A00] hover:text-white border border-transparent"}`}>
+              <button onClick={onPreview} className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition inline-flex items-center justify-center gap-1.5 ${isPopular ? "text-white/90 hover:bg-[#FF6600] hover:text-white" : "text-[#000F1B]/80 hover:bg-[#FF6600] hover:text-white border border-transparent"}`}>
                 <Eye className="h-4 w-4" /> Preview
               </button>
-              <button onClick={onBrochure} className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition inline-flex items-center justify-center gap-1.5 ${isPopular ? "text-[#FF8A4C] hover:bg-[#FF5A00] hover:text-white" : "text-[#FF5A00] hover:bg-[#FF5A00] hover:text-white border border-transparent"}`}>
+              <button onClick={onBrochure} className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition inline-flex items-center justify-center gap-1.5 ${isPopular ? "text-[#FF8A4C] hover:bg-[#FF6600] hover:text-white" : "text-[#FF6600] hover:bg-[#FF6600] hover:text-white border border-transparent"}`}>
                 <Download className="h-4 w-4" /> Brochure
               </button>
             </div>
-            <Link to={`/packages/${pkg.slug}`} className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold transition shadow-sm ${isPopular ? "bg-[#FF5A00] text-white hover:bg-[#E04F00]" : "bg-[#000F1B] text-white hover:bg-[#0B1E30]"}`}>
+            <Link to={`/packages/${pkg.slug}`} className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold transition shadow-sm ${isPopular ? "bg-[#FF6600] text-white hover:bg-[#E04F00]" : "bg-[#000F1B] text-white hover:bg-[#0B1E30]"}`}>
               View Full Details <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -262,9 +262,9 @@ function PackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
 function CustomPackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}>
-      <div className="group relative overflow-hidden rounded-3xl border border-[#FF5A00]/20 bg-gradient-to-r from-[#000F1B] to-[#0B1E30] text-white shadow-2xl transition-all duration-500 hover:border-[#FF5A00]/50 hover:shadow-[0_20px_60px_rgba(255,90,0,0.25)]">
+      <div className="group relative overflow-hidden rounded-3xl border border-[#FF6600]/20 bg-gradient-to-r from-[#000F1B] to-[#0B1E30] text-white shadow-2xl transition-all duration-500 hover:border-[#FF6600]/50 hover:shadow-[0_20px_60px_rgba(255,90,0,0.25)]">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -right-10 -top-20 h-80 w-80 rounded-full bg-[#FF5A00]/15 blur-[100px]" />
+          <div className="absolute -right-10 -top-20 h-80 w-80 rounded-full bg-[#FF6600]/15 blur-[100px]" />
           <div className="absolute inset-0 -translate-x-full -skew-x-12 bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 group-hover:translate-x-[200%]" />
         </div>
 
@@ -272,7 +272,7 @@ function CustomPackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="text-xs font-bold uppercase tracking-[0.15em] text-[#FF8A4C]">{pkg.name}</span>
-              <span className="rounded-md bg-[#FF5A00] px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-white shadow-sm">Tailor-Made</span>
+              <span className="rounded-md bg-[#FF6600] px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-white shadow-sm">Tailor-Made</span>
             </div>
 
             <div className="flex flex-wrap items-baseline gap-2 mb-3">
@@ -296,14 +296,14 @@ function CustomPackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
           <div className="flex w-full shrink-0 flex-col gap-3 md:w-[240px]">
             <div className="flex items-center overflow-hidden rounded-xl bg-white/5 border border-white/10">
               {/* FIX 3: Replaced transparent hover with solid orange hovers */}
-              <button onClick={onPreview} className="inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-3 text-xs font-bold text-white transition hover:bg-[#FF5A00] hover:text-white"><Eye className="h-4 w-4" /> Preview</button>
+              <button onClick={onPreview} className="inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-3 text-xs font-bold text-white transition hover:bg-[#FF6600] hover:text-white"><Eye className="h-4 w-4" /> Preview</button>
               <span className="h-6 w-px bg-white/20" />
-              <button onClick={onBrochure} className="inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-3 text-xs font-bold text-[#FF8A4C] transition hover:bg-[#FF5A00] hover:text-white"><Download className="h-4 w-4" /> Brochure</button>
+              <button onClick={onBrochure} className="inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-3 text-xs font-bold text-[#FF8A4C] transition hover:bg-[#FF6600] hover:text-white"><Download className="h-4 w-4" /> Brochure</button>
             </div>
             <Link to={`/packages/${pkg.slug}`} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-[#000F1B] transition hover:bg-[#F2F2F2]">
               View Full Details <ArrowRight className="h-4 w-4" />
             </Link>
-            <button onClick={onQuote} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF5A00] px-5 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(255,90,0,0.3)] transition hover:bg-[#E04F00]">
+            <button onClick={onQuote} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF6600] px-5 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(255,90,0,0.3)] transition hover:bg-[#E04F00]">
               Get Custom Quote <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -335,7 +335,7 @@ function PreviewModal({ pkg, onClose, onBrochure, onQuote }) {
           >
             <div className="flex shrink-0 items-center justify-between border-b border-black/5 bg-[#F9FAFB] px-6 py-5">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A00] mb-1">{pkg.name} Package</div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF6600] mb-1">{pkg.name} Package</div>
                 <div className="text-xl md:text-2xl font-black text-[#000F1B]">
                   {pkg.price_display} <span className="text-sm font-semibold text-[#000F1B]/50 ml-1">{pkg.price_unit}</span>
                 </div>
@@ -349,11 +349,11 @@ function PreviewModal({ pkg, onClose, onBrochure, onQuote }) {
 
               {pkg.highlights?.length > 0 && (
                 <div className="mb-8">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FF5A00] mb-4">Key Highlights</div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FF6600] mb-4">Key Highlights</div>
                   <ul className="grid sm:grid-cols-2 gap-3">
                     {pkg.highlights.map((h, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-sm font-medium text-[#000F1B]/90">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 stroke-[3] text-[#FF5A00]" /> {h}
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 stroke-[3] text-[#FF6600]" /> {h}
                       </li>
                     ))}
                   </ul>
@@ -362,7 +362,7 @@ function PreviewModal({ pkg, onClose, onBrochure, onQuote }) {
 
               {sections.length > 0 && (
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FF5A00] mb-4 border-t border-black/5 pt-6">Specifications Sneak Peek</div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FF6600] mb-4 border-t border-black/5 pt-6">Specifications Sneak Peek</div>
                   <div className="grid sm:grid-cols-2 gap-6">
                     {sections.map((sec, i) => (
                       <div key={i} className="bg-[#F9FAFB] p-4 rounded-xl border border-black/5">
@@ -370,7 +370,7 @@ function PreviewModal({ pkg, onClose, onBrochure, onQuote }) {
                         <ul className="space-y-2">
                           {(sec.items || []).slice(0, 4).map((it, j) => (
                             <li key={j} className="flex items-start gap-2 text-xs font-medium text-[#111111]/70">
-                              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#FF5A00] mt-0.5" />
+                              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#FF6600] mt-0.5" />
                               <span>{typeof it === "string" ? it : `${it.spec}${it.value ? `: ${it.value}` : ""}`}</span>
                             </li>
                           ))}
@@ -385,15 +385,15 @@ function PreviewModal({ pkg, onClose, onBrochure, onQuote }) {
             <div className="flex shrink-0 flex-col sm:flex-row gap-3 border-t border-black/5 bg-[#F9FAFB] p-6">
               <div className="flex flex-1 overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
                 {/* FIX 3: Replaced transparent hover with solid orange hovers */}
-                <button onClick={onClose} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-[#000F1B]/70 hover:bg-[#FF5A00] hover:text-white transition"><Eye className="h-4 w-4" /> Close</button>
+                <button onClick={onClose} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-[#000F1B]/70 hover:bg-[#FF6600] hover:text-white transition"><Eye className="h-4 w-4" /> Close</button>
                 <span className="w-px bg-black/10" />
-                <button onClick={onBrochure} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-[#FF5A00] hover:bg-[#FF5A00] hover:text-white transition"><Download className="h-4 w-4" /> Brochure</button>
+                <button onClick={onBrochure} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-[#FF6600] hover:bg-[#FF6600] hover:text-white transition"><Download className="h-4 w-4" /> Brochure</button>
               </div>
               <Link to={`/packages/${pkg.slug}`} onClick={onClose} className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#000F1B] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0B1E30] shadow-sm">
                 View Full Details <ArrowRight className="h-4 w-4" />
               </Link>
               {(pkg.tier === "premium" || pkg.tier === "custom") && (
-                <button onClick={onQuote} className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF5A00] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#E04F00] shadow-[0_4px_14px_rgba(255,90,0,0.3)]">
+                <button onClick={onQuote} className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#E04F00] shadow-[0_4px_14px_rgba(255,90,0,0.3)]">
                   Get Custom Quote
                 </button>
               )}

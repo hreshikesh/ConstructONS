@@ -167,7 +167,7 @@ export default function DashboardHeaders({ user, project }) {
                     {/* Circle Indicator */}
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                       isCompleted ? "bg-emerald-500 text-white" : 
-                      isCurrent ? "bg-[#FF5A00] text-white ring-4 ring-[#FF5A00]/25 animate-pulse" : 
+                      isCurrent ? "bg-[#FF6600] text-white ring-4 ring-[#FF6600]/25 animate-pulse" : 
                       "bg-white border-2 border-slate-200 text-slate-400"
                     }`}>
                       {isCompleted ? (
@@ -272,7 +272,7 @@ export default function DashboardHeaders({ user, project }) {
         <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px] md:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
-              <Camera className="w-4 h-4 text-[#FF5A00]" />
+              <Camera className="w-4 h-4 text-[#FF6600]" />
               <h2 className="text-sm font-bold text-[#000F1B]">CCTV Grid</h2>
             </div>
             <Link to="/portal/cctv" className="text-[10px] font-bold text-blue-600 hover:underline">View All</Link>

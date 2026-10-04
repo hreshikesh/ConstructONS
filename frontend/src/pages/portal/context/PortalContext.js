@@ -28,16 +28,16 @@ export function PortalProvider({ children }) {
     if (!notif || !notif.title) return;
 
     toast.custom((t) => (
-      <div className="flex items-start gap-3 p-4 bg-white border border-[#FF5A00]/30 rounded-2xl shadow-2xl shadow-[#FF5A00]/15 w-[350px] font-['Poppins'] relative overflow-hidden animate-in fade-in slide-in-from-top-3 duration-300">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF5A00]" />
+      <div className="flex items-start gap-3 p-4 bg-white border border-[#FF6600]/30 rounded-2xl shadow-2xl shadow-[#FF6600]/15 w-[350px] font-['Poppins'] relative overflow-hidden animate-in fade-in slide-in-from-top-3 duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF6600]" />
         
-        <div className="w-10 h-10 rounded-xl bg-[#FF5A00]/10 border border-[#FF5A00]/20 grid place-items-center shrink-0 mt-0.5">
-          <BellRing className="w-5 h-5 text-[#FF5A00] animate-bounce" />
+        <div className="w-10 h-10 rounded-xl bg-[#FF6600]/10 border border-[#FF6600]/20 grid place-items-center shrink-0 mt-0.5">
+          <BellRing className="w-5 h-5 text-[#FF6600] animate-bounce" />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <span className="text-[10px] font-extrabold text-[#FF5A00] uppercase tracking-wider">Live Project Update</span>
+            <span className="text-[10px] font-extrabold text-[#FF6600] uppercase tracking-wider">Live Project Update</span>
             <span className="text-[9px] text-[#111111]/40 font-medium">Just now</span>
           </div>
           
@@ -49,7 +49,7 @@ export function PortalProvider({ children }) {
               toast.dismiss(t);
               if (notif.link) navigate(notif.link);
             }}
-            className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-white bg-[#000F1B] hover:bg-[#FF5A00] px-3 py-2 rounded-xl transition-all shadow-md active:scale-95"
+            className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-white bg-[#000F1B] hover:bg-[#FF6600] px-3 py-2 rounded-xl transition-all shadow-md active:scale-95"
           >
             <span>View Details</span>
             <ExternalLink className="w-3.5 h-3.5" />

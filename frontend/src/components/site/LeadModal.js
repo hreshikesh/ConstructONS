@@ -206,7 +206,7 @@ export default function LeadModal({ isOpen, onClose, context = {} }) {
                 type="submit"
                 disabled={submitting}
                 data-testid="lead-submit"
-                className="btn-primary w-full mt-2 disabled:opacity-70 flex items-center justify-center gap-2 py-3 bg-[#FF5A00] hover:bg-[#E04F00] text-white font-semibold rounded-xl transition shadow-md"
+                className="btn-primary w-full mt-2 disabled:opacity-70 flex items-center justify-center gap-2 py-3 bg-[#FF6600] hover:bg-[#E04F00] text-white font-semibold rounded-xl transition shadow-md"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                 {submitting ? "Submitting..." : "Request Free Consultation"}
@@ -230,7 +230,7 @@ function Field({ icon: Icon, placeholder, value, onChange, type = "text", isText
         className={`flex items-start gap-2 rounded-xl border bg-white px-3 py-2.5 transition ${
           error
             ? "border-red-500 focus-within:border-red-500 ring-1 ring-red-500/20"
-            : "border-black/10 focus-within:border-[#FF5A00]"
+            : "border-black/10 focus-within:border-[#FF6600]"
         }`}
       >
         <Icon className={`w-4 h-4 mt-1 shrink-0 ${error ? "text-red-500" : "text-brand-navy/50"}`} />

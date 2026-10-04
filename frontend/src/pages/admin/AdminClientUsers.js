@@ -46,7 +46,7 @@ export default function AdminClientUsers() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="text-xs font-semibold text-[#FF5A00] uppercase tracking-wider">CRM · Leads & Clients</div>
+          <div className="text-xs font-semibold text-[#FF6600] uppercase tracking-wider">CRM · Leads & Clients</div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B]">Registered Client Users</h1>
           <p className="text-xs text-[#111111]/60 mt-1">Clients who completed Google login & onboarding questionnaire.</p>
         </div>
@@ -54,7 +54,7 @@ export default function AdminClientUsers() {
           onClick={load} 
           className="px-4 py-2 text-xs font-semibold text-[#000F1B] bg-white border border-black/10 rounded-xl hover:bg-[#F2F2F2] flex items-center gap-1.5 self-start"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#FF5A00]' : ''}`} /> Refresh
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#FF6600]' : ''}`} /> Refresh
         </button>
       </div>
 
@@ -67,7 +67,7 @@ export default function AdminClientUsers() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search name, email, phone, or location..."
-            className="w-full rounded-xl border border-black/10 bg-white pl-10 pr-4 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none"
+            className="w-full rounded-xl border border-black/10 bg-white pl-10 pr-4 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none"
           />
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function AdminClientUsers() {
       {/* Table */}
       <div className="rounded-2xl bg-white border border-black/5 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" /></div>
+          <div className="p-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#FF6600]" /></div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center text-xs text-[#111111]/50 italic">No registered client users found.</div>
         ) : (
@@ -135,7 +135,7 @@ export default function AdminClientUsers() {
                       <button
                         type="button"
                         onClick={() => setSelectedUser(c)}
-                        className="px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white font-bold rounded-lg transition"
+                        className="px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF6600] text-white font-bold rounded-lg transition"
                       >
                         View Profile
                       </button>
@@ -165,7 +165,7 @@ function ClientDetailModal({ user, onClose }) {
       <div className="bg-white rounded-2xl w-full max-w-xl p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
         <div className="flex items-center justify-between border-b border-black/5 pb-4 mb-4">
           <div>
-            <span className="text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider">Client Onboarding File</span>
+            <span className="text-[10px] font-bold text-[#FF6600] uppercase tracking-wider">Client Onboarding File</span>
             <h2 className="text-xl font-bold text-[#000F1B]">{user.name}</h2>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full grid place-items-center hover:bg-[#F2F2F2]"><X className="w-4 h-4" /></button>

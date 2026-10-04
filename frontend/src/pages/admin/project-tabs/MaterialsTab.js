@@ -27,7 +27,7 @@ const getStatusConfig = (status) => {
   const norm = getNormalizedStatus(status);
   const map = {
     received: { label: "Received", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: Truck },
-    ordered: { label: "Ordered", color: "text-[#FF5A00] bg-[#FF5A00]/10 border-[#FF5A00]/20", icon: Box },
+    ordered: { label: "Ordered", color: "text-[#FF6600] bg-[#FF6600]/10 border-[#FF6600]/20", icon: Box },
     planned: { label: "Planned", color: "text-gray-600 bg-gray-100 border-gray-200", icon: Clock },
   };
   return map[norm] || map.planned;

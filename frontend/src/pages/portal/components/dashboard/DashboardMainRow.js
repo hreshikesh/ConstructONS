@@ -41,7 +41,7 @@ export default function DashboardMainRow({ project }) {
             clientActions.map((act, i) => (
               <Link key={act.id} to={act.link} className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-rose-100 shadow-sm hover:shadow-md transition">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-5 h-5 rounded-full bg-[#FF5A00] text-white text-[9px] font-bold grid place-items-center shrink-0">{i + 1}</div>
+                  <div className="w-5 h-5 rounded-full bg-[#FF6600] text-white text-[9px] font-bold grid place-items-center shrink-0">{i + 1}</div>
                   <div className="text-[11px] font-bold text-[#000F1B] truncate">{act.title}</div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

@@ -219,7 +219,7 @@ export default function ContractorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white flex flex-col">
       <SEO
         title="Verified Civil Contractors & Structural Builders"
         description="Find elite, background-checked construction professionals near you. Match with civil contractors, master masons, and turnkey builders using our AI Talent Matcher."
@@ -238,20 +238,20 @@ export default function ContractorsPage() {
         <section className="relative bg-[#000F1B] pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
           <motion.div 
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-[#FF5A00]/15 blur-[120px] rounded-full pointer-events-none"
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-[#FF6600]/15 blur-[120px] rounded-full pointer-events-none"
             animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
             <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8">
-              <ShieldCheck className="w-4 h-4 text-[#FF5A00]" />
+              <ShieldCheck className="w-4 h-4 text-[#FF6600]" />
               <span className="text-[10px] font-bold tracking-[0.15em] text-white uppercase">ConstructONS Verified Partners</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white tracking-tight leading-[1.1] max-w-4xl mx-auto">
               The architects of your <br className="hidden md:block" />
-              <span className="text-[#FF5A00]">imagination.</span>
+              <span className="text-[#FF6600]">imagination.</span>
             </h1>
             <p className="mt-6 text-base md:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
               Connect with India's most elite, background-checked construction professionals. From visionary architects to master masons, build your dream team today.
@@ -260,7 +260,7 @@ export default function ContractorsPage() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
                 onClick={() => document.getElementById('directory')?.scrollIntoView({ behavior: 'smooth' })} 
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-8 py-4 text-sm font-bold text-white hover:bg-[#E04F00] transition shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:-translate-y-0.5"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6600] px-8 py-4 text-sm font-bold text-white hover:bg-[#E04F00] transition shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:-translate-y-0.5"
               >
                 <Search className="w-5 h-5 shrink-0" />
                 Find a Professional
@@ -282,11 +282,11 @@ export default function ContractorsPage() {
         ========================================= */}
         <div className="bg-white border-b border-black/5">
           <div className="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-between gap-6 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#000F1B]">
-            <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-[#FF5A00]" /> <span>250+ Verified Pros</span></div>
-            <div className="flex items-center gap-2"><Star className="w-4 h-4 text-[#FF5A00] fill-[#FF5A00]" /> <span>4.8★ Average Rating</span></div>
-            <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#FF5A00]" /> <span>12 Cities Covered</span></div>
+            <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-[#FF6600]" /> <span>250+ Verified Pros</span></div>
+            <div className="flex items-center gap-2"><Star className="w-4 h-4 text-[#FF6600] fill-[#FF6600]" /> <span>4.8★ Average Rating</span></div>
+            <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#FF6600]" /> <span>12 Cities Covered</span></div>
             {savedProIds.length > 0 && (
-              <div className="flex items-center gap-2 bg-[#FF5A00]/10 text-[#FF5A00] px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-2 bg-[#FF6600]/10 text-[#FF6600] px-3 py-1.5 rounded-full">
                 <Bookmark className="w-3.5 h-3.5 fill-current" />
                 <span>{savedProIds.length} Saved Professional{savedProIds.length > 1 ? 's' : ''}</span>
               </div>
@@ -306,7 +306,7 @@ export default function ContractorsPage() {
               
               <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
                 <div className="text-center lg:text-left">
-                  <div className="flex items-center justify-center lg:justify-start gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#FF5A00] mb-2">
+                  <div className="flex items-center justify-center lg:justify-start gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#FF6600] mb-2">
                     <Zap className="w-3.5 h-3.5 fill-current" /> AI Talent Matcher
                   </div>
                   <h3 className="text-xl md:text-2xl font-bold text-white">Find your perfect fit by location &amp; scope.</h3>
@@ -316,7 +316,7 @@ export default function ContractorsPage() {
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                   <select 
                     value={aiProjectType} onChange={(e) => setAiProjectType(e.target.value)}
-                    className="w-full sm:w-40 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] appearance-none cursor-pointer"
+                    className="w-full sm:w-40 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF6600] appearance-none cursor-pointer"
                   >
                     <option value="" disabled className="bg-[#000F1B]">Project Type</option>
                     <option value="villa" className="bg-[#000F1B]">Luxury Villa</option>
@@ -327,7 +327,7 @@ export default function ContractorsPage() {
 
                   <select 
                     value={aiService} onChange={(e) => setAiService(e.target.value)}
-                    className="w-full sm:w-40 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] appearance-none cursor-pointer"
+                    className="w-full sm:w-40 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF6600] appearance-none cursor-pointer"
                   >
                     <option value="" disabled className="bg-[#000F1B]">Required Service</option>
                     <option value="Architecture" className="bg-[#000F1B]">Architecture</option>
@@ -339,7 +339,7 @@ export default function ContractorsPage() {
 
                   <select 
                     value={aiLocation} onChange={(e) => setAiLocation(e.target.value)}
-                    className="w-full sm:w-44 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] appearance-none cursor-pointer"
+                    className="w-full sm:w-44 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#FF6600] appearance-none cursor-pointer"
                   >
                     <option value="" disabled className="bg-[#000F1B]">Select Location</option>
                     {LOCATIONS.map(loc => (
@@ -350,7 +350,7 @@ export default function ContractorsPage() {
                   <button 
                     onClick={handleAiMatch}
                     disabled={isMatching}
-                    className="w-full sm:w-32 bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-4 py-3 rounded-xl text-sm font-bold transition disabled:opacity-50 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                    className="w-full sm:w-32 bg-[#FF6600] hover:bg-[#FF0000] text-white px-4 py-3 rounded-xl text-sm font-bold transition disabled:opacity-50 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
                   >
                     {isMatching ? <Loader2 className="w-4 h-4 animate-spin" /> : matchedResults ? "Re-Match" : "Match Me"}
                   </button>
@@ -374,7 +374,7 @@ export default function ContractorsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name, skill, location..."
-                  className="w-full bg-[#F5F6F8] border-none rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#000F1B] focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
+                  className="w-full bg-[#F5F6F8] border-none rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#000F1B] focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
                 />
                 {searchQuery && (
                   <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-black/40 hover:text-black">
@@ -386,7 +386,7 @@ export default function ContractorsPage() {
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
                 {!matchedResults && (
                   <div className="flex items-center gap-1.5 bg-[#F5F6F8] px-3 py-1.5 rounded-xl border border-black/5 text-xs font-semibold">
-                    <MapPin className="w-3.5 h-3.5 text-[#FF5A00]" />
+                    <MapPin className="w-3.5 h-3.5 text-[#FF6600]" />
                     <select 
                       value={selectedLocation} 
                       onChange={(e) => setSelectedLocation(e.target.value)}
@@ -431,7 +431,7 @@ export default function ContractorsPage() {
                       <button 
                         key={cat} onClick={() => setActiveCategory(cat)}
                         className={`px-4 py-2 rounded-full text-xs font-bold transition border cursor-pointer ${
-                          activeCategory === cat ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white text-[#111111]/70 border-black/10 hover:border-[#FF5A00] hover:text-[#FF5A00]"
+                          activeCategory === cat ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white text-[#111111]/70 border-black/10 hover:border-[#FF6600] hover:text-[#FF6600]"
                         }`}
                       >
                         {cat}
@@ -442,7 +442,7 @@ export default function ContractorsPage() {
                   <div className="md:hidden relative">
                     <select 
                       value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)}
-                      className="w-full bg-white border border-black/10 rounded-full px-4 py-2.5 text-xs font-bold text-[#000F1B] appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
+                      className="w-full bg-white border border-black/10 rounded-full px-4 py-2.5 text-xs font-bold text-[#000F1B] appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
                     >
                       {CATEGORIES.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -462,7 +462,7 @@ export default function ContractorsPage() {
                 <p className="text-xs text-black/50 mt-1 max-w-md mx-auto">Try clearing your search query or selecting a different category or location filter.</p>
                 <button 
                   onClick={() => { setActiveCategory("All"); setSelectedLocation("All Locations"); setSearchQuery(""); resetMatch(); }} 
-                  className="mt-4 px-5 py-2 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF5A00] transition cursor-pointer"
+                  className="mt-4 px-5 py-2 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF6600] transition cursor-pointer"
                 >
                   Reset All Filters
                 </button>
@@ -481,13 +481,13 @@ export default function ContractorsPage() {
                       transition={{ duration: 0.3, delay: i * 0.05 }}
                       className={`bg-white rounded-3xl border p-6 flex flex-col transition duration-300 relative ${
                         isAiMatched 
-                          ? "border-[#FF5A00] shadow-[0_8px_25px_rgba(255,90,0,0.12)]" 
+                          ? "border-[#FF6600] shadow-[0_8px_25px_rgba(255,90,0,0.12)]" 
                           : "border-black/5 shadow-sm hover:shadow-md hover:border-black/15"
                       }`}
                     >
                       {/* Integrated AI Match Pill Header */}
                       {isAiMatched && (
-                        <div className="mb-4 inline-flex items-center gap-1.5 bg-[#FF5A00] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest w-fit shadow-xs">
+                        <div className="mb-4 inline-flex items-center gap-1.5 bg-[#FF6600] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest w-fit shadow-xs">
                           <Zap className="w-3 h-3 fill-current" /> {pro.matchScore}% Match
                         </div>
                       )}
@@ -495,10 +495,10 @@ export default function ContractorsPage() {
                       {/* Bookmark Button */}
                       <button 
                         onClick={() => toggleSavePro(pro.id, pro.name)}
-                        className="absolute top-6 right-6 text-black/30 hover:text-[#FF5A00] transition cursor-pointer"
+                        className="absolute top-6 right-6 text-black/30 hover:text-[#FF6600] transition cursor-pointer"
                         title={isSaved ? "Remove from saved" : "Save professional"}
                       >
-                        <Bookmark className={`w-5 h-5 ${isSaved ? "fill-[#FF5A00] text-[#FF5A00]" : ""}`} />
+                        <Bookmark className={`w-5 h-5 ${isSaved ? "fill-[#FF6600] text-[#FF6600]" : ""}`} />
                       </button>
 
                       {/* Pro Header */}
@@ -508,7 +508,7 @@ export default function ContractorsPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF5A00] truncate">{pro.category}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF6600] truncate">{pro.category}</span>
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" title="Background Checked & Verified" />
                           </div>
                           <h3 className="text-base font-bold text-[#000F1B] leading-tight truncate">{pro.name}</h3>
@@ -516,7 +516,7 @@ export default function ContractorsPage() {
                           
                           {/* Location Badge */}
                           <div className="flex items-center gap-1 text-[11px] text-[#111111]/50 mt-1">
-                            <MapPin className="w-3 h-3 text-[#FF5A00]" />
+                            <MapPin className="w-3 h-3 text-[#FF6600]" />
                             <span className="truncate">{pro.location}</span>
                           </div>
                         </div>
@@ -582,7 +582,7 @@ export default function ContractorsPage() {
               />
               
               <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF5A00]/15 border border-[#FF5A00]/30 flex items-center justify-center mb-6 text-[#FF5A00]">
+                <div className="w-12 h-12 rounded-2xl bg-[#FF6600]/15 border border-[#FF6600]/30 flex items-center justify-center mb-6 text-[#FF6600]">
                   <Award className="w-6 h-6" />
                 </div>
 
@@ -596,7 +596,7 @@ export default function ContractorsPage() {
 
                 <button 
                   onClick={() => navigate("/contact")}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#FF5A00] px-8 py-4 text-sm font-bold text-white hover:bg-[#E04F00] transition shadow-[0_0_25px_rgba(255,90,0,0.4)] hover:-translate-y-0.5 cursor-pointer"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#FF6600] px-8 py-4 text-sm font-bold text-white hover:bg-[#E04F00] transition shadow-[0_0_25px_rgba(255,90,0,0.4)] hover:-translate-y-0.5 cursor-pointer"
                 >
                   Apply to Join Network <ArrowRight className="w-4 h-4" />
                 </button>

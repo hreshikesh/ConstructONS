@@ -105,7 +105,7 @@ export default function AdminProjectDetail() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F6F8]">
-        <Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#FF6600]" />
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function AdminProjectDetail() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F6F8]">
         <h1 className="text-lg font-bold text-[#000F1B] mb-2">Project not found</h1>
-        <button onClick={() => navigate("/admin/projects")} className="px-4 py-1.5 bg-[#FF5A00] text-white text-xs font-bold rounded-md hover:bg-[#FF2D00] transition">
+        <button onClick={() => navigate("/admin/projects")} className="px-4 py-1.5 bg-[#FF6600] text-white text-xs font-bold rounded-md hover:bg-[#FF0000] transition">
           Return to Dashboard
         </button>
       </div>
@@ -127,7 +127,7 @@ export default function AdminProjectDetail() {
     <div className="min-h-screen bg-[#F9FAFB] font-['Poppins'] flex flex-col text-xs">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-xs">
         <div className="flex items-center justify-between px-3 sm:px-5 py-1.5 border-b border-gray-100 bg-gray-50/50">
-          <button onClick={() => navigate("/admin/projects")} className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[#FF5A00] transition">
+          <button onClick={() => navigate("/admin/projects")} className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[#FF6600] transition">
             <ArrowLeft className="w-3 h-3" /> Back
           </button>
           
@@ -136,7 +136,7 @@ export default function AdminProjectDetail() {
               <Settings className="w-3 h-3" /> Edit Settings
             </button>
             <button onClick={handleRefresh} disabled={refreshing} className="px-2 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 flex items-center gap-1 text-[10px] font-semibold text-gray-700 shadow-2xs disabled:opacity-60">
-              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin text-[#FF5A00]" : ""}`} />
+              <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin text-[#FF6600]" : ""}`} />
               {refreshing ? "Syncing..." : "Sync"}
             </button>
           </div>
@@ -173,10 +173,10 @@ export default function AdminProjectDetail() {
                   key={tab.key}
                   onClick={() => setSearchParams({ tab: tab.key })}
                   className={`flex items-center gap-1.5 px-3 py-1.5 border-b-2 transition-colors whitespace-nowrap text-xs ${
-                    isActive ? "border-[#FF5A00] text-[#000F1B] font-bold" : "border-transparent text-gray-500 font-medium hover:text-gray-800 hover:border-gray-200"
+                    isActive ? "border-[#FF6600] text-[#000F1B] font-bold" : "border-transparent text-gray-500 font-medium hover:text-gray-800 hover:border-gray-200"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#FF5A00]" : ""}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#FF6600]" : ""}`} />
                   <span>{tab.label}</span>
                   {badge > 0 && (
                     <span className="ml-0.5 bg-red-500 text-white text-[9px] font-black rounded-full px-1.5 py-0.2 grid place-items-center">

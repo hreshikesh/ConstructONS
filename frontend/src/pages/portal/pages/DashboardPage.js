@@ -12,8 +12,8 @@ export default function DashboardPage() {
   if (!project) {
     return (
       <div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center font-['Poppins']">
-        <div className="w-16 h-16 rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-5">
-          <Building2 className="w-8 h-8 text-[#FF5A00]" />
+        <div className="w-16 h-16 rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-5">
+          <Building2 className="w-8 h-8 text-[#FF6600]" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">
           Welcome, {user?.name?.split(" ")[0] || "Client"}!

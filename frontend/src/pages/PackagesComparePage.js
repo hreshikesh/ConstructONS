@@ -149,7 +149,7 @@ export default function PackagesComparePage() {
     return (
       <div className="min-h-screen bg-[#FBF9F6] grid place-items-center font-['Poppins',sans-serif]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-[#FF5A00] border-t-transparent animate-spin" />
+          <div className="w-10 h-10 rounded-full border-2 border-[#FF6600] border-t-transparent animate-spin" />
           <div className="text-xs uppercase tracking-widest text-[#000F1B]/50">
             Loading comparison
           </div>
@@ -186,7 +186,7 @@ export default function PackagesComparePage() {
   };
 
   return (
-    <div className="bg-[#FBF9F6] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+    <div className="bg-[#FBF9F6] font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white min-h-screen">
       <SEO
         title="Compare Construction Packages Side by Side"
         description="Compare Basic, Essential, Standard, and Luxury home construction packages. Inspect verified material brands, structural specifications, and warranties before building."
@@ -215,9 +215,9 @@ export default function PackagesComparePage() {
               <div className="max-w-2xl">
                 <Link
                   to="/#packages"
-                  className="inline-flex items-center gap-2 text-xs font-semibold text-[#000F1B]/50 hover:text-[#FF5A00] transition mb-5 group"
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-[#000F1B]/50 hover:text-[#FF6600] transition mb-5 group"
                 >
-                  <span className="w-7 h-7 rounded-full bg-white border border-black/5 grid place-items-center group-hover:border-[#FF5A00]/30 transition">
+                  <span className="w-7 h-7 rounded-full bg-white border border-black/5 grid place-items-center group-hover:border-[#FF6600]/30 transition">
                     <ArrowLeft className="w-3.5 h-3.5" />
                   </span>
                   All packages
@@ -230,7 +230,7 @@ export default function PackagesComparePage() {
                 <h1 className="text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-tight">
                   Compare every tier.
                   <br />
-                  <span className="text-[#FF5A00] italic">Side by side.</span>
+                  <span className="text-[#FF6600] italic">Side by side.</span>
                 </h1>
 
                 <p className="mt-4 text-[#000F1B]/60 text-sm md:text-base max-w-xl leading-relaxed">
@@ -243,21 +243,21 @@ export default function PackagesComparePage() {
                 <button
                   type="button"
                   onClick={expandAll}
-                  className="text-xs font-semibold text-[#000F1B]/60 hover:text-[#FF5A00] px-3 py-2 rounded-full border border-black/10 bg-white transition"
+                  className="text-xs font-semibold text-[#000F1B]/60 hover:text-[#FF6600] px-3 py-2 rounded-full border border-black/10 bg-white transition"
                 >
                   Expand all
                 </button>
                 <button
                   type="button"
                   onClick={collapseAll}
-                  className="text-xs font-semibold text-[#000F1B]/60 hover:text-[#FF5A00] px-3 py-2 rounded-full border border-black/10 bg-white transition"
+                  className="text-xs font-semibold text-[#000F1B]/60 hover:text-[#FF6600] px-3 py-2 rounded-full border border-black/10 bg-white transition"
                 >
                   Collapse all
                 </button>
                 <button
                   type="button"
                   onClick={() => openLead({ source: "packages-compare" })}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#000F1B] hover:bg-[#FF5A00] text-white text-xs font-semibold px-5 py-2.5 transition"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#000F1B] hover:bg-[#FF6600] text-white text-xs font-semibold px-5 py-2.5 transition"
                 >
                   Talk to expert <ArrowRight className="w-3.5 h-3.5" />
                 </button>
@@ -279,13 +279,13 @@ export default function PackagesComparePage() {
                   }`}
                 >
                   {p.is_most_popular && (
-                    <div className="absolute -top-2 left-3 px-2 py-0.5 rounded-full bg-[#FF5A00] text-white text-[8px] font-bold uppercase tracking-widest">
+                    <div className="absolute -top-2 left-3 px-2 py-0.5 rounded-full bg-[#FF6600] text-white text-[8px] font-bold uppercase tracking-widest">
                       Most Popular
                     </div>
                   )}
                   <div
                     className={`text-[10px] font-bold uppercase tracking-widest ${
-                      p.is_most_popular ? "text-[#FF8A4C]" : "text-[#FF5A00]"
+                      p.is_most_popular ? "text-[#FF8A4C]" : "text-[#FF6600]"
                     }`}
                   >
                     {p.tagline || p.tier}
@@ -350,12 +350,12 @@ export default function PackagesComparePage() {
                       >
                         <div className="p-4 lg:p-5 relative">
                           {p.is_most_popular && (
-                            <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#FF5A00]" />
+                            <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#FF6600]" />
                           )}
 
                           <div
                             className={`text-[9px] font-bold uppercase tracking-[0.16em] mb-1 ${
-                              p.is_most_popular ? "text-[#FF8A4C]" : "text-[#FF5A00]"
+                              p.is_most_popular ? "text-[#FF8A4C]" : "text-[#FF6600]"
                             }`}
                           >
                             {p.is_most_popular ? "Most Popular" : p.tier || "Package"}
@@ -403,8 +403,8 @@ export default function PackagesComparePage() {
                               to={`/packages/${p.slug}`}
                               className={`inline-flex items-center justify-center gap-1.5 rounded-full text-[11px] font-bold px-3 py-2 transition ${
                                 p.is_most_popular
-                                  ? "bg-[#FF5A00] text-white hover:bg-[#E04F00]"
-                                  : "bg-[#000F1B] text-white hover:bg-[#FF5A00]"
+                                  ? "bg-[#FF6600] text-white hover:bg-[#E04F00]"
+                                  : "bg-[#000F1B] text-white hover:bg-[#FF6600]"
                               }`}
                             >
                               View details <ArrowRight className="w-3 h-3" />
@@ -500,7 +500,7 @@ export default function PackagesComparePage() {
                                           </div>
                                           {it.brand && (
                                             <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-[#000F1B]/50">
-                                              <span className="w-1 h-1 rounded-full bg-[#FF5A00]" />
+                                              <span className="w-1 h-1 rounded-full bg-[#FF6600]" />
                                               {it.brand}
                                             </div>
                                           )}
@@ -533,7 +533,7 @@ export default function PackagesComparePage() {
                           className="px-4 lg:px-5 py-3 border-t border-black/5"
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="w-6 h-6 rounded-full bg-[#FF5A00] text-white grid place-items-center">
+                            <span className="w-6 h-6 rounded-full bg-[#FF6600] text-white grid place-items-center">
                               <Layers className="w-3 h-3" />
                             </span>
                             <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#000F1B]">
@@ -559,7 +559,7 @@ export default function PackagesComparePage() {
                                   key={i}
                                   className="flex items-start gap-2 text-xs text-[#000F1B]/80"
                                 >
-                                  <Check className="w-3.5 h-3.5 text-[#FF5A00] shrink-0 mt-0.5" strokeWidth={3} />
+                                  <Check className="w-3.5 h-3.5 text-[#FF6600] shrink-0 mt-0.5" strokeWidth={3} />
                                   <span className="leading-snug">{h}</span>
                                 </li>
                               ))}
@@ -583,8 +583,8 @@ export default function PackagesComparePage() {
         {/* ═════════════ BOTTOM CTA ═════════════ */}
         <section className="container-wide mt-10 md:mt-14">
           <div className="relative overflow-hidden rounded-sm bg-gradient-to-br from-[#000F1B] via-[#0B1E30] to-[#000F1B] text-white p-7 sm:p-10 border border-white/10">
-            <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#FF5A00]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FF5A00]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#FF6600]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FF6600]/10 blur-3xl" />
 
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="max-w-xl">
@@ -592,7 +592,7 @@ export default function PackagesComparePage() {
                 <h3 className="mt-4 text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
                   Still deciding?
                   <br />
-                  <span className="text-[#FF5A00]">We&apos;ll help you pick.</span>
+                  <span className="text-[#FF6600]">We&apos;ll help you pick.</span>
                 </h3>
                 <p className="mt-2 text-white/55 text-sm leading-relaxed">
                   Talk to a consultant — free, no obligation. They&apos;ll match the
@@ -610,7 +610,7 @@ export default function PackagesComparePage() {
                 <button
                   type="button"
                   onClick={() => openLead({ source: "packages-compare-cta" })}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF5A00] hover:bg-[#E04F00] text-white text-sm font-semibold px-6 py-3 shadow-[0_12px_30px_rgba(255,90,0,0.35)] transition"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6600] hover:bg-[#E04F00] text-white text-sm font-semibold px-6 py-3 shadow-[0_12px_30px_rgba(255,90,0,0.35)] transition"
                 >
                   Get Free Consultation <ArrowRight className="w-4 h-4" />
                 </button>

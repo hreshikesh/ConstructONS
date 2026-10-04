@@ -59,7 +59,7 @@ export default function MaskReveal({
       </motion.div>
 
       <motion.div
-        className="pointer-events-none absolute rounded-full border-2 border-[#FF5A00] mix-blend-difference"
+        className="pointer-events-none absolute rounded-full border-2 border-[#FF6600] mix-blend-difference"
         animate={{
           width: hovered ? 40 : 20,
           height: hovered ? 40 : 20,
@@ -75,7 +75,7 @@ export default function MaskReveal({
       {!hovered && (
         <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
           <div className="flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 px-4 py-2 text-white/70 text-[11px] font-semibold uppercase tracking-[0.15em]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#FF5A00] animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#FF6600] animate-pulse" />
             Hover to reveal
           </div>
         </div>

@@ -56,7 +56,7 @@ export default function DashboardBottomRow({ project }) {
           <BuildingFooterItem icon={Building2} text="BUILD WITH QUALITY" />
           <ClockFooterItem icon={Clock} text="TRACK WITH TRANSPARENCY" />
         </div>
-        <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-[0.2em] border-l-2 border-[#FF5A00] pl-3 hidden md:block">
+        <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-[0.2em] border-l-2 border-[#FF6600] pl-3 hidden md:block">
           ConstructONS
         </div>
       </div>

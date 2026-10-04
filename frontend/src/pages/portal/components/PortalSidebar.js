@@ -104,13 +104,13 @@ export default function PortalSidebar({ open, onClose }) {
                 CONSTRUCT
               </span>
               <Power
-                className="w-3.5 h-3.5 text-[#FF5A00] stroke-[2.75] shrink-0 mx-px"
+                className="w-3.5 h-3.5 text-[#FF6600] stroke-[2.75] shrink-0 mx-px"
                 aria-hidden="true"
               />
               <span className="font-extrabold text-[12px] tracking-[0.12em] text-white leading-none">
                 NS
               </span>
-              <span className="text-[8px] text-[#FF5A00] font-bold self-start mt-0.5 ml-0.5">
+              <span className="text-[8px] text-[#FF6600] font-bold self-start mt-0.5 ml-0.5">
                 ™
               </span>
             </span>
@@ -143,7 +143,7 @@ export default function PortalSidebar({ open, onClose }) {
                       className={({ isActive }) =>
                         `flex items-center justify-between px-2.5 py-2 rounded-lg text-[12px] font-medium transition min-h-[36px] group ${
                           isActive
-                            ? "bg-[#FF5A00] text-white shadow-sm"
+                            ? "bg-[#FF6600] text-white shadow-sm"
                             : "text-white/70 hover:bg-white/5 hover:text-white"
                         }`
                       }
@@ -153,7 +153,7 @@ export default function PortalSidebar({ open, onClose }) {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <item.icon
                               className={`w-3.5 h-3.5 shrink-0 transition ${
-                                isActive ? "text-white" : "group-hover:text-[#FF5A00]"
+                                isActive ? "text-white" : "group-hover:text-[#FF6600]"
                               }`}
                               strokeWidth={2}
                             />
@@ -161,7 +161,7 @@ export default function PortalSidebar({ open, onClose }) {
                           </div>
 
                           {item.label === "Approvals" && pendingApprovalsCount > 0 && (
-                            <span className="bg-[#FF2D00] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
+                            <span className="bg-[#FF0000] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
                               {pendingApprovalsCount}
                             </span>
                           )}
@@ -180,7 +180,7 @@ export default function PortalSidebar({ open, onClose }) {
           <p className="text-[9px] text-white/35 leading-snug font-semibold tracking-wide">
             PLAN · BUILD · MONITOR · COMPLETE
           </p>
-          <p className="text-[9px] text-[#FF5A00] mt-0.5 font-bold">
+          <p className="text-[9px] text-[#FF6600] mt-0.5 font-bold">
             Your Home. Our Commitment.
           </p>
         </div>

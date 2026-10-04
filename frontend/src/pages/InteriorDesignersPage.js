@@ -93,7 +93,7 @@ export default function InteriorDesignersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF5A00] selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#F5F6F8] font-['Poppins',sans-serif] text-[#000F1B] selection:bg-[#FF6600] selection:text-white flex flex-col">
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none} .no-scrollbar{scrollbar-width:none}`}</style>
       
       <SEO
@@ -113,7 +113,7 @@ export default function InteriorDesignersPage() {
           
           {/* Warmer glow: amber + orange blend for interior warmth */}
           <motion.div
-            className="absolute top-1/3 left-1/4 w-[30rem] h-[30rem] bg-[#FF5A00]/15 blur-[120px] rounded-full pointer-events-none"
+            className="absolute top-1/3 left-1/4 w-[30rem] h-[30rem] bg-[#FF6600]/15 blur-[120px] rounded-full pointer-events-none"
             animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.7, 0.4] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -128,21 +128,21 @@ export default function InteriorDesignersPage() {
               <motion.div initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
                 <div className="inline-flex items-center justify-center lg:justify-start gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm mx-auto lg:mx-0">
                   <span className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] select-none text-white">
-                    CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF5A00] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF5A00] self-start mt-0.5 ml-0.5">™</span>
+                    CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF6600] self-start mt-0.5 ml-0.5">™</span>
                   </span>
                   <span className="w-px h-3 bg-white/20 mx-1" />
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#FF5A00] uppercase">Interior Studio</span>
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#FF6600] uppercase">Interior Studio</span>
                 </div>
 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-                  The stylists who turn a house <br className="hidden lg:block" /> into <em className="text-[#FF5A00] not-italic">the home</em> you'll never want to leave.
+                  The stylists who turn a house <br className="hidden lg:block" /> into <em className="text-[#FF6600] not-italic">the home</em> you'll never want to leave.
                 </h1>
                 <p className="mt-6 text-base md:text-lg text-white/60 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                   Vetted interior designers who blend function, mood, and Indian sensibilities. Find your aesthetic soulmate — then let them make it real.
                 </p>
 
                 <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-8">
-                  <button onClick={() => document.getElementById("directory")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 bg-[#FF5A00] hover:bg-[#E04F00] transition px-8 py-4 rounded-full text-sm font-bold shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:-translate-y-0.5 cursor-pointer">
+                  <button onClick={() => document.getElementById("directory")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 bg-[#FF6600] hover:bg-[#E04F00] transition px-8 py-4 rounded-full text-sm font-bold shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:-translate-y-0.5 cursor-pointer">
                     Browse Designers <ArrowRight className="w-4 h-4" />
                   </button>
                   <div className="flex gap-8 text-left">
@@ -179,11 +179,11 @@ export default function InteriorDesignersPage() {
         <section className="py-16 md:py-28 bg-white border-b border-black/5 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="max-w-3xl mb-10 md:mb-12 text-center md:text-left mx-auto md:mx-0">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF5A00]/10 text-[#FF5A00] text-[10px] font-bold uppercase tracking-widest mb-4">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF6600]/10 text-[#FF6600] text-[10px] font-bold uppercase tracking-widest mb-4">
                 <PaintRoller className="w-3.5 h-3.5" /> Interactive Discovery Tool
               </div>
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-[#000F1B] mb-4">
-                Not sure what your style is?<br /> <span className="text-[#FF5A00]">Take the quiz.</span>
+                Not sure what your style is?<br /> <span className="text-[#FF6600]">Take the quiz.</span>
               </h2>
               <p className="text-sm md:text-base text-[#111111]/60 leading-relaxed">
                 Four visual questions. Sixty seconds. We'll tell you which interior aesthetic truly fits how you live — and instantly match you with designers who bring that vision to life.
@@ -207,7 +207,7 @@ export default function InteriorDesignersPage() {
                 <input
                   value={query} onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search name, studio, or city..."
-                  className="w-full bg-white border border-black/10 rounded-full pl-11 pr-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF5A00] shadow-sm"
+                  className="w-full bg-white border border-black/10 rounded-full pl-11 pr-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#FF6600] shadow-sm"
                 />
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function InteriorDesignersPage() {
               {(filtering || query) && (
                 <div className="flex items-center justify-between pt-4 border-t border-black/5 text-xs font-bold text-[#111111]/50 uppercase tracking-wider">
                   <span>Showing {results.length} of {INTERIOR_DESIGNERS.length} designers</span>
-                  <button onClick={clear} className="text-[#FF5A00] hover:text-[#FF2D00] flex items-center gap-1 cursor-pointer"><X className="w-3.5 h-3.5" /> Clear all</button>
+                  <button onClick={clear} className="text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1 cursor-pointer"><X className="w-3.5 h-3.5" /> Clear all</button>
                 </div>
               )}
             </div>
@@ -242,7 +242,7 @@ export default function InteriorDesignersPage() {
                 <h3 className="text-xl font-bold text-[#000F1B] mb-2">No designer fits all of that</h3>
                 <p className="text-sm text-[#111111]/60 mb-6">Loosen one filter, or let us recommend someone for you.</p>
                 <div className="flex justify-center gap-3">
-                  <button onClick={clear} className="px-6 py-3 rounded-full bg-[#000F1B] text-white text-sm font-bold transition hover:bg-[#FF5A00] cursor-pointer">Clear filters</button>
+                  <button onClick={clear} className="px-6 py-3 rounded-full bg-[#000F1B] text-white text-sm font-bold transition hover:bg-[#FF6600] cursor-pointer">Clear filters</button>
                 </div>
               </div>
             )}
@@ -253,12 +253,12 @@ export default function InteriorDesignersPage() {
         <section className="bg-[#000F1B] text-white py-20 md:py-28 px-6 relative overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
           <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">A beautiful structure <br />deserves an <span className="text-[#FF5A00]">equally beautiful soul.</span></h2>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">A beautiful structure <br />deserves an <span className="text-[#FF6600]">equally beautiful soul.</span></h2>
             <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto mt-6 mb-10 leading-relaxed">
               Great interiors are what turn 'my house' into 'my home.' Once your designer's vision is locked, the ConstructONS™ execution team makes every detail come alive — on time, on budget, exactly as imagined.
             </p>
             <button onClick={() => navigate("/contact")}
-              className="inline-flex items-center justify-center gap-2 bg-[#FF5A00] hover:bg-[#E04F00] shadow-[0_0_20px_rgba(255,90,0,0.3)] text-white px-8 py-4 rounded-full font-bold text-sm transition hover:-translate-y-0.5 cursor-pointer">
+              className="inline-flex items-center justify-center gap-2 bg-[#FF6600] hover:bg-[#E04F00] shadow-[0_0_20px_rgba(255,90,0,0.3)] text-white px-8 py-4 rounded-full font-bold text-sm transition hover:-translate-y-0.5 cursor-pointer">
               Get a Designer Recommendation <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -284,7 +284,7 @@ function FilterRow({ label, options, value, onChange }) {
           return (
             <button key={o} onClick={() => onChange(on ? "" : o)} aria-pressed={on}
               className={`px-4 py-2 rounded-full text-xs font-bold transition border cursor-pointer ${
-                on ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white text-[#111111]/70 border-black/10 hover:border-[#FF5A00] hover:text-[#FF5A00]"}`}>
+                on ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white text-[#111111]/70 border-black/10 hover:border-[#FF6600] hover:text-[#FF6600]"}`}>
               {o}
             </button>
           );
@@ -311,7 +311,7 @@ function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
         {pro.score !== null && (
-          <span className="absolute top-4 right-4 bg-[#FF5A00] text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md flex items-center gap-1.5 z-10">
+          <span className="absolute top-4 right-4 bg-[#FF6600] text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md flex items-center gap-1.5 z-10">
             <PaintRoller className="w-3.5 h-3.5 fill-current" /> {pro.score}% Match
           </span>
         )}
@@ -338,7 +338,7 @@ function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
         <div className="flex justify-between items-start mt-10 mb-4">
           <div className="min-w-0 flex-1">
             <h3 className="text-2xl font-bold text-[#000F1B] leading-tight mb-1 truncate">{pro.name}</h3>
-            <div className="text-sm font-semibold text-[#FF5A00] truncate">{pro.studio}</div>
+            <div className="text-sm font-semibold text-[#FF6600] truncate">{pro.studio}</div>
           </div>
           <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full shrink-0 shadow-sm ml-2">
             <ShieldCheck className="w-3.5 h-3.5" /> {pro.badge}
@@ -348,12 +348,12 @@ function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
         <div className="flex flex-wrap gap-2 mb-5">
           {pro.roomFocus.map((r) => (
             <span key={r} className="px-3 py-1 rounded-md text-xs font-semibold bg-[#F5F6F8] border border-black/5 text-[#000F1B] inline-flex items-center gap-1.5">
-              <Home className="w-3 h-3 text-[#FF5A00]" /> {r}
+              <Home className="w-3 h-3 text-[#FF6600]" /> {r}
             </span>
           ))}
         </div>
 
-        <p className="text-sm text-[#111111]/70 leading-relaxed line-clamp-2 mb-5 flex-1 italic border-l-2 border-[#FF5A00]/40 pl-3">"{pro.philosophy}"</p>
+        <p className="text-sm text-[#111111]/70 leading-relaxed line-clamp-2 mb-5 flex-1 italic border-l-2 border-[#FF6600]/40 pl-3">"{pro.philosophy}"</p>
 
         {/* Materials strip */}
         <div className="mb-5">
@@ -382,12 +382,12 @@ function DesignerCard({ pro, index, reduce, onOpen, onChat }) {
           <div className="w-px h-6 bg-black/10" />
           <div className="flex flex-col">
             <span className="text-[9px] uppercase text-[#111111]/40 font-bold mb-0.5">Turnaround</span>
-            <div className="text-sm font-bold text-[#000F1B] flex items-center gap-1"><Clock className="w-3 h-3 text-[#FF5A00]" /> {pro.turnaround}</div>
+            <div className="text-sm font-bold text-[#000F1B] flex items-center gap-1"><Clock className="w-3 h-3 text-[#FF6600]" /> {pro.turnaround}</div>
           </div>
           <div className="w-px h-6 bg-black/10" />
           <div className="flex flex-col">
             <span className="text-[9px] uppercase text-[#111111]/40 font-bold mb-0.5">City</span>
-            <div className="text-sm font-bold text-[#000F1B] flex items-center gap-1"><MapPin className="w-3 h-3 text-[#FF5A00]" /> {pro.location.split(",")[0]}</div>
+            <div className="text-sm font-bold text-[#000F1B] flex items-center gap-1"><MapPin className="w-3 h-3 text-[#FF6600]" /> {pro.location.split(",")[0]}</div>
           </div>
         </div>
 
@@ -445,7 +445,7 @@ function MoodBoardModal({ view, setView, onChat }) {
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 
-                <div className="absolute top-4 left-4 bg-[#FF5A00] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                <div className="absolute top-4 left-4 bg-[#FF6600] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
                   <PaintRoller className="w-3.5 h-3.5" /> Mood Board
                 </div>
 
@@ -456,7 +456,7 @@ function MoodBoardModal({ view, setView, onChat }) {
               <div className="flex gap-2 p-3 bg-[#000F1B]">
                 {pro.moodImages.map((img, n) => (
                   <button key={n} onClick={() => setI(n)} aria-label={`View photo ${n + 1}`}
-                    className={`h-16 flex-1 rounded-xl overflow-hidden border-2 transition cursor-pointer ${n === i ? "border-[#FF5A00]" : "border-transparent opacity-50 hover:opacity-100"}`}>
+                    className={`h-16 flex-1 rounded-xl overflow-hidden border-2 transition cursor-pointer ${n === i ? "border-[#FF6600]" : "border-transparent opacity-50 hover:opacity-100"}`}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -471,7 +471,7 @@ function MoodBoardModal({ view, setView, onChat }) {
                 <img src={pro.avatar} alt="" className="w-16 h-16 rounded-3xl object-cover border border-black/10 shadow-sm" />
                 <div>
                   <h3 className="text-2xl font-bold text-[#000F1B] leading-tight mb-1">{pro.name}</h3>
-                  <div className="text-sm font-semibold text-[#FF5A00]">{pro.studio}</div>
+                  <div className="text-sm font-semibold text-[#FF6600]">{pro.studio}</div>
                 </div>
               </div>
 
@@ -482,7 +482,7 @@ function MoodBoardModal({ view, setView, onChat }) {
               </div>
 
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#111111]/40 mb-2">Design Philosophy</h4>
-              <p className="text-sm leading-relaxed text-[#000F1B]/80 mb-6 italic border-l-2 border-[#FF5A00] pl-4 bg-[#F9FAFB] py-3 rounded-r-xl">"{pro.philosophy}"</p>
+              <p className="text-sm leading-relaxed text-[#000F1B]/80 mb-6 italic border-l-2 border-[#FF6600] pl-4 bg-[#F9FAFB] py-3 rounded-r-xl">"{pro.philosophy}"</p>
 
               {/* Signature Palette */}
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#111111]/40 mb-3 flex items-center gap-1.5"><Palette className="w-3.5 h-3.5" /> Signature Palette</h4>
@@ -500,7 +500,7 @@ function MoodBoardModal({ view, setView, onChat }) {
               <div className="flex flex-wrap gap-2 mb-6">
                 {pro.materials.map((m) => (
                   <span key={m} className="px-3 py-1.5 rounded-md text-xs font-bold bg-[#F5F6F8] border border-black/10 text-[#000F1B] inline-flex items-center gap-1.5">
-                    <Heart className="w-3 h-3 text-[#FF5A00] fill-current" /> {m}
+                    <Heart className="w-3 h-3 text-[#FF6600] fill-current" /> {m}
                   </span>
                 ))}
               </div>
@@ -521,8 +521,8 @@ function MoodBoardModal({ view, setView, onChat }) {
               </div>
 
               <div className="text-sm font-semibold text-[#000F1B]/60 mb-6 space-y-2">
-                <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#FF5A00]" /> Based in {pro.location}</div>
-                <div className="flex items-center gap-2"><Home className="w-4 h-4 text-[#FF5A00]" /> Specializes in: {pro.roomFocus.join(", ")}</div>
+                <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#FF6600]" /> Based in {pro.location}</div>
+                <div className="flex items-center gap-2"><Home className="w-4 h-4 text-[#FF6600]" /> Specializes in: {pro.roomFocus.join(", ")}</div>
               </div>
 
               <div className="mt-auto">

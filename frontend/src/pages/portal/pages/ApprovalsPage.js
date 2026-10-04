@@ -64,8 +64,8 @@ export default function ApprovalsPage() {
         category: "Material",
         details: `${m.quantity} ${m.unit} • ${m.brand || "Standard"}`,
         icon: Package,
-        color: "text-[#FF5A00]",
-        bg: "bg-[#FF5A00]/10",
+        color: "text-[#FF6600]",
+        bg: "bg-[#FF6600]/10",
         timestamp: m.created_at,
         isMaterial: true,
         rawData: m,
@@ -153,7 +153,7 @@ export default function ApprovalsPage() {
           <div className="w-12 h-12 rounded-xl bg-[#000F1B] grid place-items-center shrink-0 relative">
             <CheckSquare className="w-6 h-6 text-white" />
             {pendingApprovals.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#FF2D00] border-2 border-[#F5F6F8] animate-pulse" />
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#FF0000] border-2 border-[#F5F6F8] animate-pulse" />
             )}
           </div>
           <div>
@@ -161,7 +161,7 @@ export default function ApprovalsPage() {
             <p className="text-sm text-[#111111]/60 mt-0.5">Pending decisions requiring your review and approval.</p>
           </div>
         </div>
-        <div className="text-right text-xs font-bold text-[#FF5A00] bg-white border border-[#FF5A00]/20 px-4 py-2.5 rounded-xl shadow-sm">
+        <div className="text-right text-xs font-bold text-[#FF6600] bg-white border border-[#FF6600]/20 px-4 py-2.5 rounded-xl shadow-sm">
           {pendingApprovals.length} Pending Actions
         </div>
       </div>
@@ -203,14 +203,14 @@ export default function ApprovalsPage() {
                   {item.isMaterial ? (
                     <button 
                       onClick={() => setSelectedMaterial(item.rawData)}
-                      className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF5A00] transition shadow-sm"
+                      className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF6600] transition shadow-sm"
                     >
                       {item.actionText} <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : (
                     <Link 
                       to={item.link} 
-                      className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF5A00] transition shadow-sm"
+                      className="shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#000F1B] text-white rounded-xl text-xs font-bold hover:bg-[#FF6600] transition shadow-sm"
                     >
                       {item.actionText} <ArrowRight className="w-4 h-4" />
                     </Link>
@@ -239,7 +239,7 @@ export default function ApprovalsPage() {
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
             <div className="p-5 border-b border-black/5 flex items-center justify-between bg-[#F9FAFB]">
               <div>
-                <div className="text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider">Material Procurement Review</div>
+                <div className="text-[10px] font-bold text-[#FF6600] uppercase tracking-wider">Material Procurement Review</div>
                 <h2 className="text-lg font-bold text-[#000F1B] mt-0.5">{selectedMaterial.item_name}</h2>
               </div>
               <button onClick={() => { setSelectedMaterial(null); setComment(""); }} className="w-8 h-8 rounded-full grid place-items-center hover:bg-black/5 text-[#000F1B] transition">
@@ -288,7 +288,7 @@ export default function ApprovalsPage() {
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   placeholder="Add a comment or concern (required if rejecting)..."
-                  className="w-full h-20 px-3 py-2 text-xs rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] resize-none"
+                  className="w-full h-20 px-3 py-2 text-xs rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-[#FF6600] resize-none"
                 />
               </div>
             </div>

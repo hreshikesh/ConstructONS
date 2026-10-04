@@ -87,7 +87,7 @@ export default function AdminQuoteTemplates() {
   if (loading) {
     return (
       <div className="grid place-items-center py-24 font-['Poppins']">
-        <Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#FF6600]" />
       </div>
     );
   }
@@ -98,8 +98,8 @@ export default function AdminQuoteTemplates() {
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] text-[#000F1B] mb-1 select-none">
-            CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF5A00] stroke-[3] mx-0.5" />NS
-            <span className="text-[8px] text-[#FF5A00] font-bold self-start ml-0.5">™</span>
+            CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS
+            <span className="text-[8px] text-[#FF6600] font-bold self-start ml-0.5">™</span>
             <span className="ml-2 text-[10px] text-[#111111]/40 font-normal uppercase tracking-wider">· Sales Templates</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#000F1B] tracking-tight">Quote Templates</h1>
@@ -120,8 +120,8 @@ export default function AdminQuoteTemplates() {
       {/* Empty State vs Grid */}
       {items.length === 0 ? (
         <div className="rounded-2xl bg-white border border-black/5 shadow-sm p-10 text-center">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-3">
-            <BookOpen className="w-7 h-7 text-[#FF5A00]" />
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-3">
+            <BookOpen className="w-7 h-7 text-[#FF6600]" />
           </div>
           <div className="font-bold text-[#000F1B]">No templates saved yet</div>
           <p className="text-xs text-[#111111]/60 mt-1 max-w-md mx-auto">
@@ -146,7 +146,7 @@ export default function AdminQuoteTemplates() {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-[9px] uppercase font-bold text-[#111111]/40">Rate</div>
-                    <div className="font-extrabold text-[#FF5A00] text-sm">{rupees(t.price_per_sqft)}/sqft</div>
+                    <div className="font-extrabold text-[#FF6600] text-sm">{rupees(t.price_per_sqft)}/sqft</div>
                   </div>
                 </div>
 
@@ -162,7 +162,7 @@ export default function AdminQuoteTemplates() {
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {t.tags.map((tag) => (
                       <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-[#F2F2F2] text-[#000F1B] text-[10px] font-semibold px-2 py-0.5">
-                        <Tag className="w-2.5 h-2.5 text-[#FF5A00]" /> {tag}
+                        <Tag className="w-2.5 h-2.5 text-[#FF6600]" /> {tag}
                       </span>
                     ))}
                   </div>
@@ -174,7 +174,7 @@ export default function AdminQuoteTemplates() {
                   onClick={() => createFromTemplate(t)}
                   disabled={usingId === t.id}
                   data-testid={`qt-use-${t.id}`}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white px-3.5 py-2 text-xs font-bold transition disabled:opacity-50"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white px-3.5 py-2 text-xs font-bold transition disabled:opacity-50"
                 >
                   {usingId === t.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CopyIcon className="w-3.5 h-3.5" />}
                   <span>{usingId === t.id ? "Creating..." : "Use Template"}</span>
@@ -218,7 +218,7 @@ export default function AdminQuoteTemplates() {
             >
               <div className="sticky top-0 bg-white border-b border-black/5 px-6 py-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <div className="text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider">Edit Template Info</div>
+                  <div className="text-[10px] font-bold text-[#FF6600] uppercase tracking-wider">Edit Template Info</div>
                   <div className="font-bold text-[#000F1B] text-base">{editing.name}</div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export default function AdminQuoteTemplates() {
                     onClick={save}
                     disabled={saving}
                     data-testid="qt-save-btn"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-4 py-2 text-xs font-bold transition disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] text-white px-4 py-2 text-xs font-bold transition disabled:opacity-60"
                   >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
                   </button>
@@ -242,7 +242,7 @@ export default function AdminQuoteTemplates() {
                   <input
                     value={editing.name || ""}
                     onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                    className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-bold text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF5A00]"
+                    className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-bold text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF6600]"
                     data-testid="qt-field-name"
                   />
                 </label>
@@ -252,7 +252,7 @@ export default function AdminQuoteTemplates() {
                     value={editing.description || ""}
                     onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                     rows={3}
-                    className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF5A00] resize-y"
+                    className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF6600] resize-y"
                   />
                 </label>
                 <label className="block">
@@ -265,7 +265,7 @@ export default function AdminQuoteTemplates() {
                         tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
                       })
                     }
-                    className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-medium text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF5A00]"
+                    className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-medium text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF6600]"
                     placeholder="e.g. villa, premium, 3bhk"
                   />
                 </label>

@@ -31,7 +31,7 @@ export default function HomeCollection({ homes = [] }) {
     <section
       id="home-collection"
       data-testid="home-collection-section"
-      className="relative overflow-hidden py-16 md:py-20 lg:py-24 font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white scroll-mt-20"
+      className="relative overflow-hidden py-16 md:py-20 lg:py-24 font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white scroll-mt-20"
     >
       <div className="absolute inset-0 z-0 pointer-events-none">
         <img
@@ -57,13 +57,13 @@ export default function HomeCollection({ homes = [] }) {
                   aria-hidden="true"
                   className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#000F1B]/95 via-[#000F1B]/90 to-[#000F1B]/80" />
-                <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-[#FF5A00]/20 blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#111111]/95 via-[#111111]/90 to-[#111111]/80" />
+                <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-[#FF6600]/20 blur-3xl pointer-events-none" />
               </div>
 
               <div className="relative z-10 p-7 sm:p-8 md:p-10">
                 <div className="flex items-center gap-3">
-                  <span className="h-[2px] w-9 bg-[#FF5A00]" />
+                  <span className="h-[2px] w-9 bg-gradient-to-r from-[#FF6600] to-[#FF0000]" />
                   <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
                     02 — Home Collection
                   </span>
@@ -71,7 +71,9 @@ export default function HomeCollection({ homes = [] }) {
 
                 <h2 className="mt-5 text-2xl font-bold leading-[1.1] text-white sm:text-3xl md:text-[34px] lg:text-[36px]">
                   Ready-to-Build{" "}
-                  <span className="text-[#FF5A00]">Home Designs.</span>
+                  <span className="bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent">
+                    Home Designs.
+                  </span>
                 </h2>
 
                 <p className="mt-4 max-w-md text-[13px] leading-relaxed text-white/70 sm:text-sm font-normal">
@@ -95,7 +97,7 @@ export default function HomeCollection({ homes = [] }) {
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           {activeHome?.style && (
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF5A00]">
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FF6600]">
                               {activeHome.style}
                             </span>
                           )}
@@ -119,7 +121,7 @@ export default function HomeCollection({ homes = [] }) {
                       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/10 pt-3 text-[11px] font-medium text-white/80">
                         {(activeHome?.dimensions || activeHome?.area_sqft) && (
                           <span className="inline-flex items-center gap-1.5">
-                            <Ruler className="h-3.5 w-3.5 text-[#FF5A00]" />
+                            <Ruler className="h-3.5 w-3.5 text-[#FF6600]" />
                             {activeHome.dimensions || `${activeHome.area_sqft} sq.ft`}
                           </span>
                         )}
@@ -128,7 +130,7 @@ export default function HomeCollection({ homes = [] }) {
                           <>
                             <span className="h-1 w-1 rounded-full bg-white/30" />
                             <span className="inline-flex items-center gap-1.5">
-                              <Bed className="h-3.5 w-3.5 text-[#FF5A00]" />
+                              <Bed className="h-3.5 w-3.5 text-[#FF6600]" />
                               {activeHome.bedrooms} BHK
                             </span>
                           </>
@@ -138,7 +140,7 @@ export default function HomeCollection({ homes = [] }) {
                           <>
                             <span className="h-1 w-1 rounded-full bg-white/30" />
                             <span className="inline-flex items-center gap-1.5">
-                              <Bath className="h-3.5 w-3.5 text-[#FF5A00]" />
+                              <Bath className="h-3.5 w-3.5 text-[#FF6600]" />
                               {activeHome.bathrooms} Bath
                             </span>
                           </>
@@ -146,7 +148,7 @@ export default function HomeCollection({ homes = [] }) {
 
                         <span className="h-1 w-1 rounded-full bg-white/30" />
                         <span className="inline-flex items-center gap-1.5">
-                          <Layers className="h-3.5 w-3.5 text-[#FF5A00]" />
+                          <Layers className="h-3.5 w-3.5 text-[#FF6600]" />
                           {formatFloors(activeHome?.floors)}
                         </span>
                       </div>
@@ -154,7 +156,7 @@ export default function HomeCollection({ homes = [] }) {
                       {activeHome?.slug && (
                         <Link
                           to={`/homes/${activeHome.slug}`}
-                          className="group mt-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#FF5A00] transition-all hover:gap-3"
+                          className="group mt-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#FF6600] transition-all hover:gap-3 hover:text-[#FF0000]"
                         >
                           View Details
                           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -164,7 +166,6 @@ export default function HomeCollection({ homes = [] }) {
                   )}
                 </AnimatePresence>
 
-            
               </div>
 
             </div>
@@ -173,7 +174,7 @@ export default function HomeCollection({ homes = [] }) {
           {/* RIGHT CAROUSEL */}
           <div className="relative min-h-[520px] lg:min-h-[580px] w-full overflow-hidden rounded-2xl bg-transparent border border-white/20 shadow-2xl backdrop-blur-sm">
             <div className="absolute left-5 top-5 z-20 flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 backdrop-blur-md">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF5A00]" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF6600]" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90">
                 {homes.length} Designs Available
               </span>
@@ -207,7 +208,7 @@ export default function HomeCollection({ homes = [] }) {
               onClick={() => setActiveIndex(idx)}
               className={`shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 focus:outline-none ${
                 idx === safeIndex
-                  ? "border-[#FF5A00] scale-105 shadow-md"
+                  ? "border-[#FF6600] scale-105 shadow-md"
                   : "border-transparent opacity-50 hover:opacity-80"
               }`}
             >

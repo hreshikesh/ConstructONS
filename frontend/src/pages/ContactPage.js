@@ -39,7 +39,7 @@ function PowerIcon(props) {
 function BrandLockup({ tone = "light", size = "md" }) {
   const isDark = tone === "dark";
   const textColor = isDark ? "text-white" : "text-[#000F1B]";
-  const orangeColor = "text-[#FF5A00]";
+  const orangeColor = "text-[#FF6600]";
 
   const sizeClasses = {
     xs: "text-sm",
@@ -182,7 +182,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+    <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white min-h-screen">
       <SEO
         title="Contact Us - Free Construction Consultation"
         description="Have questions about house construction packages? Get in touch with ConstructONS headquarters in Bengaluru. Call directly, WhatsApp, email, or visit our design studio."
@@ -219,7 +219,7 @@ export default function ContactPage() {
                 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] tracking-tight"
               >
                 Let&rsquo;s Connect &amp; Build <br className="hidden sm:inline" />
-                <span className="text-[#FF5A00]">Your Dream Space</span>
+                <span className="text-[#FF6600]">Your Dream Space</span>
               </motion.h1>
 
               <motion.p
@@ -242,7 +242,7 @@ export default function ContactPage() {
                   <span>Free Consultation</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/15 shadow-sm">
-                  <Building2 className="w-3.5 h-3.5 text-[#FF5A00]" />
+                  <Building2 className="w-3.5 h-3.5 text-[#FF6600]" />
                   <span>Bengaluru HQ</span>
                 </div>
               </motion.div>
@@ -267,7 +267,7 @@ export default function ContactPage() {
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#FF5A00] text-white grid place-items-center shadow-md">
+                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#FF6600] text-white grid place-items-center shadow-md">
                     <Phone className="w-4 h-4" />
                   </div>
                 </figure>
@@ -312,7 +312,7 @@ export default function ContactPage() {
               {/* Card 3: Email Proposals */}
               <a
                 href={email ? `mailto:${email}` : "#"}
-                className="relative rounded-lg -skew-x-6 -translate-y-2 hover:-translate-y-1 hover:-translate-x-0 hover:skew-x-0 duration-500 w-72 h-44 p-2 bg-neutral-900 transition-all [box-shadow:12px_12px_0px_#FF5A00] hover:[box-shadow:4px_4px_0px_#FF5A00] block group border border-white/10"
+                className="relative rounded-lg -skew-x-6 -translate-y-2 hover:-translate-y-1 hover:-translate-x-0 hover:skew-x-0 duration-500 w-72 h-44 p-2 bg-neutral-900 transition-all [box-shadow:12px_12px_0px_#FF6600] hover:[box-shadow:4px_4px_0px_#FF6600] block group border border-white/10"
               >
                 <figure className="w-full h-full relative overflow-hidden rounded-lg">
                   <img
@@ -321,7 +321,7 @@ export default function ContactPage() {
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#FF5A00] text-white grid place-items-center shadow-md">
+                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#FF6600] text-white grid place-items-center shadow-md">
                     <Mail className="w-4 h-4" />
                   </div>
                 </figure>
@@ -380,7 +380,7 @@ export default function ContactPage() {
         <section className="py-14 bg-slate-50 border-t border-black/5">
           <div className="container-wide">
             <div className="text-center max-w-xl mx-auto mb-10">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A00] mb-1">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#FF6600] mb-1">
                 Social Channels
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#000F1B] tracking-tight">
@@ -440,7 +440,7 @@ export default function ContactPage() {
           <div className="container-wide relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-widest text-[#FF5A00] mb-2">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-[#FF6600] mb-2">
                   Head Office &amp; Studio
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-extrabold text-[#000F1B] tracking-tight">
@@ -452,7 +452,7 @@ export default function ContactPage() {
                 href={directMapUrl || "#"}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF5A00] hover:underline"
+                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF6600] hover:underline"
               >
                 <Navigation className="w-4 h-4" />
                 <span>Get Directions</span>
@@ -484,20 +484,20 @@ export default function ContactPage() {
                 className="absolute top-4 left-4 z-20 bg-white px-3.5 py-2.5 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-slate-100 flex items-center gap-3 hover:shadow-xl transition-all duration-200 group"
               >
                 {/* Orange Map Pin Circle */}
-                <div className="w-7 h-7 rounded-full border-2 border-[#FF5A00] grid place-items-center shrink-0">
-                  <div className="w-2.5 h-2.5 bg-[#FF5A00] rounded-full" />
+                <div className="w-7 h-7 rounded-full border-2 border-[#FF6600] grid place-items-center shrink-0">
+                  <div className="w-2.5 h-2.5 bg-[#FF6600] rounded-full" />
                 </div>
 
                 {/* View Location Title + Brand Logo (with Power Button 'O') */}
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wide text-[#FF5A00] leading-none mb-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wide text-[#FF6600] leading-none mb-1">
                     VIEW LOCATION
                   </span>
                   <BrandLockup tone="light" size="sm" />
                 </div>
 
                 {/* External Link Arrow Icon on the right */}
-                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#FF5A00] transition-colors ml-1" />
+                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#FF6600] transition-colors ml-1" />
               </a>
             </div>
           </div>

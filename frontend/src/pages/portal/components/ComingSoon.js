@@ -9,8 +9,8 @@ export default function ComingSoon({
 }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 font-['Poppins']">
-      <div className="w-16 h-16 rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-5">
-        <Icon className="w-8 h-8 text-[#FF5A00]" />
+      <div className="w-16 h-16 rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-5">
+        <Icon className="w-8 h-8 text-[#FF6600]" />
       </div>
       <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">{title}</h1>
       <p className="mt-3 text-sm text-[#111111]/65 max-w-md leading-relaxed">{description}</p>
@@ -19,7 +19,7 @@ export default function ComingSoon({
       </div>
       <Link
         to="/portal"
-        className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-5 py-3 text-sm font-semibold min-h-[44px] transition shadow-sm"
+        className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] text-white px-5 py-3 text-sm font-semibold min-h-[44px] transition shadow-sm"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Dashboard

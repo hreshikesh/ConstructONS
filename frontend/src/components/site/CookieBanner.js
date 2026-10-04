@@ -43,7 +43,7 @@ export default function CookieBanner() {
           setIsVisible(true);
           console.log(
             "%c[ConstructONS] Cookie consent reset! Banner is now visible.",
-            "color: #FF5A00; font-weight: bold;"
+            "color: #FF6600; font-weight: bold;"
           );
         } catch (e) {
           console.error(e);
@@ -119,17 +119,17 @@ export default function CookieBanner() {
     >
       <div className="bg-white rounded-2xl shadow-2xl border border-black/10 overflow-hidden relative">
         {/* Top ConstructONS Orange Accent Line */}
-        <div className="h-1.5 w-full bg-[#FF5A00]" />
+        <div className="h-1.5 w-full bg-[#FF6600]" />
 
         <div className="p-5 sm:p-6">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#FF5A00]/10 grid place-items-center shrink-0">
-                <Cookie className="w-4 h-4 text-[#FF5A00]" aria-hidden="true" />
+              <div className="w-8 h-8 rounded-xl bg-[#FF6600]/10 grid place-items-center shrink-0">
+                <Cookie className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-[#FF5A00] tracking-wider uppercase">
+                <span className="text-[10px] font-bold text-[#FF6600] tracking-wider uppercase">
                   ConstructONS™ Privacy
                 </span>
                 <h2 className="text-sm sm:text-base font-bold text-[#000F1B] leading-tight">
@@ -184,7 +184,7 @@ export default function CookieBanner() {
                   onChange={(e) =>
                     setPreferences((prev) => ({ ...prev, analytics: e.target.checked }))
                   }
-                  className="w-4 h-4 rounded accent-[#FF5A00] focus:ring-[#FF5A00] border-black/20"
+                  className="w-4 h-4 rounded accent-[#FF6600] focus:ring-[#FF6600] border-black/20"
                 />
               </label>
 
@@ -202,7 +202,7 @@ export default function CookieBanner() {
                   onChange={(e) =>
                     setPreferences((prev) => ({ ...prev, experience: e.target.checked }))
                   }
-                  className="w-4 h-4 rounded accent-[#FF5A00] focus:ring-[#FF5A00] border-black/20"
+                  className="w-4 h-4 rounded accent-[#FF6600] focus:ring-[#FF6600] border-black/20"
                 />
               </label>
             </div>
@@ -215,7 +215,7 @@ export default function CookieBanner() {
                 <button
                   type="button"
                   onClick={handleAcceptAll}
-                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition min-h-[44px]"
+                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition min-h-[44px]"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Accept All</span>
@@ -232,7 +232,7 @@ export default function CookieBanner() {
               <button
                 type="button"
                 onClick={handleSaveCustom}
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition min-h-[44px]"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition min-h-[44px]"
               >
                 Save My Preferences
               </button>
@@ -244,7 +244,7 @@ export default function CookieBanner() {
             <button
               type="button"
               onClick={() => setShowDetails((prev) => !prev)}
-              className="inline-flex items-center gap-1 font-semibold text-[#000F1B] hover:text-[#FF5A00] transition"
+              className="inline-flex items-center gap-1 font-semibold text-[#000F1B] hover:text-[#FF6600] transition"
             >
               <span>{showDetails ? "Simple view" : "Customize cookies"}</span>
               {showDetails ? (
@@ -256,7 +256,7 @@ export default function CookieBanner() {
 
             <Link
               to="/contact"
-              className="text-[#111111]/50 hover:text-[#FF5A00] hover:underline transition"
+              className="text-[#111111]/50 hover:text-[#FF6600] hover:underline transition"
             >
               Privacy & Support
             </Link>

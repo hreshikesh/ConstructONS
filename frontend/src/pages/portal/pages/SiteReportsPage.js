@@ -112,7 +112,7 @@ export default function SiteReportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#FF5A00]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF6600]" />
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function SiteReportsPage() {
             <p className="text-sm text-[#111111]/60 mt-0.5">Live chronological audit trail of all project events.</p>
           </div>
         </div>
-        <div className="text-right text-xs font-bold text-[#FF5A00] bg-white border border-[#FF5A00]/20 px-4 py-2.5 rounded-xl shadow-sm">
+        <div className="text-right text-xs font-bold text-[#FF6600] bg-white border border-[#FF6600]/20 px-4 py-2.5 rounded-xl shadow-sm">
           {rawActivities.length} Total Events
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function SiteReportsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activities or names..." 
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 bg-[#F5F6F8] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:bg-white transition"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 bg-[#F5F6F8] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:bg-white transition"
           />
         </div>
 
@@ -159,7 +159,7 @@ export default function SiteReportsPage() {
             className="w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border border-black/10 bg-white hover:bg-[#F5F6F8] transition"
           >
             <div className="flex items-center gap-2 text-xs font-bold text-[#000F1B]">
-              <Filter className="w-3.5 h-3.5 text-[#FF5A00]" /> 
+              <Filter className="w-3.5 h-3.5 text-[#FF6600]" /> 
               {filter === "All" ? "Filter Feed" : filter}
             </div>
             <ChevronDown className={`w-4 h-4 text-[#111111]/40 transition ${isFilterOpen ? 'rotate-180' : ''}`} />
@@ -171,7 +171,7 @@ export default function SiteReportsPage() {
                 <button
                   key={cat}
                   onClick={() => { setFilter(cat); setIsFilterOpen(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-[#F2F2F2] transition ${filter === cat ? 'text-[#FF5A00] bg-[#FF5A00]/5' : 'text-[#000F1B]'}`}
+                  className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-[#F2F2F2] transition ${filter === cat ? 'text-[#FF6600] bg-[#FF6600]/5' : 'text-[#000F1B]'}`}
                 >
                   {cat}
                 </button>
@@ -195,7 +195,7 @@ export default function SiteReportsPage() {
               
               {/* Date Header Badge */}
               <div className="sticky top-[130px] z-10 inline-block bg-[#F5F6F8] py-1.5 pr-4 mb-4">
-                <span className="px-3.5 py-1.5 rounded-lg bg-white border border-black/10 text-[10px] font-bold text-[#FF5A00] uppercase tracking-widest shadow-sm">
+                <span className="px-3.5 py-1.5 rounded-lg bg-white border border-black/10 text-[10px] font-bold text-[#FF6600] uppercase tracking-widest shadow-sm">
                   {group.displayDate}
                 </span>
               </div>
@@ -227,7 +227,7 @@ function ActivityFeedItem({ act }) {
   if (mod === "Quality") { Icon = ShieldCheck; color = "text-indigo-600"; bg = "bg-indigo-50"; borderColor = "border-indigo-200"; }
   if (mod === "Team") { Icon = UserPlus; color = "text-emerald-600"; bg = "bg-emerald-50"; borderColor = "border-emerald-200"; }
   if (mod === "Payments") { Icon = IndianRupee; color = "text-emerald-600"; bg = "bg-emerald-50"; borderColor = "border-emerald-200"; }
-  if (mod === "Progress") { Icon = HardHat; color = "text-[#FF5A00]"; bg = "bg-[#FF5A00]/10"; borderColor = "border-[#FF5A00]/20"; }
+  if (mod === "Progress") { Icon = HardHat; color = "text-[#FF6600]"; bg = "bg-[#FF6600]/10"; borderColor = "border-[#FF6600]/20"; }
   if (mod === "Attendance") { Icon = CheckCircle2; color = "text-teal-600"; bg = "bg-teal-50"; borderColor = "border-teal-200"; }
   if (mod === "System") { Icon = Building2; color = "text-slate-600"; bg = "bg-slate-100"; borderColor = "border-slate-200"; }
 
@@ -241,7 +241,7 @@ function ActivityFeedItem({ act }) {
         <Icon className="w-4 h-4" />
       </div>
 
-      <div className={`bg-white rounded-2xl border ${borderColor} p-4 sm:p-5 shadow-sm hover:shadow-md transition group-hover:border-[#FF5A00]/40`}>
+      <div className={`bg-white rounded-2xl border ${borderColor} p-4 sm:p-5 shadow-sm hover:shadow-md transition group-hover:border-[#FF6600]/40`}>
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
           <div className="flex-1">
             <h4 className="text-sm font-bold text-[#000F1B] leading-snug">

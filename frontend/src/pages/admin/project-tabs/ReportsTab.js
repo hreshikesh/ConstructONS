@@ -160,11 +160,11 @@ export default function ReportsTab({ project, onSaved }) {
     <div className="space-y-4 font-['Poppins']">
       {/* Top Bar Tabs */}
       <div className="flex border-b border-black/5 bg-white px-4 gap-6 rounded-xl shadow-sm">
-        <button onClick={() => setActiveTab("queue")} className={`py-4 text-xs font-bold border-b-2 transition flex items-center gap-2 ${activeTab === "queue" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
+        <button onClick={() => setActiveTab("queue")} className={`py-4 text-xs font-bold border-b-2 transition flex items-center gap-2 ${activeTab === "queue" ? "border-[#FF6600] text-[#FF6600]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
           <span>Report Queue & History ({reports.length})</span>
           {pendingCount > 0 && <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{pendingCount} Pending Approval</span>}
         </button>
-        <button onClick={() => setActiveTab("create")} className={`py-4 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${activeTab === "create" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
+        <button onClick={() => setActiveTab("create")} className={`py-4 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${activeTab === "create" ? "border-[#FF6600] text-[#FF6600]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
           <Plus className="w-4 h-4" /> <span>Log Daily Report (Site Engineer)</span>
         </button>
       </div>
@@ -179,11 +179,11 @@ export default function ReportsTab({ project, onSaved }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B]">Report Date *</label>
-              <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+              <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#000F1B] outline-none focus:ring-2 focus:ring-[#FF6600]" />
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B]">Overall Site Status *</label>
-              <select value={overallStatus} onChange={e => setOverallStatus(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#000F1B] bg-white cursor-pointer outline-none focus:ring-2 focus:ring-[#FF5A00]">
+              <select value={overallStatus} onChange={e => setOverallStatus(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#000F1B] bg-white cursor-pointer outline-none focus:ring-2 focus:ring-[#FF6600]">
                 <option>Work as per plan</option><option>Ahead of schedule</option><option>Slightly delayed</option><option>Impacted by weather</option><option>Material arrival pending</option>
               </select>
             </div>
@@ -192,7 +192,7 @@ export default function ReportsTab({ project, onSaved }) {
           {/* ★ NEW: Workforce Allocation Block */}
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
             <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-[#FF5A00]" /> Labor & Site Strength Allocation
+              <Users className="w-4 h-4 text-[#FF6600]" /> Labor & Site Strength Allocation
             </h4>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -212,19 +212,19 @@ export default function ReportsTab({ project, onSaved }) {
               <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B] flex items-center gap-1">
                 <History className="w-3.5 h-3.5 text-gray-500" /> Work Done Yesterday
               </label>
-              <textarea rows={2} value={workDoneYesterday} onChange={e => setWorkDoneYesterday(e.target.value)} placeholder="State work done yesterday to maintain continuity audit..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+              <textarea rows={2} value={workDoneYesterday} onChange={e => setWorkDoneYesterday(e.target.value)} placeholder="State work done yesterday to maintain continuity audit..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF6600]" />
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B] flex items-center gap-1">
                 <FileSpreadsheet className="w-3.5 h-3.5 text-gray-500" /> Work Completed Today (Briefing Description)
               </label>
-              <textarea rows={2} value={workCompletedToday} onChange={e => setWorkCompletedToday(e.target.value)} placeholder="Summary briefing of execution milestones completed today..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+              <textarea rows={2} value={workCompletedToday} onChange={e => setWorkCompletedToday(e.target.value)} placeholder="Summary briefing of execution milestones completed today..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF6600]" />
             </div>
           </div>
 
           <div className="sm:col-span-2">
             <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B]">Status Briefing / Notes</label>
-            <textarea rows={2} value={statusNotes} onChange={e => setStatusNotes(e.target.value)} placeholder="Brief morning notes or site conditions..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+            <textarea rows={2} value={statusNotes} onChange={e => setStatusNotes(e.target.value)} placeholder="Brief morning notes or site conditions..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF6600]" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-black/5">
@@ -232,8 +232,8 @@ export default function ReportsTab({ project, onSaved }) {
             <div>
               <label className="block text-[10px] font-bold uppercase mb-2 text-[#000F1B]">Completed Line Items *</label>
               <div className="flex gap-2 mb-3">
-                <input type="text" value={workCompletedInput} onChange={e => setWorkCompletedInput(e.target.value)} placeholder="e.g. Block work (50%)" className="flex-1 px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#FF5A00]" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddWorkCompleted(); } }} />
-                <button type="button" onClick={handleAddWorkCompleted} className="px-4 py-2 bg-[#000F1B] hover:bg-[#FF5A00] text-white rounded-xl text-xs font-bold transition">Add</button>
+                <input type="text" value={workCompletedInput} onChange={e => setWorkCompletedInput(e.target.value)} placeholder="e.g. Block work (50%)" className="flex-1 px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#FF6600]" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddWorkCompleted(); } }} />
+                <button type="button" onClick={handleAddWorkCompleted} className="px-4 py-2 bg-[#000F1B] hover:bg-[#FF6600] text-white rounded-xl text-xs font-bold transition">Add</button>
               </div>
               <div className="space-y-2">
                 {workCompletedList.map((item, i) => (
@@ -249,8 +249,8 @@ export default function ReportsTab({ project, onSaved }) {
             <div>
               <label className="block text-[10px] font-bold uppercase mb-2 text-[#000F1B]">Planned Tomorrow</label>
               <div className="flex gap-2 mb-3">
-                <input type="text" value={plannedTomorrowInput} onChange={e => setPlannedTomorrowInput(e.target.value)} placeholder="e.g. Service conduits marking" className="flex-1 px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#FF5A00]" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPlannedTomorrow(); } }} />
-                <button type="button" onClick={handleAddPlannedTomorrow} className="px-4 py-2 bg-[#000F1B] hover:bg-[#FF5A00] text-white rounded-xl text-xs font-bold transition">Add</button>
+                <input type="text" value={plannedTomorrowInput} onChange={e => setPlannedTomorrowInput(e.target.value)} placeholder="e.g. Service conduits marking" className="flex-1 px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#FF6600]" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPlannedTomorrow(); } }} />
+                <button type="button" onClick={handleAddPlannedTomorrow} className="px-4 py-2 bg-[#000F1B] hover:bg-[#FF6600] text-white rounded-xl text-xs font-bold transition">Add</button>
               </div>
               <div className="space-y-2">
                 {plannedTomorrowList.map((item, i) => (
@@ -266,7 +266,7 @@ export default function ReportsTab({ project, onSaved }) {
           <div className="pt-2 border-t border-black/5">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-[10px] font-bold uppercase text-[#000F1B]">Attach Today's Photos</label>
-              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FF5A00]/10 hover:bg-[#FF5A00]/20 text-[#FF5A00] rounded-lg text-xs font-bold cursor-pointer transition">
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6600]/10 hover:bg-[#FF6600]/20 text-[#FF6600] rounded-lg text-xs font-bold cursor-pointer transition">
                 {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
                 <span>Upload Photo</span>
                 <input type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} disabled={uploading} />
@@ -284,7 +284,7 @@ export default function ReportsTab({ project, onSaved }) {
           </div>
 
           <div className="pt-4 border-t border-black/5 flex justify-end gap-2">
-            <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white text-xs font-bold flex items-center gap-2 transition disabled:opacity-60">
+            <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white text-xs font-bold flex items-center gap-2 transition disabled:opacity-60">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Submit for PM Approval
             </button>
           </div>
@@ -339,7 +339,7 @@ export default function ReportsTab({ project, onSaved }) {
                   {/* Micro labor strength banner row */}
                   <div className="flex items-center gap-4 text-[10px] bg-slate-50 border border-slate-200 p-2 rounded-lg mb-3">
                     <div className="flex items-center gap-1 font-bold text-slate-700">
-                      <Users className="w-3.5 h-3.5 text-[#FF5A00]" /> Deployments: {rep.workers_count || 0} Workers
+                      <Users className="w-3.5 h-3.5 text-[#FF6600]" /> Deployments: {rep.workers_count || 0} Workers
                     </div>
                     <div className="w-px h-3 bg-slate-300" />
                     <div className="flex items-center gap-1 font-bold text-slate-700">

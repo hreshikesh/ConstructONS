@@ -47,7 +47,7 @@ export default function PortalProjectAdvisorModal({ project, onClose }) {
         {/* Header */}
         <div className="bg-[#000F1B] p-4 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FF5A00] grid place-items-center">
+            <div className="w-10 h-10 rounded-xl bg-[#FF6600] grid place-items-center">
               <Bot className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -68,7 +68,7 @@ export default function PortalProjectAdvisorModal({ project, onClose }) {
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] p-3.5 rounded-2xl ${
                 m.role === "user"
-                  ? "bg-[#FF5A00] text-white font-medium rounded-br-none"
+                  ? "bg-[#FF6600] text-white font-medium rounded-br-none"
                   : "bg-white text-[#000F1B] border border-black/10 shadow-sm rounded-bl-none"
               }`}>
                 {m.content}
@@ -78,7 +78,7 @@ export default function PortalProjectAdvisorModal({ project, onClose }) {
           {loading && (
             <div className="flex justify-start">
               <div className="bg-white p-3 rounded-2xl border border-black/10 shadow-sm flex items-center gap-2 text-gray-500">
-                <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" /> Analyzing live project data...
+                <Loader2 className="w-4 h-4 animate-spin text-[#FF6600]" /> Analyzing live project data...
               </div>
             </div>
           )}
@@ -92,12 +92,12 @@ export default function PortalProjectAdvisorModal({ project, onClose }) {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Ask about your project stage, approvals, timeline..."
-            className="flex-1 px-4 py-3 bg-[#F5F6F8] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
+            className="flex-1 px-4 py-3 bg-[#F5F6F8] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="w-11 h-11 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white grid place-items-center transition disabled:opacity-50"
+            className="w-11 h-11 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white grid place-items-center transition disabled:opacity-50"
           >
             <Send className="w-4 h-4" />
           </button>

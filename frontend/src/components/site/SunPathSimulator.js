@@ -10,7 +10,7 @@ import { Sun, Moon, Compass, ShieldCheck } from "lucide-react";
      orthographic 3D engine (drag to orbit). No extra libraries.
 ============================================================================ */
 const LAT = 12.9716, LON = 77.5946, RAD = Math.PI / 180;
-const NAVY = "#000F1B", ORANGE = "#FF5A00";
+const NAVY = "#000F1B", ORANGE = "#FF6600";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const CARD = ["North", "East", "South", "West"];
 const WALL = ["Front", "Right", "Back", "Left"];
@@ -200,7 +200,7 @@ export default function SunPathSimulator() {
   return (
     <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 bg-white rounded-3xl border border-black/5 shadow-sm p-4 sm:p-6 md:p-8">
       <style>{`.sp-range{-webkit-appearance:none;appearance:none;height:8px;border-radius:999px;outline:none;cursor:pointer;width:100%}
-        .sp-range::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid ${ORANGE};box-shadow:0 2px 10px rgba(255,90,0,.4)}
+        .sp-range::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid ${ORANGE};box-shadow:0 2px 10px rgba(255,102,0,.4)}
         .sp-range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid ${ORANGE}}
         .sp-scroll::-webkit-scrollbar{display:none}.sp-scroll{scrollbar-width:none}`}</style>
 
@@ -208,7 +208,7 @@ export default function SunPathSimulator() {
       <div className="lg:col-span-7 min-w-0">
         <div className="rounded-2xl overflow-hidden bg-[#000F1B] p-1.5 sm:p-2 shadow-inner">
           <div className="relative rounded-xl overflow-hidden">
-            <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full block cursor-grab active:cursor-grabbing select-none outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A00]"
+            <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full block cursor-grab active:cursor-grabbing select-none outline-none focus-visible:ring-2 focus-visible:ring-[#FF6600]"
               style={{ touchAction: "pan-y" }} tabIndex={0} role="img" aria-label={`3D model of a ${facing.toLowerCase()}-facing house on ${dateLabel(day)} at ${fmtT(clock)}. Drag to rotate.`}
               onPointerDown={onDown} onPointerMove={onMove} onPointerUp={() => (drag.current = null)} onPointerCancel={() => (drag.current = null)} onKeyDown={onKey}>
               <defs>
@@ -281,7 +281,7 @@ export default function SunPathSimulator() {
           <div className="sp-scroll flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
             {DATES.map(([l, n]) => {
               const N = n ?? dayOfYear(new Date()), on = day === N;
-              return <button key={l} onClick={() => setDay(N)} className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold border transition cursor-pointer ${on ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white border-black/10 hover:border-[#FF5A00] hover:text-[#FF5A00]"}`}>{l}</button>;
+              return <button key={l} onClick={() => setDay(N)} className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold border transition cursor-pointer ${on ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white border-black/10 hover:border-[#FF6600] hover:text-[#FF6600]"}`}>{l}</button>;
             })}
           </div>
           <input type="range" min="1" max="365" value={day} onChange={(e) => setDay(parseInt(e.target.value))} aria-label="Day of year" className="sp-range mt-4"
@@ -312,7 +312,7 @@ export default function SunPathSimulator() {
           <div className="grid grid-cols-4 gap-2">
             {Object.keys(FACINGS).map((f) => (
               <button key={f} onClick={() => setFacing(f)} aria-pressed={facing === f}
-                className={`py-3 rounded-xl text-xs font-bold border transition cursor-pointer ${facing === f ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white border-black/10 hover:border-[#FF5A00] hover:text-[#FF5A00]"}`}>{f}</button>
+                className={`py-3 rounded-xl text-xs font-bold border transition cursor-pointer ${facing === f ? "bg-[#000F1B] text-white border-[#000F1B]" : "bg-white border-black/10 hover:border-[#FF6600] hover:text-[#FF6600]"}`}>{f}</button>
             ))}
           </div>
         </div>

@@ -29,7 +29,7 @@ const CLEAN_MAP_STYLE = [
   { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#ffe0b2" }] },
 ];
 
-function BrandName({ constructClass = "text-white", onsClass = "text-[#FF5A00]", iconSize = "w-[0.7em] h-[0.7em]" }) {
+function BrandName({ constructClass = "text-white", onsClass = "text-[#FF6600]", iconSize = "w-[0.7em] h-[0.7em]" }) {
   return (
     <span className="inline-flex items-center font-black tracking-tight">
       <span className={constructClass}>Construct</span>
@@ -121,7 +121,7 @@ export default function SuppliersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-['Poppins',sans-serif] text-[#000F1B] flex flex-col selection:bg-[#FF5A00] selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8F9FA] font-['Poppins',sans-serif] text-[#000F1B] flex flex-col selection:bg-[#FF6600] selection:text-white overflow-x-hidden">
       <SEO
         title="Wholesale Building Materials, Cement & TMT Steel Suppliers"
         description="Source construction materials directly at guaranteed wholesale rates. Locate verified distributors for cement, TMT steel, tiles, sanitaryware, and electricals on our live vendor map."
@@ -134,13 +134,13 @@ export default function SuppliersPage() {
 
       {/* Hero Banner */}
       <section className="bg-[#000F1B] pt-28 pb-10 md:pt-36 md:pb-12 px-4 sm:px-6 relative shrink-0 overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#FF5A00_1px,transparent_1px)] [background-size:24px_24px]" />
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#FF6600_1px,transparent_1px)] [background-size:24px_24px]" />
         
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold mb-3 backdrop-blur-sm">
-                <Building2 className="w-3.5 h-3.5 text-[#FF5A00]" />
+                <Building2 className="w-3.5 h-3.5 text-[#FF6600]" />
                 <BrandName constructClass="text-white" />
                 <span className="text-white/80 font-normal">Verified Supplier Network</span>
               </div>
@@ -158,7 +158,7 @@ export default function SuppliersPage() {
                 <BrandName constructClass="text-white" /> Verified
               </div>
               <div className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl flex items-center gap-2">
-                <Package className="w-4 h-4 text-[#FF5A00]" /> Direct Wholesale Pricing
+                <Package className="w-4 h-4 text-[#FF6600]" /> Direct Wholesale Pricing
               </div>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function SuppliersPage() {
               placeholder="Search Network by Pincode or Area..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#F5F6F8] border border-black/10 focus:border-[#FF5A00] focus:bg-white text-xs font-bold pl-10 pr-4 py-2.5 rounded-xl outline-none transition"
+              className="w-full bg-[#F5F6F8] border border-black/10 focus:border-[#FF6600] focus:bg-white text-xs font-bold pl-10 pr-4 py-2.5 rounded-xl outline-none transition"
             />
           </div>
 
@@ -187,7 +187,7 @@ export default function SuppliersPage() {
                 onClick={() => setIsCategoryOpen(!isCategoryOpen)}
                 className="flex items-center gap-2 bg-[#F5F6F8] hover:bg-gray-200 border border-black/10 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-[#000F1B]"
               >
-                <Filter className="w-3.5 h-3.5 text-[#FF5A00]" />
+                <Filter className="w-3.5 h-3.5 text-[#FF6600]" />
                 <span>{activeCategory}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isCategoryOpen ? "rotate-180" : ""}`} />
               </button>
@@ -214,7 +214,7 @@ export default function SuppliersPage() {
                         }`}
                       >
                         {cat}
-                        {activeCategory === cat && <Check className="w-3.5 h-3.5 text-[#FF5A00]" />}
+                        {activeCategory === cat && <Check className="w-3.5 h-3.5 text-[#FF6600]" />}
                       </button>
                     ))}
                   </motion.div>
@@ -269,7 +269,7 @@ export default function SuppliersPage() {
                   setActiveCategory("All Categories");
                   setVerifiedOnly(false);
                 }}
-                className="text-xs font-bold text-[#FF5A00] hover:underline"
+                className="text-xs font-bold text-[#FF6600] hover:underline"
               >
                 Reset Filters
               </button>
@@ -290,7 +290,7 @@ export default function SuppliersPage() {
                   onMouseLeave={() => setHoveredVendorId(null)}
                   className={`group bg-white rounded-2xl border p-4 flex flex-col sm:flex-row gap-4 transition-all duration-300 shadow-sm ${
                     hoveredVendorId === vendor.id 
-                      ? "border-[#FF5A00] shadow-xl ring-2 ring-[#FF5A00]/10 -translate-y-0.5" 
+                      ? "border-[#FF6600] shadow-xl ring-2 ring-[#FF6600]/10 -translate-y-0.5" 
                       : "border-black/10 hover:border-black/20"
                   }`}
                 >
@@ -307,7 +307,7 @@ export default function SuppliersPage() {
 
                   <div className="flex-1 flex flex-col min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF5A00] truncate">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF6600] truncate">
                         {vendor.category}
                       </span>
                       {vendor.verified && (
@@ -318,7 +318,7 @@ export default function SuppliersPage() {
                       )}
                     </div>
 
-                    <h3 className="text-base font-bold text-[#000F1B] group-hover:text-[#FF5A00] transition-colors leading-tight mb-2 truncate">
+                    <h3 className="text-base font-bold text-[#000F1B] group-hover:text-[#FF6600] transition-colors leading-tight mb-2 truncate">
                       {vendor.name}
                     </h3>
 
@@ -348,7 +348,7 @@ export default function SuppliersPage() {
 
                       <button
                         onClick={() => openLead({ package: vendor.name, source: "constructons_materials_directory" })}
-                        className="bg-[#000F1B] hover:bg-[#FF5A00] text-white px-3 py-1.5 rounded-xl text-xs font-bold transition duration-200 shadow-sm flex items-center gap-1"
+                        className="bg-[#000F1B] hover:bg-[#FF6600] text-white px-3 py-1.5 rounded-xl text-xs font-bold transition duration-200 shadow-sm flex items-center gap-1"
                       >
                         Request Quote <ChevronDown className="-rotate-90 w-3.5 h-3.5" />
                       </button>
@@ -390,11 +390,11 @@ export default function SuppliersPage() {
         >
           {mobileView === "list" ? (
             <>
-              <MapIcon className="w-4 h-4 text-[#FF5A00]" /> <BrandName constructClass="text-white" /> Map
+              <MapIcon className="w-4 h-4 text-[#FF6600]" /> <BrandName constructClass="text-white" /> Map
             </>
           ) : (
             <>
-              <List className="w-4 h-4 text-[#FF5A00]" /> Supplier List
+              <List className="w-4 h-4 text-[#FF6600]" /> Supplier List
             </>
           )}
         </button>
@@ -478,7 +478,7 @@ function GoogleMapsWrapper({ vendors, activeId, onHoverVendor, onSelectVendor })
               onClick={() => onSelectVendor(v)}
               icon={{
                 path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
-                fillColor: isActive ? "#FF5A00" : "#000F1B",
+                fillColor: isActive ? "#FF6600" : "#000F1B",
                 fillOpacity: 1,
                 strokeWeight: 2,
                 strokeColor: "#FFFFFF",
@@ -496,7 +496,7 @@ function GoogleMapsWrapper({ vendors, activeId, onHoverVendor, onSelectVendor })
             onCloseClick={() => onHoverVendor(null)}
           >
             <div className="p-1 max-w-[200px] font-['Poppins',sans-serif]">
-              <span className="text-[9px] font-black text-[#FF5A00] uppercase tracking-wider block mb-0.5">
+              <span className="text-[9px] font-black text-[#FF6600] uppercase tracking-wider block mb-0.5">
                 {activeVendor.category}
               </span>
               <h4 className="text-xs font-bold text-[#000F1B] leading-tight">

@@ -36,7 +36,7 @@ export default function FinancialServices({ items = [] }) {
     <section
       id="financial"
       data-testid="financial-section"
-      className="relative overflow-hidden py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#000F1B] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative overflow-hidden py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#000F1B] font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white"
     >
       {/* Construction grid + beams */}
       <div className="pointer-events-none absolute inset-0">
@@ -48,10 +48,10 @@ export default function FinancialServices({ items = [] }) {
             backgroundSize: "64px 64px",
           }}
         />
-        <div className="absolute -top-20 left-1/4 h-[700px] w-px rotate-[12deg] bg-gradient-to-b from-transparent via-[#FF5A00]/40 to-transparent" />
+        <div className="absolute -top-20 left-1/4 h-[700px] w-px rotate-[12deg] bg-gradient-to-b from-transparent via-[#FF6600]/40 to-transparent" />
         <div className="absolute -top-20 right-1/3 h-[700px] w-px rotate-[12deg] bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#FF5A00]/10 blur-3xl" />
-        <div className="absolute top-0 left-0 h-60 w-60 rounded-full bg-[#FF5A00]/[0.07] blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#FF6600]/10 blur-3xl" />
+        <div className="absolute top-0 left-0 h-60 w-60 rounded-full bg-[#FF6600]/[0.07] blur-3xl" />
       </div>
 
       <div className="container-wide relative z-10">
@@ -61,7 +61,7 @@ export default function FinancialServices({ items = [] }) {
             <SectionLabel number={6} eyebrow="Financial Services" />
             <h2 className="mt-4 text-white font-bold text-3xl sm:text-4xl md:text-[42px] leading-[1.1] tracking-tight">
               Finance that builds with you.{" "}
-              <span className="text-[#FF5A00]">Not against you.</span>
+              <span className="text-[#FF6600]">Not against you.</span>
             </h2>
 
             <p className="mt-3 text-white/60 text-sm md:text-base leading-relaxed max-w-2xl">
@@ -134,7 +134,7 @@ function FeaturedCard({ service }) {
       <div className="relative z-10 h-full grid lg:grid-cols-[1.1fr_0.9fr] gap-6 p-6 sm:p-8 md:p-9">
         <div className="flex flex-col justify-center max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FF5A00] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FF6600] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
               <LucideIcon name={service.icon || "CreditCard"} className="w-3 h-3" />
               {service.coming_soon ? "Coming Soon" : "Featured"}
             </span>
@@ -167,7 +167,7 @@ function FeaturedCard({ service }) {
             <ul className="mt-3.5 space-y-2.5">
               {(service.features || []).map((f, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-white/90 text-xs md:text-sm">
-                  <span className="mt-0.5 grid h-5 w-5 place-items-center rounded-full bg-[#FF5A00]/15 text-[#FF5A00] shrink-0">
+                  <span className="mt-0.5 grid h-5 w-5 place-items-center rounded-full bg-[#FF6600]/15 text-[#FF6600] shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   {f}
@@ -180,7 +180,7 @@ function FeaturedCard({ service }) {
                 <div className="text-[9px] uppercase tracking-widest text-white/40">Built for</div>
                 <div className="text-white font-semibold text-xs md:text-sm">Home construction journeys</div>
               </div>
-              <div className="h-8 w-8 rounded-full bg-[#FF5A00] grid place-items-center text-white shrink-0">
+              <div className="h-8 w-8 rounded-full bg-[#FF6600] grid place-items-center text-white shrink-0">
                 <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -216,7 +216,7 @@ function ServiceCard({ service, index }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E30] via-[#0B1E30]/40 to-transparent" />
 
         <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 px-2.5 py-1">
-          <span className="h-5 w-5 rounded-md grid place-items-center bg-[#FF5A00] text-white">
+          <span className="h-5 w-5 rounded-md grid place-items-center bg-[#FF6600] text-white">
             <LucideIcon name={service.icon || "CreditCard"} className="w-3 h-3" />
           </span>
           <span className="text-[9px] font-bold uppercase tracking-widest text-white/80">
@@ -240,7 +240,7 @@ function ServiceCard({ service, index }) {
         <ul className="mt-4 space-y-2 flex-1">
           {(service.features || []).slice(0, 3).map((f, i) => (
             <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-white/85">
-              <Check className="w-3.5 h-3.5 mt-0.5 text-[#FF5A00] shrink-0" />
+              <Check className="w-3.5 h-3.5 mt-0.5 text-[#FF6600] shrink-0" />
               <span className="line-clamp-1">{f}</span>
             </li>
           ))}
@@ -248,7 +248,7 @@ function ServiceCard({ service, index }) {
       </div>
 
       {/* Orange edge accent */}
-      <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#FF5A00] transition-all duration-500 group-hover:w-full" />
+      <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#FF6600] transition-all duration-500 group-hover:w-full" />
     </motion.article>
   );
 }

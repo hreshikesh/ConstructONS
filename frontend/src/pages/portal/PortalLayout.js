@@ -26,7 +26,7 @@ function NoProjectView() {
   const waUrl = `https://wa.me/919876543210?text=${encodeURIComponent(waMsg)}`;
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] font-['Poppins'] text-[#111111] flex flex-col justify-between selection:bg-[#FF5A00]/20 selection:text-[#000F1B]">
+    <div className="min-h-screen bg-[#F5F6F8] font-['Poppins'] text-[#111111] flex flex-col justify-between selection:bg-[#FF6600]/20 selection:text-[#000F1B]">
       {/* Top Bar */}
       <header className="h-16 bg-white border-b border-black/5 px-4 sm:px-8 flex items-center justify-between shrink-0">
         <Link to="/" className="flex items-center gap-2.5 group">
@@ -46,7 +46,7 @@ function NoProjectView() {
           <button 
             type="button"
             onClick={logout} 
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/10 text-xs font-semibold text-[#111111]/70 hover:text-[#FF2D00] hover:bg-red-50 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-black/10 text-xs font-semibold text-[#111111]/70 hover:text-[#FF0000] hover:bg-red-50 transition"
           >
             <LogOut className="w-3.5 h-3.5" /> Sign out
           </button>
@@ -56,13 +56,13 @@ function NoProjectView() {
       {/* Main Activation Card */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-2xl bg-white rounded-3xl border border-black/5 shadow-sm p-6 sm:p-10 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF5A00]" />
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF6600]" />
           
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-6">
-            <Building2 className="w-8 h-8 text-[#FF5A00]" />
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-6">
+            <Building2 className="w-8 h-8 text-[#FF6600]" />
           </div>
 
-          <span className="text-[11px] font-bold text-[#FF5A00] uppercase tracking-wider bg-[#FF5A00]/10 px-3 py-1 rounded-full">
+          <span className="text-[11px] font-bold text-[#FF6600] uppercase tracking-wider bg-[#FF6600]/10 px-3 py-1 rounded-full">
             Project Onboarding
           </span>
 
@@ -92,7 +92,7 @@ function NoProjectView() {
 
             <a
               href="tel:+919876543210"
-              className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white text-xs font-bold transition shadow-sm min-h-[44px]"
+              className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white text-xs font-bold transition shadow-sm min-h-[44px]"
             >
               <Phone className="w-4 h-4" />
               <span>Call Support</span>
@@ -104,14 +104,14 @@ function NoProjectView() {
               disabled={loading}
               className="flex items-center justify-center gap-2 p-3.5 rounded-xl border border-black/10 bg-white hover:bg-[#F5F6F8] text-[#000F1B] text-xs font-bold transition min-h-[44px]"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#FF5A00]" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#FF6600]" : ""}`} />
               <span>Re-check Status</span>
             </button>
           </div>
 
           <div className="mt-8 pt-6 border-t border-black/5 flex flex-wrap items-center justify-between gap-3 text-xs text-[#111111]/50">
             <span>Looking to start a new build?</span>
-            <Link to="/packages" className="font-semibold text-[#FF5A00] hover:underline flex items-center gap-1">
+            <Link to="/packages" className="font-semibold text-[#FF6600] hover:underline flex items-center gap-1">
               Explore Home Packages <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -132,7 +132,7 @@ function PortalShell() {
     return (
       <div className="h-screen w-full grid place-items-center bg-[#F2F2F2] font-['Poppins']">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#FF5A00]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#FF6600]" />
           <span className="text-sm font-medium text-[#111111]/70">Loading your project portal...</span>
         </div>
       </div>

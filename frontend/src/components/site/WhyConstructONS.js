@@ -9,7 +9,7 @@ import { publicApi } from "@/lib/api"; // Added API import to fetch real CMS sta
 /*                        DYNAMIC LUCIDE ICON HELPER                          */
 /* -------------------------------------------------------------------------- */
 
-function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF5A00]" }) {
+function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF6600]" }) {
   if (!name) return <LucideIcons.Home className={className} strokeWidth={2} />;
 
   // If name is already a valid React Component
@@ -44,7 +44,7 @@ function BrandText({ dark = false }) {
   return (
     <span className="inline-flex items-center align-middle">
       <span className={dark ? "text-[#000F1B]" : "text-white"}>Construct</span>
-      <span className="mx-[0.05em] inline-flex items-center justify-center text-[#FF5A00]">
+      <span className="mx-[0.05em] inline-flex items-center justify-center text-[#FF6600]">
         <svg
           className="h-[0.82em] w-[0.82em] fill-none stroke-current stroke-[3.5] align-middle"
           viewBox="0 0 24 24"
@@ -52,7 +52,7 @@ function BrandText({ dark = false }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10" />
         </svg>
       </span>
-      <span className="text-[#FF5A00]">NS</span>
+      <span className="text-[#FF6600]">NS</span>
     </span>
   );
 }
@@ -108,7 +108,7 @@ export default function WhyConstructONS({
     <section
       id="why"
       data-testid="why-section"
-      className="relative scroll-mt-20 bg-[#F8F9FA] font-sans selection:bg-[#FF5A00] selection:text-white"
+      className="relative scroll-mt-20 bg-[#F8F9FA] font-sans selection:bg-[#FF6600] selection:text-white"
     >
       {/* 1. HERO SPOTLIGHT */}
       <MaskRevealHero />
@@ -164,7 +164,7 @@ function MaskRevealHero() {
       </div>
 
       <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#FF5A00] px-6 text-center transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#FF6600] px-6 text-center transition-opacity duration-300"
         style={{
           WebkitMaskImage: `radial-gradient(circle ${isHovered ? 260 : 60}px at ${pos.x}% ${pos.y}%, black 100%, transparent 100%)`,
           maskImage: `radial-gradient(circle ${isHovered ? 260 : 60}px at ${pos.x}% ${pos.y}%, black 100%, transparent 100%)`,
@@ -193,7 +193,7 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
   return (
     <div className="w-full">
       <div className="mx-auto mb-12 max-w-3xl text-center sm:mb-16">
-        <span className="inline-block rounded-full border border-[#FF5A00]/20 bg-[#FF5A00]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#FF5A00]">
+        <span className="inline-block rounded-full border border-[#FF6600]/20 bg-[#FF6600]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#FF6600]">
           Side-By-Side Comparison
         </span>
         <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#000F1B] sm:text-4xl md:text-5xl">
@@ -232,20 +232,20 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
         </div>
 
         <div className="my-2 flex items-center justify-center lg:my-0">
-          <div className="z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#FF5A00] text-lg font-black text-white shadow-lg shadow-[#FF5A00]/30 sm:h-16 sm:w-16 sm:text-xl">
+          <div className="z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#FF6600] text-lg font-black text-white shadow-lg shadow-[#FF6600]/30 sm:h-16 sm:w-16 sm:text-xl">
             VS
           </div>
         </div>
 
         <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#000F1B] p-6 text-white shadow-xl sm:p-8 md:p-10">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-[#FF5A00]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-[#FF6600]/20 blur-3xl" />
           <div>
             <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-6">
               <div>
-                <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF5A00]">Next-Gen Standard</span>
+                <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF6600]">Next-Gen Standard</span>
                 <h3 className="mt-1 text-xl font-extrabold text-white sm:text-2xl"><BrandText dark={false} /></h3>
               </div>
-              <span className="rounded-full border border-[#FF5A00]/30 bg-[#FF5A00]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF5A00]">Recommended</span>
+              <span className="rounded-full border border-[#FF6600]/30 bg-[#FF6600]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF6600]">Recommended</span>
             </div>
             <ul className="space-y-4">
               {constructons.map((point, idx) => (
@@ -260,7 +260,7 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
           </div>
           <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6 text-xs font-semibold text-slate-400">
             <span>Guaranteed deliverables backed by technology.</span>
-            <span className="font-bold text-[#FF5A00]">100% Tracked →</span>
+            <span className="font-bold text-[#FF6600]">100% Tracked →</span>
           </div>
         </div>
       </div>
@@ -280,7 +280,7 @@ function StatsBanner({ stats }) {
           <React.Fragment key={idx}>
             <div className="flex items-center gap-4 py-2 md:py-0 w-full md:w-auto justify-center">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0D1829]">
-                <DynamicLucideIcon name={s.icon} className="h-6 w-6 text-[#FF5A00]" />
+                <DynamicLucideIcon name={s.icon} className="h-6 w-6 text-[#FF6600]" />
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-black tracking-tight text-white sm:text-3xl">

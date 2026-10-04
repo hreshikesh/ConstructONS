@@ -16,7 +16,7 @@ export default function ProgressPage() {
   const [activeTab, setActiveTab] = useState("Overview");
 
   if (!project) {
-    return <div className="p-10 flex justify-center"><div className="w-6 h-6 md:w-8 md:h-8 border-2 border-[#FF5A00] border-t-transparent rounded-full animate-spin" /></div>;
+    return <div className="p-10 flex justify-center"><div className="w-6 h-6 md:w-8 md:h-8 border-2 border-[#FF6600] border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   const stages = project.stages || [];
@@ -46,7 +46,7 @@ export default function ProgressPage() {
               key={tab} 
               onClick={() => setActiveTab(tab)}
               className={`px-3 py-1.5 md:py-2 text-[10px] md:text-xs 2xl:text-sm uppercase tracking-wider font-bold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === tab ? "border-[#FF5A00] text-[#000F1B]" : "border-transparent text-gray-400 hover:text-[#000F1B]"
+                activeTab === tab ? "border-[#FF6600] text-[#000F1B]" : "border-transparent text-gray-400 hover:text-[#000F1B]"
               }`}
             >
               {tab}
@@ -57,7 +57,7 @@ export default function ProgressPage() {
 
       {/* COMPACT KPI STRIP */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3 2xl:gap-4">
-        <KpiBlock title="Overall Progress" value={`${overallProgress}%`} subtitle={overallProgress >= 100 ? "Completed" : "On Track"} accent="#FF5A00" icon={Target} />
+        <KpiBlock title="Overall Progress" value={`${overallProgress}%`} subtitle={overallProgress >= 100 ? "Completed" : "On Track"} accent="#FF6600" icon={Target} />
         <KpiBlock title="Stages Done" value={`${stagesCompleted}/${stages.length}`} subtitle="Milestones" accent="#10B981" icon={CheckCircle2} />
         <KpiBlock title="Days Completed" value={daysCompleted} subtitle={`of ${totalDays} total`} accent="#FF8C00" icon={Clock} />
         <KpiBlock title="Days Remaining" value={daysRemaining} subtitle="Estimated" accent="#EAB308" icon={Calendar} />
@@ -115,14 +115,14 @@ function OverviewTab({ project, stages }) {
                   : "—";
 
                 return (
-                  <tr key={i} className={`transition-colors ${isActive ? "bg-[#FF5A00]/5" : "hover:bg-[#F9FAFB]"}`}>
+                  <tr key={i} className={`transition-colors ${isActive ? "bg-[#FF6600]/5" : "hover:bg-[#F9FAFB]"}`}>
                     <td className="py-2 px-3 text-gray-400 font-mono font-bold">{(i + 1).toString().padStart(2, '0')}</td>
-                    <td className={`py-2 px-3 font-bold ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{stage.name}</td>
+                    <td className={`py-2 px-3 font-bold ${isActive ? "text-[#FF6600]" : "text-[#000F1B]"}`}>{stage.name}</td>
                     <td className="py-2 px-3 text-center"><StatusBadge status={stage.status} /></td>
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-1.5 2xl:gap-2">
                         <div className="flex-1 h-1 md:h-1.5 2xl:h-2 bg-[#F2F2F2] rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${isCompleted ? "bg-emerald-500" : "bg-gradient-to-r from-[#FF5A00] to-[#FFA500]"}`} style={{ width: `${pct}%` }} />
+                          <div className={`h-full rounded-full ${isCompleted ? "bg-emerald-500" : "bg-gradient-to-r from-[#FF6600] to-[#FFA500]"}`} style={{ width: `${pct}%` }} />
                         </div>
                         <span className="text-[9px] md:text-[10px] 2xl:text-xs font-black w-6 2xl:w-8 text-right text-[#000F1B]">{pct}%</span>
                       </div>
@@ -143,17 +143,17 @@ function OverviewTab({ project, stages }) {
             const actualEnd = stage.actual_end_date ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
             
             return (
-              <div key={i} className={`p-2.5 rounded-lg border ${isActive ? "border-[#FF5A00] bg-[#FF5A00]/5 shadow-sm" : "border-black/5 bg-white"}`}>
+              <div key={i} className={`p-2.5 rounded-lg border ${isActive ? "border-[#FF6600] bg-[#FF6600]/5 shadow-sm" : "border-black/5 bg-white"}`}>
                 <div className="flex items-center justify-between mb-2 gap-2">
                   <div className="flex items-center gap-1.5 min-w-0 pr-1">
                     <span className="text-[10px] font-mono font-bold text-gray-400 shrink-0">#{(i + 1).toString().padStart(2, '0')}</span>
-                    <span className={`text-xs font-bold truncate ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{stage.name}</span>
+                    <span className={`text-xs font-bold truncate ${isActive ? "text-[#FF6600]" : "text-[#000F1B]"}`}>{stage.name}</span>
                   </div>
                   <StatusBadge status={stage.status} />
                 </div>
                 <div className="flex items-center gap-2 bg-white p-1.5 rounded border border-black/5">
                   <div className="flex-1 h-1.5 bg-[#F2F2F2] rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${stage.status === "completed" ? "bg-emerald-500" : "bg-[#FF5A00]"}`} style={{ width: `${pct}%` }} />
+                    <div className={`h-full rounded-full ${stage.status === "completed" ? "bg-emerald-500" : "bg-[#FF6600]"}`} style={{ width: `${pct}%` }} />
                   </div>
                   <span className="text-[9px] font-black text-[#000F1B] shrink-0">{pct}%</span>
                   <span className="text-[8px] text-gray-300">|</span>
@@ -168,16 +168,16 @@ function OverviewTab({ project, stages }) {
       <div className="lg:col-span-4 order-1 lg:order-2 space-y-3 md:space-y-4">
         
         <div className="bg-gradient-to-br from-[#000F1B] via-[#0F1E30] to-[#000F1B] rounded-xl shadow-sm p-4 md:p-5 2xl:p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-[#FF5A00]" />
-          <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#FF5A00]/20 blur-[15px] rounded-full" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-[#FF6600]" />
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#FF6600]/20 blur-[15px] rounded-full" />
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[10px] md:text-xs 2xl:text-sm font-bold text-white/60 uppercase tracking-widest flex items-center gap-1.5">
-                <Target className="w-3 h-3 2xl:w-4 2xl:h-4 text-[#FF5A00]" /> Active Stage
+                <Target className="w-3 h-3 2xl:w-4 2xl:h-4 text-[#FF6600]" /> Active Stage
               </h3>
               {activeStage && (
-                <span className="text-[10px] md:text-xs 2xl:text-sm font-black bg-[#FF5A00] text-white px-2 py-0.5 rounded">{activeStage.progress_pct || 0}%</span>
+                <span className="text-[10px] md:text-xs 2xl:text-sm font-black bg-[#FF6600] text-white px-2 py-0.5 rounded">{activeStage.progress_pct || 0}%</span>
               )}
             </div>
             
@@ -185,7 +185,7 @@ function OverviewTab({ project, stages }) {
               <div className="space-y-2">
                 <h4 className="text-sm md:text-base 2xl:text-lg font-bold text-white leading-tight">{activeStage.name}</h4>
                 <div className="h-1 md:h-1.5 2xl:h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#FF5A00] to-[#FFA500] rounded-full" style={{ width: `${activeStage.progress_pct || 0}%` }} />
+                  <div className="h-full bg-gradient-to-r from-[#FF6600] to-[#FFA500] rounded-full" style={{ width: `${activeStage.progress_pct || 0}%` }} />
                 </div>
                 {activeStage.description && (
                   <p className="text-[10px] md:text-xs 2xl:text-sm text-white/70 bg-white/5 p-2 rounded border border-white/10 italic leading-relaxed mt-2">
@@ -250,7 +250,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
         </div>
         <div className="flex items-center gap-2 text-[9px] md:text-[10px] 2xl:text-xs font-bold text-gray-500 uppercase tracking-wider bg-[#F9FAFB] p-1.5 rounded border border-black/5 flex-wrap">
           <div className="flex items-center gap-1"><div className="w-2 h-2 bg-emerald-500 rounded-sm" /> Done</div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 bg-[#FF5A00] rounded-sm" /> Active</div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 bg-[#FF6600] rounded-sm" /> Active</div>
           <div className="flex items-center gap-1"><div className="w-2 h-2 bg-slate-300 rounded-sm" /> Pending</div>
           <div className="w-px h-3 bg-black/10 mx-0.5" />
           <div className="flex items-center gap-1"><div className="w-0.5 h-3 bg-red-500 rounded-full" /> Today</div>
@@ -295,7 +295,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
               const widthPct = hasDates ? Math.max(0.5, ((activeEnd - sStart) / totalMs) * 100) : 0;
               const isCompleted = stage.status === "completed";
               const isActive = stage.status === "in_progress";
-              const barColor = isCompleted ? "bg-emerald-500" : isActive ? "bg-[#FF5A00]" : "bg-slate-300";
+              const barColor = isCompleted ? "bg-emerald-500" : isActive ? "bg-[#FF6600]" : "bg-slate-300";
 
               return (
                 <div key={idx} className="group pb-1.5">
@@ -306,7 +306,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
                       <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
                         <div className="text-[8px] md:text-[9px] 2xl:text-[10px] font-black text-white bg-[#000F1B] w-4 h-4 rounded-[3px] grid place-items-center shrink-0">{(idx + 1)}</div>
                         <div className="font-bold text-[10px] md:text-xs 2xl:text-sm text-[#000F1B] truncate">{stage.name}</div>
-                        <div className="text-[9px] md:text-[10px] 2xl:text-xs font-black text-[#FF5A00] ml-auto">{stage.progress_pct || 0}%</div>
+                        <div className="text-[9px] md:text-[10px] 2xl:text-xs font-black text-[#FF6600] ml-auto">{stage.progress_pct || 0}%</div>
                       </div>
 
                       <div className="flex items-center gap-2 text-[9px] text-gray-500">
@@ -416,7 +416,7 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
           <h3 className="font-bold text-xs md:text-sm 2xl:text-base text-[#000F1B]">Planned vs Actual Progression</h3>
           <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] 2xl:text-xs font-bold uppercase tracking-wider text-gray-500">
             <div className="flex items-center gap-1"><div className="w-2 h-2 bg-slate-200 rounded-sm" /> Planned</div>
-            <div className="flex items-center gap-1"><div className="w-2 h-2 bg-[#FF5A00] rounded-sm" /> Actual</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 bg-[#FF6600] rounded-sm" /> Actual</div>
           </div>
         </div>
 
@@ -434,10 +434,10 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
               <div key={i} className="flex gap-0.5 md:gap-1 h-full items-end group relative w-full justify-center cursor-pointer">
                 <div className="absolute -top-10 bg-[#000F1B] text-white text-[9px] md:text-[10px] font-bold px-2 py-1 rounded shadow-lg hidden group-hover:block z-20 whitespace-nowrap text-center">
                   <div className="text-white/60 mb-0.5">{d.fullLabel}</div>
-                  <span className="text-slate-300">Plan: {d.planned}%</span> <span className="mx-0.5 opacity-40">|</span> <span className="text-[#FF5A00]">Act: {d.actual}%</span>
+                  <span className="text-slate-300">Plan: {d.planned}%</span> <span className="mx-0.5 opacity-40">|</span> <span className="text-[#FF6600]">Act: {d.actual}%</span>
                 </div>
                 <div className="w-3 md:w-5 bg-slate-200 rounded-t-sm transition-all duration-700 ease-out group-hover:bg-slate-300" style={{ height: `${d.planned}%` }}></div>
-                <div className="w-3 md:w-5 bg-gradient-to-t from-[#FF5A00] to-[#FFA500] rounded-t-sm shadow-[0_-1px_4px_rgba(255,90,0,0.2)] transition-all duration-700 ease-out group-hover:brightness-110" style={{ height: `${d.actual}%` }}></div>
+                <div className="w-3 md:w-5 bg-gradient-to-t from-[#FF6600] to-[#FFA500] rounded-t-sm shadow-[0_-1px_4px_rgba(255,90,0,0.2)] transition-all duration-700 ease-out group-hover:brightness-110" style={{ height: `${d.actual}%` }}></div>
               </div>
             ))}
           </div>
@@ -470,14 +470,14 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
                 <tr key={d.fullLabel} className="hover:bg-black/[0.02] transition-colors">
                   <td className="px-2 md:px-4 py-2.5 font-bold text-[#000F1B] whitespace-nowrap overflow-hidden text-ellipsis">{d.fullLabel}</td>
                   <td className="px-1 md:px-3 py-2.5 text-center font-medium text-gray-500">{d.planned}%</td>
-                  <td className="px-1 md:px-3 py-2.5 text-center font-black text-[#FF5A00]">{d.actual}%</td>
+                  <td className="px-1 md:px-3 py-2.5 text-center font-black text-[#FF6600]">{d.actual}%</td>
                   <td className="px-1 md:px-3 py-2.5 text-center hidden sm:table-cell">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] md:text-[9px] 2xl:text-[10px] font-bold uppercase tracking-wider ${d.status === 'On Track' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                       <Circle className="w-1.5 h-1.5 fill-current" /> {d.status}
                     </span>
                   </td>
                   <td className="px-2 md:px-4 py-2.5 text-right">
-                    <button onClick={() => handleDownloadReport(d.fullLabel)} className="inline-flex items-center justify-center gap-1 text-[8px] md:text-[10px] font-bold text-white bg-[#000F1B] hover:bg-[#FF5A00] px-2 py-1.5 rounded transition shadow-sm ml-auto">
+                    <button onClick={() => handleDownloadReport(d.fullLabel)} className="inline-flex items-center justify-center gap-1 text-[8px] md:text-[10px] font-bold text-white bg-[#000F1B] hover:bg-[#FF6600] px-2 py-1.5 rounded transition shadow-sm ml-auto">
                       <Download className="w-2.5 h-2.5" /> <span className="hidden sm:inline">PDF</span>
                     </button>
                   </td>
@@ -539,10 +539,10 @@ function ProjectPhotosTab({ reports, stages }) {
         </div>
         
         <div className="flex items-center gap-1 bg-[#F5F6F8] p-0.5 rounded border border-black/5 self-start sm:self-auto">
-          <button onClick={() => setViewMode("card")} className={`p-1.5 rounded-[4px] transition ${viewMode === "card" ? "bg-white shadow-sm text-[#FF5A00]" : "text-gray-400 hover:text-[#000F1B]"}`} title="Grid View">
+          <button onClick={() => setViewMode("card")} className={`p-1.5 rounded-[4px] transition ${viewMode === "card" ? "bg-white shadow-sm text-[#FF6600]" : "text-gray-400 hover:text-[#000F1B]"}`} title="Grid View">
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-[4px] transition ${viewMode === "list" ? "bg-white shadow-sm text-[#FF5A00]" : "text-gray-400 hover:text-[#000F1B]"}`} title="List View">
+          <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-[4px] transition ${viewMode === "list" ? "bg-white shadow-sm text-[#FF6600]" : "text-gray-400 hover:text-[#000F1B]"}`} title="List View">
             <List className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -583,7 +583,7 @@ function ProjectPhotosTab({ reports, stages }) {
                     </div>
                   </td>
                   <td className="px-3 py-1.5 font-bold text-[#000F1B]">{img.caption}</td>
-                  <td className="px-3 py-1.5 text-[#FF5A00] font-semibold text-[9px] md:text-[10px] uppercase tracking-wider">{img.category}</td>
+                  <td className="px-3 py-1.5 text-[#FF6600] font-semibold text-[9px] md:text-[10px] uppercase tracking-wider">{img.category}</td>
                   <td className="px-3 py-1.5 text-right font-medium text-gray-500">{img.date ? new Date(img.date).toLocaleDateString("en-IN") : "—"}</td>
                 </tr>
               ))}
@@ -611,8 +611,8 @@ function DailyProgressTab({ project, reports }) {
   if (reports.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-black/5 shadow-sm p-10 flex flex-col items-center justify-center text-center min-h-[300px]">
-        <div className="w-12 h-12 rounded-full bg-[#FF5A00]/10 grid place-items-center mb-3">
-          <FileText className="w-5 h-5 text-[#FF5A00]" />
+        <div className="w-12 h-12 rounded-full bg-[#FF6600]/10 grid place-items-center mb-3">
+          <FileText className="w-5 h-5 text-[#FF6600]" />
         </div>
         <h3 className="font-bold text-sm md:text-base text-[#000F1B]">No verified reports</h3>
         <p className="text-xs text-gray-400 mt-1 max-w-sm">Check back later when site updates are published by the PM.</p>
@@ -627,16 +627,16 @@ function DailyProgressTab({ project, reports }) {
       <div className="bg-white p-3 md:p-4 rounded-xl border border-black/5 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <div>
           <h3 className="font-bold text-xs md:text-sm text-[#000F1B] flex items-center gap-1.5">
-            <HardHat className="w-3.5 h-3.5 text-[#FF5A00]" /> Daily Progress Report
+            <HardHat className="w-3.5 h-3.5 text-[#FF6600]" /> Daily Progress Report
           </h3>
           <p className="text-[9px] md:text-[10px] text-gray-500 font-medium mt-0.5">PM-verified daily site updates & logs</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-2">
-          <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="w-full sm:w-auto bg-[#F5F6F8] border border-black/10 rounded-lg px-3 py-1.5 text-[10px] md:text-xs font-bold text-[#000F1B] focus:outline-none focus:border-[#FF5A00] cursor-pointer">
+          <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="w-full sm:w-auto bg-[#F5F6F8] border border-black/10 rounded-lg px-3 py-1.5 text-[10px] md:text-xs font-bold text-[#000F1B] focus:outline-none focus:border-[#FF6600] cursor-pointer">
             {reports.map(r => <option key={r.id} value={r.date}>{new Date(r.date).toLocaleDateString("en-IN", { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</option>)}
           </select>
-          <button onClick={handleDownloadFullPDF} className="w-full sm:w-auto px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] md:text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap">
+          <button onClick={handleDownloadFullPDF} className="w-full sm:w-auto px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF6600] text-white text-[10px] md:text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap">
             <Download className="w-3 h-3" /> Full PDF
           </button>
         </div>
@@ -683,8 +683,8 @@ function DailyProgressTab({ project, reports }) {
                   <div className="font-bold text-gray-400 uppercase tracking-wider text-[8px] mb-1">Work Done Yesterday (Audited)</div>
                   <div className="text-gray-700 font-semibold leading-relaxed">{report.work_done_yesterday || "—"}</div>
                 </div>
-                <div className="p-2.5 bg-[#FF5A00]/5 rounded-lg border border-[#FF5A00]/10 text-[10px] md:text-xs">
-                  <div className="font-bold text-[#FF5A00] uppercase tracking-wider text-[8px] mb-1">Work Completed Today (Detailed Briefing)</div>
+                <div className="p-2.5 bg-[#FF6600]/5 rounded-lg border border-[#FF6600]/10 text-[10px] md:text-xs">
+                  <div className="font-bold text-[#FF6600] uppercase tracking-wider text-[8px] mb-1">Work Completed Today (Detailed Briefing)</div>
                   <div className="text-gray-900 font-bold leading-relaxed">{report.work_completed_today || "—"}</div>
                 </div>
               </div>
@@ -751,7 +751,7 @@ function DailyProgressTab({ project, reports }) {
 function StatusBadge({ status }) {
   const config = {
     completed: { label: "Completed", color: "text-emerald-700 bg-emerald-50 border-emerald-200", Icon: CheckCircle2 },
-    in_progress: { label: "Active", color: "text-[#FF5A00] bg-[#FF5A00]/10 border-[#FF5A00]/30", Icon: PlayCircle },
+    in_progress: { label: "Active", color: "text-[#FF6600] bg-[#FF6600]/10 border-[#FF6600]/30", Icon: PlayCircle },
     pending: { label: "Pending", color: "text-gray-500 bg-[#F5F6F8] border-black/10", Icon: Circle }
   };
   const c = config[status] || config.pending;

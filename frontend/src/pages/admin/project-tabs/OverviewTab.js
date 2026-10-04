@@ -41,7 +41,7 @@ export default function OverviewTab({ project }) {
       
       {/* Top Row: 4 Big KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={Target} title="Overall Progress" value={`${overall}%`} sub={`${done} of ${stages.length} stages complete`} color="#FF5A00" />
+        <KpiCard icon={Target} title="Overall Progress" value={`${overall}%`} sub={`${done} of ${stages.length} stages complete`} color="#FF6600" />
         <KpiCard icon={Clock} title="Days Elapsed" value={daysCompleted} sub={daysRemaining !== null ? `${daysRemaining} days remaining` : "Duration TBD"} color="#3B82F6" />
         <KpiCard icon={IndianRupee} title="Payment Received" value={`₹${(paid/100000).toFixed(1)}L`} sub={`Balance: ₹${(balance/100000).toFixed(1)}L`} color="#10B981" />
         <KpiCard icon={TrendingUp} title="Contract Value" value={`₹${(cv/100000).toFixed(1)}L`} sub={cv > 0 ? `${Math.round((paid/cv)*100)}% collected` : "Not set"} color="#000F1B" />
@@ -54,16 +54,16 @@ export default function OverviewTab({ project }) {
           
           {/* Active Stage Card */}
           <div className="bg-gradient-to-br from-[#000F1B] to-[#0F1E30] rounded-xl shadow-lg p-5 text-white relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-[#FF5A00]" />
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FF5A00]/15 blur-[40px] rounded-full" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#FF6600]" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FF6600]/15 blur-[40px] rounded-full" />
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
-                  <HardHat className="w-3.5 h-3.5 text-[#FF5A00]" /> Currently In Progress
+                  <HardHat className="w-3.5 h-3.5 text-[#FF6600]" /> Currently In Progress
                 </h3>
                 {activeStage && (
-                  <span className="text-xs font-black bg-[#FF5A00] text-white px-3 py-1 rounded-full shadow-md">
+                  <span className="text-xs font-black bg-[#FF6600] text-white px-3 py-1 rounded-full shadow-md">
                     {activeStage.progress_pct || 0}% Done
                   </span>
                 )}
@@ -76,7 +76,7 @@ export default function OverviewTab({ project }) {
                     <p className="text-sm text-white/70 mb-4 leading-relaxed">{activeStage.description}</p>
                   )}
                   <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-4">
-                    <div className="h-full bg-gradient-to-r from-[#FF5A00] to-[#FFA500] rounded-full transition-all duration-1000" style={{ width: `${activeStage.progress_pct || 0}%` }} />
+                    <div className="h-full bg-gradient-to-r from-[#FF6600] to-[#FFA500] rounded-full transition-all duration-1000" style={{ width: `${activeStage.progress_pct || 0}%` }} />
                   </div>
                   <div className="grid grid-cols-3 gap-3 text-[10px]">
                     <div>
@@ -111,11 +111,11 @@ export default function OverviewTab({ project }) {
                 const isCompleted = s.status === "completed";
                 const isActive = s.status === "in_progress";
                 return (
-                  <div key={i} className={`flex items-center gap-2 p-2 rounded-lg ${isActive ? "bg-[#FF5A00]/5 border border-[#FF5A00]/20" : "hover:bg-[#F9FAFB]"}`}>
+                  <div key={i} className={`flex items-center gap-2 p-2 rounded-lg ${isActive ? "bg-[#FF6600]/5 border border-[#FF6600]/20" : "hover:bg-[#F9FAFB]"}`}>
                     <span className="text-[9px] font-mono font-bold text-[#111111]/40 w-5">{(i+1).toString().padStart(2, '0')}</span>
-                    <span className={`text-xs font-bold flex-1 truncate ${isActive ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>{s.name}</span>
+                    <span className={`text-xs font-bold flex-1 truncate ${isActive ? "text-[#FF6600]" : "text-[#000F1B]"}`}>{s.name}</span>
                     <div className="w-16 h-1 bg-[#F2F2F2] rounded-full overflow-hidden">
-                      <div className={`h-full ${isCompleted ? "bg-emerald-500" : "bg-[#FF5A00]"}`} style={{ width: `${pct}%` }} />
+                      <div className={`h-full ${isCompleted ? "bg-emerald-500" : "bg-[#FF6600]"}`} style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-[10px] font-black w-9 text-right text-[#000F1B]">{pct}%</span>
                   </div>
@@ -148,7 +148,7 @@ export default function OverviewTab({ project }) {
               <StatBlock icon={FileText} label="Drawings" value={stats.drawings} color="#8B5CF6" badge={pendingDrawings} />
               <StatBlock icon={Package} label="Materials" value={stats.materials} color="#F59E0B" badge={pendingMaterials} />
               <StatBlock icon={ShieldCheck} label="Quality" value={stats.quality} color="#10B981" />
-              <StatBlock icon={HardHat} label="Reports" value={stats.reports} color="#FF5A00" badge={pendingReports} />
+              <StatBlock icon={HardHat} label="Reports" value={stats.reports} color="#FF6600" badge={pendingReports} />
               <StatBlock icon={Wrench} label="Tickets" value={stats.tickets} color="#EF4444" />
               <StatBlock icon={FileText} label="Docs" value={stats.documents} color="#6366F1" />
               <StatBlock icon={Video} label="Cameras" value={stats.cameras} color="#EC4899" />
@@ -184,7 +184,7 @@ function InfoRow({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-2.5">
       <div className="w-6 h-6 rounded-md bg-[#F9FAFB] border border-black/5 grid place-items-center shrink-0 mt-0.5">
-        <Icon className="w-3 h-3 text-[#FF5A00]" />
+        <Icon className="w-3 h-3 text-[#FF6600]" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[9px] font-bold uppercase tracking-wider text-[#111111]/40">{label}</div>

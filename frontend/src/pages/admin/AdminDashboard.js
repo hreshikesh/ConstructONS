@@ -45,10 +45,10 @@ export default function AdminDashboard() {
     <div className="font-['Poppins']">
       <div className="flex items-baseline justify-between">
         <div>
-          <div className="text-xs font-semibold text-[#FF5A00] uppercase tracking-wider">Overview</div>
+          <div className="text-xs font-semibold text-[#FF6600] uppercase tracking-wider">Overview</div>
           <h1 className="mt-1 text-2xl md:text-3xl font-bold text-[#000F1B]">Dashboard</h1>
         </div>
-        <Link to="/" className="text-sm text-[#111111]/60 hover:text-[#FF5A00] transition">
+        <Link to="/" className="text-sm text-[#111111]/60 hover:text-[#FF6600] transition">
           View public site →
         </Link>
       </div>
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
             key={s.label}
             className="rounded-2xl bg-white border border-black/5 shadow-sm p-4 hover:shadow-md transition group"
           >
-            <s.icon className="w-5 h-5 text-[#FF5A00]" />
+            <s.icon className="w-5 h-5 text-[#FF6600]" />
             <div className="mt-2 text-2xl font-bold text-[#000F1B]">{s.value ?? "0"}</div>
             <div className="text-xs text-[#111111]/60">{s.label}</div>
           </Link>
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
       <div className="mt-8 rounded-2xl bg-white border border-black/5 shadow-sm">
         <div className="p-4 flex items-center justify-between border-b border-black/5">
           <div className="font-semibold text-[#000F1B]">Recent leads</div>
-          <Link to="/admin/leads" className="text-sm text-[#FF5A00] font-semibold inline-flex items-center gap-1 hover:underline">
+          <Link to="/admin/leads" className="text-sm text-[#FF6600] font-semibold inline-flex items-center gap-1 hover:underline">
             All leads <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

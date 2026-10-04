@@ -19,7 +19,7 @@ export default function LiveCCTVPage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-[#000F1B] grid place-items-center shrink-0 shadow-sm border border-white/10">
-            <Video className="w-6 h-6 text-[#FF5A00]" />
+            <Video className="w-6 h-6 text-[#FF6600]" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">Site Security & CCTV</h1>
@@ -35,8 +35,8 @@ export default function LiveCCTVPage() {
           </div>
           <div className="bg-[#000F1B] text-white px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF5A00] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF5A00]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6600] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6600]"></span>
             </span>
             <span className="text-xs font-bold">{onlineCams.length} Cams Live</span>
           </div>
@@ -137,7 +137,7 @@ function CameraFeed({ camera }) {
       <div className="p-4 bg-gradient-to-t from-[#000F1B] to-[#000F1B]/90 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-white leading-tight">{camera.name}</h3>
-          <p className="text-[10px] text-[#FF5A00] uppercase tracking-wider mt-0.5 font-bold">
+          <p className="text-[10px] text-[#FF6600] uppercase tracking-wider mt-0.5 font-bold">
             {camera.location_label || "No Zone Specified"}
           </p>
         </div>

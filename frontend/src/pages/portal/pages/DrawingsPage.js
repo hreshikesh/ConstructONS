@@ -262,9 +262,9 @@ export default function DrawingsPage() {
               return (
                 <button
                   key={cat} onClick={() => setActiveTab(cat)}
-                  className={`flex items-center gap-1.5 pb-2.5 border-b-[3px] transition-colors whitespace-nowrap ${isActive ? "border-[#FF5A00] text-[#000F1B]" : "border-transparent text-gray-500 hover:text-gray-800"}`}
+                  className={`flex items-center gap-1.5 pb-2.5 border-b-[3px] transition-colors whitespace-nowrap ${isActive ? "border-[#FF6600] text-[#000F1B]" : "border-transparent text-gray-500 hover:text-gray-800"}`}
                 >
-                  <Icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isActive ? "text-[#FF5A00]" : ""}`} />
+                  <Icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isActive ? "text-[#FF6600]" : ""}`} />
                   <span className="text-xs md:text-sm font-semibold">{cat}</span>
                   <span className="text-[9px] md:text-[10px] font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>
                 </button>
@@ -287,7 +287,7 @@ export default function DrawingsPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <input 
                     type="text" placeholder="Search drawings..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-[11px] md:text-xs bg-white border border-gray-200 rounded-lg outline-none focus:border-[#FF5A00] transition shadow-sm"
+                    className="w-full pl-9 pr-3 py-2 text-[11px] md:text-xs bg-white border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] transition shadow-sm"
                   />
                 </div>
                 <select 
@@ -318,7 +318,7 @@ export default function DrawingsPage() {
                       <div 
                         key={d.id} onClick={() => setSelectedId(d.id)}
                         className={`bg-white p-3 rounded-xl border cursor-pointer transition-all ${
-                          isSelected ? "border-[#FF5A00] shadow-md ring-1 ring-[#FF5A00]/20" : "border-gray-200 shadow-sm hover:border-[#FF5A00]/40"
+                          isSelected ? "border-[#FF6600] shadow-md ring-1 ring-[#FF6600]/20" : "border-gray-200 shadow-sm hover:border-[#FF6600]/40"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
@@ -335,7 +335,7 @@ export default function DrawingsPage() {
                           {/* THUMBNAIL PREVIEW (Works for PDF and Images) */}
                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center relative">
                             {isPdf ? (
-                              <div className="flex flex-col items-center justify-center text-[#FF5A00]">
+                              <div className="flex flex-col items-center justify-center text-[#FF6600]">
                                 <FileText className="w-5 h-5 opacity-70" />
                                 <span className="text-[6px] font-bold mt-0.5 uppercase tracking-widest">PDF</span>
                               </div>
@@ -345,7 +345,7 @@ export default function DrawingsPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-semibold text-gray-500">
-                          <span className="text-[#FF5A00] uppercase tracking-wider">{d.category || "General"}</span>
+                          <span className="text-[#FF6600] uppercase tracking-wider">{d.category || "General"}</span>
                           <span>•</span>
                           <span>Rev: V{d.current_version}</span>
                           <span>•</span>
@@ -371,7 +371,7 @@ export default function DrawingsPage() {
                   {/* Fixed Header */}
                   <div className="p-3 md:p-4 border-b border-gray-100 shrink-0 bg-white z-20 shadow-sm relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <button onClick={() => setSelectedId(null)} className="md:hidden flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-[#FF5A00] bg-gray-50 px-2.5 py-1.5 rounded-md">
+                      <button onClick={() => setSelectedId(null)} className="md:hidden flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-[#FF6600] bg-gray-50 px-2.5 py-1.5 rounded-md">
                         <ChevronLeft className="w-3.5 h-3.5" /> Back
                       </button>
                       <div className="flex flex-col">
@@ -398,7 +398,7 @@ export default function DrawingsPage() {
                       <button 
                         onClick={() => downloadWithWatermark(resolveMediaUrl(activeUrl), `${selectedDrawing.name.replace(/\s+/g, '_')}_V${activeVersion?.version || selectedDrawing.current_version || 1}`)} 
                         disabled={!activeUrl}
-                        className="flex-1 sm:flex-none px-2.5 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                        className="flex-1 sm:flex-none px-2.5 py-1.5 bg-[#000F1B] hover:bg-[#FF6600] text-white rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition disabled:opacity-50 cursor-pointer whitespace-nowrap"
                       >
                         <Download className="w-3.5 h-3.5" /> Download
                       </button>
@@ -434,7 +434,7 @@ export default function DrawingsPage() {
                     {["Overview", "Revisions"].map(t => (
                       <button key={t} onClick={() => setDrawerTab(t)} className={`px-4 py-2.5 text-[10px] md:text-xs font-bold relative transition cursor-pointer ${drawerTab === t ? "text-[#000F1B]" : "text-gray-400 hover:text-gray-700"}`}>
                         {t} {t === "Revisions" && `(${versions.length})`}
-                        {drawerTab === t && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00]" />}
+                        {drawerTab === t && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600]" />}
                       </button>
                     ))}
                   </div>
@@ -476,7 +476,7 @@ export default function DrawingsPage() {
                             </div>
                             <div>
                               <div className="text-gray-500 font-medium mb-0.5 text-[10px]">Viewing Revision</div>
-                              <div className="text-gray-900 font-bold text-[#FF5A00]">
+                              <div className="text-gray-900 font-bold text-[#FF6600]">
                                 {activeVersion?.version ? `R0${activeVersion.version}` : selectedDrawing.current_version ? `R0${selectedDrawing.current_version}` : "R01"}
                               </div>
                             </div>
@@ -504,7 +504,7 @@ export default function DrawingsPage() {
                               )}
                               <button 
                                 onClick={() => { if (activeUrl) setIsFullscreen(true); }}
-                                className="text-[10px] font-bold text-[#FF5A00] hover:underline cursor-pointer flex items-center gap-1"
+                                className="text-[10px] font-bold text-[#FF6600] hover:underline cursor-pointer flex items-center gap-1"
                               >
                                 <Maximize2 className="w-3 h-3" /> View Full Screen
                               </button>
@@ -549,7 +549,7 @@ export default function DrawingsPage() {
                           
                           return (
                             <div key={v.version || originalIndex} className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${
-                              isViewingThis ? "bg-[#FF5A00]/5 border-[#FF5A00]/30 shadow-sm" : "bg-white border-black/5 hover:border-black/15 shadow-sm"
+                              isViewingThis ? "bg-[#FF6600]/5 border-[#FF6600]/30 shadow-sm" : "bg-white border-black/5 hover:border-black/15 shadow-sm"
                             }`}>
                               <div>
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -565,7 +565,7 @@ export default function DrawingsPage() {
                                 <div className="text-[10px] text-gray-500 font-medium">{fmtDate(v.uploaded_at)}</div>
                                 
                                 {v.client_comment && (
-                                  <p className="text-[10px] text-gray-600 italic border-l-2 border-[#FF5A00]/50 pl-2 mt-1.5">"{v.client_comment}"</p>
+                                  <p className="text-[10px] text-gray-600 italic border-l-2 border-[#FF6600]/50 pl-2 mt-1.5">"{v.client_comment}"</p>
                                 )}
                               </div>
                               
@@ -583,7 +583,7 @@ export default function DrawingsPage() {
                                       setActiveVersionIdx(originalIndex);
                                       setDrawerTab("Overview"); 
                                     }}
-                                    className="flex-1 sm:flex-none px-3 py-1.5 bg-white border border-gray-300 text-[#000F1B] hover:border-[#FF5A00] hover:text-[#FF5A00] text-[10px] md:text-xs font-bold rounded-lg transition shadow-sm cursor-pointer ml-auto"
+                                    className="flex-1 sm:flex-none px-3 py-1.5 bg-white border border-gray-300 text-[#000F1B] hover:border-[#FF6600] hover:text-[#FF6600] text-[10px] md:text-xs font-bold rounded-lg transition shadow-sm cursor-pointer ml-auto"
                                   >
                                     Read
                                   </button>
@@ -606,7 +606,7 @@ export default function DrawingsPage() {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-[#F9FAFB]">
-                  <FileBox className="w-12 h-12 opacity-20 mb-3 text-[#FF5A00]" />
+                  <FileBox className="w-12 h-12 opacity-20 mb-3 text-[#FF6600]" />
                   <p className="text-sm font-bold text-[#000F1B] mb-1">No Drawing Selected</p>
                   <p className="text-[10px] md:text-xs max-w-xs text-gray-500 leading-relaxed">Select a drawing from the list on the left to view its details and provide approval.</p>
                 </div>
@@ -707,7 +707,7 @@ export default function DrawingsPage() {
               )}
               <button 
                 onClick={() => setIsFullscreen(false)} 
-                className="p-2 md:p-3 bg-white/10 hover:bg-[#FF5A00] rounded-full text-white transition-all shadow-lg cursor-pointer"
+                className="p-2 md:p-3 bg-white/10 hover:bg-[#FF6600] rounded-full text-white transition-all shadow-lg cursor-pointer"
               >
                 <X className="w-4 h-4 md:w-5 md:h-5" />
               </button>

@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] flex flex-col justify-between font-['Poppins'] text-[#111111] selection:bg-[#FF5A00]/20 selection:text-[#000F1B] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#F2F2F2] flex flex-col justify-between font-['Poppins'] text-[#111111] selection:bg-[#FF6600]/20 selection:text-[#000F1B] p-4 sm:p-6 lg:p-8">
       <Toaster richColors position="top-right" />
 
       {/* 🧭 Top Navigation Exit Bar */}
@@ -49,9 +49,9 @@ export default function AdminLoginPage() {
         <Link
           to="/"
           aria-label="Back to ConstructONS Website"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#111111]/70 hover:text-[#FF5A00] transition-colors py-2 px-3 -ml-2 rounded-xl hover:bg-white/80 min-h-[44px] group"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#111111]/70 hover:text-[#FF6600] transition-colors py-2 px-3 -ml-2 rounded-xl hover:bg-white/80 min-h-[44px] group"
         >
-          <ArrowLeft className="w-4 h-4 text-[#FF5A00] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
+          <ArrowLeft className="w-4 h-4 text-[#FF6600] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
           <span>Back to Home</span>
         </Link>
 
@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
       <main className="w-full max-w-md mx-auto my-auto py-6">
         <div className="bg-white rounded-2xl shadow-sm border border-black/5 p-6 sm:p-10 relative overflow-hidden">
           {/* Top Orange Stripe */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-[#FF5A00]" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-[#FF6600]" />
 
           {/* Brand Header */}
           <div className="flex flex-col items-center text-center">
@@ -72,12 +72,12 @@ export default function AdminLoginPage() {
               <BrandLockup tone="light" size="md" />
             ) : (
               <div className="text-xl font-bold tracking-tight text-[#000F1B]">
-                Construct<span className="text-[#FF5A00]">ONS™</span>
+                Construct<span className="text-[#FF6600]">ONS™</span>
               </div>
             )}
 
             <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-[#000F1B]/5 border border-black/5 rounded-full text-[11px] font-semibold text-[#000F1B] tracking-wider uppercase">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#FF5A00]" aria-hidden="true" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#FF6600]" aria-hidden="true" />
               <span>Admin & Staff Portal</span>
             </div>
 
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
               >
                 Email Address
               </label>
-              <div className="flex items-center gap-2.5 rounded-xl border border-black/10 bg-[#F2F2F2]/60 px-3.5 py-3 transition focus-within:bg-white focus-within:border-[#FF5A00] focus-within:ring-2 focus-within:ring-[#FF5A00]/20 min-h-[48px]">
+              <div className="flex items-center gap-2.5 rounded-xl border border-black/10 bg-[#F2F2F2]/60 px-3.5 py-3 transition focus-within:bg-white focus-within:border-[#FF6600] focus-within:ring-2 focus-within:ring-[#FF6600]/20 min-h-[48px]">
                 <Mail className="w-4 h-4 text-[#111111]/40 shrink-0" aria-hidden="true" />
                 <input
                   id="admin-email"
@@ -123,7 +123,7 @@ export default function AdminLoginPage() {
               >
                 Password
               </label>
-              <div className="flex items-center gap-2.5 rounded-xl border border-black/10 bg-[#F2F2F2]/60 pl-3.5 pr-2 py-1.5 transition focus-within:bg-white focus-within:border-[#FF5A00] focus-within:ring-2 focus-within:ring-[#FF5A00]/20 min-h-[48px]">
+              <div className="flex items-center gap-2.5 rounded-xl border border-black/10 bg-[#F2F2F2]/60 pl-3.5 pr-2 py-1.5 transition focus-within:bg-white focus-within:border-[#FF6600] focus-within:ring-2 focus-within:ring-[#FF6600]/20 min-h-[48px]">
                 <Lock className="w-4 h-4 text-[#111111]/40 shrink-0" aria-hidden="true" />
                 <input
                   id="admin-password"
@@ -140,7 +140,7 @@ export default function AdminLoginPage() {
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="p-2 rounded-lg text-[#111111]/40 hover:text-[#000F1B] hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/40 shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                  className="p-2 rounded-lg text-[#111111]/40 hover:text-[#000F1B] hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6600]/40 shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" aria-hidden="true" />
@@ -156,7 +156,7 @@ export default function AdminLoginPage() {
               data-testid="admin-login-submit"
               type="submit"
               disabled={loading}
-              className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF5A00] px-5 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#FF2D00] active:scale-[0.99] transition duration-200 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] px-5 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-[#FF0000] active:scale-[0.99] transition duration-200 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -179,7 +179,7 @@ export default function AdminLoginPage() {
             </p>
             <Link
               to="/portal/login"
-              className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#FF5A00] hover:underline focus:outline-none focus:ring-1 focus:ring-[#FF5A00] rounded px-1 py-0.5"
+              className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#FF6600] hover:underline focus:outline-none focus:ring-1 focus:ring-[#FF6600] rounded px-1 py-0.5"
             >
               <span>Go to Customer Portal</span>
               <ArrowRight className="w-3 h-3" />

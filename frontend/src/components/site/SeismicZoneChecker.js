@@ -91,10 +91,10 @@ export default function SeismicZoneChecker() {
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px)", backgroundSize: "30px 30px" }} />
         
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF5A00]/15 text-[#FF5A00] text-[10px] font-bold uppercase tracking-widest mb-4 border border-[#FF5A00]/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF6600]/15 text-[#FF6600] text-[10px] font-bold uppercase tracking-widest mb-4 border border-[#FF6600]/20">
             <ShieldAlert className="w-3.5 h-3.5" /> IS 1893:2016
           </div>
-          <h3 className="text-2xl md:text-3xl font-bold leading-tight mb-3">Check your <span className="text-[#FF5A00]">seismic zone</span></h3>
+          <h3 className="text-2xl md:text-3xl font-bold leading-tight mb-3">Check your <span className="text-[#FF6600]">seismic zone</span></h3>
           <p className="text-white/60 text-sm leading-relaxed mb-6">
             Enter your PIN code and instantly know your seismic risk category — plus the exact structural precautions your engineer must follow.
           </p>
@@ -112,13 +112,13 @@ export default function SeismicZoneChecker() {
                   onChange={(e) => { setPincode(e.target.value.replace(/\D/g, "")); setError(""); }}
                   onKeyDown={(e) => e.key === "Enter" && check()}
                   placeholder="e.g. 600001"
-                  className="w-full bg-white/5 border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-sm font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-[#FF5A00] focus:ring-2 focus:ring-[#FF5A00]/20"
+                  className="w-full bg-white/5 border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-sm font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20"
                 />
               </div>
               <button
                 onClick={check}
                 disabled={loading || pincode.length !== 6}
-                className="px-5 py-3.5 rounded-xl bg-[#FF5A00] hover:bg-[#E04F00] disabled:bg-white/10 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-widest transition inline-flex items-center gap-2 cursor-pointer"
+                className="px-5 py-3.5 rounded-xl bg-[#FF6600] hover:bg-[#E04F00] disabled:bg-white/10 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-widest transition inline-flex items-center gap-2 cursor-pointer"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4" /><span className="hidden sm:inline">Check</span></>}
               </button>
@@ -182,16 +182,16 @@ export default function SeismicZoneChecker() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#FF5A00]/5 to-[#FF5A00]/10 border border-[#FF5A00]/20 rounded-xl p-5">
+              <div className="bg-gradient-to-br from-[#FF6600]/5 to-[#FF6600]/10 border border-[#FF6600]/20 rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Zap className="w-4 h-4 text-[#FF5A00]" />
+                  <Zap className="w-4 h-4 text-[#FF6600]" />
                   <h5 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">Engineering Precautions Required</h5>
                 </div>
                 <ul className="space-y-2.5">
                   {result.recommendations.map((r, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-[#111111]/80">
-                      <div className="w-4 h-4 rounded-full bg-[#FF5A00]/15 grid place-items-center shrink-0 mt-0.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF5A00]" />
+                      <div className="w-4 h-4 rounded-full bg-[#FF6600]/15 grid place-items-center shrink-0 mt-0.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF6600]" />
                       </div>
                       <span className="leading-snug">{r}</span>
                     </li>

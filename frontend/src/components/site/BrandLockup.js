@@ -100,7 +100,7 @@ export default function BrandLockup({
     ${sizes.power}
     mx-[2px]
     shrink-0
-    text-[#FF5A00]
+    text-[#FF6600]
   `}
   strokeWidth={3.5}
 />
@@ -113,7 +113,7 @@ export default function BrandLockup({
               font-extrabold
               tracking-[-0.02em]
               whitespace-nowrap
-              text-[#FF5A00]
+              text-[#FF6600]
             `}
           >
             NS

@@ -47,11 +47,11 @@ export default function MaintenanceTab({ project, onSaved }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider mb-1 text-[#111111]/60">Handover Date (Start)</label>
-            <input type="date" value={wForm.warranty_start_date} onChange={e => setWForm({ ...wForm, warranty_start_date: e.target.value })} className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none" />
+            <input type="date" value={wForm.warranty_start_date} onChange={e => setWForm({ ...wForm, warranty_start_date: e.target.value })} className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF6600] outline-none" />
           </div>
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider mb-1 text-[#111111]/60">Duration (Years)</label>
-            <select value={wForm.warranty_years} onChange={e => setWForm({ ...wForm, warranty_years: e.target.value })} className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none bg-white">
+            <select value={wForm.warranty_years} onChange={e => setWForm({ ...wForm, warranty_years: e.target.value })} className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF6600] outline-none bg-white">
               <option value={1}>1 Year</option><option value={2}>2 Years</option><option value={5}>5 Years</option><option value={10}>10 Years</option>
             </select>
           </div>
@@ -85,13 +85,13 @@ export default function MaintenanceTab({ project, onSaved }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded-lg border border-black/5">
                   <div>
                     <label className="block text-[9px] font-bold uppercase tracking-wider mb-1 text-[#111111]/50">Update Status</label>
-                    <select className="w-full border border-black/10 px-3 py-2 rounded-lg text-xs font-bold bg-white outline-none focus:ring-2 focus:ring-[#FF5A00]" defaultValue={t.status} id={`status-${t.id}`}>
+                    <select className="w-full border border-black/10 px-3 py-2 rounded-lg text-xs font-bold bg-white outline-none focus:ring-2 focus:ring-[#FF6600]" defaultValue={t.status} id={`status-${t.id}`}>
                       <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[9px] font-bold uppercase tracking-wider mb-1 text-[#111111]/50">Resolution Notes (Visible to Client)</label>
-                    <input type="text" defaultValue={t.admin_notes || ""} id={`note-${t.id}`} placeholder="e.g. Technician dispatched..." className="w-full border border-black/10 px-3 py-2 rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+                    <input type="text" defaultValue={t.admin_notes || ""} id={`note-${t.id}`} placeholder="e.g. Technician dispatched..." className="w-full border border-black/10 px-3 py-2 rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-[#FF6600]" />
                   </div>
                 </div>
                 <div className="mt-3 text-right">

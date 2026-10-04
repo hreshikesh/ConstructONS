@@ -119,7 +119,7 @@ function StoryJcbLoader({ onComplete }) {
 
       {/* Ambient Orange Backlight Glow */}
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35rem] h-[35rem] bg-[#FF5A00]/15 blur-[140px] rounded-full pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35rem] h-[35rem] bg-[#FF6600]/15 blur-[140px] rounded-full pointer-events-none"
         animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -131,7 +131,7 @@ function StoryJcbLoader({ onComplete }) {
           <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
             <img src="/logo.webp" alt="ConstructONS" className="h-5 w-auto object-contain shrink-0" />
             <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] text-white select-none">
-              CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF5A00] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF5A00] font-bold self-start mt-0.5 ml-0.5">™</span>
+              CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF6600] font-bold self-start mt-0.5 ml-0.5">™</span>
             </div>
           </div>
 
@@ -140,13 +140,13 @@ function StoryJcbLoader({ onComplete }) {
             <AnimatePresence mode="wait">
               {phase === "planning" && (
                 <motion.div key="s1" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
-                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#FF5A00] uppercase mb-1">STORY 01 / 03 · PLANNING</div>
+                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#FF6600] uppercase mb-1">STORY 01 / 03 · PLANNING</div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">Every home starts with a vision.</h2>
                 </motion.div>
               )}
               {phase === "building" && (
                 <motion.div key="s2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
-                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#FF5A00] uppercase mb-1">STORY 02 / 03 · EXECUTION</div>
+                  <div className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#FF6600] uppercase mb-1">STORY 02 / 03 · EXECUTION</div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">Structure rises &amp; details come together.</h2>
                 </motion.div>
               )}
@@ -166,7 +166,7 @@ function StoryJcbLoader({ onComplete }) {
             
             {/* Filled Progress Line */}
             <div 
-              className="absolute bottom-[-2px] left-0 h-[2px] bg-gradient-to-r from-[#FF5A00] to-[#FF7A2E] shadow-[0_0_15px_#FF5A00] transition-all duration-75"
+              className="absolute bottom-[-2px] left-0 h-[2px] bg-gradient-to-r from-[#FF6600] to-[#FF7A2E] shadow-[0_0_15px_#FF6600] transition-all duration-75"
               style={{ width: `${Math.min(progress, 100)}%` }}
             />
 
@@ -176,7 +176,7 @@ function StoryJcbLoader({ onComplete }) {
                 {/* Drafting Table */}
                 <rect x="25" y="45" width="50" height="8" fill="#0B1E30" stroke="#38BDF8" strokeWidth="1.5" />
                 <path d="M35 53 V90 M65 53 V90" stroke="#38BDF8" strokeWidth="1.5" strokeLinecap="round" />
-                <polygon points="35,25 65,25 75,45 25,45" fill="#FF5A00" opacity="0.8" />
+                <polygon points="35,25 65,25 75,45 25,45" fill="#FF6600" opacity="0.8" />
                 {/* Architect */}
                 <circle cx="20" cy="35" r="7" fill="#FFF" />
                 <path d="M20 42 V80" stroke="#FFF" strokeWidth="4" strokeLinecap="round" />
@@ -196,7 +196,7 @@ function StoryJcbLoader({ onComplete }) {
                 <path d="M90 100 V10 M90 20 H10" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
                 <path d="M90 10 L60 20" stroke="#D97706" strokeWidth="2" />
                 <line x1="30" y1="20" x2="30" y2="40" stroke="#FFF" strokeWidth="1.5" strokeDasharray="2 2" />
-                <rect x="15" y="40" width="30" height="6" fill="#FF5A00" rx="1" />
+                <rect x="15" y="40" width="30" height="6" fill="#FF6600" rx="1" />
               </svg>
             </div>
 
@@ -205,13 +205,13 @@ function StoryJcbLoader({ onComplete }) {
               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl overflow-visible">
                 {/* House Shape */}
                 <path d="M10 100 V50 L50 20 L90 50 V100 Z" fill="#000F1B" stroke="#FFFFFF" strokeWidth="2.5" strokeLinejoin="round" />
-                <path d="M5 52 L50 18 L95 52" stroke="#FF5A00" strokeWidth="3" strokeLinecap="round" />
+                <path d="M5 52 L50 18 L95 52" stroke="#FF6600" strokeWidth="3" strokeLinecap="round" />
                 {/* Windows/Doors */}
-                <rect x="40" y="65" width="20" height="35" rx="1" fill="#FF5A00" fillOpacity="0.85" />
+                <rect x="40" y="65" width="20" height="35" rx="1" fill="#FF6600" fillOpacity="0.85" />
                 <rect x="20" y="55" width="12" height="12" rx="1" fill="#38BDF8" fillOpacity="0.7" />
                 <rect x="68" y="55" width="12" height="12" rx="1" fill="#38BDF8" fillOpacity="0.7" />
                 {/* Sparkle */}
-                <motion.circle cx="50" cy="8" r="3" fill="#FF5A00" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }} />
+                <motion.circle cx="50" cy="8" r="3" fill="#FF6600" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }} />
               </svg>
             </div>
 
@@ -235,20 +235,20 @@ function StoryJcbLoader({ onComplete }) {
                   <path d="M18 28 L32 28 L40 42 L13 42 Z" fill="#38BDF8" opacity="0.6" />
                   
                   {/* Body */}
-                  <rect x="30" y="35" width="45" height="15" rx="3" fill="#FF5A00" />
+                  <rect x="30" y="35" width="45" height="15" rx="3" fill="#FF6600" />
                   <rect x="35" y="40" width="12" height="6" rx="1" fill="#0F172A" opacity="0.5" />
                   
                   {/* Arm */}
                   <path d="M50 40 L75 25 L85 45" stroke="#0F172A" strokeWidth="4" fill="none" strokeLinecap="round" />
-                  <path d="M50 40 L75 25 L85 45" stroke="#FF5A00" strokeWidth="2" fill="none" strokeLinecap="round" />
+                  <path d="M50 40 L75 25 L85 45" stroke="#FF6600" strokeWidth="2" fill="none" strokeLinecap="round" />
                   
                   {/* Bucket */}
-                  <path d="M80 40 L95 40 L90 55 L75 55 Z" fill="#0F172A" stroke="#FF5A00" strokeWidth="1" strokeLinejoin="round" />
+                  <path d="M80 40 L95 40 L90 55 L75 55 Z" fill="#0F172A" stroke="#FF6600" strokeWidth="1" strokeLinejoin="round" />
                 </g>
 
                 {/* Tracks / Wheels */}
                 <g>
-                  <rect x="5" y="50" width="75" height="12" rx="6" fill="#0F172A" stroke="#FF5A00" strokeWidth="1.5" />
+                  <rect x="5" y="50" width="75" height="12" rx="6" fill="#0F172A" stroke="#FF6600" strokeWidth="1.5" />
                   <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "15px 56px" }}><circle cx="15" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
                   <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "35px 56px" }}><circle cx="35" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
                   <g className={progress < 95 ? "animate-[spin_1s_linear_infinite]" : ""} style={{ transformOrigin: "55px 56px" }}><circle cx="55" cy="56" r="3.5" fill="#334155" stroke="#64748B" strokeWidth="1" strokeDasharray="2 2" /></g>
@@ -259,7 +259,7 @@ function StoryJcbLoader({ onComplete }) {
           </div>
           
           <div className="absolute bottom-10 font-mono text-[10px] font-bold text-white/30 tracking-[0.2em]">
-            PROGRESS: <span className="text-[#FF5A00]">{Math.min(Math.round(progress), 100)}%</span>
+            PROGRESS: <span className="text-[#FF6600]">{Math.min(Math.round(progress), 100)}%</span>
           </div>
 
           <style>{`
@@ -286,10 +286,10 @@ function StoryJcbLoader({ onComplete }) {
           <img src="/logo.webp" alt="ConstructONS Logo" className="h-16 md:h-20 w-auto object-contain mb-6 drop-shadow-[0_0_30px_rgba(255,90,0,0.6)]" />
           
           <div className="flex items-center gap-1 text-2xl sm:text-3xl md:text-4xl font-black tracking-[0.18em] text-white select-none mb-3">
-            CONSTRUCT<Power className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-[#FF5A00] stroke-[3.5] mx-1" />NS<span className="text-sm text-[#FF5A00] font-bold self-start mt-1">™</span>
+            CONSTRUCT<Power className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-[#FF6600] stroke-[3.5] mx-1" />NS<span className="text-sm text-[#FF6600] font-bold self-start mt-1">™</span>
           </div>
 
-          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-[#FF5A00] drop-shadow-[0_0_12px_rgba(255,90,0,0.5)]">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-[#FF6600] drop-shadow-[0_0_12px_rgba(255,90,0,0.5)]">
             Everything Construction. Always On.
           </p>
         </motion.div>
@@ -302,7 +302,7 @@ function StoryJcbLoader({ onComplete }) {
             initial={{ scaleY: 0, opacity: 0 }}
             animate={{ scaleY: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
-            className="absolute inset-0 z-[100] origin-bottom bg-[#FF5A00]"
+            className="absolute inset-0 z-[100] origin-bottom bg-[#FF6600]"
           />
         )}
       </AnimatePresence>
@@ -315,7 +315,7 @@ function PageFallback() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-md font-['Poppins',sans-serif]">
       <div className="relative w-12 h-12 mb-3">
-        <svg viewBox="0 0 100 100" className="w-full h-full stroke-[#FF5A00] drop-shadow-[0_4px_12px_rgba(255,90,0,0.3)]" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg viewBox="0 0 100 100" className="w-full h-full stroke-[#FF6600] drop-shadow-[0_4px_12px_rgba(255,90,0,0.3)]" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <motion.path
             d="M50 15 L80 32 L80 68 L50 85 L20 68 L20 32 Z M50 15 L50 50 M20 32 L50 50 L80 32 M50 50 L50 85"
             initial={{ pathLength: 0, opacity: 0.2 }}
@@ -341,7 +341,7 @@ function App() {
   });
 
   return (
-    <div className="App font-['Poppins',sans-serif] text-[#111111] bg-white antialiased min-h-screen flex flex-col selection:bg-[#FF5A00]/20 selection:text-[#000F1B]">
+    <div className="App font-['Poppins',sans-serif] text-[#111111] bg-white antialiased min-h-screen flex flex-col selection:bg-[#FF6600]/20 selection:text-[#000F1B]">
       
       {/* 🎬 ONE-TIME Storyline JCB Construction Loader */}
       <AnimatePresence>

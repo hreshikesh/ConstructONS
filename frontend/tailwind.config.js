@@ -25,11 +25,11 @@ module.exports = {
       colors: {
         // Brand tokens
         brand: {
-          orange: "#FF5A00",
+          orange: "#FF6600",
           orangeDark: "#E64F00",
           orangeLight: "#FF7A2E",
-          navy: "#0B1220",
-          navySoft: "#111A2E",
+          navy: "#111111",
+          navySoft: "#111111",
           bg: "#F8F9FC",
           success: "#22C55E",
           warning: "#F59E0B",
@@ -71,9 +71,9 @@ module.exports = {
       },
       boxShadow: {
         premium:
-          "0 20px 60px -20px rgba(11, 18, 32, 0.15), 0 2px 8px rgba(11, 18, 32, 0.04)",
+          "0 20px 60px -20px rgba(17, 17, 17, 0.15), 0 2px 8px rgba(17, 17, 17, 0.04)",
         glow: "0 20px 60px -12px rgba(255, 90, 0, 0.35)",
-        soft: "0 8px 30px rgba(11,18,32,0.06)",
+        soft: "0 8px 30px rgba(17,17,17,0.06)",
       },
       backgroundImage: {
         "grid-fade":
@@ -97,9 +97,9 @@ module.exports = {
           "100%": { backgroundPosition: "1000px 0" },
         },
         "pulse-ring": {
-          "0%": { boxShadow: "0 0 0 0 rgba(255,90,0,0.55)" },
-          "70%": { boxShadow: "0 0 0 18px rgba(255,90,0,0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(255,90,0,0)" },
+          "0%": { boxShadow: "0 0 0 0 rgba(255,102,0,0.55)" },
+          "70%": { boxShadow: "0 0 0 18px rgba(255,102,0,0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(255,102,0,0)" },
         },
       },
       animation: {

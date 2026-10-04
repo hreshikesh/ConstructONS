@@ -136,7 +136,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-['Poppins'] pb-12 selection:bg-[#FF5A00]/20 selection:text-[#000F1B]">
+    <div className="max-w-4xl mx-auto space-y-6 font-['Poppins'] pb-12 selection:bg-[#FF6600]/20 selection:text-[#000F1B]">
       
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 pb-4">
@@ -145,7 +145,7 @@ export default function SettingsPage() {
             <Settings className="w-6 h-6 text-white" />
           </div>
           <div>
-            <div className="text-[11px] font-semibold text-[#FF5A00] tracking-wider uppercase">Account & Preferences</div>
+            <div className="text-[11px] font-semibold text-[#FF6600] tracking-wider uppercase">Account & Preferences</div>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">Account Settings</h1>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function SettingsPage() {
           type="button"
           onClick={handleSubmit}
           disabled={saving}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-6 py-3 text-xs sm:text-sm font-bold shadow-sm transition min-h-[44px] disabled:opacity-70 self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] text-white px-6 py-3 text-xs sm:text-sm font-bold shadow-sm transition min-h-[44px] disabled:opacity-70 self-start sm:self-auto"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           <span>{saving ? "Saving..." : "Save Changes"}</span>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
         <section className="rounded-2xl bg-white border border-black/5 shadow-sm p-6 sm:p-8 space-y-5">
           <div className="flex items-center justify-between border-b border-black/5 pb-3">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-[#FF5A00]" />
+              <User className="w-4 h-4 text-[#FF6600]" />
               <h2 className="text-sm font-bold text-[#000F1B] uppercase tracking-wider">Personal & Contact Details</h2>
             </div>
             <span className="text-[10px] font-semibold text-[#10B981] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
@@ -188,7 +188,7 @@ export default function SettingsPage() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 maxLength={30}
                 required
-                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none"
+                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none"
               />
             </div>
 
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   maxLength={13}
                   placeholder="+919876543210"
-                  className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-mono text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none"
+                  className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-mono text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none"
                 />
               </div>
               <p className="mt-1 text-[10px] text-[#111111]/45">Used for site engineer emergency calls & alerts.</p>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleSyncWhatsappBtn}
-                  className="text-[10px] font-bold text-[#FF5A00] hover:underline flex items-center gap-1"
+                  className="text-[10px] font-bold text-[#FF6600] hover:underline flex items-center gap-1"
                 >
                   <Copy className="w-3 h-3" /> Same as Mobile
                 </button>
@@ -250,7 +250,7 @@ export default function SettingsPage() {
                   placeholder="+919876543210"
                   disabled={form.sameWhatsapp}
                   className={`w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-sm font-mono text-[#000F1B] outline-none ${
-                    form.sameWhatsapp ? "bg-[#F5F6F8] cursor-not-allowed opacity-80" : "bg-white focus:ring-2 focus:ring-[#FF5A00]"
+                    form.sameWhatsapp ? "bg-[#F5F6F8] cursor-not-allowed opacity-80" : "bg-white focus:ring-2 focus:ring-[#FF6600]"
                   }`}
                 />
               </div>
@@ -260,7 +260,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={form.sameWhatsapp}
                     onChange={(e) => handleSameWhatsappToggle(e.target.checked)}
-                    className="w-4 h-4 rounded accent-[#FF5A00]"
+                    className="w-4 h-4 rounded accent-[#FF6600]"
                   />
                   <span className="text-xs font-semibold text-[#000F1B]">Keep WhatsApp same as mobile</span>
                 </label>
@@ -273,7 +273,7 @@ export default function SettingsPage() {
         {/* Section 2: Construction & Plot Requirements */}
         <section className="rounded-2xl bg-white border border-black/5 shadow-sm p-6 sm:p-8 space-y-5">
           <div className="flex items-center gap-2 border-b border-black/5 pb-3">
-            <Building2 className="w-4 h-4 text-[#FF5A00]" />
+            <Building2 className="w-4 h-4 text-[#FF6600]" />
             <h2 className="text-sm font-bold text-[#000F1B] uppercase tracking-wider">Project & Plot Requirements</h2>
           </div>
 
@@ -287,7 +287,7 @@ export default function SettingsPage() {
               <select
                 value={form.current_status}
                 onChange={(e) => setForm({ ...form, current_status: e.target.value })}
-                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none cursor-pointer"
+                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none cursor-pointer"
               >
                 <option value="I own a plot & ready to build">I own a plot & ready to build</option>
                 <option value="Floor plan ready, looking for builder">Floor plan ready, looking for builder</option>
@@ -300,14 +300,14 @@ export default function SettingsPage() {
             {/* Plot Location */}
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-[#FF5A00]" /> Plot City / Location
+                <MapPin className="w-3.5 h-3.5 text-[#FF6600]" /> Plot City / Location
               </label>
               <input
                 type="text"
                 value={form.plot_location}
                 onChange={(e) => setForm({ ...form, plot_location: e.target.value })}
                 placeholder="e.g. Whitefield, Bangalore"
-                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none"
+                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none"
               />
             </div>
 
@@ -321,19 +321,19 @@ export default function SettingsPage() {
                 value={form.plot_size}
                 onChange={(e) => setForm({ ...form, plot_size: e.target.value })}
                 placeholder="e.g. 1200 Sq.ft (30 x 40)"
-                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none"
+                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none"
               />
             </div>
 
             {/* Style Preference */}
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Compass className="w-3.5 h-3.5 text-[#FF5A00]" /> Architectural Style Preference
+                <Compass className="w-3.5 h-3.5 text-[#FF6600]" /> Architectural Style Preference
               </label>
               <select
                 value={form.style_pref}
                 onChange={(e) => setForm({ ...form, style_pref: e.target.value })}
-                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none cursor-pointer"
+                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none cursor-pointer"
               >
                 <option value="Modern">Modern</option>
                 <option value="Classic">Classic</option>
@@ -346,12 +346,12 @@ export default function SettingsPage() {
             {/* Target Budget Range */}
             <div>
               <label className="block text-[11px] font-bold text-[#000F1B] uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <IndianRupee className="w-3.5 h-3.5 text-[#FF5A00]" /> Target Budget Range
+                <IndianRupee className="w-3.5 h-3.5 text-[#FF6600]" /> Target Budget Range
               </label>
               <select
                 value={form.budget_range}
                 onChange={(e) => setForm({ ...form, budget_range: e.target.value })}
-                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF5A00] outline-none cursor-pointer"
+                className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#000F1B] focus:ring-2 focus:ring-[#FF6600] outline-none cursor-pointer"
               >
                 <option value="Below ₹50 Lakhs">Below ₹50 Lakhs</option>
                 <option value="₹50 Lakhs - ₹1 Crore">₹50 Lakhs - ₹1 Crore</option>
@@ -383,7 +383,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-8 py-3.5 text-sm font-bold shadow-md transition min-h-[48px] disabled:opacity-70"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] text-white px-8 py-3.5 text-sm font-bold shadow-md transition min-h-[48px] disabled:opacity-70"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>{saving ? "Saving Changes..." : "Save Settings"}</span>

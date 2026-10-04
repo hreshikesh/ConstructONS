@@ -130,16 +130,16 @@ export default function PlantRecommender() {
       <div className="lg:col-span-2 bg-[#000F1B] rounded-3xl p-6 md:p-8 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px)", backgroundSize: "30px 30px" }} />
         <motion.div
-          className="absolute -top-20 -right-20 w-64 h-64 bg-[#FF5A00]/20 blur-[80px] rounded-full pointer-events-none"
+          className="absolute -top-20 -right-20 w-64 h-64 bg-[#FF6600]/20 blur-[80px] rounded-full pointer-events-none"
           animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
         
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF5A00]/15 text-[#FF5A00] text-[10px] font-bold uppercase tracking-widest mb-4 border border-[#FF5A00]/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF6600]/15 text-[#FF6600] text-[10px] font-bold uppercase tracking-widest mb-4 border border-[#FF6600]/20">
             <Leaf className="w-3.5 h-3.5" /> Plant Recommender
           </div>
-          <h3 className="text-2xl md:text-3xl font-bold leading-tight mb-3">Find the right <span className="text-[#FF5A00]">plants for you</span></h3>
+          <h3 className="text-2xl md:text-3xl font-bold leading-tight mb-3">Find the right <span className="text-[#FF6600]">plants for you</span></h3>
           <p className="text-white/60 text-sm leading-relaxed mb-6">
             Tell us your space, sunlight, and how much care you'd like to give. We'll recommend plants that will actually thrive.
           </p>
@@ -155,7 +155,7 @@ export default function PlantRecommender() {
                     key={s.id}
                     onClick={() => setSpace(s.id)}
                     className={`py-2.5 px-3 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                      on ? "bg-[#FF5A00] border-[#FF5A00] text-white" : "bg-white/5 border-white/10 text-white/70 hover:border-[#FF5A00]/50"
+                      on ? "bg-[#FF6600] border-[#FF6600] text-white" : "bg-white/5 border-white/10 text-white/70 hover:border-[#FF6600]/50"
                     }`}
                   >
                     {s.label}
@@ -177,7 +177,7 @@ export default function PlantRecommender() {
                     key={s.id}
                     onClick={() => setSunlight(s.id)}
                     className={`py-3 px-2 rounded-xl transition border cursor-pointer flex flex-col items-center gap-1 ${
-                      on ? "bg-[#FF5A00] border-[#FF5A00] text-white" : "bg-white/5 border-white/10 text-white/70 hover:border-[#FF5A00]/50"
+                      on ? "bg-[#FF6600] border-[#FF6600] text-white" : "bg-white/5 border-white/10 text-white/70 hover:border-[#FF6600]/50"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -199,7 +199,7 @@ export default function PlantRecommender() {
                     key={c.id}
                     onClick={() => setCare(c.id)}
                     className={`py-2.5 px-2 rounded-xl transition border cursor-pointer text-center ${
-                      on ? "bg-[#FF5A00] border-[#FF5A00] text-white" : "bg-white/5 border-white/10 text-white/70 hover:border-[#FF5A00]/50"
+                      on ? "bg-[#FF6600] border-[#FF6600] text-white" : "bg-white/5 border-white/10 text-white/70 hover:border-[#FF6600]/50"
                     }`}
                   >
                     <div className="text-xs font-bold">{c.label}</div>
@@ -212,7 +212,7 @@ export default function PlantRecommender() {
           <button
             onClick={fetchPlants}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-[#FF5A00] hover:bg-[#E04F00] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-widest transition inline-flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3.5 rounded-xl bg-[#FF6600] hover:bg-[#E04F00] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-widest transition inline-flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Finding plants...</> : <><Leaf className="w-4 h-4" /> Find My Plants</>}
           </button>
@@ -236,19 +236,19 @@ export default function PlantRecommender() {
             </motion.div>
           ) : loading ? (
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center py-8 min-h-[400px]">
-              <Loader2 className="w-12 h-12 text-[#FF5A00] animate-spin mb-4" />
+              <Loader2 className="w-12 h-12 text-[#FF6600] animate-spin mb-4" />
               <div className="text-sm font-bold text-[#000F1B]">Curating plants for you...</div>
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A00] mb-1 flex items-center gap-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#FF6600] mb-1 flex items-center gap-1.5">
                     Your Recommendations
                   </div>
                   <h4 className="text-lg font-bold text-[#000F1B]">{plants.length} plants perfect for you</h4>
                 </div>
-                <button onClick={reset} className="text-xs font-bold text-[#111111]/50 hover:text-[#FF5A00] transition inline-flex items-center gap-1 cursor-pointer">
+                <button onClick={reset} className="text-xs font-bold text-[#111111]/50 hover:text-[#FF6600] transition inline-flex items-center gap-1 cursor-pointer">
                   <RotateCcw className="w-3.5 h-3.5" /> Reset
                 </button>
               </div>
@@ -260,7 +260,7 @@ export default function PlantRecommender() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08 }}
-                    className="bg-[#F9FAFB] border border-black/5 rounded-2xl overflow-hidden hover:shadow-md hover:border-[#FF5A00]/30 transition group"
+                    className="bg-[#F9FAFB] border border-black/5 rounded-2xl overflow-hidden hover:shadow-md hover:border-[#FF6600]/30 transition group"
                   >
                     <div className="h-32 overflow-hidden bg-emerald-50">
                       <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400"; }} />

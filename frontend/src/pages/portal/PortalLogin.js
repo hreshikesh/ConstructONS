@@ -122,7 +122,7 @@ export default function PortalLogin() {
         aria-live="polite"
       >
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#FF5A00]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#FF6600]" />
           <span className="text-sm font-medium text-[#111111]/70 font-['Poppins']">
             Checking session...
           </span>
@@ -133,7 +133,7 @@ export default function PortalLogin() {
 
   return (
     <div 
-      className="min-h-screen bg-[#F2F2F2] flex flex-col md:grid md:grid-cols-2 font-['Poppins'] relative selection:bg-[#FF5A00]/20 selection:text-[#000F1B]"
+      className="min-h-screen bg-[#F2F2F2] flex flex-col md:grid md:grid-cols-2 font-['Poppins'] relative selection:bg-[#FF6600]/20 selection:text-[#000F1B]"
       data-testid="portal-login"
     >
       <SEO
@@ -150,17 +150,17 @@ export default function PortalLogin() {
           aria-label="Back to ConstructONS Home"
           className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium transition-colors py-2 px-3 -ml-2 rounded-lg active:bg-white/10 min-h-[44px]"
         >
-          <ArrowLeft className="w-4 h-4 text-[#FF5A00]" aria-hidden="true" />
+          <ArrowLeft className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
           <span>Home</span>
         </Link>
         <span className="text-white font-bold text-base tracking-tight">
-          Construct<span className="text-[#FF5A00]">ONS™</span>
+          Construct<span className="text-[#FF6600]">ONS™</span>
         </span>
       </header>
 
       {/* 💻 Left Hero Column: Brand Ecosystem Showcase */}
       <div className="hidden md:flex bg-[#000F1B] text-white flex-col justify-between p-10 lg:p-14 xl:p-16 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF5A00]" />
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF6600]" />
 
         <div>
           <Link
@@ -168,17 +168,17 @@ export default function PortalLogin() {
             aria-label="Back to ConstructONS Home"
             className="inline-flex items-center gap-2.5 text-white/80 hover:text-white text-sm font-medium transition-all py-2 px-3.5 -ml-3 rounded-xl hover:bg-white/10 min-h-[44px] group"
           >
-            <ArrowLeft className="w-4 h-4 text-[#FF5A00] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
+            <ArrowLeft className="w-4 h-4 text-[#FF6600] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
             <span>Back to Home</span>
           </Link>
 
           <div className="mt-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF5A00]/10 border border-[#FF5A00]/20 rounded-full text-xs font-semibold text-[#FF5A00] tracking-wider uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6600]/10 border border-[#FF6600]/20 rounded-full text-xs font-semibold text-[#FF6600] tracking-wider uppercase">
               Customer Portal
             </div>
             <h1 className="mt-4 text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-white">
               Everything Construction. <br />
-              <span className="text-[#FF5A00]">Always On.</span>
+              <span className="text-[#FF6600]">Always On.</span>
             </h1>
             <p className="mt-3.5 text-white/70 text-sm lg:text-base leading-relaxed max-w-md">
               Your trusted partner for every stage of home construction. Access live updates, documents, and quality milestones in real time.
@@ -212,7 +212,7 @@ export default function PortalLogin() {
           ].map((item, index) => (
             <div key={index} className="flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-[#white]/5 border border-white/10 grid place-items-center shrink-0 mt-0.5">
-                <item.Icon className="w-4 h-4 text-[#FF5A00]" strokeWidth={2} aria-hidden="true" />
+                <item.Icon className="w-4 h-4 text-[#FF6600]" strokeWidth={2} aria-hidden="true" />
               </div>
               <div>
                 <div className="text-sm font-semibold text-white">{item.title}</div>
@@ -230,7 +230,7 @@ export default function PortalLogin() {
       {/* 🔐 Right Sign-In Card */}
       <div className="flex-1 grid place-items-center p-6 sm:p-10 lg:p-12">
         <main className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-black/5 p-8 sm:p-10">
-          <div className="text-xs font-semibold text-[#FF5A00] tracking-wider uppercase">
+          <div className="text-xs font-semibold text-[#FF6600] tracking-wider uppercase">
             ConstructONS™
           </div>
           <h2 className="mt-2 text-2xl font-bold text-[#000F1B] tracking-tight">
@@ -252,7 +252,7 @@ export default function PortalLogin() {
           <div className="mt-8 flex justify-center">
             {signingIn ? (
               <div className="w-full py-3.5 px-4 rounded-xl border border-black/10 bg-[#F2F2F2] flex items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-[#000F1B]">
-                <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#FF6600]" />
                 <span>Creating ConstructONS session...</span>
               </div>
             ) : (
@@ -274,7 +274,7 @@ export default function PortalLogin() {
             <span>Admin or Site Engineer?</span>
             <Link
               to="/admin/login"
-              className="text-[#FF5A00] font-semibold hover:underline focus:outline-none focus:ring-1 focus:ring-[#FF5A00] rounded px-1 py-0.5"
+              className="text-[#FF6600] font-semibold hover:underline focus:outline-none focus:ring-1 focus:ring-[#FF6600] rounded px-1 py-0.5"
             >
               Staff Login &rarr;
             </Link>

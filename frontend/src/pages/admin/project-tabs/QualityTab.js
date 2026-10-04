@@ -167,16 +167,16 @@ export default function QualityTab({ project, onSaved }) {
       <div className="flex items-center gap-4 border-b border-gray-200">
         <button onClick={() => setActiveTab("prd")} className={`pb-2.5 text-xs font-bold relative ${activeTab === "prd" ? "text-[#000F1B]" : "text-gray-400 hover:text-gray-700"}`}>
           <span className="flex items-center gap-1.5"><List className="w-3.5 h-3.5" /> Stage Reviews</span>
-          {activeTab === "prd" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00]" />}
+          {activeTab === "prd" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600]" />}
         </button>
         <button onClick={() => setActiveTab("issues")} className={`pb-2.5 text-xs font-bold relative flex items-center gap-1.5 ${activeTab === "issues" ? "text-[#000F1B]" : "text-gray-400 hover:text-gray-700"}`}>
           <AlertTriangle className="w-3.5 h-3.5" /> Issues Dashboard
           {issues.filter(i => i.status !== "closed").length > 0 && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full leading-none">{issues.filter(i => i.status !== "closed").length}</span>}
-          {activeTab === "issues" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00]" />}
+          {activeTab === "issues" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600]" />}
         </button>
         <button onClick={() => setActiveTab("legacy")} className={`pb-2.5 text-xs font-bold relative ${activeTab === "legacy" ? "text-[#000F1B]" : "text-gray-400 hover:text-gray-700"}`}>
           <span className="flex items-center gap-1.5"><History className="w-3.5 h-3.5" /> Legacy</span>
-          {activeTab === "legacy" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00]" />}
+          {activeTab === "legacy" && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600]" />}
         </button>
       </div>
 
@@ -296,7 +296,7 @@ export default function QualityTab({ project, onSaved }) {
                           <div className="sm:col-span-2"><label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">PM Remark</label><input value={checkForm.pm_remark} onChange={(e) => setCheckForm({ ...checkForm, pm_remark: e.target.value })} placeholder="Checked on site." className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg outline-none focus:border-blue-500 bg-white" /></div>
                           <div className="sm:col-span-2 flex items-center gap-3 flex-wrap">
                             <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-[10px] font-bold text-gray-700 hover:bg-gray-100 shadow-sm">
-                              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5A00]" /> : <UploadCloud className="w-3.5 h-3.5 text-gray-500" />}
+                              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6600]" /> : <UploadCloud className="w-3.5 h-3.5 text-gray-500" />}
                               {checkForm.photo_url ? "Replace Photo" : "Upload Evidence Photo"}
                               <input type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} disabled={uploading} />
                             </label>
@@ -310,7 +310,7 @@ export default function QualityTab({ project, onSaved }) {
                         </div>
                         <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
                           <button type="button" onClick={() => { setAddingCheckTo(null); setEditingCheck(null); }} className="px-3 py-1.5 text-[10px] font-bold text-gray-600">Cancel</button>
-                          <button type="button" onClick={handleSaveCheck} disabled={saving} className="px-4 py-1.5 text-[10px] font-bold bg-[#000F1B] hover:bg-[#FF5A00] text-white rounded-lg flex items-center gap-1 transition shadow-sm">
+                          <button type="button" onClick={handleSaveCheck} disabled={saving} className="px-4 py-1.5 text-[10px] font-bold bg-[#000F1B] hover:bg-[#FF6600] text-white rounded-lg flex items-center gap-1 transition shadow-sm">
                             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}{editingCheck ? "Update Check" : "Save Check"}
                           </button>
                         </div>

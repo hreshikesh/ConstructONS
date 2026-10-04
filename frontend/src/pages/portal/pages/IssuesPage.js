@@ -108,7 +108,7 @@ export default function IssuesPage() {
                       )}
                       {i.target_date && (
                         <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-[#FF5A00]" />
+                          <Calendar className="w-3.5 h-3.5 text-[#FF6600]" />
                           <span>Target Fix: <strong className="text-gray-900">{fmtDate(i.target_date)}</strong></span>
                         </div>
                       )}
@@ -177,7 +177,7 @@ export default function IssuesPage() {
                 <textarea 
                   rows="2" value={remark} onChange={e => setRemark(e.target.value)}
                   placeholder="Leave a note for the team..."
-                  className="w-full border border-gray-200 rounded-xl p-3 text-xs sm:text-sm focus:border-[#FF5A00] outline-none resize-none bg-gray-50 focus:bg-white"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-xs sm:text-sm focus:border-[#FF6600] outline-none resize-none bg-gray-50 focus:bg-white"
                 />
               </div>
             </div>

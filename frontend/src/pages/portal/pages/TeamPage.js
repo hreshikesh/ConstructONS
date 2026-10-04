@@ -149,7 +149,7 @@ Everything Construction. Always On.`;
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-[#FF5A00]" /></div>;
+    return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-[#FF6600]" /></div>;
   }
 
   const kpis = teamData?.kpis || {};
@@ -177,7 +177,7 @@ Everything Construction. Always On.`;
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="text-[11px] font-semibold text-[#FF5A00] tracking-wider uppercase mb-1">Home &gt; Team</div>
+          <div className="text-[11px] font-semibold text-[#FF6600] tracking-wider uppercase mb-1">Home &gt; Team</div>
           <h1 className="text-3xl font-bold text-[#000F1B] tracking-tight">Team</h1>
           <p className="text-sm text-[#111111]/60 mt-1">The right people. A better build. Collaborate, track and grow together.</p>
         </div>
@@ -188,12 +188,12 @@ Everything Construction. Always On.`;
             disabled={refreshing}
             className="px-3 py-2 bg-white border border-black/10 rounded-lg text-xs font-semibold text-[#000F1B] hover:bg-black/5 flex items-center gap-1.5 transition"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#FF5A00]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#FF6600]' : ''}`} />
             <span>Sync Live Data</span>
           </button>
 
           {hasFullAccess && (
-            <button onClick={scrollToInvite} className="px-5 py-2 bg-[#000F1B] text-white rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-[#FF5A00] transition w-max">
+            <button onClick={scrollToInvite} className="px-5 py-2 bg-[#000F1B] text-white rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-[#FF6600] transition w-max">
               <UserPlus className="w-3.5 h-3.5" /> Invite Member
             </button>
           )}
@@ -219,7 +219,7 @@ Everything Construction. Always On.`;
             <div className="flex px-2 pt-2">
               {["Team Members", "Attendance"].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === tab ? "border-[#FF5A00] text-[#000F1B]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
+                  className={`px-4 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === tab ? "border-[#FF6600] text-[#000F1B]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
                   {tab}
                 </button>
               ))}
@@ -229,7 +229,7 @@ Everything Construction. Always On.`;
                 <div className="relative flex-1 min-w-[180px] max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#111111]/40" />
                   <input value={search} onChange={e => setSearch(e.target.value)} type="text" placeholder="Search team members..."
-                    className="w-full pl-9 pr-4 py-2 rounded-lg border border-black/10 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF5A00]" />
+                    className="w-full pl-9 pr-4 py-2 rounded-lg border border-black/10 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
                 </div>
                 <div className="flex items-center gap-2">
                   <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
@@ -327,7 +327,7 @@ Everything Construction. Always On.`;
                             <CheckCircle2 className={`w-4 h-4 ${(a.member_ids || []).length > 0 ? "text-emerald-500" : "text-[#111111]/30"}`} />
                             <span className="text-xs font-semibold text-[#000F1B]">
                               {new Date(a.date + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
-                              {a.date === teamData?.date_today && <span className="ml-2 text-[9px] font-bold text-[#FF5A00] uppercase">Today</span>}
+                              {a.date === teamData?.date_today && <span className="ml-2 text-[9px] font-bold text-[#FF6600] uppercase">Today</span>}
                             </span>
                           </div>
                           <span className="text-xs font-bold text-[#000F1B]">{a.count ?? (a.member_ids || []).length} on site</span>
@@ -370,18 +370,18 @@ Everything Construction. Always On.`;
               <div className="space-y-3">
                 <input ref={nameInputRef} value={invName} onChange={e => setInvName(e.target.value)} type="text"
                   placeholder="Name" maxLength={30} required
-                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF5A00]" />
+                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
                 
                 <input value={invEmail} onChange={e => setInvEmail(e.target.value)} type="email"
                   placeholder="Google Email (required for login)" required
-                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF5A00]" />
+                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
 
                 <input value={invPhone} onChange={e => setInvPhone(forcePhone(e.target.value))} type="tel" inputMode="numeric"
                   maxLength={13} placeholder="WhatsApp Number (+91...)" required
-                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#FF5A00]" />
+                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
                 
                 <select value={invRole} onChange={e => setInvRole(e.target.value)} required
-                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs text-[#111111]/70 bg-white focus:outline-none focus:ring-1 focus:ring-[#FF5A00]">
+                  className="w-full px-3 py-2 rounded-lg border border-black/10 text-xs text-[#111111]/70 bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6600]">
                   <option value="">Select Role...</option>
                   <option value="Co-Owner">Co-Owner</option>
                   <option value="Spouse">Spouse</option>
@@ -390,7 +390,7 @@ Everything Construction. Always On.`;
                 </select>
 
                 <button type="submit" disabled={isInviting}
-                  className="w-full px-4 py-2.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-70">
+                  className="w-full px-4 py-2.5 bg-[#000F1B] hover:bg-[#FF6600] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-70">
                   {isInviting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageCircle className="w-3.5 h-3.5" />}
                   {isInviting ? "Sending..." : "Grant Access & Send WhatsApp"}
                 </button>
@@ -424,7 +424,7 @@ function MemberRow({ m, onDelete, hasFullAccess }) {
             : <div className="w-8 h-8 rounded-full bg-[#E5E7EB] text-[#000F1B] font-bold text-xs flex items-center justify-center shrink-0">{m.name?.[0]?.toUpperCase() || "?"}</div>}
           <div className="min-w-0">
             <div className="font-bold text-[#000F1B] truncate max-w-[150px]">{m.name}</div>
-            {m.email && <div className="text-[9px] text-[#FF5A00] font-semibold">{m.email}</div>}
+            {m.email && <div className="text-[9px] text-[#FF6600] font-semibold">{m.email}</div>}
           </div>
         </div>
       </td>
@@ -471,7 +471,7 @@ function MemberCard({ m, onDelete, hasFullAccess }) {
         <div className="min-w-0 flex-1">
           <div className="font-bold text-sm text-[#000F1B] truncate">{m.name}</div>
           <div className="text-[10px] text-[#111111]/55 truncate">{m.role}</div>
-          {m.email && <div className="text-[9px] text-[#FF5A00] truncate">{m.email}</div>}
+          {m.email && <div className="text-[9px] text-[#FF6600] truncate">{m.email}</div>}
         </div>
         {isRemovable && (
           <button
@@ -527,7 +527,7 @@ function AccessBadge({ access }) {
 function ActivityItem({ act }) {
   let Icon = UserPlus, color = "text-emerald-600", bg = "bg-emerald-50";
   const mod = act.module || "System";
-  if (mod === "Progress") { Icon = HardHat; color = "text-[#FF5A00]"; bg = "bg-[#FF5A00]/10"; }
+  if (mod === "Progress") { Icon = HardHat; color = "text-[#FF6600]"; bg = "bg-[#FF6600]/10"; }
   if (mod === "Attendance") { Icon = CheckCircle2; color = "text-teal-600"; bg = "bg-teal-50"; }
   if (mod === "Payments") { Icon = HardHat; color = "text-emerald-600"; bg = "bg-emerald-50"; }
   if (mod === "System") { Icon = Building2; color = "text-slate-500"; bg = "bg-slate-100"; }

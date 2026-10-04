@@ -27,7 +27,7 @@ const getNormalizedStatus = (backendStatus) => {
 const getStatusConfig = (status) => {
   const map = {
     received: { label: "Received", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: Truck },
-    ordered: { label: "Ordered", color: "text-[#FF5A00] bg-[#FF5A00]/10 border-[#FF5A00]/20", icon: Box },
+    ordered: { label: "Ordered", color: "text-[#FF6600] bg-[#FF6600]/10 border-[#FF6600]/20", icon: Box },
   };
   return map[status] || map.ordered;
 };
@@ -124,16 +124,16 @@ export default function MaterialsPage() {
             <input 
               type="text" placeholder="Search materials (e.g. tiles, cement)..."
               value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-[#FF5A00] focus:bg-white transition shadow-sm"
+              className="w-full pl-8 pr-3 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] focus:bg-white transition shadow-sm"
             />
           </div>
         </div>
 
         {/* SUMMARY CARDS (Cleaned up to 3 cards) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-          <div className="bg-[#FF5A00]/5 border border-[#FF5A00]/20 rounded-lg p-2 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-[#FF5A00]/10 flex items-center justify-center shrink-0">
-              <Package className="w-4 h-4 text-[#FF5A00]" />
+          <div className="bg-[#FF6600]/5 border border-[#FF6600]/20 rounded-lg p-2 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-[#FF6600]/10 flex items-center justify-center shrink-0">
+              <Package className="w-4 h-4 text-[#FF6600]" />
             </div>
             <div>
               <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Total Materials</div>
@@ -141,14 +141,14 @@ export default function MaterialsPage() {
             </div>
           </div>
           
-          <div className="bg-[#FF5A00]/5 border border-[#FF5A00]/20 rounded-lg p-2 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-[#FF5A00]/10 flex items-center justify-center shrink-0">
-              <Box className="w-4 h-4 text-[#FF5A00]" />
+          <div className="bg-[#FF6600]/5 border border-[#FF6600]/20 rounded-lg p-2 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-[#FF6600]/10 flex items-center justify-center shrink-0">
+              <Box className="w-4 h-4 text-[#FF6600]" />
             </div>
             <div>
               <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Ordered</div>
               <div className="text-lg font-black text-[#000F1B] leading-tight flex items-baseline gap-1.5">
-                {kpis.ordered.count} <span className="text-[9px] font-semibold text-[#FF5A00]">{kpis.ordered.pct}%</span>
+                {kpis.ordered.count} <span className="text-[9px] font-semibold text-[#FF6600]">{kpis.ordered.pct}%</span>
               </div>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function MaterialsPage() {
                 key={cat} onClick={() => setActiveTab(cat)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all whitespace-nowrap border shadow-sm ${
                   isActive 
-                    ? "bg-[#FF5A00] border-[#FF5A00] text-white" 
+                    ? "bg-[#FF6600] border-[#FF6600] text-white" 
                     : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -216,18 +216,18 @@ export default function MaterialsPage() {
                   return (
                     <tr 
                       key={m.id} onClick={() => setSelectedId(m.id)}
-                      className={`cursor-pointer transition-colors ${isSelected ? "bg-[#FF5A00]/5 hover:bg-[#FF5A00]/10" : "hover:bg-gray-50"}`}
+                      className={`cursor-pointer transition-colors ${isSelected ? "bg-[#FF6600]/5 hover:bg-[#FF6600]/10" : "hover:bg-gray-50"}`}
                     >
                       <td className="py-2 px-3">
                         <div className="flex items-center gap-2">
-                          {isSelected && <div className="absolute left-0 w-1 h-8 bg-[#FF5A00] rounded-r" />}
+                          {isSelected && <div className="absolute left-0 w-1 h-8 bg-[#FF6600] rounded-r" />}
                           <div className="w-8 h-8 rounded-md bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
                             {m.photo_url ? <img src={resolveMediaUrl(m.photo_url)} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-3.5 h-3.5 text-gray-400" />}
                           </div>
                           <span className="text-[10px] font-bold text-[#000F1B]">{m.item_name}</span>
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-[10px] font-medium text-[#FF5A00]">{m.category || "—"}</td>
+                      <td className="py-2 px-3 text-[10px] font-medium text-[#FF6600]">{m.category || "—"}</td>
                       <td className="py-2 px-3">
                         <div className="text-[10px] font-bold text-gray-800">{m.brand || "—"}</div>
                         <div className="text-[9px] text-gray-500 truncate max-w-[120px]">{m.grade_spec || "—"}</div>
@@ -265,7 +265,7 @@ export default function MaterialsPage() {
                             <conf.icon className="w-2.5 h-2.5" /> {conf.label}
                           </span>
                         </div>
-                        <div className="text-[9px] font-medium text-[#FF5A00] mb-0.5">{m.category || "General"}</div>
+                        <div className="text-[9px] font-medium text-[#FF6600] mb-0.5">{m.category || "General"}</div>
                         <div className="text-[9px] text-gray-500 truncate">{m.brand ? `${m.brand} • ` : ''}{m.grade_spec || "Standard"}</div>
                       </div>
                     </div>
@@ -296,7 +296,7 @@ export default function MaterialsPage() {
               <div className="p-3 border-b border-gray-100 bg-white shrink-0 relative">
                 <button 
                   onClick={() => setSelectedId(null)} 
-                  className="md:hidden flex items-center gap-1 text-[10px] font-bold text-gray-500 hover:text-[#FF5A00] mb-2 bg-gray-50 px-2 py-1 rounded w-max"
+                  className="md:hidden flex items-center gap-1 text-[10px] font-bold text-gray-500 hover:text-[#FF6600] mb-2 bg-gray-50 px-2 py-1 rounded w-max"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" /> Back to List
                 </button>
@@ -384,7 +384,7 @@ export default function MaterialsPage() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-6 text-center bg-[#F9FAFB]">
-              <Package className="w-12 h-12 opacity-20 mb-2 text-[#FF5A00]" />
+              <Package className="w-12 h-12 opacity-20 mb-2 text-[#FF6600]" />
               <p className="text-sm font-bold text-gray-600 mb-1">No Material Selected</p>
               <p className="text-[10px] max-w-[200px]">Select a material from the list to view its full specifications and status.</p>
             </div>

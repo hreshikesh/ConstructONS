@@ -10,7 +10,7 @@ export default function Hero() {
     <section
       id="top"
       data-testid="hero-section"
-      className="relative min-h-[100svh] w-full overflow-hidden bg-[#000F1B]"
+      className="relative min-h-[100svh] w-full overflow-hidden bg-[#111111]"
     >
       {/* -------------------------------------------------
           BACKGROUND IMAGE & SMART OVERLAYS
@@ -25,13 +25,13 @@ export default function Hero() {
         />
 
         {/* 1. Base darkening */}
-        <div className="absolute inset-0 bg-[#000F1B]/25" />
+        <div className="absolute inset-0 bg-[#111111]/25" />
 
         {/* 2. Strong left-side text protection */}
-        <div className="absolute inset-0 w-full bg-gradient-to-r from-[#000F1B]/95 via-[#000F1B]/65 to-[#000F1B]/15 md:w-[85%]" />
+        <div className="absolute inset-0 w-full bg-gradient-to-r from-[#111111]/95 via-[#111111]/65 to-[#111111]/15 md:w-[85%]" />
 
         {/* 3. Bottom fade */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#000F1B] to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#111111] to-transparent" />
 
       </div>
 
@@ -54,7 +54,7 @@ export default function Hero() {
               className="mb-6 flex items-center gap-4"
             >
               {/* Orange line */}
-              <span className="h-[2px] w-12 bg-[#FF5A00]" />
+              <span className="h-[2px] w-12 bg-gradient-to-r from-[#FF6600] to-[#FF0000]" />
 
               {/* ConstructONS */}
               <div className="flex items-center whitespace-nowrap">
@@ -66,17 +66,17 @@ export default function Hero() {
 
                 {/* Power-button O */}
                 <Power
-                  className="mx-[2px] h-[15px] w-[15px] shrink-0 text-[#FF5A00]"
+                  className="mx-[2px] h-[15px] w-[15px] shrink-0 text-[#FF6600]"
                   strokeWidth={3.5}
                 />
 
                 {/* NS */}
-                <span className="font-[Poppins] text-[13px] font-extrabold tracking-[0.08em] text-[#FF5A00]">
+                <span className="font-[Poppins] text-[13px] font-extrabold tracking-[0.08em] bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent">
                   NS
                 </span>
 
                 {/* TM */}
-                <sup className="ml-[2px] mt-[-5px] font-[Poppins] text-[7px] font-semibold text-[#FF5A00]">
+                <sup className="ml-[2px] mt-[-5px] font-[Poppins] text-[7px] font-semibold text-[#FF6600]">
                   ™
                 </sup>
 
@@ -96,7 +96,7 @@ export default function Hero() {
             >
               Your trusted partner for <br className="hidden lg:block" />
               every stage of{" "}
-              <span className="text-[#FF5A00]">
+              <span className="bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent">
                 home construction.
               </span>
             </motion.h1>
@@ -129,7 +129,7 @@ export default function Hero() {
             >
               <a
                 href="/about"
-                className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#FF5A00] px-8 py-3 font-[Poppins] text-base font-medium text-white transition-all duration-300 hover:bg-[#FF2D00] hover:shadow-[0_8px_25px_rgba(255,90,0,0.3)] sm:w-auto"
+                className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6600] to-[#FF0000] px-8 py-3 font-[Poppins] text-base font-medium text-white transition-all duration-300 hover:opacity-95 hover:shadow-[0_8px_30px_rgba(255,102,0,0.35)] sm:w-auto"
               >
                 Explore Our Ecosystem
 
@@ -139,7 +139,7 @@ export default function Hero() {
               <button
                 type="button"
                 onClick={() => openLead({ source: "hero" })}
-                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-transparent px-8 py-3 font-[Poppins] text-base font-medium text-white backdrop-blur-sm transition-all duration-300 hover:border-[#FF5A00] hover:bg-[#FF5A00]/10 hover:text-[#FF5A00] sm:w-auto"
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-transparent px-8 py-3 font-[Poppins] text-base font-medium text-white backdrop-blur-sm transition-all duration-300 hover:border-[#FF6600] hover:bg-[#FF6600]/10 hover:text-[#FF6600] sm:w-auto"
               >
                 Talk to an Expert
               </button>

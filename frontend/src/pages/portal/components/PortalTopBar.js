@@ -145,7 +145,7 @@ export default function PortalTopBar() {
 
           {/* Brand Logo for Mobile */}
           <div className="lg:hidden flex items-center gap-0.5 text-sm sm:text-base font-extrabold tracking-[0.15em] text-[#000F1B] shrink-0">
-            CONSTRUCT<Power className="w-4 h-4 text-[#FF5A00] stroke-[3]" />NS<span className="text-[8px] text-[#111111]/40 self-start mt-0.5 ml-0.5">™</span>
+            CONSTRUCT<Power className="w-4 h-4 text-[#FF6600] stroke-[3]" />NS<span className="text-[8px] text-[#111111]/40 self-start mt-0.5 ml-0.5">™</span>
           </div>
 
           {/* Active Project Dropdown Trigger (Desktop) */}
@@ -162,7 +162,7 @@ export default function PortalTopBar() {
                 {project?.cover_image ? (
                   <img src={resolveMediaUrl(project.cover_image)} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-[10px] font-bold text-[#FF5A00]">CO</span>
+                  <span className="text-[10px] font-bold text-[#FF6600]">CO</span>
                 )}
               </div>
               <div className="min-w-0 text-left">
@@ -182,7 +182,7 @@ export default function PortalTopBar() {
             {/* Projects Dropdown Menu */}
             {projDropdownOpen && (
               <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-black/10 shadow-2xl rounded-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="px-4 py-2 text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider border-b border-black/5 mb-1">
+                <div className="px-4 py-2 text-[10px] font-bold text-[#FF6600] uppercase tracking-wider border-b border-black/5 mb-1">
                   Your Projects ({projectsList.length})
                 </div>
                 <div className="max-h-[300px] overflow-y-auto">
@@ -193,17 +193,17 @@ export default function PortalTopBar() {
                         switchProject(p.id);
                         setProjDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 hover:bg-[#F2F2F2] transition text-left ${p.id === activeProjectId ? 'bg-[#FF5A00]/5' : ''}`}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 hover:bg-[#F2F2F2] transition text-left ${p.id === activeProjectId ? 'bg-[#FF6600]/5' : ''}`}
                     >
                       <div className="min-w-0 pr-3">
-                        <div className={`text-xs font-bold truncate ${p.id === activeProjectId ? 'text-[#FF5A00]' : 'text-[#000F1B]'}`}>
+                        <div className={`text-xs font-bold truncate ${p.id === activeProjectId ? 'text-[#FF6600]' : 'text-[#000F1B]'}`}>
                           {p.title || "Unnamed Project"}
                         </div>
                         <div className="text-[10px] text-[#111111]/50 truncate mt-0.5">
                           {p.user_role} • {p.project_code || "Active"}
                         </div>
                       </div>
-                      {p.id === activeProjectId && <Check className="w-4 h-4 text-[#FF5A00] shrink-0" />}
+                      {p.id === activeProjectId && <Check className="w-4 h-4 text-[#FF6600] shrink-0" />}
                     </button>
                   ))}
                 </div>
@@ -217,7 +217,7 @@ export default function PortalTopBar() {
           
           {/* SEARCH BAR */}
           <div className="relative hidden md:block" ref={searchRef}>
-            <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-[#F9FAFB] px-3 py-2 w-48 xl:w-64 focus-within:ring-2 focus-within:ring-[#FF5A00] focus-within:bg-white transition">
+            <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-[#F9FAFB] px-3 py-2 w-48 xl:w-64 focus-within:ring-2 focus-within:ring-[#FF6600] focus-within:bg-white transition">
               <Search className="w-4 h-4 text-[#111111]/40" />
               <input
                 type="search"
@@ -253,7 +253,7 @@ export default function PortalTopBar() {
                             <button
                               key={idx}
                               onClick={() => handleResultClick(item.link)}
-                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FF5A00]/5 transition text-left"
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FF6600]/5 transition text-left"
                             >
                               <div className="w-8 h-8 rounded-full bg-white border border-black/10 flex items-center justify-center shrink-0 text-[#000F1B]">
                                 <item.icon className="w-4 h-4" />
@@ -282,7 +282,7 @@ export default function PortalTopBar() {
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1 w-4 h-4 flex items-center justify-center rounded-full bg-[#FF2D00] border-[1.5px] border-white text-white text-[8px] font-black shadow-sm">
+                <span className="absolute top-1.5 right-1 w-4 h-4 flex items-center justify-center rounded-full bg-[#FF0000] border-[1.5px] border-white text-white text-[8px] font-black shadow-sm">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
@@ -294,7 +294,7 @@ export default function PortalTopBar() {
                 <div className="px-4 py-3 border-b border-black/5 bg-[#F9FAFB] flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">Notifications</span>
-                    {unreadCount > 0 && <span className="text-[9px] font-bold text-white bg-[#FF5A00] px-2 py-0.5 rounded-full">{unreadCount} New</span>}
+                    {unreadCount > 0 && <span className="text-[9px] font-bold text-white bg-[#FF6600] px-2 py-0.5 rounded-full">{unreadCount} New</span>}
                   </div>
                   
                   {/* LOCAL CLEAR BUTTON */}
@@ -316,14 +316,14 @@ export default function PortalTopBar() {
                       <button 
                         key={n.id} 
                         onClick={() => handleReadNotification(n.id, n.link)}
-                        className={`w-full text-left p-4 border-b border-black/5 last:border-0 hover:bg-[#F2F2F2]/50 transition flex gap-3 ${!n.is_read ? "bg-[#FF5A00]/5" : ""}`}
+                        className={`w-full text-left p-4 border-b border-black/5 last:border-0 hover:bg-[#F2F2F2]/50 transition flex gap-3 ${!n.is_read ? "bg-[#FF6600]/5" : ""}`}
                       >
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${!n.is_read ? "border-[#FF5A00]/20 bg-white" : "border-black/5 bg-[#F9FAFB]"}`}>
-                          {n.icon === "progress" && <HardHat className={`w-4 h-4 ${!n.is_read ? "text-[#FF5A00]" : "text-[#111111]/40"}`} />}
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${!n.is_read ? "border-[#FF6600]/20 bg-white" : "border-black/5 bg-[#F9FAFB]"}`}>
+                          {n.icon === "progress" && <HardHat className={`w-4 h-4 ${!n.is_read ? "text-[#FF6600]" : "text-[#111111]/40"}`} />}
                           {n.icon === "attendance" && <CheckCircle2 className={`w-4 h-4 ${!n.is_read ? "text-emerald-500" : "text-[#111111]/40"}`} />}
                           {n.icon === "team" && <UserPlus className={`w-4 h-4 ${!n.is_read ? "text-blue-500" : "text-[#111111]/40"}`} />}
                           {n.icon === "system" && <FileText className={`w-4 h-4 ${!n.is_read ? "text-purple-500" : "text-[#111111]/40"}`} />}
-                          {n.icon === "general" && <Bell className={`w-4 h-4 ${!n.is_read ? "text-[#FF5A00]" : "text-[#111111]/40"}`} />}
+                          {n.icon === "general" && <Bell className={`w-4 h-4 ${!n.is_read ? "text-[#FF6600]" : "text-[#111111]/40"}`} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className={`text-xs font-bold truncate ${!n.is_read ? "text-[#000F1B]" : "text-[#111111]/70"}`}>{n.title}</div>
@@ -335,7 +335,7 @@ export default function PortalTopBar() {
                   )}
                 </div>
                 
-                <Link to="/portal/site-reports" onClick={() => setNotifDropdownOpen(false)} className="block w-full p-3 text-center text-[10px] font-bold text-[#FF5A00] bg-white border-t border-black/5 hover:bg-[#F9FAFB] transition shrink-0 uppercase tracking-widest">
+                <Link to="/portal/site-reports" onClick={() => setNotifDropdownOpen(false)} className="block w-full p-3 text-center text-[10px] font-bold text-[#FF6600] bg-white border-t border-black/5 hover:bg-[#F9FAFB] transition shrink-0 uppercase tracking-widest">
                   View Full Activity Log
                 </Link>
               </div>
@@ -354,7 +354,7 @@ export default function PortalTopBar() {
               <div className="text-xs font-semibold text-[#000F1B] truncate">{user?.name?.split(" ")[0] || "Client"}</div>
               <div className="text-[10px] text-[#111111]/45 truncate">Client Portal</div>
             </div>
-            <button onClick={logout} type="button" className="w-9 h-9 rounded-xl grid place-items-center hover:bg-red-50 text-[#111111]/60 hover:text-[#FF2D00] min-h-[36px]" title="Sign out">
+            <button onClick={logout} type="button" className="w-9 h-9 rounded-xl grid place-items-center hover:bg-red-50 text-[#111111]/60 hover:text-[#FF0000] min-h-[36px]" title="Sign out">
               <LogOut className="w-4 h-4" />
             </button>
           </div>

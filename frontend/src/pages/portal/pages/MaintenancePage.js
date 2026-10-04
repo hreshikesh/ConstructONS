@@ -59,7 +59,7 @@ export default function MaintenancePage() {
       
       {/* Header */}
       <div>
-        <div className="text-[11px] font-semibold text-[#FF5A00] tracking-wider uppercase mb-1">
+        <div className="text-[11px] font-semibold text-[#FF6600] tracking-wider uppercase mb-1">
           Post-Handover Support
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">
@@ -101,7 +101,7 @@ export default function MaintenancePage() {
                 { label: "Priority Resolution", desc: "48-hour SLA for critical tickets." }
               ].map((b, i) => (
                 <div key={i} className="flex gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#FF5A00] shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#FF6600] shrink-0" />
                   <div>
                     <div className="text-xs font-bold text-white">{b.label}</div>
                     <div className="text-[10px] text-white/60 leading-tight">{b.desc}</div>
@@ -118,7 +118,7 @@ export default function MaintenancePage() {
             <h2 className="text-lg font-bold text-[#000F1B]">Support Tickets</h2>
             <button 
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-1.5 bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm"
+              className="inline-flex items-center gap-1.5 bg-[#FF6600] hover:bg-[#FF0000] text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm"
             >
               <Plus className="w-4 h-4" /> Raise Request
             </button>
@@ -250,7 +250,7 @@ function TicketCard({ ticket }) {
       <div className="flex justify-between items-start mb-3 border-b border-black/5 pb-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold text-[#FF5A00] bg-[#FF5A00]/10 px-2 py-0.5 rounded uppercase">{ticket.id}</span>
+            <span className="text-[10px] font-bold text-[#FF6600] bg-[#FF6600]/10 px-2 py-0.5 rounded uppercase">{ticket.id}</span>
             <span className="text-[10px] font-semibold text-[#111111]/50">{new Date(ticket.raised_at).toLocaleDateString()}</span>
           </div>
           <h4 className="font-bold text-[#000F1B]">{ticket.title}</h4>
@@ -273,7 +273,7 @@ function TicketCard({ ticket }) {
 
       {ticket.admin_notes && (
         <div className="bg-[#F9FAFB] border border-black/5 rounded-lg p-3 text-xs">
-          <div className="font-bold text-[#000F1B] mb-1 flex items-center gap-1"><Wrench className="w-3 h-3 text-[#FF5A00]"/> ConstructONS Team Response:</div>
+          <div className="font-bold text-[#000F1B] mb-1 flex items-center gap-1"><Wrench className="w-3 h-3 text-[#FF6600]"/> ConstructONS Team Response:</div>
           <div className="text-[#111111]/70 italic">{ticket.admin_notes}</div>
         </div>
       )}

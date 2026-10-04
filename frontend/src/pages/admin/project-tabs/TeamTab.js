@@ -59,7 +59,7 @@ export default function TeamTab({ project, onSaved }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-[#FF5A00] hover:bg-[#FF2D00] rounded-xl transition shadow-sm disabled:opacity-60 cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-[#FF6600] hover:bg-[#FF0000] rounded-xl transition shadow-sm disabled:opacity-60 cursor-pointer"
         >
           {saving ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -73,7 +73,7 @@ export default function TeamTab({ project, onSaved }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {loading ? (
           <div className="col-span-full py-12 flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" />
+            <Loader2 className="w-6 h-6 animate-spin text-[#FF6600]" />
           </div>
         ) : (
           allStaff.map((staff) => {
@@ -84,7 +84,7 @@ export default function TeamTab({ project, onSaved }) {
                 onClick={() => toggleSelect(staff.id)}
                 className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition ${
                   isSelected
-                    ? "border-[#FF5A00] bg-[#FF5A00]/5 ring-1 ring-[#FF5A00]/30"
+                    ? "border-[#FF6600] bg-[#FF6600]/5 ring-1 ring-[#FF6600]/30"
                     : "border-black/10 bg-white hover:border-black/20"
                 }`}
               >
@@ -112,7 +112,7 @@ export default function TeamTab({ project, onSaved }) {
                 <div
                   className={`w-5 h-5 rounded grid place-items-center shrink-0 transition ${
                     isSelected
-                      ? "bg-[#FF5A00] text-white"
+                      ? "bg-[#FF6600] text-white"
                       : "border border-black/20 bg-white"
                   }`}
                 >

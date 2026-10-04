@@ -27,7 +27,7 @@ export default function AdminSiteSettings() {
       });
   }, []);
 
-  if (!s) return <div className="p-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#FF5A00]" /></div>;
+  if (!s) return <div className="p-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#FF6600]" /></div>;
 
   const save = async () => {
     setSaving(true);
@@ -46,7 +46,7 @@ export default function AdminSiteSettings() {
 
   return (
     <div className="max-w-4xl font-['Poppins'] pb-12">
-      <div className="text-xs font-semibold text-[#FF5A00] uppercase tracking-wider">CMS Management</div>
+      <div className="text-xs font-semibold text-[#FF6600] uppercase tracking-wider">CMS Management</div>
       <h1 className="mt-1 text-2xl font-bold text-[#000F1B]">Site Settings</h1>
       <p className="text-sm text-[#111111]/60 mt-1 mb-6">Manage your public website contact details and branding.</p>
 
@@ -73,7 +73,7 @@ export default function AdminSiteSettings() {
       </div>
       
       <div className="mt-6 flex justify-end">
-        <button onClick={save} disabled={saving} className="bg-[#000F1B] hover:bg-[#FF5A00] text-white px-6 py-3 rounded-xl text-sm font-bold transition flex items-center gap-2 disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="bg-[#000F1B] hover:bg-[#FF6600] text-white px-6 py-3 rounded-xl text-sm font-bold transition flex items-center gap-2 disabled:opacity-50">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
           {saving ? "Saving…" : "Save Changes"}
         </button>
@@ -89,7 +89,7 @@ function Field({ label, value, onChange, className = "" }) {
       <input 
         value={value || ""} 
         onChange={(e) => onChange(e.target.value)} 
-        className="w-full rounded-xl border border-black/10 bg-[#F9FAFB] px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] focus:bg-white text-sm transition" 
+        className="w-full rounded-xl border border-black/10 bg-[#F9FAFB] px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] focus:bg-white text-sm transition" 
       />
     </label>
   );

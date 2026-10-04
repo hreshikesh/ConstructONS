@@ -38,7 +38,7 @@ export default function ContactCTA({ settings = {} }) {
     <section
       id="contact"
       data-testid="contact-section"
-      className="relative py-14 md:py-20 lg:py-24 scroll-mt-20 bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white overflow-hidden"
+      className="relative py-14 md:py-20 lg:py-24 scroll-mt-20 bg-white font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white overflow-hidden"
     >
       <div className="container-wide relative z-10">
         {/* Header */}
@@ -47,7 +47,7 @@ export default function ContactCTA({ settings = {} }) {
             <SectionLabel number={10} eyebrow="Get In Touch" />
             <h2 className="mt-3 text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-[40px] leading-[1.1] tracking-tight">
               Let&rsquo;s Build Your{" "}
-              <span className="text-[#FF5A00]">Dream Home</span> Together
+              <span className="text-[#FF6600]">Dream Home</span> Together
             </h2>
             <p className="mt-2 text-[#000F1B]/55 text-sm leading-relaxed max-w-lg">
               Talk to our team — free, no obligation. We&rsquo;ll help you pick the
@@ -115,16 +115,16 @@ export default function ContactCTA({ settings = {} }) {
                   className="absolute left-3 sm:left-4 top-3 rounded-xl bg-white/95 backdrop-blur-md border border-black/10 p-3 shadow-lg flex items-center justify-between gap-4 hover:bg-slate-50 transition group"
                 >
                   <div className="flex items-start gap-2.5">
-                    <MapPin className="w-5 h-5 text-[#FF5A00] mt-0.5 shrink-0" />
+                    <MapPin className="w-5 h-5 text-[#FF6600] mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#FF5A00]">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#FF6600]">
                         View Location
                       </div>
                       
                       {/* Styled Company Title with Larger/Darker Power Button "O" */}
                       <div className="text-base font-bold text-[#000F1B] leading-snug mt-0.5 flex items-center tracking-tight">
                         <span>Construct</span>
-                        <span className="text-[#FF5A00] flex items-center ml-[1px]">
+                        <span className="text-[#FF6600] flex items-center ml-[1px]">
                           {/* Larger, Darker Orange Power Button "O" */}
                           <Power className="w-4 h-4 stroke-[3.5] text-[#E04F00] inline-block transform translate-y-[-0.5px] -mr-[0.5px]" />
                           NS
@@ -194,7 +194,7 @@ export default function ContactCTA({ settings = {} }) {
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 justify-between">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-1">
               <div className="flex items-start gap-2.5">
-                <Clock className="w-4 h-4 mt-0.5 text-[#FF5A00] shrink-0" />
+                <Clock className="w-4 h-4 mt-0.5 text-[#FF6600] shrink-0" />
                 <div>
                   <div className="text-sm font-semibold">
                     Mon – Sat · 9:00 AM – 7:00 PM
@@ -225,7 +225,7 @@ export default function ContactCTA({ settings = {} }) {
                 type="button"
                 onClick={() => open({ source: "contact" })}
                 data-testid="contact-cta"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF5A00] hover:bg-[#E04F00] text-white font-semibold text-sm px-6 py-3 shadow-[0_10px_28px_rgba(255,90,0,0.35)] transition"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6600] hover:bg-[#E04F00] text-white font-semibold text-sm px-6 py-3 shadow-[0_10px_28px_rgba(255,90,0,0.35)] transition"
               >
                 Get Free Consultation
                 <ArrowRight className="w-4 h-4" />
@@ -238,9 +238,9 @@ export default function ContactCTA({ settings = {} }) {
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <a
             href={phone ? `tel:${phone.replace(/\s+/g, "")}` : "#"}
-            className="rounded-2xl border border-black/5 bg-[#F7F7F7] hover:border-[#FF5A00]/30 hover:bg-white p-4 flex items-center gap-3 transition"
+            className="rounded-2xl border border-black/5 bg-[#F7F7F7] hover:border-[#FF6600]/30 hover:bg-white p-4 flex items-center gap-3 transition"
           >
-            <span className="w-10 h-10 rounded-full bg-[#FF5A00]/10 text-[#FF5A00] grid place-items-center">
+            <span className="w-10 h-10 rounded-full bg-[#FF6600]/10 text-[#FF6600] grid place-items-center">
               <Phone className="w-4 h-4" />
             </span>
             <div>
@@ -270,9 +270,9 @@ export default function ContactCTA({ settings = {} }) {
           </a>
           <a
             href={email ? `mailto:${email}` : "#"}
-            className="rounded-2xl border border-black/5 bg-[#F7F7F7] hover:border-[#FF5A00]/30 hover:bg-white p-4 flex items-center gap-3 transition"
+            className="rounded-2xl border border-black/5 bg-[#F7F7F7] hover:border-[#FF6600]/30 hover:bg-white p-4 flex items-center gap-3 transition"
           >
-            <span className="w-10 h-10 rounded-full bg-[#FF5A00]/10 text-[#FF5A00] grid place-items-center">
+            <span className="w-10 h-10 rounded-full bg-[#FF6600]/10 text-[#FF6600] grid place-items-center">
               <Mail className="w-4 h-4" />
             </span>
             <div className="min-w-0">
@@ -299,7 +299,7 @@ function ContactItem({ icon: Icon, label, value, href, testId }) {
       className="flex items-center gap-3 group"
       data-testid={testId}
     >
-      <div className="w-11 h-11 rounded-full bg-[#FF5A00]/10 grid place-items-center group-hover:bg-[#FF5A00] group-hover:text-white text-[#FF5A00] transition-colors shrink-0">
+      <div className="w-11 h-11 rounded-full bg-[#FF6600]/10 grid place-items-center group-hover:bg-[#FF6600] group-hover:text-white text-[#FF6600] transition-colors shrink-0">
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0">

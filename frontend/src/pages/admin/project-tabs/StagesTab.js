@@ -520,7 +520,7 @@ export default function StagesTab({ project, onSaved }) {
     <div className="font-['Poppins'] flex flex-col h-[calc(100vh-160px)] min-h-[560px] bg-[#F9FAFB] rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <style>{`
         .gantt-slider{-webkit-appearance:none;width:100%;background:transparent}
-        .gantt-slider::-webkit-slider-thumb{-webkit-appearance:none;height:12px;width:12px;border-radius:50%;background:#FF5A00;margin-top:-4px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+        .gantt-slider::-webkit-slider-thumb{-webkit-appearance:none;height:12px;width:12px;border-radius:50%;background:#FF6600;margin-top:-4px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
         .gantt-slider::-webkit-slider-runnable-track{height:4px;background:#E8EAED;border-radius:2px}
         .csb::-webkit-scrollbar{width:6px;height:6px}
         .csb::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
@@ -533,7 +533,7 @@ export default function StagesTab({ project, onSaved }) {
           <button
             onClick={() => setViewMode("list")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 ${
-              viewMode === "list" ? "bg-white shadow text-[#FF5A00]" : "text-gray-500"
+              viewMode === "list" ? "bg-white shadow text-[#FF6600]" : "text-gray-500"
             }`}
           >
             <List className="w-3.5 h-3.5" /> Editor
@@ -541,7 +541,7 @@ export default function StagesTab({ project, onSaved }) {
           <button
             onClick={() => setViewMode("split")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 ${
-              viewMode === "split" ? "bg-white shadow text-[#FF5A00]" : "text-gray-500"
+              viewMode === "split" ? "bg-white shadow text-[#FF6600]" : "text-gray-500"
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" /> Gantt
@@ -555,13 +555,13 @@ export default function StagesTab({ project, onSaved }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none focus:border-[#FF5A00]"
+              className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none focus:border-[#FF6600]"
             />
           </div>
         )}
 
         <div className="flex items-center gap-1.5 ml-auto">
-          {refreshing && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5A00]" />}
+          {refreshing && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6600]" />}
           {viewMode === "split" && (
             <>
               <button
@@ -587,7 +587,7 @@ export default function StagesTab({ project, onSaved }) {
           {viewMode === "list" && (
             <button
               onClick={() => setShowAddStage(true)}
-              className="px-3 py-1.5 bg-[#FF5A00] hover:bg-[#FF2D00] text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm"
+              className="px-3 py-1.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" /> Add Stage
             </button>
@@ -608,7 +608,7 @@ export default function StagesTab({ project, onSaved }) {
           </div>
 
           {showAddStage && (
-            <div className="bg-white border-2 border-[#FF5A00]/40 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center shadow-sm">
+            <div className="bg-white border-2 border-[#FF6600]/40 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center shadow-sm">
               <div className="flex-1">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">
                   New Stage Name
@@ -620,7 +620,7 @@ export default function StagesTab({ project, onSaved }) {
                   value={newStageName}
                   onChange={(e) => setNewStageName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addStage()}
-                  className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none"
+                  className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none"
                 />
               </div>
               <div className="flex gap-2 sm:self-end">
@@ -635,7 +635,7 @@ export default function StagesTab({ project, onSaved }) {
                 </button>
                 <button
                   onClick={addStage}
-                  className="px-5 py-2 text-xs font-bold bg-[#000F1B] text-white rounded-lg hover:bg-[#FF5A00]"
+                  className="px-5 py-2 text-xs font-bold bg-[#000F1B] text-white rounded-lg hover:bg-[#FF6600]"
                 >
                   Create
                 </button>
@@ -654,7 +654,7 @@ export default function StagesTab({ project, onSaved }) {
 
               const statMap = {
                 completed: { text: "text-emerald-700", bg: "bg-emerald-50", label: "Completed" },
-                in_progress: { text: "text-[#FF5A00]", bg: "bg-[#FF5A00]/10", label: "In Progress" },
+                in_progress: { text: "text-[#FF6600]", bg: "bg-[#FF6600]/10", label: "In Progress" },
                 pending: { text: "text-[#111111]/50", bg: "bg-slate-100", label: "Pending" },
               };
               const stat = statMap[s.status] || statMap.pending;
@@ -672,7 +672,7 @@ export default function StagesTab({ project, onSaved }) {
                   key={s.id || idx}
                   className={`bg-white rounded-xl border shadow-sm transition-all ${
                     isExpanded
-                      ? "border-[#FF5A00] ring-1 ring-[#FF5A00]/20"
+                      ? "border-[#FF6600] ring-1 ring-[#FF6600]/20"
                       : "border-black/5 hover:border-black/15"
                   }`}
                 >
@@ -739,7 +739,7 @@ export default function StagesTab({ project, onSaved }) {
                       onClick={() => setExpandedStage(isExpanded ? null : idx)}
                       className={`shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition ${
                         isExpanded
-                          ? "bg-[#FF5A00] border-[#FF5A00] text-white"
+                          ? "bg-[#FF6600] border-[#FF6600] text-white"
                           : "bg-white border-black/10 text-[#000F1B] hover:bg-black/5"
                       }`}
                     >
@@ -781,7 +781,7 @@ export default function StagesTab({ project, onSaved }) {
                                 value={s.name}
                                 disabled={isHandover}
                                 onChange={(e) => patchStageLocal(idx, { name: e.target.value })}
-                                className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100"
+                                className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                               />
                             </div>
                             <div>
@@ -792,7 +792,7 @@ export default function StagesTab({ project, onSaved }) {
                                 value={s.status}
                                 disabled={hasChildren}
                                 onChange={(e) => patchStageLocal(idx, { status: e.target.value })}
-                                className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none bg-white disabled:bg-gray-100"
+                                className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF6600] outline-none bg-white disabled:bg-gray-100"
                               >
                                 <option value="pending">Pending</option>
                                 <option value="in_progress">In Progress</option>
@@ -815,7 +815,7 @@ export default function StagesTab({ project, onSaved }) {
                                   try { e.target.showPicker(); } catch {}
                                 }
                               }}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                           <div>
@@ -834,7 +834,7 @@ export default function StagesTab({ project, onSaved }) {
                                   try { e.target.showPicker(); } catch {}
                                 }
                               }}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                           <div>
@@ -853,7 +853,7 @@ export default function StagesTab({ project, onSaved }) {
                                   try { e.target.showPicker(); } catch {}
                                 }
                               }}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </div>
                           <div>
@@ -870,7 +870,7 @@ export default function StagesTab({ project, onSaved }) {
                                 onChange={(e) =>
                                   patchStageLocal(idx, { progress_pct: e.target.value })
                                 }
-                                className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-black text-[#FF5A00] focus:ring-2 focus:ring-[#FF5A00] outline-none pr-8 disabled:bg-gray-100"
+                                className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-black text-[#FF6600] focus:ring-2 focus:ring-[#FF6600] outline-none pr-8 disabled:bg-gray-100"
                               />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#111111]/30">
                                 %
@@ -895,7 +895,7 @@ export default function StagesTab({ project, onSaved }) {
                                 }
                                 className="flex-1 gantt-slider"
                               />
-                              <span className="text-sm font-black text-[#FF5A00] w-12 text-right">
+                              <span className="text-sm font-black text-[#FF6600] w-12 text-right">
                                 {s.progress_pct || 0}%
                               </span>
                             </div>
@@ -907,9 +907,9 @@ export default function StagesTab({ project, onSaved }) {
                       <div className="bg-white border border-black/5 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-3 border-b border-black/5 pb-2">
                           <h4 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider flex items-center gap-1.5">
-                            <Camera className="w-3.5 h-3.5 text-[#FF5A00]" /> Photos ({photos.length})
+                            <Camera className="w-3.5 h-3.5 text-[#FF6600]" /> Photos ({photos.length})
                           </h4>
-                          <label className="cursor-pointer text-xs font-bold text-[#FF5A00] hover:text-[#FF2D00] flex items-center gap-1.5">
+                          <label className="cursor-pointer text-xs font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1.5">
                             {uploading === idx ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
@@ -970,7 +970,7 @@ export default function StagesTab({ project, onSaved }) {
                             )}
                             <button
                               onClick={() => addSubstage(idx)}
-                              className="text-[10px] font-bold text-[#FF5A00] hover:text-[#FF2D00] flex items-center gap-1"
+                              className="text-[10px] font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1"
                             >
                               <Plus className="w-3 h-3" /> Add Substage
                             </button>
@@ -998,7 +998,7 @@ export default function StagesTab({ project, onSaved }) {
                                     value={sub.name}
                                     onChange={(e) => patchSubLocal(idx, sIdx, { name: e.target.value })}
                                     onBlur={(e) => autoSaveSub(idx, sIdx, { name: e.target.value })}
-                                    className="flex-1 px-3 py-2 border border-black/10 bg-white rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FF5A00] outline-none"
+                                    className="flex-1 px-3 py-2 border border-black/10 bg-white rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FF6600] outline-none"
                                     placeholder="Name"
                                   />
                                 </div>
@@ -1094,7 +1094,7 @@ export default function StagesTab({ project, onSaved }) {
                                           ),
                                         })
                                       }
-                                      className="w-16 border border-black/10 rounded-lg px-2 py-1.5 text-xs font-black text-[#FF5A00] outline-none"
+                                      className="w-16 border border-black/10 rounded-lg px-2 py-1.5 text-xs font-black text-[#FF6600] outline-none"
                                     />
                                   </div>
                                 </div>
@@ -1107,7 +1107,7 @@ export default function StagesTab({ project, onSaved }) {
                                         sub.status === "completed"
                                           ? "text-emerald-600"
                                           : sub.status === "in_progress"
-                                          ? "text-[#FF5A00]"
+                                          ? "text-[#FF6600]"
                                           : "text-[#111111]/50"
                                       }`}
                                     >
@@ -1169,7 +1169,7 @@ export default function StagesTab({ project, onSaved }) {
                             s.approval_status === "rejected") && (
                             <button
                               onClick={() => submitForApproval(idx)}
-                              className="px-5 py-2.5 bg-[#FF5A00] hover:bg-[#FF2D00] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm"
+                              className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm"
                             >
                               <Send className="w-4 h-4" /> Submit to PM
                             </button>
@@ -1358,7 +1358,7 @@ export default function StagesTab({ project, onSaved }) {
                           <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div
                               className={`h-full ${
-                                d.status === "completed" ? "bg-[#10B981]" : "bg-[#FF5A00]"
+                                d.status === "completed" ? "bg-[#10B981]" : "bg-[#FF6600]"
                               }`}
                               style={{ width: `${d.progress_pct || 0}%` }}
                             />
@@ -1383,7 +1383,7 @@ export default function StagesTab({ project, onSaved }) {
 
           {/* FIXED DRAGGER */}
           <div
-            className="w-2.5 shrink-0 bg-gray-100 hover:bg-[#FF5A00] border-x border-gray-200 cursor-col-resize z-20 flex items-center justify-center group transition-colors"
+            className="w-2.5 shrink-0 bg-gray-100 hover:bg-[#FF6600] border-x border-gray-200 cursor-col-resize z-20 flex items-center justify-center group transition-colors"
             onMouseDown={(e) => {
               e.preventDefault();
               setDragging(true);
@@ -1402,7 +1402,7 @@ export default function StagesTab({ project, onSaved }) {
                   key={z}
                   onClick={() => setZoom(z)}
                   className={`px-2.5 py-0.5 text-[9px] font-bold capitalize rounded ${
-                    zoom === z ? "bg-[#FF5A00] text-white" : "text-gray-500 hover:text-black"
+                    zoom === z ? "bg-[#FF6600] text-white" : "text-gray-500 hover:text-black"
                   }`}
                 >
                   {z}
@@ -1463,7 +1463,7 @@ export default function StagesTab({ project, onSaved }) {
                       d.status === "completed"
                         ? "bg-[#10B981]"
                         : d.status === "in_progress"
-                        ? "bg-[#FF5A00]"
+                        ? "bg-[#FF6600]"
                         : "bg-gray-300";
 
                     return (
@@ -1512,7 +1512,7 @@ function StatusPill({ status }) {
     },
     in_progress: {
       text: "In Progress",
-      classes: "bg-[#FF5A00]/10 text-[#FF5A00] border border-[#FF5A00]/30",
+      classes: "bg-[#FF6600]/10 text-[#FF6600] border border-[#FF6600]/30",
     },
     pending: {
       text: "Not Started",

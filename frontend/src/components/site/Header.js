@@ -53,8 +53,8 @@ export default function Header() {
             rounded-full border px-2 py-2 sm:px-3
             ${
               scrolled
-                ? "border-black/[0.06] bg-white/95 shadow-[0_12px_40px_rgba(0,15,27,0.08)] backdrop-blur-xl"
-                : "border-white/15 bg-[#000F1B]/30 backdrop-blur-md"
+                ? "border-black/[0.06] bg-white/95 shadow-[0_12px_40px_rgba(17,17,17,0.08)] backdrop-blur-xl"
+                : "border-white/15 bg-[#111111]/30 backdrop-blur-md"
             }
           `}
         >
@@ -77,8 +77,8 @@ export default function Header() {
                 text-sm font-semibold transition-all duration-300 md:inline-flex
                 ${
                   scrolled
-                    ? "text-[#000F1B] hover:text-[#FF5A00]"
-                    : "text-white hover:text-[#FF5A00]"
+                    ? "text-[#111111] hover:text-[#FF6600]"
+                    : "text-white hover:text-[#FF6600]"
                 }
               `}
             >
@@ -91,10 +91,10 @@ export default function Header() {
               data-testid="header-cta"
               className="
                 hidden min-h-11 items-center justify-center gap-2 rounded-full
-                bg-[#FF5A00] px-5 text-sm font-semibold text-white
+                bg-gradient-to-r from-[#FF6600] to-[#FF0000] px-5 text-sm font-semibold text-white
                 transition-all duration-300
-                hover:bg-[#FF2D00] hover:shadow-[0_8px_30px_rgba(255,90,0,0.25)]
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A00]
+                hover:opacity-90 hover:shadow-[0_8px_30px_rgba(255,102,0,0.35)]
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6600]
                 focus-visible:ring-offset-2 md:inline-flex
               "
             >
@@ -112,8 +112,8 @@ export default function Header() {
                 grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors xl:hidden
                 ${
                   scrolled
-                    ? "bg-[#000F1B] text-white hover:bg-[#FF5A00]"
-                    : "border border-white/20 bg-white/10 text-white hover:bg-[#FF5A00] hover:border-[#FF5A00]"
+                    ? "bg-[#111111] text-white hover:bg-[#FF6600]"
+                    : "border border-white/20 bg-white/10 text-white hover:bg-[#FF6600] hover:border-[#FF6600]"
                 }
               `}
             >
@@ -129,7 +129,7 @@ export default function Header() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-2 overflow-hidden rounded-3xl border border-black/[0.06] bg-white shadow-[0_20px_60px_rgba(0,15,27,0.14)] xl:hidden"
+              className="mt-2 overflow-hidden rounded-3xl border border-black/[0.06] bg-white shadow-[0_20px_60px_rgba(17,17,17,0.14)] xl:hidden"
             >
               <nav aria-label="Mobile navigation" className="p-2">
                 {NAV.map((item) => (
@@ -141,7 +141,7 @@ export default function Header() {
                     to="/portal/login"
                     onClick={() => setOpen(false)}
                     data-testid="mobile-client-login"
-                    className="flex min-h-12 items-center rounded-2xl px-4 text-sm font-semibold text-[#000F1B] transition-colors hover:text-[#FF5A00] hover:bg-[#FF5A00]/5"
+                    className="flex min-h-12 items-center rounded-2xl px-4 text-sm font-semibold text-[#111111] transition-colors hover:text-[#FF6600] hover:bg-[#FF6600]/5"
                   >
                     Client Login
                   </Link>
@@ -152,7 +152,7 @@ export default function Header() {
                       setOpen(false);
                       openLead({ source: "header" });
                     }}
-                    className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#FF5A00] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#FF2D00]"
+                    className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF6600] to-[#FF0000] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   >
                     Talk to an Expert
                     <ArrowRight className="h-4 w-4" />
@@ -188,14 +188,13 @@ function NavItem({ item, scrolled }) {
     scrollToSection(item.hash);
   };
 
-  // FIXED: single hover:text-[#FF5A00] — no hover:text-white override
   const baseClass = `
     relative rounded-full px-3 py-2.5 text-[13px] font-medium
     transition-colors duration-200 cursor-pointer
     ${
       scrolled
-        ? "text-[#000F1B]/75 hover:text-[#FF5A00]"
-        : "text-white/80 hover:text-[#FF5A00]"
+        ? "text-[#111111]/75 hover:text-[#FF6600]"
+        : "text-white/80 hover:text-[#FF6600]"
     }
   `;
 
@@ -241,8 +240,8 @@ function MobileNavItem({ item, onClose }) {
 
   const className = `
     flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm
-    font-medium text-[#000F1B]/80 transition-colors cursor-pointer
-    hover:bg-[#FF5A00]/5 hover:text-[#FF5A00]
+    font-medium text-[#111111]/80 transition-colors cursor-pointer
+    hover:bg-[#FF6600]/5 hover:text-[#FF6600]
   `;
 
   if (!item.hash) {

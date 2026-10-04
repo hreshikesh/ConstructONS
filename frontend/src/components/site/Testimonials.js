@@ -57,8 +57,8 @@ export default function TestimonialsSection({
           <div className="lg:col-span-4 z-10 bg-[#F8F9FA]">
             {/* Tagline */}
             <div className="flex items-center gap-2 mb-3">
-              <span className="h-[2px] w-6 bg-[#FF5A00]" />
-              <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF5A00]">
+              <span className="h-[2px] w-6 bg-[#FF6600]" />
+              <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF6600]">
                 TESTIMONIALS
               </span>
             </div>
@@ -66,7 +66,7 @@ export default function TestimonialsSection({
             {/* Heading */}
             <h2 className="text-3xl font-extrabold tracking-tight text-[#000F1B] sm:text-4xl lg:text-5xl leading-[1.15]">
               Happy Families. <br />
-              <span className="text-[#FF5A00]">Happy Homes.</span>
+              <span className="text-[#FF6600]">Happy Homes.</span>
             </h2>
 
             {/* Description */}
@@ -79,17 +79,17 @@ export default function TestimonialsSection({
             <div className="mt-8 inline-flex items-center gap-4 rounded-2xl bg-[#030914] px-5 py-3.5 text-white shadow-xl w-fit">
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-white">4.5</span>
-                <span className="text-xs font-bold text-[#FF5A00]">/5</span>
+                <span className="text-xs font-bold text-[#FF6600]">/5</span>
               </div>
 
               <div className="h-7 w-[1px] bg-white/20" />
 
               <div>
-                <div className="flex text-[#FF5A00] gap-0.5">
+                <div className="flex text-[#FF6600] gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className="h-4 w-4 fill-[#FF5A00] text-[#FF5A00]"
+                      className="h-4 w-4 fill-[#FF6600] text-[#FF6600]"
                     />
                   ))}
                 </div>
@@ -166,15 +166,15 @@ export default function TestimonialsSection({
                       </div>
 
                       {/* Quote Icon */}
-                      <Quote className="h-6 w-6 text-[#FF5A00]/30 shrink-0" />
+                      <Quote className="h-6 w-6 text-[#FF6600]/30 shrink-0" />
                     </div>
 
                     {/* Star Rating */}
-                    <div className="flex text-[#FF5A00] gap-0.5 mb-3">
+                    <div className="flex text-[#FF6600] gap-0.5 mb-3">
                       {[...Array(item.rating || 5)].map((_, i) => (
                         <Star
                           key={i}
-                          className="h-4 w-4 fill-[#FF5A00] text-[#FF5A00]"
+                          className="h-4 w-4 fill-[#FF6600] text-[#FF6600]"
                         />
                       ))}
                     </div>

@@ -44,20 +44,20 @@ export default function TimelinePage() {
                   {/* Status Node */}
                   <div className="relative z-10 shrink-0 mt-1">
                     {isCompleted ? <CheckCircle2 className="w-7 h-7 text-[#10B981] bg-white" /> :
-                     isInProgress ? <PlayCircle className="w-7 h-7 text-[#FF5A00] bg-white" /> :
+                     isInProgress ? <PlayCircle className="w-7 h-7 text-[#FF6600] bg-white" /> :
                      <Circle className="w-7 h-7 text-[#111111]/20 bg-white" />}
                   </div>
                   
                   {/* Stage Content Card */}
                   <div className={`flex-1 min-w-0 rounded-xl p-4 sm:p-5 transition ${
-                    isInProgress ? "bg-[#FF5A00]/5 border border-[#FF5A00]/20" : 
+                    isInProgress ? "bg-[#FF6600]/5 border border-[#FF6600]/20" : 
                     isCompleted ? "bg-white border border-emerald-100" : 
                     "bg-white border border-black/5 opacity-60"
                   }`}>
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                       <div>
                         <span className={`text-[9px] font-bold uppercase tracking-widest ${
-                          isCompleted ? "text-emerald-600" : isInProgress ? "text-[#FF5A00]" : "text-[#111111]/40"
+                          isCompleted ? "text-emerald-600" : isInProgress ? "text-[#FF6600]" : "text-[#111111]/40"
                         }`}>
                           Stage {i + 1}
                         </span>
@@ -93,11 +93,11 @@ export default function TimelinePage() {
                         {hasPhotos && (
                           <div className="mb-3">
                             <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-[#000F1B] mb-2">
-                              <Camera className="w-3.5 h-3.5 text-[#FF5A00]" /> Progress Photos
+                              <Camera className="w-3.5 h-3.5 text-[#FF6600]" /> Progress Photos
                             </div>
                             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                               {stage.photos.map((url, pid) => (
-                                <a key={pid} href={url} target="_blank" rel="noreferrer" className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-black/10 hover:border-[#FF5A00] transition">
+                                <a key={pid} href={url} target="_blank" rel="noreferrer" className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-black/10 hover:border-[#FF6600] transition">
                                   <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
                                 </a>
                               ))}
@@ -108,11 +108,11 @@ export default function TimelinePage() {
                         {hasDocs && (
                           <div>
                             <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-[#000F1B] mb-2">
-                              <FileText className="w-3.5 h-3.5 text-[#FF5A00]" /> Stage Documents
+                              <FileText className="w-3.5 h-3.5 text-[#FF6600]" /> Stage Documents
                             </div>
                             <div className="flex flex-col gap-1.5">
                               {stage.documents.map((doc, did) => (
-                                <a key={did} href={doc.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-semibold text-[#111111]/70 hover:text-[#FF5A00] transition">
+                                <a key={did} href={doc.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-semibold text-[#111111]/70 hover:text-[#FF6600] transition">
                                   <FileText className="w-3.5 h-3.5" /> {doc.name || `Document ${did+1}`}
                                 </a>
                               ))}

@@ -77,10 +77,10 @@ export default function PortalAIChatWidget() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="bg-[#000F1B] hover:bg-[#FF5A00] text-white h-14 px-4 rounded-full shadow-[0_8px_30px_rgba(0,15,27,0.4)] flex items-center gap-3 transition-all duration-300 hover:scale-105 border-2 border-[#FF5A00] group"
+          className="bg-[#000F1B] hover:bg-[#FF6600] text-white h-14 px-4 rounded-full shadow-[0_8px_30px_rgba(0,15,27,0.4)] flex items-center gap-3 transition-all duration-300 hover:scale-105 border-2 border-[#FF6600] group"
         >
           <div className="relative">
-            <div className="w-9 h-9 rounded-full bg-[#FF5A00] grid place-items-center shrink-0 shadow-md">
+            <div className="w-9 h-9 rounded-full bg-[#FF6600] grid place-items-center shrink-0 shadow-md">
               <Bot className="w-5 h-5 text-white" />
             </div>
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#000F1B] animate-pulse" />
@@ -101,12 +101,12 @@ export default function PortalAIChatWidget() {
           {/* Header */}
           <div className="bg-[#000F1B] p-4 text-white flex items-center justify-between shrink-0 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FF5A00] grid place-items-center shrink-0 shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-[#FF6600] grid place-items-center shrink-0 shadow-md">
                 <Bot className="w-6 h-6 text-white" />
               </div>
               <div>
                 <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  ConstructONS AI Advisor <HardHat className="w-3.5 h-3.5 text-[#FF5A00]" />
+                  ConstructONS AI Advisor <HardHat className="w-3.5 h-3.5 text-[#FF6600]" />
                 </div>
                 <div className="text-[10px] text-white/60 truncate max-w-[200px]">
                   {project ? `Linked: ${project.project_code || project.title}` : "General Construction Guide"}
@@ -134,7 +134,7 @@ export default function PortalAIChatWidget() {
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-white p-3 rounded-2xl border border-black/10 shadow-sm flex items-center gap-2 text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" /> Analyzing live construction records...
+                  <Loader2 className="w-4 h-4 animate-spin text-[#FF6600]" /> Analyzing live construction records...
                 </div>
               </div>
             )}
@@ -148,12 +148,12 @@ export default function PortalAIChatWidget() {
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Ask about stage, completion, approvals..."
-              className="flex-1 px-4 py-3 bg-[#F5F6F8] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
+              className="flex-1 px-4 py-3 bg-[#F5F6F8] rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="w-11 h-11 rounded-xl bg-[#000F1B] hover:bg-[#FF5A00] text-white grid place-items-center transition disabled:opacity-50 shrink-0"
+              className="w-11 h-11 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white grid place-items-center transition disabled:opacity-50 shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>

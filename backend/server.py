@@ -122,7 +122,8 @@ if raw_cors.strip() == '*':
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
-        "https://construct-ons-six.vercel.app"
+        "https://construct-ons-six.vercel.app",
+        "https://constructons.com"
     ]
 else:
     origins = [origin.strip() for origin in raw_cors.split(',') if origin.strip()]

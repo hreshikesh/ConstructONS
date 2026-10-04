@@ -137,7 +137,7 @@ export default function PaymentsPage() {
       case "invoiced":
         return <span className={`${base} text-blue-700 bg-blue-50 border-blue-200`}>Invoiced</span>;
       default:
-        return <span className={`${base} text-[#FF5A00] bg-[#FF5A00]/10 border-[#FF5A00]/20`}>Upcoming</span>;
+        return <span className={`${base} text-[#FF6600] bg-[#FF6600]/10 border-[#FF6600]/20`}>Upcoming</span>;
     }
   };
 
@@ -167,8 +167,8 @@ export default function PaymentsPage() {
             Track invoices, verified receipts & scope variations in real-time.
           </p>
         </div>
-        <div className="bg-[#FF5A00]/5 border border-[#FF5A00]/20 rounded-lg p-2.5 flex items-start gap-2 w-full md:w-auto md:max-w-sm">
-          <Info className="w-4 h-4 text-[#FF5A00] shrink-0 mt-0.5" />
+        <div className="bg-[#FF6600]/5 border border-[#FF6600]/20 rounded-lg p-2.5 flex items-start gap-2 w-full md:w-auto md:max-w-sm">
+          <Info className="w-4 h-4 text-[#FF6600] shrink-0 mt-0.5" />
           <p className="text-[10px] sm:text-[11px] text-[#000F1B] font-medium leading-relaxed">
             All invoices, receipts and contract changes are transparently maintained here.
           </p>
@@ -196,9 +196,9 @@ export default function PaymentsPage() {
               <span className="text-[9px] font-bold text-amber-800 uppercase tracking-wider">
                 Variations
               </span>
-              <TrendingUp className="w-4 h-4 text-[#FF5A00]" />
+              <TrendingUp className="w-4 h-4 text-[#FF6600]" />
             </div>
-            <div className="text-sm sm:text-base xl:text-lg font-black text-[#FF5A00]">
+            <div className="text-sm sm:text-base xl:text-lg font-black text-[#FF6600]">
               + {fmtINR(approvedVariations)}
             </div>
             <div className="text-[9px] font-semibold text-amber-700/80 mt-0.5">
@@ -213,9 +213,9 @@ export default function PaymentsPage() {
               <span className="text-[9px] font-bold text-gray-300 uppercase tracking-wider">
                 Total Contract
               </span>
-              <FileText className="w-4 h-4 text-[#FF5A00]" />
+              <FileText className="w-4 h-4 text-[#FF6600]" />
             </div>
-            <div className="text-sm sm:text-base xl:text-lg font-black text-[#FF5A00]">
+            <div className="text-sm sm:text-base xl:text-lg font-black text-[#FF6600]">
               {fmtINR(totalContractValue)}
             </div>
             <div className="text-[9px] font-semibold text-gray-400 mt-0.5">Base + Approved</div>
@@ -301,11 +301,11 @@ export default function PaymentsPage() {
           >
             {tab.label}
             {tab.badge > 0 && (
-              <span className="bg-[#FF5A00] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-black">
+              <span className="bg-[#FF6600] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-black">
                 {tab.badge}
               </span>
             )}
-            {activeTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00]" />}
+            {activeTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600]" />}
           </button>
         ))}
       </div>
@@ -324,7 +324,7 @@ export default function PaymentsPage() {
                   <h3 className="text-xs sm:text-sm font-bold text-[#000F1B]">
                     Upcoming Payments
                   </h3>
-                  <span className="text-[10px] font-bold text-[#FF5A00] bg-[#FF5A00]/10 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-[#FF6600] bg-[#FF6600]/10 px-2 py-0.5 rounded">
                     {upcomingInvoices.length} Due
                   </span>
                 </div>
@@ -346,11 +346,11 @@ export default function PaymentsPage() {
                           {inv.description}
                         </td>
                         <td className="py-2.5 px-3 text-gray-600 truncate">{fmtDate(inv.due_date)}</td>
-                        <td className="py-2.5 px-3 font-bold text-[#FF5A00] truncate">{fmtINR(inv.amount)}</td>
+                        <td className="py-2.5 px-3 font-bold text-[#FF6600] truncate">{fmtINR(inv.amount)}</td>
                         <td className="py-2.5 px-3 text-right">
                           <button
                             onClick={() => setSelectedInvoiceId(inv.id)}
-                            className="px-2.5 py-1 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] font-bold rounded shadow-sm transition"
+                            className="px-2.5 py-1 bg-[#000F1B] hover:bg-[#FF6600] text-white text-[10px] font-bold rounded shadow-sm transition"
                           >
                             View
                           </button>
@@ -372,7 +372,7 @@ export default function PaymentsPage() {
                     <input
                       type="text" placeholder="Search..."
                       value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-white border border-gray-200 rounded outline-none focus:border-[#FF5A00]"
+                      className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-white border border-gray-200 rounded outline-none focus:border-[#FF6600]"
                     />
                   </div>
                   <select
@@ -408,7 +408,7 @@ export default function PaymentsPage() {
                       key={inv.id}
                       onClick={() => setSelectedInvoiceId(inv.id)}
                       className={`cursor-pointer transition hover:bg-gray-50 ${
-                        selectedInvoice?.id === inv.id ? "bg-[#FF5A00]/5 border-l-4 border-l-[#FF5A00]" : "border-l-4 border-l-transparent"
+                        selectedInvoice?.id === inv.id ? "bg-[#FF6600]/5 border-l-4 border-l-[#FF6600]" : "border-l-4 border-l-transparent"
                       }`}
                     >
                       {/* Desktop Row */}
@@ -464,7 +464,7 @@ export default function PaymentsPage() {
                 <div className="flex items-start justify-between border-b border-gray-100 pb-3 gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <FileText className="w-4 h-4 text-[#FF5A00] shrink-0" />
+                      <FileText className="w-4 h-4 text-[#FF6600] shrink-0" />
                       <h3 className="text-sm font-bold text-[#000F1B]">{selectedInvoice.number}</h3>
                       {getStatusBadge(selectedInvoice.status)}
                     </div>
@@ -481,7 +481,7 @@ export default function PaymentsPage() {
                         "_blank"
                       );
                     }}
-                    className="px-2.5 py-1.5 bg-[#FF5A00]/10 border border-[#FF5A00]/20 text-[#FF5A00] text-[10px] font-bold rounded flex items-center gap-1 hover:bg-[#FF5A00] hover:text-white transition shadow-sm shrink-0"
+                    className="px-2.5 py-1.5 bg-[#FF6600]/10 border border-[#FF6600]/20 text-[#FF6600] text-[10px] font-bold rounded flex items-center gap-1 hover:bg-[#FF6600] hover:text-white transition shadow-sm shrink-0"
                   >
                     <Download className="w-3 h-3" /> PDF
                   </button>
@@ -598,7 +598,7 @@ export default function PaymentsPage() {
                     .map((ms, idx) => (
                       <tr key={idx} className="hover:bg-gray-50">
                         <td className="py-3 px-4 font-bold text-[#000F1B]">{ms.name}</td>
-                        <td className="py-3 px-4 text-[#FF5A00] font-semibold hidden sm:table-cell">
+                        <td className="py-3 px-4 text-[#FF6600] font-semibold hidden sm:table-cell">
                           {ms.stage || "General"}
                         </td>
                         <td className="py-3 px-4 text-gray-600">{fmtDate(ms.due_date)}</td>
@@ -651,7 +651,7 @@ export default function PaymentsPage() {
                         <a
                           href={resolveMediaUrl(v.document_url)}
                           target="_blank" rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] text-[#FF5A00] hover:underline font-bold"
+                          className="inline-flex items-center gap-1 text-[10px] text-[#FF6600] hover:underline font-bold"
                         >
                           <Download className="w-3 h-3" /> View supporting document
                         </a>
@@ -663,7 +663,7 @@ export default function PaymentsPage() {
                         <span className="text-[9px] font-bold uppercase text-gray-400 block">
                           Cost Adjustment
                         </span>
-                        <span className="text-sm font-black text-[#FF5A00]">+ {fmtINR(v.amount)}</span>
+                        <span className="text-sm font-black text-[#FF6600]">+ {fmtINR(v.amount)}</span>
                       </div>
 
                       <div className="flex gap-2 shrink-0">
@@ -734,7 +734,7 @@ export default function PaymentsPage() {
                           <td className="py-3 px-4 font-bold text-gray-900 max-w-[200px]">
                             {v.description}
                           </td>
-                          <td className="py-3 px-4 font-bold text-[#FF5A00]">+ {fmtINR(v.amount)}</td>
+                          <td className="py-3 px-4 font-bold text-[#FF6600]">+ {fmtINR(v.amount)}</td>
                           <td className="py-3 px-4">
                             {payStatus.invoice ? (
                               <button
@@ -806,7 +806,7 @@ export default function PaymentsPage() {
                     historyVariationsList.map((v, idx) => (
                       <tr key={idx} className="hover:bg-gray-50">
                         <td className="py-3 px-4 font-bold text-gray-900">{v.description}</td>
-                        <td className="py-3 px-4 font-bold text-[#FF5A00]">+ {fmtINR(v.amount)}</td>
+                        <td className="py-3 px-4 font-bold text-[#FF6600]">+ {fmtINR(v.amount)}</td>
                         <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">
                           {fmtDate(v.approved_at || v.rejected_at || v.created_at)}
                         </td>

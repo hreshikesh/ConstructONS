@@ -350,10 +350,10 @@ export default function AdminEntity() {
   if (!cfg) {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-black/5 font-['Poppins']">
-        <Database className="w-10 h-10 text-[#FF5A00] mx-auto mb-3" />
+        <Database className="w-10 h-10 text-[#FF6600] mx-auto mb-3" />
         <h2 className="text-xl font-bold text-[#000F1B]">Unknown Entity Schema</h2>
         <p className="text-sm text-[#111111]/60 mt-1">
-          Entity <code className="text-[#FF5A00] bg-black/5 px-2 py-0.5 rounded">{entity}</code> is not declared.
+          Entity <code className="text-[#FF6600] bg-black/5 px-2 py-0.5 rounded">{entity}</code> is not declared.
         </p>
       </div>
     );
@@ -454,13 +454,13 @@ export default function AdminEntity() {
     <div className="font-['Poppins'] text-[#111111]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-[11px] font-bold text-[#FF5A00] tracking-wider uppercase">ConstructONS™ CMS</div>
+          <div className="text-[11px] font-bold text-[#FF6600] tracking-wider uppercase">ConstructONS™ CMS</div>
           <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">{cfg.title}</h1>
         </div>
         <button
           type="button"
           onClick={startCreate}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-5 py-3 text-xs sm:text-sm font-semibold shadow-sm transition min-h-[44px]"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] text-white px-5 py-3 text-xs sm:text-sm font-semibold shadow-sm transition min-h-[44px]"
         >
           <Plus className="w-4 h-4" /> <span>Add New {cfg.title}</span>
         </button>
@@ -469,7 +469,7 @@ export default function AdminEntity() {
       <div className="mt-6 rounded-2xl bg-white border border-black/5 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 flex flex-col items-center justify-center gap-3 text-sm text-[#111111]/60">
-            <Loader2 className="w-7 h-7 animate-spin text-[#FF5A00]" /> Fetching records...
+            <Loader2 className="w-7 h-7 animate-spin text-[#FF6600]" /> Fetching records...
           </div>
         ) : items.length === 0 ? (
           <div className="p-12 text-center text-sm text-[#111111]/50">No records found. Click &quot;Add New&quot; to create one.</div>
@@ -521,7 +521,7 @@ export default function AdminEntity() {
                         <button type="button" onClick={() => startEdit(it)} className="w-9 h-9 rounded-xl hover:bg-[#F2F2F2] grid place-items-center text-[#000F1B] transition">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button type="button" onClick={() => remove(it.id)} className="w-9 h-9 rounded-xl hover:bg-red-50 text-[#FF2D00] grid place-items-center transition">
+                        <button type="button" onClick={() => remove(it.id)} className="w-9 h-9 rounded-xl hover:bg-red-50 text-[#FF0000] grid place-items-center transition">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -547,7 +547,7 @@ export default function AdminEntity() {
             >
               <div className="p-5 sm:p-6 border-b border-black/5 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10">
                 <div>
-                  <span className="text-[10px] font-bold text-[#FF5A00] uppercase tracking-wider">{editing.__isNew ? "Create New" : "Edit Record"}</span>
+                  <span className="text-[10px] font-bold text-[#FF6600] uppercase tracking-wider">{editing.__isNew ? "Create New" : "Edit Record"}</span>
                   <div className="text-lg font-bold text-[#000F1B] mt-0.5">{cfg.title}</div>
                 </div>
                 <button type="button" onClick={close} className="w-9 h-9 rounded-xl grid place-items-center hover:bg-[#F2F2F2] text-[#000F1B] transition">
@@ -571,7 +571,7 @@ export default function AdminEntity() {
                 <button type="button" onClick={close} disabled={saving} className="rounded-xl border border-black/15 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#000F1B] hover:bg-black/5 transition">
                   Cancel
                 </button>
-                <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[#FF5A00] hover:bg-[#FF2D00] text-white px-6 py-2.5 text-xs sm:text-sm font-bold shadow-sm transition disabled:opacity-60">
+                <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[#FF6600] hover:bg-[#FF0000] text-white px-6 py-2.5 text-xs sm:text-sm font-bold shadow-sm transition disabled:opacity-60">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Record
                 </button>
               </div>
@@ -592,7 +592,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
       <span className="flex items-center gap-2 min-w-0">
         <span className="truncate">{field.label || field.name.replaceAll("_", " ")}</span>
         {isRequired ? (
-          <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FF2D00]/10 text-[#FF2D00]">Required</span>
+          <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FF0000]/10 text-[#FF0000]">Required</span>
         ) : (
           <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5 text-[#111111]/45">Optional</span>
         )}
@@ -635,7 +635,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
           </div>
           <div className="flex-1 space-y-2">
             <label className="inline-flex items-center gap-2 rounded-xl bg-white border border-black/10 px-4 py-2 text-xs font-semibold text-[#000F1B] cursor-pointer hover:bg-black/5 transition shadow-sm w-max">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin text-[#FF5A00]" /> : <UploadCloud className="w-4 h-4 text-[#FF5A00]" />}
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin text-[#FF6600]" /> : <UploadCloud className="w-4 h-4 text-[#FF6600]" />}
               <span>{uploading ? "Uploading..." : "Upload New Image"}</span>
               <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
             </label>
@@ -645,7 +645,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
             {value && (
               <div className="flex items-center gap-2">
                 <input value={value} readOnly className="flex-1 text-[10px] text-[#111111]/50 bg-transparent outline-none truncate" />
-                <button type="button" onClick={() => onChange("")} className="text-[10px] font-semibold text-[#FF2D00] hover:underline">
+                <button type="button" onClick={() => onChange("")} className="text-[10px] font-semibold text-[#FF0000] hover:underline">
                   Remove
                 </button>
               </div>
@@ -673,7 +673,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
           }}
           placeholder="+919876543210"
           maxLength={13}
-          className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm text-[#000F1B] font-mono"
+          className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B] font-mono"
         />
         <p className="mt-1 text-[10px] text-[#111111]/45">+91 then exactly 10 digits. No spaces or letters.</p>
       </label>
@@ -699,7 +699,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
             {field.label || "WhatsApp"}
             <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5 text-[#111111]/45">Optional</span>
           </span>
-          <button type="button" onClick={handleSync} className="inline-flex items-center gap-1 text-[9px] text-[#FF5A00] font-bold hover:underline">
+          <button type="button" onClick={handleSync} className="inline-flex items-center gap-1 text-[9px] text-[#FF6600] font-bold hover:underline">
             <Copy className="w-3 h-3" /> Same as Phone
           </button>
         </div>
@@ -710,7 +710,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
           onChange={(e) => onChange(forcePhone91Input(e.target.value))}
           maxLength={13}
           placeholder="+919876543210"
-          className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm font-mono"
+          className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm font-mono"
         />
       </div>
     );
@@ -719,7 +719,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
   if (field.type === "bool") {
     return (
       <label className="flex items-center gap-3 p-3 rounded-xl border border-black/5 bg-[#F2F2F2]/40 hover:bg-[#F2F2F2] cursor-pointer transition">
-        <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} className="w-5 h-5 rounded accent-[#FF5A00]" />
+        <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} className="w-5 h-5 rounded accent-[#FF6600]" />
         <span className="text-xs sm:text-sm font-semibold text-[#000F1B]">{field.label || field.name.replaceAll("_", " ")}</span>
         <span className="ml-auto text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5 text-[#111111]/45">Optional</span>
       </label>
@@ -730,7 +730,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
     return (
       <label className="block">
         {label}
-        <input type="number" value={value ?? 0} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm text-[#000F1B]" />
+        <input type="number" value={value ?? 0} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]" />
       </label>
     );
   }
@@ -739,7 +739,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
     return (
       <label className="block">
         {label}
-        <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm text-[#000F1B] resize-y" placeholder={field.placeholder || "Enter details..."} />
+        <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B] resize-y" placeholder={field.placeholder || "Enter details..."} />
       </label>
     );
   }
@@ -758,7 +758,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
     return (
       <label className="block">
         {label}
-        <input value={val} placeholder={field.placeholder || "Comma-separated"} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm text-[#000F1B]" />
+        <input value={val} placeholder={field.placeholder || "Comma-separated"} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]" />
       </label>
     );
   }
@@ -768,7 +768,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
     return (
       <label className="block">
         {label}
-        <textarea value={val} onChange={(e) => onChange(e.target.value)} rows={5} placeholder={field.placeholder} className="w-full rounded-xl border border-black/10 bg-[#F2F2F2]/60 px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-xs font-mono text-[#000F1B] resize-y" />
+        <textarea value={val} onChange={(e) => onChange(e.target.value)} rows={5} placeholder={field.placeholder} className="w-full rounded-xl border border-black/10 bg-[#F2F2F2]/60 px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-xs font-mono text-[#000F1B] resize-y" />
       </label>
     );
   }
@@ -777,7 +777,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
     return (
       <label className="block">
         {label}
-        <select value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm text-[#000F1B]">
+        <select value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]">
           <option value="">— Select an option —</option>
           {field.options?.map((o) => (
             <option key={o} value={o}>
@@ -808,7 +808,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
           }
           onChange(v);
         }}
-        className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF5A00] text-sm text-[#000F1B]"
+        className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]"
       />
       {field.name === "name" && (
         <p className="mt-1 text-[10px] text-[#111111]/45">Letters and spaces only · max 30 characters</p>

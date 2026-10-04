@@ -142,7 +142,7 @@ export default function DrawingsTab({ project, onSaved }) {
           className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === "library" ? "text-[#000F1B]" : "text-gray-400 hover:text-gray-700"}`}
         >
           Drawing Library
-          {activeTab === "library" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00] rounded-t-full" />}
+          {activeTab === "library" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600] rounded-t-full" />}
         </button>
         
         <button 
@@ -153,7 +153,7 @@ export default function DrawingsTab({ project, onSaved }) {
           {pendingRequestsCount > 0 && (
             <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full leading-none">{pendingRequestsCount}</span>
           )}
-          {activeTab === "requests" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF5A00] rounded-t-full" />}
+          {activeTab === "requests" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF6600] rounded-t-full" />}
         </button>
       </div>
 
@@ -180,15 +180,15 @@ export default function DrawingsTab({ project, onSaved }) {
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
               <div className="flex-1 w-full">
                 <label className="block text-[10px] font-bold text-[#111111]/60 uppercase tracking-wider mb-1">Drawing Title *</label>
-                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Ground Floor Electrical Layout" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none transition" />
+                <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Ground Floor Electrical Layout" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none transition" />
               </div>
               <div className="w-full sm:w-48">
                 <label className="block text-[10px] font-bold text-[#111111]/60 uppercase tracking-wider mb-1">Category</label>
-                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-[#FF5A00] outline-none cursor-pointer">
+                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none cursor-pointer">
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <label className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl text-white px-6 py-2.5 text-sm font-bold transition cursor-pointer shadow-sm ${fulfillingReqId ? "bg-amber-600 hover:bg-amber-700" : "bg-[#000F1B] hover:bg-[#FF5A00]"}`}>
+              <label className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl text-white px-6 py-2.5 text-sm font-bold transition cursor-pointer shadow-sm ${fulfillingReqId ? "bg-amber-600 hover:bg-amber-700" : "bg-[#000F1B] hover:bg-[#FF6600]"}`}>
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
                 <span>{fulfillingReqId ? "Upload & Fulfill" : "Upload Plan"}</span>
                 <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleUploadNew} disabled={!newTitle.trim() || uploading} />
@@ -226,7 +226,7 @@ export default function DrawingsTab({ project, onSaved }) {
                   const isPdf = latest.url?.toLowerCase().includes('.pdf');
 
                   return (
-                    <div key={d.id} className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden hover:border-[#FF5A00]/40 transition">
+                    <div key={d.id} className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden hover:border-[#FF6600]/40 transition">
                       <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#F9FAFB]/50">
                         <div className="flex items-center gap-4 min-w-0">
                           
@@ -245,7 +245,7 @@ export default function DrawingsTab({ project, onSaved }) {
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <span className="text-[9px] font-bold text-[#FF5A00] uppercase tracking-wider">{d.category}</span>
+                              <span className="text-[9px] font-bold text-[#FF6600] uppercase tracking-wider">{d.category}</span>
                               <span className="text-[9px] font-mono font-bold bg-[#000F1B] text-white px-2 py-0.5 rounded shadow-sm">V{d.current_version}</span>
                               <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${stat.color}`}>
                                 {stat.label}
@@ -260,7 +260,7 @@ export default function DrawingsTab({ project, onSaved }) {
                             <History className="w-3.5 h-3.5" /> {isExpanded ? "Hide History" : `History (${versions.length})`}
                           </button>
 
-                          <label className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#FF5A00]/10 text-[#FF5A00] hover:bg-[#FF5A00] hover:text-white px-4 py-1.5 text-xs font-bold cursor-pointer transition shadow-sm">
+                          <label className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#FF6600]/10 text-[#FF6600] hover:bg-[#FF6600] hover:text-white px-4 py-1.5 text-xs font-bold cursor-pointer transition shadow-sm">
                             {revisingId === d.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : `Upload V${d.current_version + 1}`}
                             <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => handleUploadRevision(d.id, e)} />
                           </label>
@@ -396,7 +396,7 @@ export default function DrawingsTab({ project, onSaved }) {
                       {req.status === "pending" ? (
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => updateRequestStatus(req.id, "dismissed")} className="text-[10px] font-bold text-gray-500 hover:text-gray-800 transition">Dismiss</button>
-                          <button onClick={() => startFulfillRequest(req)} className="px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF5A00] text-white text-[10px] font-bold rounded flex items-center gap-1 shadow-sm transition">
+                          <button onClick={() => startFulfillRequest(req)} className="px-3 py-1.5 bg-[#000F1B] hover:bg-[#FF6600] text-white text-[10px] font-bold rounded flex items-center gap-1 shadow-sm transition">
                             Fulfill <ArrowRight className="w-3 h-3" />
                           </button>
                         </div>

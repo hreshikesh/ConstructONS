@@ -40,7 +40,7 @@ function cn(...classes) {
 /*                        DYNAMIC LUCIDE ICON HELPER                          */
 /* -------------------------------------------------------------------------- */
 
-function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF5A00]" }) {
+function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF6600]" }) {
   if (!name) return <LucideIcons.Home className={className} strokeWidth={2} />;
 
   // If name is already a valid React Component
@@ -163,7 +163,7 @@ export default function AboutPage() {
       m.bio ||
       "Dedicated to building better homes with transparent processes.",
     image: m.photo,
-    accent: "#FF5A00",
+    accent: "#FF6600",
   }));
 
   const structuredData = {
@@ -197,7 +197,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+    <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white min-h-screen">
       <SEO
         title="About Us - Intelligent & Transparent Builders"
         description="We are India's premium tech-enabled construction platform. Read our mission to bring complete structural transparency and AI-driven efficiency to your dream home."
@@ -223,11 +223,11 @@ export default function AboutPage() {
             >
               <h1 className="font-extrabold text-[#000F1B] text-[13vw] sm:text-[11vw] md:text-[10vw] lg:text-[9vw] leading-none tracking-tight whitespace-nowrap flex items-center justify-center">
                 Construct
-                <span className="inline-flex items-center text-[#FF5A00]">
-                  <PowerIcon className="w-[0.72em] h-[0.72em] stroke-[#FF5A00] inline-block -mt-[0.05em]" />
+                <span className="inline-flex items-center text-[#FF6600]">
+                  <PowerIcon className="w-[0.72em] h-[0.72em] stroke-[#FF6600] inline-block -mt-[0.05em]" />
                   NS
                 </span>
-                <sup className="text-[0.35em] font-bold text-[#FF5A00] -top-[0.8em] ml-[0.05em]">™</sup>
+                <sup className="text-[0.35em] font-bold text-[#FF6600] -top-[0.8em] ml-[0.05em]">™</sup>
               </h1>
               <p className="mt-3 text-[#000F1B]/50 font-medium text-xs sm:text-sm md:text-base tracking-[0.2em] uppercase">
                 Everything Construction. Always On.
@@ -263,7 +263,7 @@ export default function AboutPage() {
                 className="absolute left-4 bottom-6 md:left-8 md:bottom-12 pointer-events-auto"
               >
                 <div className="max-w-[200px] sm:max-w-[240px] bg-white/85 backdrop-blur-md p-4 sm:p-5 rounded-xl border border-black/5 shadow-xl">
-                  <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#FF5A00] mb-2">
+                  <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#FF6600] mb-2">
                     Our Mission
                   </div>
                   <p className="text-[10px] sm:text-[11px] leading-relaxed text-[#000F1B]/75">
@@ -280,7 +280,7 @@ export default function AboutPage() {
               >
                 <div className="bg-[#000F1B]/95 backdrop-blur-md text-white p-4 sm:p-5 rounded-xl shadow-2xl max-w-[200px] sm:max-w-[220px] border border-white/10">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A00] animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6600] animate-pulse" />
                     <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#FF8A4C]">
                       What we build
                     </div>
@@ -304,8 +304,8 @@ export default function AboutPage() {
               <div className="relative overflow-hidden bg-[#000F1B] rounded-[2.5rem] md:rounded-full py-8 md:py-10 px-5 sm:px-8 md:px-12 border border-white/10 shadow-2xl shadow-[#000F1B]/20">
                 
                 {/* Glowing decorative circles */}
-                <div className="pointer-events-none absolute -right-10 -bottom-10 w-60 h-60 bg-[#FF5A00]/15 rounded-full blur-3xl" />
-                <div className="pointer-events-none absolute -left-10 -top-10 w-60 h-60 bg-[#FF5A00]/10 rounded-full blur-3xl" />
+                <div className="pointer-events-none absolute -right-10 -bottom-10 w-60 h-60 bg-[#FF6600]/15 rounded-full blur-3xl" />
+                <div className="pointer-events-none absolute -left-10 -top-10 w-60 h-60 bg-[#FF6600]/10 rounded-full blur-3xl" />
 
                 {/* STATS GRID */}
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-y-8 md:gap-y-0">
@@ -319,7 +319,7 @@ export default function AboutPage() {
                       className={`flex items-center justify-center gap-3 sm:gap-4 px-3 md:px-5 ${i !== 0 ? "md:border-l md:border-white/10" : ""}`}
                     >
                       <div className="flex items-center justify-center shrink-0 rounded-[1.25rem] border border-white/10 bg-[#132230] shadow-inner" style={{ width: "56px", height: "56px", minWidth: "56px", minHeight: "56px" }}>
-                        <DynamicLucideIcon name={stat.icon} className="w-6 h-6 text-[#FF5A00]" />
+                        <DynamicLucideIcon name={stat.icon} className="w-6 h-6 text-[#FF6600]" />
                       </div>
                       <div className="text-left">
                         <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-none text-white">
@@ -368,15 +368,15 @@ export default function AboutPage() {
             <div className="grid lg:grid-cols-[1fr_1.5fr] gap-12 lg:gap-20 items-start">
               
               <div className="lg:sticky lg:top-32">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#FF5A00]/20 bg-[#FF5A00]/5 px-3 py-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5A00] animate-pulse" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#FF5A00]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6600]/20 bg-[#FF6600]/5 px-3 py-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#FF6600] animate-pulse" />
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#FF6600]">
                     Knowledge Base
                   </span>
                 </div>
                 <h2 className="mt-5 text-3xl md:text-4xl lg:text-5xl font-bold text-[#000F1B] leading-[1.1] tracking-tight">
                   Frequently Asked<br />
-                  <span className="text-[#FF5A00]">Questions.</span>
+                  <span className="text-[#FF6600]">Questions.</span>
                 </h2>
                 <p className="mt-4 text-[#000F1B]/60 text-sm md:text-base leading-relaxed max-w-sm">
                   Everything you need to know about building with ConstructONS. Can&rsquo;t find the answer? Contact our support team.
@@ -415,17 +415,17 @@ function FAQItem({ faq, index }) {
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
       className={`rounded-2xl border transition-colors duration-300 overflow-hidden ${
-        isOpen ? "bg-[#F7F7F7] border-[#FF5A00]/30" : "bg-white border-black/5 hover:border-black/15"
+        isOpen ? "bg-[#F7F7F7] border-[#FF6600]/30" : "bg-white border-black/5 hover:border-black/15"
       }`}
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full text-left px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-4 outline-none"
       >
-        <span className={`font-semibold text-sm sm:text-[15px] pr-4 transition-colors ${isOpen ? "text-[#FF5A00]" : "text-[#000F1B]"}`}>
+        <span className={`font-semibold text-sm sm:text-[15px] pr-4 transition-colors ${isOpen ? "text-[#FF6600]" : "text-[#000F1B]"}`}>
           {faq.question}
         </span>
-        <div className={`shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center transition-colors duration-300 ${isOpen ? "bg-[#FF5A00] text-white" : "bg-[#000F1B]/5 text-[#000F1B]"}`}>
+        <div className={`shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center transition-colors duration-300 ${isOpen ? "bg-[#FF6600] text-white" : "bg-[#000F1B]/5 text-[#000F1B]"}`}>
           {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
         </div>
       </button>
@@ -462,7 +462,7 @@ function initials(name) {
 ========================================================= */
 
 function Portrait({ member, active }) {
-  const style = { "--team-accent": member.accent ?? "#FF5A00" };
+  const style = { "--team-accent": member.accent ?? "#FF6600" };
   return (
     <div style={style} className={cn("relative h-full overflow-hidden rounded-[1.05rem] bg-[#E8EEF2] transition-colors duration-500", active && "bg-[color-mix(in_srgb,var(--team-accent)_12%,white)]")}>
       <div aria-hidden="true" className={cn("absolute inset-0 opacity-55 transition-opacity duration-500", active && "opacity-100")} style={{ background: "radial-gradient(circle at 68% 20%, color-mix(in srgb, var(--team-accent) 36%, transparent), transparent 36%), radial-gradient(circle at 22% 82%, color-mix(in srgb, var(--team-accent) 16%, transparent), transparent 42%)" }} />
@@ -506,11 +506,11 @@ function TeamRevealGrid({ eyebrow, title, description, members = [] }) {
   return (
     <div className="relative w-full mx-auto max-w-6xl">
       <header className="mx-auto mb-10 md:mb-12 max-w-2xl text-center">
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#FF5A00]">{eyebrow}</p>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#FF6600]">{eyebrow}</p>
         <h2 className="text-balance text-3xl sm:text-4xl font-bold tracking-tight text-[#000F1B]">
           <span className="relative inline-block">
             <span className="relative z-10">{title}</span>
-            <svg aria-hidden="true" className="absolute -bottom-2 sm:-bottom-3 left-0 h-2 sm:h-3 w-full text-[#FF5A00]" viewBox="0 0 100 20" preserveAspectRatio="none" fill="none">
+            <svg aria-hidden="true" className="absolute -bottom-2 sm:-bottom-3 left-0 h-2 sm:h-3 w-full text-[#FF6600]" viewBox="0 0 100 20" preserveAspectRatio="none" fill="none">
               <path d="M2 12 Q35 2 95 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" pathLength="1">
                 <animate attributeName="stroke-dasharray" values="0 1;1 0" dur="700ms" fill="freeze" />
               </path>
@@ -540,7 +540,7 @@ function TeamRevealGrid({ eyebrow, title, description, members = [] }) {
                 onBlur={() => setInteracting(false)}
                 className="group block w-full text-left outline-none"
               >
-                <div style={{ "--team-accent": member.accent ?? "#FF5A00" }} className={cn("relative overflow-hidden rounded-[1.25rem] border bg-white/90 backdrop-blur-sm p-1.5 shadow-[0_10px_35px_-24px_rgba(0,0,0,0.15)] transition-[border-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]", active ? "-translate-y-1 border-[color-mix(in_srgb,var(--team-accent)_50%,transparent)] shadow-[0_22px_48px_-28px_color-mix(in_srgb,var(--team-accent)_60%,transparent)]" : "border-black/5")}>
+                <div style={{ "--team-accent": member.accent ?? "#FF6600" }} className={cn("relative overflow-hidden rounded-[1.25rem] border bg-white/90 backdrop-blur-sm p-1.5 shadow-[0_10px_35px_-24px_rgba(0,0,0,0.15)] transition-[border-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]", active ? "-translate-y-1 border-[color-mix(in_srgb,var(--team-accent)_50%,transparent)] shadow-[0_22px_48px_-28px_color-mix(in_srgb,var(--team-accent)_60%,transparent)]" : "border-black/5")}>
                   <div className={cn("h-44 sm:h-48 md:h-52 transition-[height] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]", active && "h-60 sm:h-64 md:h-72")}>
                     <Portrait member={member} active={active} />
                   </div>
@@ -550,7 +550,7 @@ function TeamRevealGrid({ eyebrow, title, description, members = [] }) {
                 </div>
                 <div className="px-1 pt-2.5 text-center">
                   <h3 className="truncate text-xs sm:text-sm md:text-base font-bold text-[#000F1B] tracking-tight">{member.name}</h3>
-                  <p className={cn("mt-0.5 truncate text-[10px] sm:text-[11px] md:text-xs font-medium transition-colors duration-300", active ? "text-[#FF5A00]" : "text-[#000F1B]/60")}>{member.role}</p>
+                  <p className={cn("mt-0.5 truncate text-[10px] sm:text-[11px] md:text-xs font-medium transition-colors duration-300", active ? "text-[#FF6600]" : "text-[#000F1B]/60")}>{member.role}</p>
                 </div>
               </button>
             </li>

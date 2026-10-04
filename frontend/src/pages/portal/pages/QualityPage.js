@@ -150,7 +150,7 @@ export default function QualityPage() {
   const getIssueStatusUI = (status) => {
     switch (status) {
       case "open": return { label: "Raised", color: "bg-red-50 text-red-700 border-red-200" };
-      case "in_progress": return { label: "Fix In Progress", color: "bg-[#FF5A00]/10 text-[#FF5A00] border-[#FF5A00]/30" };
+      case "in_progress": return { label: "Fix In Progress", color: "bg-[#FF6600]/10 text-[#FF6600] border-[#FF6600]/30" };
       case "ready_for_client_review": return { label: "Ready for Your Review", color: "bg-amber-100 text-amber-800 border-amber-300" };
       case "client_approved": return { label: "Resolution Accepted", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
       case "closed": return { label: "Closed", color: "bg-gray-100 text-gray-700 border-gray-300" };
@@ -174,7 +174,7 @@ export default function QualityPage() {
         <div className="bg-white border-b border-gray-200 px-4 py-3 shrink-0 shadow-sm">
           <button
             onClick={() => setActiveStageId(null)}
-            className="text-[10px] font-bold text-gray-500 hover:text-[#FF5A00] flex items-center gap-1 mb-2 bg-gray-50 px-2 py-1 rounded w-max transition"
+            className="text-[10px] font-bold text-gray-500 hover:text-[#FF6600] flex items-center gap-1 mb-2 bg-gray-50 px-2 py-1 rounded w-max transition"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Back to Quality
           </button>
@@ -293,7 +293,7 @@ export default function QualityPage() {
                 <button onClick={() => setModalType(null)} className="p-1 hover:bg-gray-200 rounded-full transition"><X className="w-4 h-4 text-gray-500" /></button>
               </div>
               <div className="p-4 space-y-3">
-                <p className="text-[10px] text-[#CC4800] bg-[#FF5A00]/10 border border-[#FF5A00]/20 rounded-lg p-2 font-medium">
+                <p className="text-[10px] text-[#CC4800] bg-[#FF6600]/10 border border-[#FF6600]/20 rounded-lg p-2 font-medium">
                   Confirm that this quality check has been reviewed and is satisfactory.
                 </p>
                 <div className="flex gap-2.5 p-2 bg-gray-50 border border-gray-200 rounded-lg">
@@ -303,7 +303,7 @@ export default function QualityPage() {
                   <div className="flex flex-col justify-center">
                     <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Quality Check</span>
                     <span className="text-xs font-bold text-[#000F1B] mb-0.5">{selectedCheck.check_text}</span>
-                    <span className="text-[9px] text-[#FF5A00] font-bold">{selectedCheck.area}</span>
+                    <span className="text-[9px] text-[#FF6600] font-bold">{selectedCheck.area}</span>
                   </div>
                 </div>
                 <div>
@@ -346,7 +346,7 @@ export default function QualityPage() {
                   <div className="flex flex-col justify-center">
                     <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Quality Check</span>
                     <span className="text-xs font-bold text-[#000F1B] mb-0.5">{selectedCheck.check_text}</span>
-                    <span className="text-[9px] text-[#FF5A00] font-bold">{selectedCheck.area}</span>
+                    <span className="text-[9px] text-[#FF6600] font-bold">{selectedCheck.area}</span>
                   </div>
                 </div>
                 <div>
@@ -368,7 +368,7 @@ export default function QualityPage() {
                       </div>
                     ))}
                     <label className="w-12 h-12 rounded-md border border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition shrink-0">
-                      {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5A00]" /> : <Camera className="w-3.5 h-3.5 text-[#FF5A00] mb-0.5" />}
+                      {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF6600]" /> : <Camera className="w-3.5 h-3.5 text-[#FF6600] mb-0.5" />}
                       <span className="text-[7px] font-bold text-gray-500 mt-0.5">Photo</span>
                       <input type="file" accept="image/*" className="hidden" onChange={onIssuePhotoUpload} disabled={uploading} />
                     </label>
@@ -428,7 +428,7 @@ export default function QualityPage() {
         <div className="space-y-4 animate-in fade-in duration-300">
           <section>
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-5 h-5 rounded-full bg-[#FF5A00] text-white text-[10px] font-bold grid place-items-center">1</span>
+              <span className="w-5 h-5 rounded-full bg-[#FF6600] text-white text-[10px] font-bold grid place-items-center">1</span>
               <div>
                 <h2 className="text-sm font-bold text-[#000F1B]">Awaiting Your Review</h2>
                 <p className="text-[9px] text-gray-500">Stages waiting for your confirmation</p>
@@ -447,7 +447,7 @@ export default function QualityPage() {
                   const pending = (stage.checks || []).filter((c) => c.client_status === "pending_review").length;
                   const thumb = stage.checks?.find((c) => c.photo_urls?.[0])?.photo_urls?.[0];
                   return (
-                    <div key={stage.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:border-[#FF5A00]/40 transition flex flex-col justify-between">
+                    <div key={stage.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:border-[#FF6600]/40 transition flex flex-col justify-between">
                       <div>
                         <div className="h-20 bg-gray-100 border-b border-gray-100 relative">
                           {thumb ? (
@@ -459,13 +459,13 @@ export default function QualityPage() {
                         <div className="p-3">
                           <h3 className="text-xs font-bold text-[#000F1B]">{stage.name}</h3>
                           <p className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">{pending} pending · {stage.checks?.length || 0} checks</p>
-                          <span className="inline-block mt-1.5 text-[8px] font-bold uppercase tracking-wider text-[#CC4800] bg-[#FF5A00]/10 border border-[#FF5A00]/20 px-1.5 py-0.5 rounded">
+                          <span className="inline-block mt-1.5 text-[8px] font-bold uppercase tracking-wider text-[#CC4800] bg-[#FF6600]/10 border border-[#FF6600]/20 px-1.5 py-0.5 rounded">
                             Awaiting Your Review
                           </span>
                         </div>
                       </div>
                       <div className="p-3 pt-0">
-                        <button onClick={() => setActiveStageId(stage.id)} className="w-full py-1.5 text-[10px] font-bold text-[#FF5A00] bg-[#FF5A00]/5 border border-[#FF5A00]/20 rounded-lg hover:bg-[#FF5A00]/10 transition flex items-center justify-center gap-1">
+                        <button onClick={() => setActiveStageId(stage.id)} className="w-full py-1.5 text-[10px] font-bold text-[#FF6600] bg-[#FF6600]/5 border border-[#FF6600]/20 rounded-lg hover:bg-[#FF6600]/10 transition flex items-center justify-center gap-1">
                           Review <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -478,7 +478,7 @@ export default function QualityPage() {
 
           <section>
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-5 h-5 rounded-full bg-[#FF5A00] text-white text-[10px] font-bold grid place-items-center">2</span>
+              <span className="w-5 h-5 rounded-full bg-[#FF6600] text-white text-[10px] font-bold grid place-items-center">2</span>
               <div>
                 <h2 className="text-sm font-bold text-[#000F1B]">Reviewed by You</h2>
                 <p className="text-[9px] text-gray-500">Stages you have already reviewed and confirmed.</p>
@@ -497,7 +497,7 @@ export default function QualityPage() {
                   const hasIssues = checks.some((c) => c.client_status === "issue_raised");
                   const thumb = checks.find((c) => c.photo_urls?.[0])?.photo_urls?.[0];
                   return (
-                    <button key={stage.id} type="button" onClick={() => setActiveStageId(stage.id)} className="w-full bg-white border border-gray-200 rounded-xl p-2.5 flex items-center gap-3 text-left hover:border-[#FF5A00]/40 transition shadow-sm group">
+                    <button key={stage.id} type="button" onClick={() => setActiveStageId(stage.id)} className="w-full bg-white border border-gray-200 rounded-xl p-2.5 flex items-center gap-3 text-left hover:border-[#FF6600]/40 transition shadow-sm group">
                       <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 hidden sm:block border border-gray-200">
                         {thumb ? <img src={resolveMediaUrl(thumb)} alt="" className="w-full h-full object-cover" /> : null}
                       </div>
@@ -516,7 +516,7 @@ export default function QualityPage() {
                         <div className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Reviewed On</div>
                         <div className="text-[10px] font-bold text-gray-700">{fmtDate(stage.released_at)}</div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#FF5A00] transition shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#FF6600] transition shrink-0" />
                     </button>
                   );
                 })}
@@ -546,7 +546,7 @@ export default function QualityPage() {
                     <div>
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <div className="text-[9px] font-bold text-[#FF5A00] uppercase tracking-wider">{i.area}</div>
+                          <div className="text-[9px] font-bold text-[#FF6600] uppercase tracking-wider">{i.area}</div>
                           <div className="text-xs font-bold text-[#000F1B] leading-tight mt-0.5">{i.check_text_snapshot}</div>
                         </div>
                         <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border text-center ${ui.color}`}>
@@ -564,13 +564,13 @@ export default function QualityPage() {
                         <div className="flex flex-wrap items-center gap-3 text-[9px] font-medium text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100 mb-2">
                           {i.assigned_to && (
                             <div className="flex items-center gap-1">
-                              <UserCheck className="w-3 h-3 text-[#FF5A00]" />
+                              <UserCheck className="w-3 h-3 text-[#FF6600]" />
                               <span>Assigned: <strong className="text-gray-800">{i.assigned_to}</strong></span>
                             </div>
                           )}
                           {i.target_date && (
                             <div className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3 text-[#FF5A00]" />
+                              <Calendar className="w-3 h-3 text-[#FF6600]" />
                               <span>Fix Target: <strong className="text-gray-800">{fmtDate(i.target_date)}</strong></span>
                             </div>
                           )}
@@ -655,7 +655,7 @@ export default function QualityPage() {
                 <textarea 
                   rows="2" value={remark} onChange={e => setRemark(e.target.value)}
                   placeholder="Leave a note for the team..."
-                  className="w-full border border-gray-200 rounded-lg p-2 text-[11px] focus:border-[#FF5A00] outline-none resize-none bg-gray-50 focus:bg-white"
+                  className="w-full border border-gray-200 rounded-lg p-2 text-[11px] focus:border-[#FF6600] outline-none resize-none bg-gray-50 focus:bg-white"
                 />
               </div>
             </div>
@@ -684,7 +684,7 @@ export default function QualityPage() {
 function getIssueStatusUI(status) {
   switch (status) {
     case "open": return { label: "Raised", color: "bg-red-50 text-red-700 border-red-200" };
-    case "in_progress": return { label: "Fix In Progress", color: "bg-[#FF5A00]/10 text-[#FF5A00] border-[#FF5A00]/20" };
+    case "in_progress": return { label: "Fix In Progress", color: "bg-[#FF6600]/10 text-[#FF6600] border-[#FF6600]/20" };
     case "ready_for_client_review": return { label: "Ready for Your Review", color: "bg-amber-100 text-amber-800 border-amber-300" };
     case "client_approved": return { label: "Resolution Accepted", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
     case "closed": return { label: "Closed", color: "bg-gray-100 text-gray-700 border-gray-300" };

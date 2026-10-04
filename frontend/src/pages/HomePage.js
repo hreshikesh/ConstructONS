@@ -80,7 +80,7 @@ export default function HomePage() {
   if (!data) {
     return (
       <div className="min-h-screen grid place-items-center">
-        <div className="w-8 h-8 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-[#FF6600] border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -105,16 +105,19 @@ export default function HomePage() {
         
         {/* PREMIUM PACKAGES TEASER BANNER */}
         <section className="py-12 md:py-20 px-4">
-          <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden relative bg-[#000F1B] shadow-2xl">
+          <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden relative bg-[#111111] shadow-2xl">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-[#FF5A00]/20 blur-[100px] rounded-full animate-pulse" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-[#FF6600]/20 blur-[100px] rounded-full animate-pulse" />
               <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
             </div>
             
             <div className="relative z-10 px-6 py-12 md:py-16 md:px-12 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
               <div>
                 <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-3">
-                  Transparent Pricing. <span className="text-[#FF5A00]">Zero Surprises.</span>
+                  Transparent Pricing.{" "}
+                  <span className="bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent">
+                    Zero Surprises.
+                  </span>
                 </h2>
                 <p className="text-white/60 text-sm md:text-base max-w-lg">
                   Explore our curated construction packages designed for every budget. From essential builds to premium custom homes, know exactly what you pay for.
@@ -122,7 +125,7 @@ export default function HomePage() {
               </div>
               <Link 
                 to="/packages" 
-                className="shrink-0 inline-flex items-center justify-center gap-2 bg-[#FF5A00] hover:bg-[#E04F00] text-white px-8 py-4 rounded-full font-bold transition shadow-[0_0_20px_rgba(255,90,0,0.3)] hover:shadow-[0_0_30px_rgba(255,90,0,0.5)] hover:-translate-y-1"
+                className="shrink-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6600] to-[#FF0000] hover:opacity-90 text-white px-8 py-4 rounded-full font-bold transition shadow-[0_0_20px_rgba(255,102,0,0.3)] hover:shadow-[0_0_30px_rgba(255,102,0,0.5)] hover:-translate-y-1"
               >
                 <span>View All Packages</span>
                 <ArrowRight className="w-5 h-5" />

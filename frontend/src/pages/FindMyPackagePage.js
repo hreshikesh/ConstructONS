@@ -234,7 +234,7 @@ function BrandLogoText({ size = "md" }) {
   return (
     <span className={`font-bold tracking-tight text-white inline-flex items-center ${sizes}`}>
       Construct
-      <span className="inline-flex items-center justify-center relative mx-[1px] w-[0.8em] h-[0.8em] rounded-full border-[2.5px] border-[#D44A00] align-middle bg-[#FF5A00]/10">
+      <span className="inline-flex items-center justify-center relative mx-[1px] w-[0.8em] h-[0.8em] rounded-full border-[2.5px] border-[#D44A00] align-middle bg-[#FF6600]/10">
         <span className="absolute top-0 w-[2.5px] h-[48%] bg-[#D44A00] rounded-full -translate-y-0.5" />
       </span>
       NS
@@ -308,7 +308,7 @@ export default function FindMyPackagePage() {
   };
 
   return (
-    <div className="bg-[#FBF9F6] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white min-h-screen">
+    <div className="bg-[#FBF9F6] font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white min-h-screen">
       <SEO
         title="Find My Package - Construction Matching Tool"
         description="Not sure which house specification package matches your budget and requirements? Answer 4 basic style, structural, and tech preference questions to find your layout."
@@ -408,14 +408,14 @@ function IntroScreen({ onBegin }) {
           <h1 className="text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-[1.05] tracking-tight">
             Answer four questions.
             <br />
-            <span className="text-[#FF5A00] italic">Find your home.</span>
+            <span className="text-[#FF6600] italic">Find your home.</span>
           </h1>
 
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.9, delay: 0.4 }}
-            className="mt-8 h-[2px] w-20 bg-[#FF5A00] origin-left mx-auto"
+            className="mt-8 h-[2px] w-20 bg-[#FF6600] origin-left mx-auto"
           />
 
           <p className="mt-6 max-w-lg mx-auto text-[#000F1B]/60 text-sm md:text-base leading-relaxed">
@@ -432,10 +432,10 @@ function IntroScreen({ onBegin }) {
             <button
               type="button"
               onClick={onBegin}
-              className="group inline-flex items-center gap-3 rounded-full bg-[#000F1B] hover:bg-[#FF5A00] text-white text-sm font-semibold px-8 py-4 transition-all shadow-[0_16px_40px_rgba(0,15,27,0.25)]"
+              className="group inline-flex items-center gap-3 rounded-full bg-[#000F1B] hover:bg-[#FF6600] text-white text-sm font-semibold px-8 py-4 transition-all shadow-[0_16px_40px_rgba(0,15,27,0.25)]"
             >
               Begin Selection
-              <span className="w-7 h-7 rounded-full bg-[#FF5A00] group-hover:bg-white group-hover:text-[#FF5A00] text-white grid place-items-center transition">
+              <span className="w-7 h-7 rounded-full bg-[#FF6600] group-hover:bg-white group-hover:text-[#FF6600] text-white grid place-items-center transition">
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </button>
@@ -454,7 +454,7 @@ function IntroScreen({ onBegin }) {
                 transition={{ delay: 0.9 + i * 0.08 }}
                 className="rounded-sm border border-black/10 bg-white/60 backdrop-blur p-4 text-left"
               >
-                <q.icon className="w-4 h-4 text-[#FF5A00]" />
+                <q.icon className="w-4 h-4 text-[#FF6600]" />
                 <div className="mt-2 text-[9px] font-bold uppercase tracking-widest text-[#000F1B]/45">
                   {String(i + 1).padStart(2, "0")}
                 </div>
@@ -497,7 +497,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF6600]">
                     {String(step + 1).padStart(2, "0")} / {String(total).padStart(2, "0")} · {current.kicker}
                   </div>
 
@@ -511,7 +511,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                         onBlur={() => setShowTip(false)}
                         onClick={() => setShowTip((s) => !s)}
                         aria-label="Why we ask"
-                        className="inline-flex items-center gap-1 rounded-full border border-[#000F1B]/15 bg-white text-[#000F1B]/60 hover:text-[#FF5A00] hover:border-[#FF5A00]/40 text-[10px] font-semibold uppercase tracking-widest px-2 py-1 transition"
+                        className="inline-flex items-center gap-1 rounded-full border border-[#000F1B]/15 bg-white text-[#000F1B]/60 hover:text-[#FF6600] hover:border-[#FF6600]/40 text-[10px] font-semibold uppercase tracking-widest px-2 py-1 transition"
                       >
                         <Info className="w-3 h-3" />
                         Why?
@@ -562,7 +562,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                           group relative overflow-hidden rounded-sm text-left border transition-all duration-300
                           ${
                             active
-                              ? "border-[#FF5A00] shadow-[0_16px_32px_-16px_rgba(255,90,0,0.4)]"
+                              ? "border-[#FF6600] shadow-[0_16px_32px_-16px_rgba(255,90,0,0.4)]"
                               : "border-black/10 hover:border-[#000F1B]/40"
                           }
                         `}
@@ -583,7 +583,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0, opacity: 0 }}
-                                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-[#FF5A00] grid place-items-center shadow-lg"
+                                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-[#FF6600] grid place-items-center shadow-lg"
                               >
                                 <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                               </motion.div>
@@ -601,14 +601,14 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                         </div>
 
                         <div className="flex items-center justify-between px-2.5 py-2 bg-white">
-                          <span className={`text-[9px] font-bold uppercase tracking-widest ${active ? "text-[#FF5A00]" : "text-[#000F1B]/40"}`}>
+                          <span className={`text-[9px] font-bold uppercase tracking-widest ${active ? "text-[#FF6600]" : "text-[#000F1B]/40"}`}>
                             {active ? "Selected" : "Select"}
                           </span>
                           <ArrowRight
                             className={`w-3 h-3 transition-all ${
                               active
-                                ? "text-[#FF5A00] translate-x-1"
-                                : "text-[#000F1B]/30 group-hover:text-[#FF5A00] group-hover:translate-x-1"
+                                ? "text-[#FF6600] translate-x-1"
+                                : "text-[#000F1B]/30 group-hover:text-[#FF6600] group-hover:translate-x-1"
                             }`}
                           />
                         </div>
@@ -616,7 +616,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                         {active && (
                           <motion.div
                             layoutId="activeBar"
-                            className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FF5A00]"
+                            className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FF6600]"
                           />
                         )}
                       </motion.button>
@@ -628,7 +628,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                   <button
                     type="button"
                     onClick={onBack}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#000F1B]/60 hover:text-[#FF5A00] transition"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#000F1B]/60 hover:text-[#FF6600] transition"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     {step === 0 ? "Back to start" : "Previous"}
@@ -660,7 +660,7 @@ function JourneyIndicator({ step, total, answers }) {
             <div className="flex items-center gap-2 mb-1.5">
               <span
                 className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                  active ? "text-[#FF5A00]" : done ? "text-[#000F1B]" : "text-[#000F1B]/30"
+                  active ? "text-[#FF6600]" : done ? "text-[#000F1B]" : "text-[#000F1B]/30"
                 }`}
               >
                 {String(i + 1).padStart(2, "0")} · <span className="hidden sm:inline">{q.kicker}</span>
@@ -673,7 +673,7 @@ function JourneyIndicator({ step, total, answers }) {
                   width: active ? "60%" : done ? "100%" : "0%",
                 }}
                 transition={{ duration: 0.5 }}
-                className="h-full bg-[#FF5A00]"
+                className="h-full bg-[#FF6600]"
               />
             </div>
           </div>
@@ -687,8 +687,8 @@ function ProfilePanel({ answers }) {
   return (
     <div className="lg:sticky lg:top-28 self-start">
       <div className="rounded-sm bg-white/70 backdrop-blur border border-black/5 p-4 shadow-sm">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5A00]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A00] animate-pulse" />
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF6600]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF6600] animate-pulse" />
           Your Selections
         </div>
 
@@ -736,7 +736,7 @@ function AnalysingScreen() {
       className="min-h-[65vh] flex items-center justify-center"
     >
       <div className="container-wide text-center max-w-md">
-        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A00] mb-4">
+        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF6600] mb-4">
           Processing
         </div>
         <h3 className="text-[#000F1B] font-bold text-2xl sm:text-3xl md:text-4xl leading-tight tracking-tight">
@@ -757,7 +757,7 @@ function AnalysingScreen() {
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.4 + 0.3 }}
-                className="w-6 h-6 rounded-full bg-[#FF5A00] grid place-items-center"
+                className="w-6 h-6 rounded-full bg-[#FF6600] grid place-items-center"
               >
                 <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
               </motion.div>
@@ -810,7 +810,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-5xl leading-[1.05] tracking-tight">
             A home designed{" "}
-            <span className="italic text-[#FF5A00]">around you.</span>
+            <span className="italic text-[#FF6600]">around you.</span>
           </h2>
         </div>
 
@@ -824,8 +824,8 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
             className="relative overflow-hidden rounded-sm bg-gradient-to-br from-[#000F1B] via-[#0B1E30] to-[#000F1B] text-white p-7 sm:p-9 border border-white/10 shadow-[0_30px_60px_-30px_rgba(0,15,27,0.4)]"
           >
             {/* soft ambient */}
-            <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#FF5A00]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FF5A00]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#FF6600]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FF6600]/10 blur-3xl" />
 
             <div className="relative z-10">
               <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -864,7 +864,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
                       transition={{ delay: 0.3 + i * 0.08 }}
                       className="flex items-start gap-2.5 text-sm text-white/85"
                     >
-                      <span className="w-5 h-5 rounded-full bg-[#FF5A00]/15 border border-[#FF5A00]/30 grid place-items-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[#FF6600]/15 border border-[#FF6600]/30 grid place-items-center shrink-0 mt-0.5">
                         <Check className="w-3 h-3 text-[#FF8A4C]" strokeWidth={3} />
                       </span>
                       {h}
@@ -876,7 +876,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
               <div className="mt-7 flex flex-col sm:flex-row gap-2.5">
                 <Link
                   to={`/packages/${result.slug}`}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#FF5A00] hover:bg-[#E04F00] text-white text-sm font-semibold px-6 py-3 shadow-[0_10px_28px_rgba(255,90,0,0.35)] transition"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6600] hover:bg-[#E04F00] text-white text-sm font-semibold px-6 py-3 shadow-[0_10px_28px_rgba(255,90,0,0.35)] transition"
                 >
                   Explore this package <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -898,7 +898,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
             transition={{ duration: 0.6, delay: 0.1 }}
             className="rounded-sm bg-white border border-black/10 p-6 sm:p-8 flex flex-col"
           >
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF6600]">
               Why this match
             </div>
             <h4 className="mt-2 text-[#000F1B] font-bold text-2xl leading-tight">
@@ -915,8 +915,8 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
                     transition={{ delay: 0.3 + i * 0.1 }}
                     className="flex items-start gap-3"
                   >
-                    <span className="w-6 h-6 rounded-full bg-[#FF5A00]/10 grid place-items-center shrink-0 mt-0.5">
-                      <Check className="w-3.5 h-3.5 text-[#FF5A00]" strokeWidth={3} />
+                    <span className="w-6 h-6 rounded-full bg-[#FF6600]/10 grid place-items-center shrink-0 mt-0.5">
+                      <Check className="w-3.5 h-3.5 text-[#FF6600]" strokeWidth={3} />
                     </span>
                     <div>
                       <div className="text-sm font-semibold text-[#000F1B]">
@@ -952,7 +952,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
           >
             <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A00]">
+                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF6600]">
                   Recommended Homes
                 </div>
                 <h3 className="mt-2 text-[#000F1B] font-bold text-xl sm:text-2xl md:text-3xl tracking-tight">
@@ -961,7 +961,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
               </div>
               <Link
                 to="/#home-collection"
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#FF5A00] hover:gap-2 transition-all"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#FF6600] hover:gap-2 transition-all"
               >
                 View all <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -980,7 +980,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
           <button
             type="button"
             onClick={onRestart}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#000F1B]/60 hover:text-[#FF5A00] transition"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#000F1B]/60 hover:text-[#FF6600] transition"
           >
             <RotateCcw className="w-4 h-4" />
             Retake Selection
@@ -993,7 +993,7 @@ function ResultScreen({ result, answers, homes, onRestart, onConsult, onBrochure
             <button
               type="button"
               onClick={onConsult}
-              className="inline-flex items-center gap-2 rounded-full bg-[#FF5A00] hover:bg-[#E04F00] text-white text-sm font-semibold px-6 py-3 shadow-[0_10px_28px_rgba(255,90,0,0.32)] transition"
+              className="inline-flex items-center gap-2 rounded-full bg-[#FF6600] hover:bg-[#E04F00] text-white text-sm font-semibold px-6 py-3 shadow-[0_10px_28px_rgba(255,90,0,0.32)] transition"
             >
               Talk to our home consultant
               <ArrowRight className="w-4 h-4" />
@@ -1010,7 +1010,7 @@ function SmallHomeCard({ home, isBest }) {
   return (
     <Link
       to={`/homes/${home.slug}`}
-      className="group relative rounded-sm overflow-hidden bg-white border border-black/10 hover:border-[#FF5A00]/40 hover:shadow-[0_16px_32px_-16px_rgba(255,90,0,0.25)] transition-all block"
+      className="group relative rounded-sm overflow-hidden bg-white border border-black/10 hover:border-[#FF6600]/40 hover:shadow-[0_16px_32px_-16px_rgba(255,90,0,0.25)] transition-all block"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[#0B1E30]">
         <img
@@ -1021,7 +1021,7 @@ function SmallHomeCard({ home, isBest }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[#000F1B]/60 to-transparent" />
 
         {isBest && (
-          <div className="absolute top-2.5 left-2.5 z-10 px-2 py-1 rounded-full bg-[#FF5A00] text-white text-[9px] font-bold uppercase tracking-widest shadow">
+          <div className="absolute top-2.5 left-2.5 z-10 px-2 py-1 rounded-full bg-[#FF6600] text-white text-[9px] font-bold uppercase tracking-widest shadow">
             Best Match
           </div>
         )}
@@ -1039,7 +1039,7 @@ function SmallHomeCard({ home, isBest }) {
         <div className="mt-1.5 flex items-center gap-2 text-[10px] text-[#000F1B]/55 flex-wrap">
           {home.bedrooms && (
             <span className="inline-flex items-center gap-0.5">
-              <Bed className="w-3 h-3 text-[#FF5A00]" />
+              <Bed className="w-3 h-3 text-[#FF6600]" />
               {home.bedrooms} BHK
             </span>
           )}
@@ -1047,7 +1047,7 @@ function SmallHomeCard({ home, isBest }) {
             <>
               <span className="w-0.5 h-0.5 rounded-full bg-black/20" />
               <span className="inline-flex items-center gap-0.5">
-                <Bath className="w-3 h-3 text-[#FF5A00]" />
+                <Bath className="w-3 h-3 text-[#FF6600]" />
                 {home.bathrooms}
               </span>
             </>
@@ -1056,7 +1056,7 @@ function SmallHomeCard({ home, isBest }) {
             <>
               <span className="w-0.5 h-0.5 rounded-full bg-black/20" />
               <span className="inline-flex items-center gap-0.5">
-                <Layers className="w-3 h-3 text-[#FF5A00]" />
+                <Layers className="w-3 h-3 text-[#FF6600]" />
                 G+{home.floors}
               </span>
             </>
@@ -1067,7 +1067,7 @@ function SmallHomeCard({ home, isBest }) {
           <div className="text-[10px] font-semibold text-[#000F1B]/70 line-clamp-1">
             {home.area_sqft}
           </div>
-          <span className="text-[10px] font-bold text-[#FF5A00] inline-flex items-center gap-0.5 group-hover:gap-1 transition-all">
+          <span className="text-[10px] font-bold text-[#FF6600] inline-flex items-center gap-0.5 group-hover:gap-1 transition-all">
             View
             <ArrowRight className="w-3.5 h-3.5" />
           </span>

@@ -10,7 +10,7 @@ export default function Marketplace({ items = [] }) {
     <section
       id="marketplace"
       data-testid="marketplace-section"
-      className="relative py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF5A00] selection:text-white"
+      className="relative py-16 md:py-20 lg:py-24 scroll-mt-20 bg-[#F7F7F7] font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white"
     >
       <div className="container-wide">
         {/* Header */}
@@ -19,7 +19,7 @@ export default function Marketplace({ items = [] }) {
             <SectionLabel number={5} eyebrow="Marketplace" />
             <h2 className="mt-4 text-[#000F1B] font-bold text-3xl sm:text-4xl md:text-[40px] lg:text-[44px] leading-[1.15] tracking-tight">
               Everything You Need.{" "}
-              <span className="text-[#FF5A00]">To Build.</span>
+              <span className="text-[#FF6600]">To Build.</span>
             </h2>
             <p className="mt-4 text-[#000F1B]/60 max-w-xl leading-relaxed text-sm md:text-[15px]">
               One-stop marketplace for materials, equipment, contractors & professionals —
@@ -117,7 +117,7 @@ function MarketCard({ item, index }) {
               <div className="absolute inset-0 bg-gradient-to-t from-[#000F1B]/50 via-transparent to-transparent" />
 
               {item.icon && (
-                <div className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-xl grid place-items-center bg-white/95 text-[#FF5A00] shadow-md">
+                <div className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-xl grid place-items-center bg-white/95 text-[#FF6600] shadow-md">
                   <LucideIcon name={item.icon} className="w-3.5 h-3.5" />
                 </div>
               )}
@@ -134,8 +134,8 @@ function MarketCard({ item, index }) {
                 </p>
               </div>
               <div className="flex items-center justify-between mt-2">
-                <div className="w-6 h-0.5 rounded-full bg-[#FF5A00]" />
-                <span className="text-[9px] uppercase tracking-widest font-semibold text-[#000F1B]/35 group-hover:text-[#FF5A00] transition-colors">
+                <div className="w-6 h-0.5 rounded-full bg-[#FF6600]" />
+                <span className="text-[9px] uppercase tracking-widest font-semibold text-[#000F1B]/35 group-hover:text-[#FF6600] transition-colors">
                   Flip →
                 </span>
               </div>
@@ -145,12 +145,12 @@ function MarketCard({ item, index }) {
           {/* ===================== BACK ===================== */}
           <div className="flip-face flip-back bg-gradient-to-br from-[#000F1B] via-[#0B1E30] to-[#000F1B] border border-white/10 text-white">
             {/* Soft glows */}
-            <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#FF5A00]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-10 -left-10 w-28 h-28 rounded-full bg-[#FF5A00]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#FF6600]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-10 -left-10 w-28 h-28 rounded-full bg-[#FF6600]/10 blur-3xl" />
 
             <div className="relative z-10 h-full flex flex-col p-4 sm:p-5">
               {/* Icon */}
-              <div className="w-11 h-11 rounded-2xl grid place-items-center bg-[#FF5A00]/15 border border-[#FF5A00]/30 text-[#FF5A00]">
+              <div className="w-11 h-11 rounded-2xl grid place-items-center bg-[#FF6600]/15 border border-[#FF6600]/30 text-[#FF6600]">
                 <LucideIcon name={item.icon || "Package"} className="w-5 h-5" />
               </div>
 
@@ -170,7 +170,7 @@ function MarketCard({ item, index }) {
               <ul className="mt-4 space-y-1.5 flex-1">
                 {["Verified partners", "Transparent rates", "On-demand"].map((t) => (
                   <li key={t} className="flex items-center gap-2 text-[11px] text-white/85">
-                    <Check className="w-3.5 h-3.5 text-[#FF5A00] shrink-0" />
+                    <Check className="w-3.5 h-3.5 text-[#FF6600] shrink-0" />
                     {t}
                   </li>
                 ))}
@@ -179,7 +179,7 @@ function MarketCard({ item, index }) {
               {/* CTA LINK WITH SLUG */}
               <Link
                 to={`/marketplace/${item.slug}`}
-                className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#FF5A00] hover:bg-[#E04F00] text-white text-xs font-semibold px-4 py-2.5 transition-colors"
+                className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#FF6600] hover:bg-[#E04F00] text-white text-xs font-semibold px-4 py-2.5 transition-colors"
               >
                 Explore
                 <ArrowUpRight className="w-3.5 h-3.5" />

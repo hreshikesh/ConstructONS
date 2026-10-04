@@ -91,7 +91,7 @@ export default function PortalHome() {
         aria-live="polite"
       >
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#FF5A00]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#FF6600]" />
           <span className="text-sm font-medium text-[#111111]/70">
             Loading your project details...
           </span>
@@ -116,7 +116,7 @@ export default function PortalHome() {
 
   return (
     <div
-      className="min-h-screen bg-[#F2F2F2] text-[#111111] font-['Poppins'] flex flex-col selection:bg-[#FF5A00]/20 selection:text-[#000F1B]"
+      className="min-h-screen bg-[#F2F2F2] text-[#111111] font-['Poppins'] flex flex-col selection:bg-[#FF6600]/20 selection:text-[#000F1B]"
       data-testid="portal-home"
     >
       <Toaster richColors position="top-right" />
@@ -129,9 +129,9 @@ export default function PortalHome() {
             <Link
               to="/"
               aria-label="Back to ConstructONS Website"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#111111]/80 hover:text-[#FF5A00] transition-colors py-2 px-2.5 -ml-2 rounded-lg hover:bg-[#F2F2F2] min-h-[44px]"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#111111]/80 hover:text-[#FF6600] transition-colors py-2 px-2.5 -ml-2 rounded-lg hover:bg-[#F2F2F2] min-h-[44px]"
             >
-              <ArrowLeft className="w-4 h-4 text-[#FF5A00]" aria-hidden="true" />
+              <ArrowLeft className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
               <span className="hidden xs:inline">Back to</span> Home
             </Link>
 
@@ -139,9 +139,9 @@ export default function PortalHome() {
 
             <div className="flex items-center gap-2">
               <span className="text-[#000F1B] font-bold text-base sm:text-lg tracking-tight">
-                Construct<span className="text-[#FF5A00]">ONS™</span>
+                Construct<span className="text-[#FF6600]">ONS™</span>
               </span>
-              <span className="hidden md:inline-block px-2 py-0.5 rounded-full bg-[#FF5A00]/10 text-[10px] font-semibold text-[#FF5A00] uppercase tracking-wider">
+              <span className="hidden md:inline-block px-2 py-0.5 rounded-full bg-[#FF6600]/10 text-[10px] font-semibold text-[#FF6600] uppercase tracking-wider">
                 Live Tracker
               </span>
             </div>
@@ -175,7 +175,7 @@ export default function PortalHome() {
               onClick={logout}
               data-testid="portal-logout"
               aria-label="Sign out of portal"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#F2F2F2] hover:text-[#FF2D00] transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#F2F2F2] hover:text-[#FF0000] transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
             >
               <LogOut className="w-3.5 h-3.5 text-[#111111]/70" aria-hidden="true" />
               <span className="hidden sm:inline">Sign out</span>
@@ -192,8 +192,8 @@ export default function PortalHome() {
             className="rounded-2xl bg-white border border-black/5 shadow-sm p-8 sm:p-12 text-center"
             data-testid="portal-no-project"
           >
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF5A00]/10 grid place-items-center mb-5">
-              <Building2 className="w-8 h-8 text-[#FF5A00]" aria-hidden="true" />
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-5">
+              <Building2 className="w-8 h-8 text-[#FF6600]" aria-hidden="true" />
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-[#000F1B] tracking-tight">
@@ -206,7 +206,7 @@ export default function PortalHome() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#FF5A00] text-white px-6 py-3 text-sm font-semibold hover:bg-[#FF2D00] transition min-h-[44px] shadow-sm"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#FF6600] text-white px-6 py-3 text-sm font-semibold hover:bg-[#FF0000] transition min-h-[44px] shadow-sm"
               >
                 <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                 <span>Return to Home</span>
@@ -227,11 +227,11 @@ export default function PortalHome() {
               className="rounded-2xl bg-[#000F1B] text-white p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden"
               data-testid="portal-project-header"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-[#FF5A00]" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#FF6600]" />
 
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
-                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#FF5A00]/20 border border-[#FF5A00]/30 text-[10px] font-semibold text-[#FF5A00] tracking-wider uppercase">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#FF6600]/20 border border-[#FF6600]/30 text-[10px] font-semibold text-[#FF6600] tracking-wider uppercase">
                     Active Home Construction
                   </span>
                   <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-white tracking-tight">
@@ -245,7 +245,7 @@ export default function PortalHome() {
                 </div>
 
                 <div className="text-left sm:text-right shrink-0">
-                  <div className="text-2xl sm:text-3xl font-bold text-[#FF5A00]">
+                  <div className="text-2xl sm:text-3xl font-bold text-[#FF6600]">
                     {overallProgress}%
                   </div>
                   <div className="text-xs text-white/60">Overall Completion</div>
@@ -262,7 +262,7 @@ export default function PortalHome() {
                   aria-valuemax={100}
                 >
                   <div
-                    className="h-full bg-[#FF5A00] rounded-full transition-all duration-500 ease-out"
+                    className="h-full bg-[#FF6600] rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${overallProgress}%` }}
                   />
                 </div>
@@ -311,8 +311,8 @@ function StageCard({ stage, displayIndex }) {
     in_progress: {
       Icon: PlayCircle,
       label: "In Progress",
-      iconColor: "text-[#FF5A00]",
-      chipClass: "bg-[#FF5A00]/10 text-[#FF5A00] border-[#FF5A00]/20",
+      iconColor: "text-[#FF6600]",
+      chipClass: "bg-[#FF6600]/10 text-[#FF6600] border-[#FF6600]/20",
     },
     pending: {
       Icon: Circle,
@@ -334,7 +334,7 @@ function StageCard({ stage, displayIndex }) {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 text-left hover:bg-[#F2F2F2]/50 transition min-h-[56px] focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:ring-inset"
+        className="w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 text-left hover:bg-[#F2F2F2]/50 transition min-h-[56px] focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:ring-inset"
       >
         <StatusIcon
           className={`w-6 h-6 sm:w-7 sm:h-7 shrink-0 ${currentStatus.iconColor}`}
@@ -373,7 +373,7 @@ function StageCard({ stage, displayIndex }) {
               </div>
             )}
             {stage.status === "in_progress" && (
-              <div className="font-bold text-[#FF5A00] text-sm mt-0.5">
+              <div className="font-bold text-[#FF6600] text-sm mt-0.5">
                 {stage.progress_pct || 0}%
               </div>
             )}
@@ -405,7 +405,7 @@ function StageCard({ stage, displayIndex }) {
           {(stage.photos || []).length > 0 && (
             <div>
               <div className="text-xs font-semibold text-[#000F1B] uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
-                <Camera className="w-4 h-4 text-[#FF5A00]" aria-hidden="true" />
+                <Camera className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
                 <span>Site Progress Photos</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -433,7 +433,7 @@ function StageCard({ stage, displayIndex }) {
           {(stage.documents || []).length > 0 && (
             <div>
               <div className="text-xs font-semibold text-[#000F1B] uppercase tracking-wider mb-2 inline-flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-[#FF5A00]" aria-hidden="true" />
+                <FileText className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
                 <span>Verified Inspection Documents</span>
               </div>
               <div className="grid sm:grid-cols-2 gap-2">
@@ -443,9 +443,9 @@ function StageCard({ stage, displayIndex }) {
                     href={doc.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-black/5 text-[#000F1B] hover:text-[#FF5A00] hover:border-[#FF5A00]/40 transition min-h-[44px]"
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-black/5 text-[#000F1B] hover:text-[#FF6600] hover:border-[#FF6600]/40 transition min-h-[44px]"
                   >
-                    <FileText className="w-4 h-4 shrink-0 text-[#FF5A00]" />
+                    <FileText className="w-4 h-4 shrink-0 text-[#FF6600]" />
                     <span className="truncate font-medium">{doc.name || "Inspection Document"}</span>
                   </a>
                 ))}
