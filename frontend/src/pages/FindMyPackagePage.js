@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
+import BrandLockup from "@/components/site/BrandLockup";
 import { publicApi } from "@/lib/api";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 import SEO from "@/components/site/SEO";
@@ -212,7 +213,7 @@ function LogoMark({ className = "w-6 h-6" }) {
   return (
     <div className={`relative inline-flex items-center justify-center shrink-0 ${className}`}>
       <img
-        src="/logo.webp"
+        src="/icon.svg"
         alt="ConstructONS Logo"
         onError={(e) => {
           e.currentTarget.style.display = "none";
@@ -220,25 +221,6 @@ function LogoMark({ className = "w-6 h-6" }) {
         className="w-full h-full object-contain"
       />
     </div>
-  );
-}
-
-// Brand Logo text updated with static presentation formatting
-function BrandLogoText({ size = "md" }) {
-  const sizes = {
-    sm: "text-xs",
-    md: "text-base",
-    lg: "text-xl",
-  }[size];
-
-  return (
-    <span className={`font-bold tracking-tight text-white inline-flex items-center ${sizes}`}>
-      Construct
-      <span className="inline-flex items-center justify-center relative mx-[1px] w-[0.8em] h-[0.8em] rounded-full border-[2.5px] border-[#D44A00] align-middle bg-[#FF6600]/10">
-        <span className="absolute top-0 w-[2.5px] h-[48%] bg-[#D44A00] rounded-full -translate-y-0.5" />
-      </span>
-      NS
-    </span>
   );
 }
 
@@ -367,9 +349,9 @@ export default function FindMyPackagePage() {
 ────────────────────────────────────────────────────────────── */
 function BrandPill({ size = "md", logoOnly = false }) {
   const sizes = {
-    sm: { pill: "px-3 py-1.5 text-[11px] gap-1.5", mark: "w-5 h-5" },
-    md: { pill: "px-4 py-2 text-xs gap-2", mark: "w-6 h-6" },
-    lg: { pill: "px-5 py-2.5 text-sm gap-2.5", mark: "w-7 h-7" },
+    sm: { pill: "px-3 py-1.5 text-[11px] gap-1.5", mark: "w-5 h-5", logo: "xs" },
+    md: { pill: "px-4 py-2 text-xs gap-2", mark: "w-6 h-6", logo: "sm" },
+    lg: { pill: "px-5 py-2.5 text-sm gap-2.5", mark: "w-7 h-7", logo: "md" },
   }[size];
 
   if (logoOnly) {
@@ -382,8 +364,7 @@ function BrandPill({ size = "md", logoOnly = false }) {
 
   return (
     <div className={`inline-flex items-center rounded-full bg-[#000F1B] shadow-[0_10px_30px_rgba(0,15,27,0.25)] border border-white/5 ${sizes.pill}`}>
-      <LogoMark className={sizes.mark} />
-      <BrandLogoText size={size === "sm" ? "sm" : size === "lg" ? "lg" : "md"} />
+      <BrandLockup tone="dark" size={sizes.logo} />
     </div>
   );
 }

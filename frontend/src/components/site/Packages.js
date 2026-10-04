@@ -10,6 +10,7 @@ import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 import { useBrochureModal } from "@/components/site/BrochureModalProvider";
+import BrandLockup from "@/components/site/BrandLockup";
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState([]);
@@ -77,10 +78,7 @@ export default function PackagesPage() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
               className="flex items-center justify-center gap-3 mb-8 bg-white/5 border border-white/10 px-5 py-2.5 rounded-full backdrop-blur-sm"
             >
-              <img src="/logo.webp" alt="Logo" className="h-6 w-auto object-contain shrink-0" />
-              <div className="flex items-center gap-0.5 text-sm sm:text-base font-extrabold tracking-[0.15em]  shrink-0 leading-none select-none">
-                <span className="text-white">CONSTRUCT</span><Power className="w-4 h-4 text-[#FF6600] stroke-[3]" /><span className="text-[#FF6600]">NS</span><span className="text-[9px] text-[#FF6600] self-start mt-0.5 ml-0.5">™</span>
-              </div>
+              <BrandLockup tone="dark" size="sm" className="w-[128px] h-10" />
             </motion.div>
 
             <motion.h1 

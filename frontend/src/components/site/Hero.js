@@ -1,7 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Power } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import BrandLockup from "@/components/site/BrandLockup";
 
 export default function Hero() {
   const { open: openLead } = useLeadModal();
@@ -44,7 +45,7 @@ export default function Hero() {
           <div className="max-w-4xl">
 
             {/* Brand Kicker */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -53,35 +54,11 @@ export default function Hero() {
               }}
               className="mb-6 flex items-center gap-4"
             >
-              {/* Orange line */}
+              
               <span className="h-[2px] w-12 bg-gradient-to-r from-[#FF6600] to-[#FF0000]" />
 
-              {/* ConstructONS */}
-              <div className="flex items-center whitespace-nowrap">
-
-                {/* Construct */}
-                <span className="font-[Poppins] text-[13px] font-semibold tracking-[0.12em] text-white">
-                  Construct
-                </span>
-
-                {/* Power-button O */}
-                <Power
-                  className="mx-[2px] h-[15px] w-[15px] shrink-0 text-[#FF6600]"
-                  strokeWidth={3.5}
-                />
-
-                {/* NS */}
-                <span className="font-[Poppins] text-[13px] font-extrabold tracking-[0.08em] bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent">
-                  NS
-                </span>
-
-                {/* TM */}
-                <sup className="ml-[2px] mt-[-5px] font-[Poppins] text-[7px] font-semibold text-[#FF6600]">
-                  ™
-                </sup>
-
-              </div>
-            </motion.div>
+              <BrandLockup tone="dark" size="sm" className="w-[128px] h-10" />
+            </motion.div> */}
 
             {/* Main Heading */}
             <motion.h1

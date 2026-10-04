@@ -64,9 +64,9 @@ export default function VideoShowcase() {
                             <span className="font-extrabold tracking-[0.14em] text-black">
                                  CONSTRUCT
                             </span>
-                            <Power className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#FF6600] stroke-[3] mx-0.5" />
+
                             <span className="font-extrabold tracking-[0.14em] bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent">
-                                NS
+                                ONS
                             </span>
                             <sup className="text-[9px] md:text-[11px] text-[#FF6600] font-bold ml-0.5 -top-1">
                                 ™

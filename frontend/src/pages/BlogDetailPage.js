@@ -35,7 +35,7 @@ export default function BlogDetailPage() {
         {
           "@type": "BlogPosting",
           "headline": b.title,
-          "image": b.cover_image || "https://constructons.com/logo.webp",
+          "image": b.cover_image || "https://constructons.com/icon.svg",
           "author": {
             "@type": "Person",
             "name": b.author || "ConstructONS Team"
@@ -45,7 +45,7 @@ export default function BlogDetailPage() {
             "name": "ConstructONS",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://constructons.com/logo.webp"
+              "url": "https://constructons.com/icon.svg"
             }
           },
           "description": b.excerpt || b.title,

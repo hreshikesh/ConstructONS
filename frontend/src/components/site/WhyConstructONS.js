@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { publicApi } from "@/lib/api"; // Added API import to fetch real CMS stats
+import BrandLockup from "@/components/site/BrandLockup";
 
 /* -------------------------------------------------------------------------- */
 /*                        DYNAMIC LUCIDE ICON HELPER                          */
@@ -41,20 +42,7 @@ function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF6600]" }) {
 /* -------------------------------------------------------------------------- */
 
 function BrandText({ dark = false }) {
-  return (
-    <span className="inline-flex items-center align-middle">
-      <span className={dark ? "text-[#000F1B]" : "text-white"}>Construct</span>
-      <span className="mx-[0.05em] inline-flex items-center justify-center text-[#FF6600]">
-        <svg
-          className="h-[0.82em] w-[0.82em] fill-none stroke-current stroke-[3.5] align-middle"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10" />
-        </svg>
-      </span>
-      <span className="text-[#FF6600]">NS</span>
-    </span>
-  );
+  return <BrandLockup tone={dark ? "light" : "dark"} size="sm" className="align-middle" />;
 }
 
 /* -------------------------------------------------------------------------- */

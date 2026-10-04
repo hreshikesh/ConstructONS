@@ -16,6 +16,7 @@ import PortalTopBar from "./components/PortalTopBar";
 import OnboardingWizard from "../../components/site/OnboardingWizard";
 import PortalAIChatWidget from "./components/PortalAIChatWidget";
 import SEO from "@/components/site/SEO";
+import BrandLockup from "@/components/site/BrandLockup";
 
 function NoProjectView() {
   const { user, logout, reload, loading } = usePortal();
@@ -30,7 +31,7 @@ function NoProjectView() {
       {/* Top Bar */}
       <header className="h-16 bg-white border-b border-black/5 px-4 sm:px-8 flex items-center justify-between shrink-0">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <img src="/logo.webp" alt="ConstructONS Logo" className="h-7 w-auto object-contain" />
+          <BrandLockup tone="light" size="sm" />
         </Link>
         
         <div className="flex items-center gap-3">

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { toast, Toaster } from "sonner";
+import BrandLockup from "@/components/site/BrandLockup";
 import {
   Loader2,
   LogOut,
@@ -138,9 +139,7 @@ export default function PortalHome() {
             <div className="h-5 w-px bg-black/10 hidden sm:block" />
 
             <div className="flex items-center gap-2">
-              <span className="text-[#000F1B] font-bold text-base sm:text-lg tracking-tight">
-                Construct<span className="text-[#FF6600]">ONS™</span>
-              </span>
+              <BrandLockup tone="light" size="sm" />
               <span className="hidden md:inline-block px-2 py-0.5 rounded-full bg-[#FF6600]/10 text-[10px] font-semibold text-[#FF6600] uppercase tracking-wider">
                 Live Tracker
               </span>

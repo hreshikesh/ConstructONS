@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import BrandLockup from "@/components/site/BrandLockup";
 import { 
   Building2, 
   Phone, 
@@ -116,9 +117,7 @@ export default function OnboardingWizard({ user, onComplete }) {
       {/* Top Header */}
       <header className="h-16 bg-white border-b border-black/5 px-4 sm:px-8 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-lg tracking-tight text-[#000F1B]">
-            Construct<span className="text-[#FF6600]">ONS™</span>
-          </span>
+          <BrandLockup tone="light" size="sm" />
           <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-[#FF6600]/10 text-[10px] font-bold text-[#FF6600] uppercase tracking-wider">
             Quick Onboarding
           </span>

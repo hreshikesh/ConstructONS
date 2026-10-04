@@ -10,6 +10,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SmartHomeBuilder from "@/components/site/SmartHomeBuilder";
 import SEO from "@/components/site/SEO";
+import BrandLockup from "@/components/site/BrandLockup";
 
 import { SMART_HOME_BUNDLES } from "./data/SmartHomeBundleData";
 
@@ -125,9 +126,7 @@ export default function SmartHomePage() {
             <div className="lg:col-span-7 text-center lg:text-left">
               <motion.div initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
                 <div className="inline-flex items-center justify-center lg:justify-start gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm mx-auto lg:mx-0">
-                  <span className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] select-none text-white">
-                    CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF6600] self-start mt-0.5 ml-0.5">™</span>
-                  </span>
+                  <BrandLockup tone="dark" size="sm" />
                   <span className="w-px h-3 bg-white/20 mx-1" />
                   <span className="text-[10px] font-bold tracking-[0.2em] text-[#FF6600] uppercase">Smart Home Bureau</span>
                 </div>

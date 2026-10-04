@@ -20,50 +20,10 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import { publicApi } from "@/lib/api";
 import SEO from "@/components/site/SEO";
+import SharedBrandLockup from "@/components/site/BrandLockup";
 
-/* =========================================================
-   CUSTOM POWER BUTTON O SVG (Matches ConstructONS Logo)
-========================================================= */
-function PowerIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-      <line x1="12" y1="2" x2="12" y2="12" />
-    </svg>
-  );
-}
-
-/* =========================================================
-   BRAND LOCKUP COMPONENT (With Power Button 'O')
-========================================================= */
 function BrandLockup({ tone = "light", size = "md" }) {
-  const isDark = tone === "dark";
-  const textColor = isDark ? "text-white" : "text-[#000F1B]";
-  const orangeColor = "text-[#FF6600]";
-
-  const sizeClasses = {
-    xs: "text-sm",
-    sm: "text-base",
-    md: "text-xl",
-    lg: "text-2xl",
-  }[size] || "text-xl";
-
-  const iconSizes = {
-    xs: "w-3.5 h-3.5",
-    sm: "w-4 h-4",
-    md: "w-5 h-5",
-    lg: "w-6 h-6",
-  }[size] || "w-5 h-5";
-
-  return (
-    <div className={`font-black tracking-tight flex items-center ${sizeClasses}`}>
-      <span className={textColor}>Construct</span>
-      <span className={`inline-flex items-center ${orangeColor}`}>
-        <PowerIcon className={`${iconSizes} mx-[0.5px] stroke-[3.5]`} />
-        <span>NS</span>
-      </span>
-    </div>
-  );
+  return <SharedBrandLockup tone={tone} size={size} />;
 }
 
 /* =========================================================
@@ -165,7 +125,7 @@ export default function ContactPage() {
       {
         "@type": "LocalBusiness",
         "name": "ConstructONS",
-        "image": "https://constructons.com/logo.webp",
+        "image": "https://constructons.com/icon.svg",
         "telephone": phone || "+91-XXXXXXXXXX",
         "email": email || "support@constructons.com",
         "address": {

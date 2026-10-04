@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LucideIcon from "@/components/site/LucideIcon";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
+import BrandLockup from "@/components/site/BrandLockup";
 
 const FALLBACK_ICON = "Check";
 
@@ -13,24 +14,7 @@ const FALLBACK_ICON = "Check";
 function BrandTitle() {
   return (
     <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-gray-950 lg:text-5xl lg:leading-[1.15]">
-      Your Journey With{" "}
-      <span className="inline-flex items-center align-middle">
-        <span>Construct</span>
-        {/* Power Icon replacing 'O' */}
-        <span className="mx-[0.05em] inline-flex items-center justify-center text-orange-500">
-          <svg
-            className="h-[0.82em] w-[0.82em] fill-none stroke-current stroke-[3.5] align-middle"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10"
-            />
-          </svg>
-        </span>
-        <span className="text-orange-500">NS</span>
-      </span>
+      Your Journey With{" "}<BrandLockup tone="light" size="md" className="w-[150px] h-12 align-middle" />
     </h2>
   );
 }
@@ -138,7 +122,7 @@ export default function CustomerJourney({ steps = [] }) {
 
                 <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-gray-100 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
                   <img
-                    src="/logo.webp"
+                    src="/icon.svg"
                     alt="ConstructONS"
                     className="h-16 w-auto object-contain"
                     onError={(e) => {
@@ -256,23 +240,7 @@ export default function CustomerJourney({ steps = [] }) {
               <SectionLabel>OUR PROCESS</SectionLabel>
 
               <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-gray-950">
-                Your Journey With{" "}
-                <span className="inline-flex items-center align-middle">
-                  <span>Construct</span>
-                  <span className="mx-[0.05em] inline-flex items-center justify-center text-orange-500">
-                    <svg
-                      className="h-[0.80em] w-[0.80em] fill-none stroke-current stroke-[3.5] align-middle"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10"
-                      />
-                    </svg>
-                  </span>
-                  <span className="text-orange-500">NS</span>
-                </span>
+                Your Journey With{" "}<BrandLockup tone="light" size="sm" className="w-[132px] h-10 align-middle" />
               </h2>
 
               <p className="mt-3 text-sm leading-relaxed text-gray-500">
@@ -284,7 +252,7 @@ export default function CustomerJourney({ steps = [] }) {
           <div className="relative mx-auto mb-8 flex h-32 w-32 items-center justify-center">
             <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-gray-100 bg-white shadow-lg">
               <img
-                src="/logo.webp"
+                src="/icon.svg"
                 alt="ConstructONS"
                 className="h-14 w-auto object-contain"
                 onError={(e) => {

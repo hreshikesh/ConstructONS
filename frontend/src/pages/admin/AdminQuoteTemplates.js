@@ -10,6 +10,7 @@ import {
   Loader2, Tag, Power,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BrandLockup from "@/components/site/BrandLockup";
 
 const rupees = (n) =>
   `₹${Math.round(Number(n) || 0).toLocaleString("en-IN")}`;
@@ -97,9 +98,8 @@ export default function AdminQuoteTemplates() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] text-[#000F1B] mb-1 select-none">
-            CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS
-            <span className="text-[8px] text-[#FF6600] font-bold self-start ml-0.5">™</span>
+          <div className="flex items-center gap-2 mb-1">
+            <BrandLockup tone="light" size="xs" />
             <span className="ml-2 text-[10px] text-[#111111]/40 font-normal uppercase tracking-wider">· Sales Templates</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#000F1B] tracking-tight">Quote Templates</h1>

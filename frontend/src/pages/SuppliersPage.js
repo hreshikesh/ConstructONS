@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   MapPin, Search, Star, ShieldCheck, Phone, 
   Map as MapIcon, List, ChevronDown, Package, 
-  Filter, Sparkles, Check, ArrowUpDown, Building2, Power
+  Filter, Sparkles, Check, ArrowUpDown, Building2
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from "@react-google-maps/api";
 import Header from "@/components/site/Header";
@@ -29,14 +29,11 @@ const CLEAN_MAP_STYLE = [
   { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#ffe0b2" }] },
 ];
 
-function BrandName({ constructClass = "text-white", onsClass = "text-[#FF6600]", iconSize = "w-[0.7em] h-[0.7em]" }) {
+function BrandName({ constructClass = "text-white", onsClass = "text-[#FF6600]" }) {
   return (
     <span className="inline-flex items-center font-black tracking-tight">
       <span className={constructClass}>Construct</span>
-      <span className={`inline-flex items-center ${onsClass}`}>
-        <Power className={`${iconSize} stroke-[3.5] mx-[0.5px] -mt-[1px]`} />
-        NS
-      </span>
+      <span className={onsClass}>ONS</span>
     </span>
   );
 }

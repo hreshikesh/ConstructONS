@@ -7,7 +7,8 @@ import { LeadModalProvider } from "@/components/site/LeadModalProvider";
 import { BrochureModalProvider } from "@/components/site/BrochureModalProvider";
 import CookieBanner from "./components/site/CookieBanner";
 import PublicAIChat from "@/components/site/PublicAIChat";
-import { Power, Loader2 } from "lucide-react";
+import BrandLockup from "@/components/site/BrandLockup";
+import { Loader2 } from "lucide-react";
 
 // Lazy-loaded Pages
 const HomePage = lazy(() => import("@/pages/HomePage"));
@@ -128,11 +129,8 @@ function StoryJcbLoader({ onComplete }) {
         <div className="relative w-full max-w-5xl mx-auto flex flex-col h-full">
           
           {/* Top Brand Lockup Pill */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
-            <img src="/logo.webp" alt="ConstructONS" className="h-5 w-auto object-contain shrink-0" />
-            <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] text-white select-none">
-              CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF6600] font-bold self-start mt-0.5 ml-0.5">™</span>
-            </div>
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center justify-center px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
+            <BrandLockup tone="dark" size="sm" />
           </div>
 
           {/* Dynamic Storytelling Text Overlay */}
@@ -283,15 +281,7 @@ function StoryJcbLoader({ onComplete }) {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-20 flex flex-col items-center text-center px-6 my-auto"
         >
-          <img src="/logo.webp" alt="ConstructONS Logo" className="h-16 md:h-20 w-auto object-contain mb-6 drop-shadow-[0_0_30px_rgba(255,90,0,0.6)]" />
-          
-          <div className="flex items-center gap-1 text-2xl sm:text-3xl md:text-4xl font-black tracking-[0.18em] text-white select-none mb-3">
-            CONSTRUCT<Power className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-[#FF6600] stroke-[3.5] mx-1" />NS<span className="text-sm text-[#FF6600] font-bold self-start mt-1">™</span>
-          </div>
-
-          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-[#FF6600] drop-shadow-[0_0_12px_rgba(255,90,0,0.5)]">
-            Everything Construction. Always On.
-          </p>
+          <BrandLockup tone="dark" size="lg" className="w-[260px] h-[96px] drop-shadow-[0_0_30px_rgba(255,90,0,0.6)]" />
         </motion.div>
       )}
 

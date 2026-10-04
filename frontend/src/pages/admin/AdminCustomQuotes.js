@@ -14,6 +14,7 @@ import { adminApi, publicApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import BrandLockup from "@/components/site/BrandLockup";
 import {
   Plus, Trash2, Save, X, Pencil, RefreshCw, FileDown,
   Wand2, Mail, MessageCircle, Copy, Loader2, ChevronDown,
@@ -219,9 +220,8 @@ export default function AdminCustomQuotes() {
     <div className="max-w-7xl mx-auto font-['Poppins']" data-testid="admin-custom-quotes">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.15em] text-[#000F1B] mb-1 select-none">
-            CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS
-            <span className="text-[8px] text-[#FF6600] font-bold self-start ml-0.5">™</span>
+          <div className="flex items-center gap-2 mb-1">
+            <BrandLockup tone="light" size="xs" />
             <span className="ml-2 text-[10px] text-[#111111]/40 font-normal uppercase tracking-wider">· Sales Quotation Builder</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#000F1B] tracking-tight">Custom Quotes</h1>
@@ -245,9 +245,7 @@ export default function AdminCustomQuotes() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FF6600]/10 grid place-items-center mb-4">
               <Building2 className="w-8 h-8 text-[#FF6600]" />
             </div>
-            <div className="flex items-center justify-center gap-0.5 text-base font-extrabold tracking-[0.15em] text-[#000F1B] mb-1">
-              CONSTRUCT<Power className="w-4 h-4 text-[#FF6600] stroke-[3] mx-0.5" />NS<span className="text-[9px] text-[#FF6600] font-bold self-start ml-0.5">™</span>
-            </div>
+            <BrandLockup tone="light" size="sm" className="mx-auto mb-1" />
             <div className="font-bold text-[#000F1B]">No custom quotes generated yet</div>
             <p className="text-xs text-[#111111]/60 mt-1 max-w-sm mx-auto">
               Click "New Custom Quote" to build your first AI-assisted bespoke quotation.
@@ -688,9 +686,8 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel, 
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-black/5 px-5 md:px-8 py-3.5 flex items-center justify-between shadow-sm">
           <div className="min-w-0">
-            <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.14em] text-[#000F1B] select-none">
-              CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS
-              <span className="text-[8px] text-[#FF6600] font-bold self-start ml-0.5">™</span>
+            <div className="flex items-center gap-2">
+              <BrandLockup tone="light" size="xs" />
               <span className="ml-2 text-[10px] text-[#111111]/40 font-normal uppercase tracking-wider">• {editing.ref_number || "Draft"}</span>
             </div>
             <div className="font-bold text-[#000F1B] text-base truncate">{editing.client_name || "Untitled Quote"}</div>
@@ -989,9 +986,7 @@ function QuoteEditor({ editing, setEditing, packages, saving, onSave, onCancel, 
           <div className="fixed inset-0 bg-[#000F1B]/60 backdrop-blur-sm z-[60] grid place-items-center p-4">
             <div className="bg-white rounded-2xl w-full max-w-md p-6">
               <div className="font-bold text-[#000F1B] text-lg inline-flex items-center gap-2">
-                <div className="flex items-center gap-0.5 text-sm font-extrabold tracking-[0.12em]">
-                  CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS
-                </div>
+                <BrandLockup tone="light" size="sm" />
               </div>
               <div className="text-xs text-[#111111]/60 mt-1">Save as template for future reuse.</div>
               <label className="block mt-4">

@@ -5,7 +5,7 @@ const SITE_URL = "https://constructons.com";
 const DEFAULT_TITLE = "ConstructONS | AI-Powered Home Construction Platform";
 const DEFAULT_DESC =
   "ConstructONS is India's premium home construction platform. Get transparent packages starting from ₹1,499/sqft, real-time live site tracking, and AI-powered design tools.";
-const DEFAULT_IMAGE = `${SITE_URL}/logo.webp`;
+const DEFAULT_IMAGE = `${SITE_URL}/icon.svg`;
 
 export default function SEO({
   title,
@@ -72,7 +72,7 @@ export const organizationSchema = {
   "@type": "Organization",
   name: "ConstructONS",
   url: "https://constructons.com",
-  logo: "https://constructons.com/logo.webp",
+  logo: "https://constructons.com/icon.svg",
   description: DEFAULT_DESC,
   address: {
     "@type": "PostalAddress",

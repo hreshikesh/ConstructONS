@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import SEO from "@/components/site/SEO";
+import BrandLockup from "@/components/site/BrandLockup";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 
@@ -153,9 +154,7 @@ export default function PortalLogin() {
           <ArrowLeft className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
           <span>Home</span>
         </Link>
-        <span className="text-white font-bold text-base tracking-tight">
-          Construct<span className="text-[#FF6600]">ONS™</span>
-        </span>
+        <BrandLockup tone="dark" size="sm" />
       </header>
 
       {/* 💻 Left Hero Column: Brand Ecosystem Showcase */}
@@ -230,9 +229,7 @@ export default function PortalLogin() {
       {/* 🔐 Right Sign-In Card */}
       <div className="flex-1 grid place-items-center p-6 sm:p-10 lg:p-12">
         <main className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-black/5 p-8 sm:p-10">
-          <div className="text-xs font-semibold text-[#FF6600] tracking-wider uppercase">
-            ConstructONS™
-          </div>
+          <BrandLockup tone="light" size="xs" />
           <h2 className="mt-2 text-2xl font-bold text-[#000F1B] tracking-tight">
             Sign in to your portal
           </h2>

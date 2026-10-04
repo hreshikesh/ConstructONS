@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
+import BrandLockup from "@/components/site/BrandLockup";
 import {
   LayoutDashboard,
   Home,
@@ -17,7 +18,6 @@ import {
   Wrench,
   Settings,
   X,
-  Power,
 } from "lucide-react";
 import { usePortal } from "../context/PortalContext";
 
@@ -83,7 +83,7 @@ export default function PortalSidebar({ open, onClose }) {
           ${open ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* Brand — Logo + CONSTRUCT + Power O + NS */}
+        {/* Brand logo */}
         <div className="h-14 px-3 flex items-center justify-between border-b border-white/10 shrink-0">
           <Link
             to="/portal"
@@ -91,31 +91,8 @@ export default function PortalSidebar({ open, onClose }) {
             className="flex items-center gap-2 min-w-0 select-none"
             aria-label="ConstructONS Portal Home"
           >
-            {/* Original logo image */}
-            <img
-              src="/logo.webp"
-              alt="ConstructONS"
-              className="h-7 w-auto object-contain shrink-0"
-            />
-
-            {/* Wordmark: CONSTRUCT + Power O + NS */}
-            <span className="flex items-center gap-0.5 min-w-0">
-              <span className="font-extrabold text-[12px] tracking-[0.12em] text-white leading-none">
-                CONSTRUCT
-              </span>
-              <Power
-                className="w-3.5 h-3.5 text-[#FF6600] stroke-[2.75] shrink-0 mx-px"
-                aria-hidden="true"
-              />
-              <span className="font-extrabold text-[12px] tracking-[0.12em] text-white leading-none">
-                NS
-              </span>
-              <span className="text-[8px] text-[#FF6600] font-bold self-start mt-0.5 ml-0.5">
-                ™
-              </span>
-            </span>
+            <BrandLockup tone="dark" size="sm" />
           </Link>
-
           <button
             type="button"
             onClick={onClose}
@@ -125,9 +102,7 @@ export default function PortalSidebar({ open, onClose }) {
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Nav — compact */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-3.5 no-scrollbar">
+        <nav className="flex-1 px-3 pb-4 space-y-0.5">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
               <div className="px-2.5 mb-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/30">

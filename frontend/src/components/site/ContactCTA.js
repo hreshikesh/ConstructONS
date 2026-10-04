@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { FadeIn, SectionLabel } from "@/components/site/Primitives";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
+import BrandLockup from "@/components/site/BrandLockup";
 
 export default function ContactCTA({ settings = {} }) {
   const { open } = useLeadModal();
@@ -121,14 +122,8 @@ export default function ContactCTA({ settings = {} }) {
                         View Location
                       </div>
                       
-                      {/* Styled Company Title with Larger/Darker Power Button "O" */}
-                      <div className="text-base font-bold text-[#000F1B] leading-snug mt-0.5 flex items-center tracking-tight">
-                        <span>Construct</span>
-                        <span className="text-[#FF6600] flex items-center ml-[1px]">
-                          {/* Larger, Darker Orange Power Button "O" */}
-                          <Power className="w-4 h-4 stroke-[3.5] text-[#E04F00] inline-block transform translate-y-[-0.5px] -mr-[0.5px]" />
-                          NS
-                        </span>
+                      <div className="mt-0.5">
+                        <BrandLockup tone="light" size="xs" />
                       </div>
                     </div>
                   </div>

@@ -10,6 +10,7 @@ import Footer from "@/components/site/Footer";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
 import { FLEET } from "./data/Equipment";
 import SEO from "@/components/site/SEO";
+import BrandLockup from "@/components/site/BrandLockup";
 
 export default function EquipmentPage() {
   const { open: openLead } = useLeadModal();
@@ -87,8 +88,8 @@ export default function EquipmentPage() {
           />
 
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="flex items-center gap-0.5 text-xs font-extrabold tracking-[0.15em] text-white mb-6 select-none">
-              CONSTRUCT<Power className="w-3.5 h-3.5 text-[#FF6600] stroke-[3] mx-0.5" />NS<span className="text-[8px] text-[#FF6600] font-bold self-start mt-0.5 ml-0.5">™</span>
+            <div className="flex items-center gap-3 mb-6">
+              <BrandLockup tone="dark" size="sm" />
               <span className="ml-3 text-[10px] text-white/50 font-normal uppercase tracking-widest">· Fleet & Machinery</span>
             </div>
 

@@ -68,13 +68,7 @@ export default function AdminLoginPage() {
 
           {/* Brand Header */}
           <div className="flex flex-col items-center text-center">
-            {BrandLockup ? (
-              <BrandLockup tone="light" size="md" />
-            ) : (
-              <div className="text-xl font-bold tracking-tight text-[#000F1B]">
-                Construct<span className="text-[#FF6600]">ONS™</span>
-              </div>
-            )}
+            <BrandLockup tone="light" size="md" />
 
             <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-[#000F1B]/5 border border-black/5 rounded-full text-[11px] font-semibold text-[#000F1B] tracking-wider uppercase">
               <ShieldCheck className="w-3.5 h-3.5 text-[#FF6600]" aria-hidden="true" />

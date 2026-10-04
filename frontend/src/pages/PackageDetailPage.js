@@ -80,7 +80,7 @@ export default function PackageDetailPage() {
         {
           "@type": "Product",
           "name": pkg.name,
-          "image": pkg.hero_image || "https://constructons.com/logo.webp",
+          "image": pkg.hero_image || "https://constructons.com/icon.svg",
           "description": pkg.description || pkg.tagline,
           "brand": {
             "@type": "Brand",

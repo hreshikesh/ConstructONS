@@ -8,6 +8,7 @@ import { usePortal } from "../context/PortalContext";
 import { resolveMediaUrl } from "../../../lib/mediaUrl";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import BrandLockup from "@/components/site/BrandLockup";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 
@@ -144,9 +145,7 @@ export default function PortalTopBar() {
           </button>
 
           {/* Brand Logo for Mobile */}
-          <div className="lg:hidden flex items-center gap-0.5 text-sm sm:text-base font-extrabold tracking-[0.15em] text-[#000F1B] shrink-0">
-            CONSTRUCT<Power className="w-4 h-4 text-[#FF6600] stroke-[3]" />NS<span className="text-[8px] text-[#111111]/40 self-start mt-0.5 ml-0.5">™</span>
-          </div>
+          <BrandLockup tone="light" size="sm" className="lg:hidden" />
 
           {/* Active Project Dropdown Trigger (Desktop) */}
           <div className="relative hidden lg:block" ref={projDropdownRef}>

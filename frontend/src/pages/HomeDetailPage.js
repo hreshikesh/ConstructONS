@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { publicApi } from "@/lib/api";
 import Header from "@/components/site/Header";
+import BrandLockup from "@/components/site/BrandLockup";
 import Footer from "@/components/site/Footer";
 import FloatingActions from "@/components/site/FloatingActions";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
@@ -219,7 +220,7 @@ export default function HomeDetailPage() {
                     </AnimatePresence>
 
                     <div className="absolute top-4 left-4 z-20 rounded-full bg-white/90 backdrop-blur-md px-3 py-1.5 shadow-md flex items-center">
-                      <img src="/logo.webp" alt="ConstructONS Logo" className="h-5 w-auto object-contain" />
+                      <BrandLockup tone="light" size="xs" />
                     </div>
 
                     <div className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-full bg-[#FF6600] text-white text-[10px] font-bold uppercase tracking-widest shadow-md">
@@ -565,7 +566,7 @@ export default function HomeDetailPage() {
             />
 
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 shadow-md flex items-center">
-              <img src="/logo.webp" alt="ConstructONS Logo" className="h-5 w-auto object-contain" />
+              <BrandLockup tone="light" size="xs" />
             </div>
           </motion.div>
         )}
@@ -647,7 +648,7 @@ function AboutModal({ open, onClose, home }) {
                   </h3>
                 </div>
                 <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-full shadow-md flex items-center shrink-0">
-                  <img src="/logo.webp" alt="ConstructONS Logo" className="h-5 w-auto object-contain" />
+                  <BrandLockup tone="light" size="xs" />
                 </div>
               </div>
             </div>
@@ -861,7 +862,7 @@ function FloorPlanCard({ home }) {
         <div className="mt-5 rounded-2xl overflow-hidden bg-[#F7F7F7] border border-black/5 relative">
           <img src={home.floorplan_image} alt="Floor plan blueprint" className="w-full h-auto object-cover" />
           <div className="absolute top-3 left-3 bg-white/95 backdrop-blur rounded-full px-3 py-1.5 shadow-sm flex items-center">
-            <img src="/logo.webp" alt="ConstructONS Logo" className="h-5 w-auto object-contain" />
+            <BrandLockup tone="light" size="xs" />
           </div>
         </div>
       )}
