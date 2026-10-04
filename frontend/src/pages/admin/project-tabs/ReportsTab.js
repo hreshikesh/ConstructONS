@@ -5,14 +5,14 @@ import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { adminApi } from "@/lib/api";
 import { 
   Plus, X, Save, Loader2, CheckCircle2, Circle, Camera, 
-  HardHat, ShieldCheck, Trash2 
+  HardHat, ShieldCheck, Trash2, Users, Users2, History, FileSpreadsheet
 } from "lucide-react";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 
 export default function ReportsTab({ project, onSaved }) {
-  const [activeTab, setActiveTab] = useState("queue"); // "create" | "queue"
+  const [activeTab, setActiveTab] = useState("queue");
   const [reports, setReports] = useState(project.daily_reports || []);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -22,6 +22,15 @@ export default function ReportsTab({ project, onSaved }) {
   const [date, setDate] = useState(todayStr);
   const [overallStatus, setOverallStatus] = useState("Work as per plan");
   const [statusNotes, setStatusNotes] = useState("");
+  
+  // ★ Labor Force State
+  const [workersCount, setWorkersCount] = useState(0);
+  const [masteriesCount, setMasteriesCount] = useState(0);
+  
+  // ★ Work Briefings state
+  const [workDoneYesterday, setWorkDoneYesterday] = useState("");
+  const [workCompletedToday, setWorkCompletedToday] = useState("");
+
   const [workCompletedInput, setWorkCompletedInput] = useState("");
   const [workCompletedList, setWorkCompletedList] = useState([]);
   const [plannedTomorrowInput, setPlannedTomorrowInput] = useState("");
@@ -75,17 +84,36 @@ export default function ReportsTab({ project, onSaved }) {
   const handleSubmitReport = async (e) => {
     e.preventDefault();
     if (workCompletedList.length === 0) {
-      toast.error("Please add at least one item under 'Work Completed Today'");
+      toast.error("Please add at least one item under 'Completed Line Items'");
       return;
     }
     setLoading(true);
     try {
       await api.post(`/admin/projects/${project.id}/daily-reports`, {
-        date, overall_status: overallStatus, status_notes: statusNotes,
-        work_completed: workCompletedList, planned_tomorrow: plannedTomorrowList, photos: photosList,
+        date, 
+        overall_status: overallStatus, 
+        status_notes: statusNotes,
+        work_completed: workCompletedList, 
+        planned_tomorrow: plannedTomorrowList, 
+        photos: photosList,
+        // ★ New parameters payload
+        workers_count: Number(workersCount) || 0,
+        masteries_count: Number(masteriesCount) || 0,
+        work_done_yesterday: workDoneYesterday,
+        work_completed_today: workCompletedToday
       });
       toast.success("Daily report submitted! (Awaiting PM Approval)");
-      setDate(todayStr); setStatusNotes(""); setWorkCompletedList([]); setPlannedTomorrowList([]); setPhotosList([]);
+      
+      // Reset State
+      setDate(todayStr); 
+      setStatusNotes(""); 
+      setWorkersCount(0);
+      setMasteriesCount(0);
+      setWorkDoneYesterday("");
+      setWorkCompletedToday("");
+      setWorkCompletedList([]); 
+      setPlannedTomorrowList([]); 
+      setPhotosList([]);
       setActiveTab("queue");
       await fetchReports();
     } catch (err) {
@@ -129,7 +157,7 @@ export default function ReportsTab({ project, onSaved }) {
   const pendingCount = reports.filter(r => !r.is_approved).length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-['Poppins']">
       {/* Top Bar Tabs */}
       <div className="flex border-b border-black/5 bg-white px-4 gap-6 rounded-xl shadow-sm">
         <button onClick={() => setActiveTab("queue")} className={`py-4 text-xs font-bold border-b-2 transition flex items-center gap-2 ${activeTab === "queue" ? "border-[#FF5A00] text-[#FF5A00]" : "border-transparent text-[#111111]/50 hover:text-[#000F1B]"}`}>
@@ -159,16 +187,50 @@ export default function ReportsTab({ project, onSaved }) {
                 <option>Work as per plan</option><option>Ahead of schedule</option><option>Slightly delayed</option><option>Impacted by weather</option><option>Material arrival pending</option>
               </select>
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B]">Status Briefing / Notes</label>
-              <textarea rows={2} value={statusNotes} onChange={e => setStatusNotes(e.target.value)} placeholder="Brief morning notes or site conditions..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+          </div>
+
+          {/* ★ NEW: Workforce Allocation Block */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <h4 className="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-[#FF5A00]" /> Labor & Site Strength Allocation
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Number of Workers *</label>
+                <input type="number" required min="0" value={workersCount} onChange={e => setWorkersCount(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-xs font-bold" />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Number of Masteries (Masons / Mistris) *</label>
+                <input type="number" required min="0" value={masteriesCount} onChange={e => setMasteriesCount(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-xs font-bold" />
+              </div>
             </div>
+          </div>
+
+          {/* ★ NEW: Yesterday & Today Work briefings */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B] flex items-center gap-1">
+                <History className="w-3.5 h-3.5 text-gray-500" /> Work Done Yesterday
+              </label>
+              <textarea rows={2} value={workDoneYesterday} onChange={e => setWorkDoneYesterday(e.target.value)} placeholder="State work done yesterday to maintain continuity audit..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B] flex items-center gap-1">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-gray-500" /> Work Completed Today (Briefing Description)
+              </label>
+              <textarea rows={2} value={workCompletedToday} onChange={e => setWorkCompletedToday(e.target.value)} placeholder="Summary briefing of execution milestones completed today..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
+            </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-[10px] font-bold uppercase mb-1 text-[#000F1B]">Status Briefing / Notes</label>
+            <textarea rows={2} value={statusNotes} onChange={e => setStatusNotes(e.target.value)} placeholder="Brief morning notes or site conditions..." className="w-full px-3 py-2 border rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-[#FF5A00]" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-black/5">
             {/* Work Completed */}
             <div>
-              <label className="block text-[10px] font-bold uppercase mb-2 text-[#000F1B]">Work Completed Today *</label>
+              <label className="block text-[10px] font-bold uppercase mb-2 text-[#000F1B]">Completed Line Items *</label>
               <div className="flex gap-2 mb-3">
                 <input type="text" value={workCompletedInput} onChange={e => setWorkCompletedInput(e.target.value)} placeholder="e.g. Block work (50%)" className="flex-1 px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#FF5A00]" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddWorkCompleted(); } }} />
                 <button type="button" onClick={handleAddWorkCompleted} className="px-4 py-2 bg-[#000F1B] hover:bg-[#FF5A00] text-white rounded-xl text-xs font-bold transition">Add</button>
@@ -274,9 +336,32 @@ export default function ReportsTab({ project, onSaved }) {
                     </div>
                   </div>
 
+                  {/* Micro labor strength banner row */}
+                  <div className="flex items-center gap-4 text-[10px] bg-slate-50 border border-slate-200 p-2 rounded-lg mb-3">
+                    <div className="flex items-center gap-1 font-bold text-slate-700">
+                      <Users className="w-3.5 h-3.5 text-[#FF5A00]" /> Deployments: {rep.workers_count || 0} Workers
+                    </div>
+                    <div className="w-px h-3 bg-slate-300" />
+                    <div className="flex items-center gap-1 font-bold text-slate-700">
+                      <Users2 className="w-3.5 h-3.5 text-blue-600" /> Masteries: {rep.masteries_count || 0} Skilled
+                    </div>
+                  </div>
+
+                  {/* Core yesterday vs today textual briefings */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] bg-white border border-gray-100 p-3 rounded-lg mb-4">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-gray-500 uppercase tracking-wider text-[8px]">Work Done Yesterday</div>
+                      <div className="text-gray-800 font-semibold">{rep.work_done_yesterday || "—"}</div>
+                    </div>
+                    <div className="space-y-0.5 border-t md:border-t-0 md:border-l border-gray-100 pt-2 md:pt-0 md:pl-3">
+                      <div className="font-bold text-gray-500 uppercase tracking-wider text-[8px]">Work Completed Today</div>
+                      <div className="text-gray-900 font-bold">{rep.work_completed_today || "—"}</div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div>
-                      <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Work Completed Today:</div>
+                      <div className="text-[10px] font-bold text-[#000F1B] uppercase tracking-wider mb-1">Completed Line Items:</div>
                       <ul className="space-y-1 pl-1">
                         {(rep.work_completed || []).map((item, idx) => (
                           <li key={idx} className="flex items-center gap-1.5 text-[#111111]/80 font-medium">

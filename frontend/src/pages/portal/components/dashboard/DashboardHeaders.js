@@ -39,24 +39,60 @@ export default function DashboardHeaders({ user, project }) {
   const completedStages = stages.filter((s) => s.status === "completed").length;
   const progressVal = stages.length ? Math.round(stages.reduce((sum, s) => sum + (Number(s.progress_pct) || 0), 0) / stages.length) : 0;
   const currentStage = stages.find((s) => s.status === "in_progress");
-  const expectedCompletionDate = project.expected_completion || (stages.length > 0 ? stages[stages.length - 1]?.expected_date : null);
+  const expectedCompletionDate = project?.expected_completion || (stages.length > 0 ? stages[stages.length - 1]?.expected_date : null);
 
-  // Consolidated Health Indicators - "Procurement" renamed to "Materials" for simplicity
+  // REAL DATA MAPPING FOR HEALTH METRICS
   const healthData = [
-    { key: "Schedule", status: stages.some((s) => s.status !== "completed" && s.expected_date && new Date(s.expected_date) < today) ? "At Risk" : "On Track" },
-    { key: "Cost", status: project.amount_spent > project.contract_value && project.contract_value > 0 ? "At Risk" : "On Track" },
-    { key: "Materials", status: materials.some((m) => m.status === "pending") ? "Attention" : "On Track" }, // Simplified wording
-    { key: "Quality", status: quality.some((q) => q.status === "rectification") ? "At Risk" : "On Track" },
-    { key: "Approvals", status: drawings.some((d) => d.status === "pending") ? "Attention" : "On Track" },
-    { key: "Payments", status: (project.amount_spent > (project.contract_value || 0)) ? "At Risk" : "On Track" }
+    { 
+      key: "Schedule", 
+      status: stages.some((s) => s.status !== "completed" && s.expected_date && new Date(s.expected_date) < today) 
+        ? "At Risk" 
+        : "On Track" 
+    },
+    { 
+      key: "Cost", 
+      status: (Number(project?.amount_spent) > Number(project?.contract_value) && Number(project?.contract_value) > 0) 
+        ? "At Risk" 
+        : "On Track" 
+    },
+    { 
+      key: "Materials", 
+      status: materials.length > 0 && materials.every(m => m.status !== "delivered" && m.status !== "installed") 
+        ? "Attention" 
+        : "On Track" 
+    },
+    { 
+      key: "Quality", 
+      status: quality.some((q) => q.status === "failed" || q.status === "rectification") 
+        ? "At Risk" 
+        : "On Track" 
+    },
+    { 
+      key: "Approvals", 
+      status: drawings.some((d) => d.status === "pending" || d.status === "changes_required" || d.status === "rejected") 
+        ? "Attention" 
+        : "On Track" 
+    },
+    { 
+      key: "Payments", 
+      status: (Number(project?.amount_spent) > (Number(project?.contract_value) || 0)) 
+        ? "At Risk" 
+        : "On Track" 
+    }
   ];
 
-  const overallHealth = healthData.some((h) => h.status === "At Risk") ? "At Risk" : healthData.some((h) => h.status === "Attention") ? "Attention" : "On Track";
+  const overallHealth = healthData.some((h) => h.status === "At Risk") 
+    ? "At Risk" 
+    : healthData.some((h) => h.status === "Attention") 
+    ? "Attention" 
+    : "On Track";
+
   const hColors = {
     "On Track": { text: "text-emerald-700", bg: "bg-emerald-50", icon: CheckCircle2, ring: "#10B981" },
     "Attention": { text: "text-amber-600", bg: "bg-amber-50", icon: Clock, ring: "#F59E0B" },
     "At Risk": { text: "text-red-600", bg: "bg-red-50", icon: ShieldAlert, ring: "#EF4444" },
   };
+
   const HealthIcon = hColors[overallHealth].icon;
   const formatDate = (date) => date ? new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
@@ -93,7 +129,7 @@ export default function DashboardHeaders({ user, project }) {
             <Calendar className="w-4 h-4 text-[#111111]/40" />
             <div>
               <div className="text-[8px] text-[#111111]/50 font-bold uppercase tracking-wider">Project Start</div>
-              <div className="text-[11px] font-bold text-[#000F1B]">{formatDate(project.start_date || project.created_at)}</div>
+              <div className="text-[11px] font-bold text-[#000F1B]">{formatDate(project?.start_date || project?.created_at)}</div>
             </div>
           </div>
           <div className="w-px h-6 bg-black/10 hidden sm:block" />
@@ -110,12 +146,11 @@ export default function DashboardHeaders({ user, project }) {
         </div>
       </div>
 
-      {/* 2. New Horizontal Stages Progress Strip */}
+      {/* 2. Horizontal Stages Progress Strip */}
       {stages.length > 0 && (
         <div className="bg-white rounded-2xl border border-black/5 p-3.5 shadow-sm">
           <div className="text-[9px] font-bold text-[#111111]/50 uppercase tracking-widest mb-2.5">Project Roadmap</div>
           
-          {/* Flex-nowrap with horizontal scrollbar hide support */}
           <div className="overflow-x-auto no-scrollbar scroll-smooth">
             <div className="flex items-center min-w-[760px] md:min-w-0 justify-between relative py-1.5 px-2">
               
@@ -196,7 +231,7 @@ export default function DashboardHeaders({ user, project }) {
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-2 mt-auto border-t border-black/5">
             {healthData.map((h, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
-                <div className={`w-full py-0.5 text-center rounded text-[7px] font-black uppercase tracking-normal ${hColors[h.status].bg} ${hColors[h.status].text}`}>
+                <div className={`w-full py-0.5 text-center rounded text-[7px] font-bold uppercase tracking-normal ${hColors[h.status].bg} ${hColors[h.status].text}`}>
                   {h.status === "On Track" ? "Healthy" : h.status === "Attention" ? "Review" : "Risk"}
                 </div>
                 <div className="text-[8px] font-semibold text-[#111111]/60 truncate w-full text-center leading-none">{h.key}</div>

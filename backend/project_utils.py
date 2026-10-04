@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional
 from fastapi import HTTPException, Request
+from auth import require_admin
 from db import db
 from email_service import send_project_notification_email
 
@@ -231,3 +232,27 @@ async def _auto_activate_pending_user(project_id: str, email: str, name: str):
     if updated:
         await db.projects.update_one({"id": project_id}, {"$set": {"team_directory": directory}})
         await _log_activity(project_id, name or email, f"{name or email} joined the project as {activated_role}", "Team")
+
+async def _push_admin_notification(title: str, message: str, link: str, type_tag: str = "general", project_id: str = None, severity: str = "info"):
+    """Push a notification visible to all admins in the admin dashboard."""
+    from db import db
+    import uuid
+    from datetime import datetime, timezone
+    
+    try:
+        notif = {
+            "id": f"notif_{uuid.uuid4().hex[:12]}",
+            "title": title,
+            "message": message,
+            "link": link,
+            "type": type_tag,
+            "severity": severity,
+            "project_id": project_id,
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.admin_notifications.insert_one(notif)
+    except Exception as e:
+        import logging
+        logging.error(f"[Admin Notification Error] {e}")
+

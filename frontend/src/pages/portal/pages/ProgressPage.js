@@ -596,7 +596,7 @@ function ProjectPhotosTab({ reports, stages }) {
 }
 
 // ============================================================================
-// PROGRESS REPORT
+// PROGRESS REPORT (Updated inside ProgressPage.js)
 // ============================================================================
 
 function DailyProgressTab({ project, reports }) {
@@ -647,6 +647,8 @@ function DailyProgressTab({ project, reports }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
           
           <div className="lg:col-span-4 space-y-3 md:space-y-4">
+            
+            {/* Status Briefing Card */}
             <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 md:p-4 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
               <h4 className="text-[9px] md:text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">Site Status</h4>
@@ -655,9 +657,42 @@ function DailyProgressTab({ project, reports }) {
               </div>
               {report.status_notes && <p className="text-[10px] md:text-xs text-emerald-800 mt-2 font-medium leading-relaxed bg-emerald-100/50 p-2 rounded border border-emerald-200/50">"{report.status_notes}"</p>}
             </div>
+
+            {/* ★ NEW: Labor Force Deployment Info Card */}
+            <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3 md:p-4 space-y-2.5">
+              <h4 className="font-bold text-[10px] md:text-xs text-[#000F1B] uppercase tracking-wide border-b border-black/5 pb-1.5">On-Site Labor Deployment</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Workers Strength</div>
+                  <div className="text-sm font-black text-slate-800 mt-0.5">{report.workers_count || 0}</div>
+                  <span className="text-[8px] text-gray-400">General Helpers</span>
+                </div>
+                <div className="bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
+                  <div className="text-[8px] font-bold text-blue-500 uppercase tracking-wider">Masteries Strength</div>
+                  <div className="text-sm font-black text-blue-900 mt-0.5">{report.masteries_count || 0}</div>
+                  <span className="text-[8px] text-blue-400">Skilled Masons</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ★ NEW: Chronological briefing descriptions */}
+            <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3 md:p-4 space-y-3">
+              <h4 className="font-bold text-[10px] md:text-xs text-[#000F1B] uppercase tracking-wide border-b border-black/5 pb-1.5">Execution Details</h4>
+              <div className="space-y-2">
+                <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-[10px] md:text-xs">
+                  <div className="font-bold text-gray-400 uppercase tracking-wider text-[8px] mb-1">Work Done Yesterday (Audited)</div>
+                  <div className="text-gray-700 font-semibold leading-relaxed">{report.work_done_yesterday || "—"}</div>
+                </div>
+                <div className="p-2.5 bg-[#FF5A00]/5 rounded-lg border border-[#FF5A00]/10 text-[10px] md:text-xs">
+                  <div className="font-bold text-[#FF5A00] uppercase tracking-wider text-[8px] mb-1">Work Completed Today (Detailed Briefing)</div>
+                  <div className="text-gray-900 font-bold leading-relaxed">{report.work_completed_today || "—"}</div>
+                </div>
+              </div>
+            </div>
             
+            {/* Completed Line Items checklist */}
             <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3 md:p-4">
-              <h4 className="font-bold text-[10px] md:text-xs text-[#000F1B] mb-2 uppercase tracking-wide border-b border-black/5 pb-1.5">Work Completed Today</h4>
+              <h4 className="font-bold text-[10px] md:text-xs text-[#000F1B] mb-2 uppercase tracking-wide border-b border-black/5 pb-1.5">Completed Checklist Items</h4>
               <ul className="space-y-1.5">
                 {(report.work_completed || []).map((work, i) => (
                   <li key={i} className="flex items-start gap-1.5 text-[10px] md:text-xs font-medium text-gray-600">
@@ -709,7 +744,6 @@ function DailyProgressTab({ project, reports }) {
     </div>
   );
 }
-
 // ============================================================================
 // SHARED COMPONENTS
 // ============================================================================

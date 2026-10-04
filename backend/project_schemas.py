@@ -198,6 +198,11 @@ class DailyReportCreateBody(BaseModel):
     work_completed: List[str] = Field(default_factory=list)
     planned_tomorrow: List[str] = Field(default_factory=list)
     photos: List[DailyReportPhotoBody] = Field(default_factory=list)
+    # ★ New Fields
+    workers_count: Optional[int] = 0
+    masteries_count: Optional[int] = 0
+    work_done_yesterday: Optional[str] = ""
+    work_completed_today: Optional[str] = ""
 
 class DailyReportUpdateBody(BaseModel):
     date: Optional[str] = None
@@ -206,6 +211,11 @@ class DailyReportUpdateBody(BaseModel):
     work_completed: Optional[List[str]] = None
     planned_tomorrow: Optional[List[str]] = None
     photos: Optional[List[DailyReportPhotoBody]] = None
+    # ★ New Fields
+    workers_count: Optional[int] = None
+    masteries_count: Optional[int] = None
+    work_done_yesterday: Optional[str] = None
+    work_completed_today: Optional[str] = None
 
 # --- Quality & Issues Schemas ---
 class QualityStageCreate(BaseModel):

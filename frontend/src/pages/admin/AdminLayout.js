@@ -97,7 +97,8 @@ export default function AdminLayout() {
         noindex={true}
       />
 
-      <div className="lg:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-black/5 shadow-soft">
+      {/* MOBILE HEADER (z-[50] ensures it sits above page content) */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-[50] bg-white border-b border-black/5 shadow-sm">
         <div className="flex items-center justify-between px-3 py-2.5">
           <button onClick={() => setDrawerOpen(true)} className="w-10 h-10 rounded-full grid place-items-center border border-black/10 bg-white">
             <Menu className="w-5 h-5 text-brand-navy" />
@@ -113,7 +114,8 @@ export default function AdminLayout() {
         </div>
       </div>
 
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-brand-navy text-white flex flex-col overflow-y-auto z-50 transition-transform duration-300 ease-out ${drawerOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
+      {/* SIDEBAR (z-[60] ensures it slides over the header if needed) */}
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-brand-navy text-white flex flex-col overflow-y-auto z-[60] transition-transform duration-300 ease-out ${drawerOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
         <div className="p-5 flex items-center justify-between">
           <BrandLockup tone="dark" size="sm" />
           <button onClick={() => setDrawerOpen(false)} className="lg:hidden w-8 h-8 rounded-full grid place-items-center bg-white/10 hover:bg-white/15">
@@ -154,12 +156,13 @@ export default function AdminLayout() {
 
       <AnimatePresence>
         {drawerOpen && (
-          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDrawerOpen(false)} className="lg:hidden fixed inset-0 bg-brand-navy/60 backdrop-blur-sm z-40" />
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDrawerOpen(false)} className="lg:hidden fixed inset-0 bg-brand-navy/60 backdrop-blur-sm z-[50]" />
         )}
       </AnimatePresence>
 
       <main className="lg:ml-64 pt-[58px] lg:pt-0">
-        <div className="hidden lg:flex items-center justify-end gap-3 px-8 py-3 border-b border-black/5 bg-white sticky top-0 z-30">
+        {/* DESKTOP HEADER (z-[50] to float above tables) */}
+        <div className="hidden lg:flex items-center justify-end gap-3 px-8 py-3 border-b border-black/5 bg-white sticky top-0 z-[50]">
           <NotificationBell unseenCount={unseenCount} open={notifOpen} setOpen={setNotifOpen} notifications={notifications} markAllSeen={markAllSeen} markSeen={markSeen} permission={permission} />
         </div>
         <div className="p-4 md:p-6 lg:p-8">
@@ -170,8 +173,12 @@ export default function AdminLayout() {
   );
 }
 
+// ============================================================================
+// NOTIFICATION BELL & DROPDOWN
+// ============================================================================
 function NotificationBell({ unseenCount, open, setOpen, notifications, markAllSeen, markSeen, permission }) {
   const [askedPermission, setAskedPermission] = useState(false);
+  
   const askPermission = async () => {
     setAskedPermission(true);
     await requestNotificationPermission();
@@ -180,7 +187,10 @@ function NotificationBell({ unseenCount, open, setOpen, notifications, markAllSe
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="relative w-10 h-10 rounded-full grid place-items-center border border-black/10 bg-white hover:bg-brand-bg transition">
+      <button 
+        onClick={() => setOpen(!open)} 
+        className="relative w-10 h-10 rounded-full grid place-items-center border border-black/10 bg-white hover:bg-brand-bg transition cursor-pointer"
+      >
         <Bell className="w-5 h-5 text-brand-navy" />
         {unseenCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-orange text-white text-[10px] font-bold grid place-items-center animate-pulse">
@@ -192,30 +202,46 @@ function NotificationBell({ unseenCount, open, setOpen, notifications, markAllSe
       <AnimatePresence>
         {open && (
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <motion.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.2 }} className="absolute right-0 mt-2 w-[calc(100vw-32px)] max-w-sm bg-white rounded-2xl shadow-premium border border-black/5 overflow-hidden z-50">
-              <div className="p-4 flex items-center justify-between border-b border-black/5">
+            {/* BACKDROP */}
+            <div className="fixed inset-0 z-[90]" onClick={() => setOpen(false)} />
+            
+            {/* NOTIFICATION PANEL */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }} 
+              animate={{ opacity: 1, y: 0, scale: 1 }} 
+              exit={{ opacity: 0, y: 10, scale: 0.95 }} 
+              transition={{ duration: 0.2, ease: "easeOut" }} 
+              className="absolute top-full mt-3 right-0 w-[calc(100vw-24px)] sm:w-[380px] max-w-sm bg-white rounded-2xl shadow-2xl border border-black/10 overflow-hidden z-[100] origin-top-right"
+            >
+              <div className="p-4 flex items-center justify-between border-b border-black/5 bg-gray-50/50">
                 <div>
-                  <div className="section-eyebrow">Live Notifications</div>
-                  <div className="font-semibold text-brand-navy mt-0.5">{unseenCount > 0 ? `${unseenCount} new` : "You're all caught up"}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#FF5A00]">Live Notifications</div>
+                  <div className="font-bold text-brand-navy text-sm mt-0.5">
+                    {unseenCount > 0 ? `${unseenCount} new updates` : "You're all caught up"}
+                  </div>
                 </div>
                 {unseenCount > 0 && (
-                  <button onClick={markAllSeen} className="text-xs text-brand-orange font-semibold inline-flex items-center gap-1 hover:underline">
+                  <button onClick={markAllSeen} className="text-xs text-brand-orange font-bold inline-flex items-center gap-1 hover:underline cursor-pointer">
                     <CheckCheck className="w-3.5 h-3.5" /> Mark all
                   </button>
                 )}
               </div>
 
               {permission !== "granted" && permission !== "unsupported" && (
-                <div className="px-4 py-3 bg-amber-50 border-b border-amber-200 text-xs text-amber-800 flex items-center justify-between gap-2">
-                  <div>Enable push notifications to get pinged even when this tab is in the background.</div>
-                  <button onClick={askPermission} className="rounded-full bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 whitespace-nowrap">Enable</button>
+                <div className="px-4 py-3 bg-amber-50 border-b border-amber-200 text-xs text-amber-800 flex items-center justify-between gap-3">
+                  <div className="leading-snug font-medium">Enable push notifications to get pinged even when this tab is closed.</div>
+                  <button onClick={askPermission} className="rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-3 py-2 whitespace-nowrap transition shadow-sm cursor-pointer">
+                    Enable
+                  </button>
                 </div>
               )}
 
-              <div className="max-h-[60vh] overflow-y-auto">
+              <div className="max-h-[60vh] overflow-y-auto custom-scrollbar bg-white">
                 {notifications.length === 0 ? (
-                  <div className="p-6 text-sm text-brand-navy/50 text-center">No new activity yet. New leads and quiz submissions will appear here.</div>
+                  <div className="p-8 text-sm font-medium text-brand-navy/40 text-center flex flex-col items-center gap-2">
+                    <Bell className="w-8 h-8 opacity-20" />
+                    No new activity yet.<br />Leads & submissions will appear here.
+                  </div>
                 ) : (
                   notifications.map((n) => {
                     let iconBg = "bg-emerald-100 text-emerald-600";
@@ -236,13 +262,17 @@ function NotificationBell({ unseenCount, open, setOpen, notifications, markAllSe
                         onClick={() => { markSeen(n.id, n.type); setOpen(false); }}
                         className="flex items-start gap-3 p-4 border-b border-black/5 last:border-0 hover:bg-brand-bg/50 transition"
                       >
-                        <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${iconBg}`}>
+                        <div className={`w-9 h-9 rounded-full grid place-items-center shrink-0 ${iconBg}`}>
                           <IconCmp className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-brand-navy text-sm truncate">{n.title}</div>
-                          <div className="text-xs text-brand-navy/60 truncate">{n.subtitle}</div>
-                          <div className="text-[10px] text-brand-navy/40 mt-1">{new Date(n.created_at).toLocaleString()}</div>
+                          <div className="font-bold text-brand-navy text-sm truncate">{n.title}</div>
+                          <div className="text-xs text-brand-navy/60 font-medium truncate mt-0.5">{n.subtitle}</div>
+                          <div className="text-[10px] font-semibold text-brand-navy/40 mt-1.5 uppercase tracking-wide">
+                            {new Date(n.created_at).toLocaleString('en-IN', {
+                              day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                            })}
+                          </div>
                         </div>
                       </Link>
                     );
