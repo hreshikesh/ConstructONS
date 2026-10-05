@@ -9,7 +9,7 @@ import BrandLockup from "@/components/site/BrandLockup";
 
 const NAV = [
   { label: "Home", to: "/", hash: "top" },
-  { label: "Home Collection", to: "/#home-collection", hash: "home-collection" },
+  // { label: "Home Collection", to: "/#home-collection", hash: "home-collection" },
   { label: "AI Platform", to: "/#ai-platform", hash: "ai-platform" },
   { label: "Marketplace", to: "/#marketplace", hash: "marketplace" },
   { label: "Financial Services", to: "/#financial", hash: "financial" },
