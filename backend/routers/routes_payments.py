@@ -934,7 +934,7 @@ async def delete_payment_log(project_id: str, payment_id: str):
 
 async def _send_invoice_edit_email(project: dict, invoice: dict, changes: list):
     try:
-        from email_utils import send_email
+        from email_service import send_email
 
         customer_email = project.get("customer_email")
         if not customer_email:
@@ -986,7 +986,7 @@ async def _send_invoice_edit_email(project: dict, invoice: dict, changes: list):
 
 async def _send_receipt_email_with_pdf(project: dict, payment: dict, linked_invoice: dict = None):
     try:
-        from email_utils import send_receipt_email
+        from email_service import send_receipt_email
         from receipt_pdf import generate_receipt_pdf
 
         customer_email = project.get("customer_email")
