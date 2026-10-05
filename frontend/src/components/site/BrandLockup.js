@@ -16,7 +16,7 @@ export default function BrandLockup({
     md: responsive
       ? "w-[128px] h-10 sm:w-[148px] sm:h-12"
       : "w-[148px] h-12",
-    lg: "w-[28px] h-16",
+    lg: "w-[188px] h-16",
   }[size] || "w-[148px] h-12";
 
   if (!showLogo) return null;
@@ -26,7 +26,7 @@ export default function BrandLockup({
       src={isDarkBackground ? "/logoLight.svg" : "/logoDark.svg"}
       alt="ConstructONS - Everything Construction. Always On."
       draggable={false}
-      className={`${dimensions}  object-cover object-left select-none ${className}`}
+      className={`${dimensions} shrink-0 object-cover object-left select-none ${className}`}
     />
   );
 }

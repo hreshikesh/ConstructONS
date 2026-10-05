@@ -51,16 +51,21 @@ export default function Header() {
           className={`
             flex items-center justify-between
             rounded-full border px-2 py-2 sm:px-3
-            ${
-              scrolled
-                ? "border-black/[0.06] bg-white/95 shadow-[0_12px_40px_rgba(17,17,17,0.08)] backdrop-blur-xl"
-                : "border-white/15 bg-[#111111]/30 backdrop-blur-md"
+            ${scrolled
+              ? "border-black/[0.06] bg-white/95 shadow-[0_12px_40px_rgba(17,17,17,0.08)] backdrop-blur-xl"
+              : "border-white/15 bg-[#111111]/30 backdrop-blur-md"
             }
           `}
         >
-          <Link to="/" data-testid="header-logo" aria-label="ConstructONS home" className="flex min-h-11 shrink-0 items-center px-2 sm:px-3">
-            <BrandLockup tone={scrolled ? "light" : "dark"} size="md" responsive />
-          </Link>
+        <Link
+  to="/"
+  data-testid="header-logo"
+  aria-label="ConstructONS home"
+  className="flex shrink-0 items-center py-1 pl-3 pr-4 sm:pl-4"
+>
+  <BrandLockup tone={scrolled ? "light" : "dark"} size="lg" responsive />
+</Link>
+
 
           <nav aria-label="Primary navigation" className="hidden xl:flex items-center gap-0.5">
             {NAV.map((item) => (
@@ -75,10 +80,9 @@ export default function Header() {
               className={`
                 hidden min-h-11 items-center justify-center rounded-full px-4
                 text-sm font-semibold transition-all duration-300 md:inline-flex
-                ${
-                  scrolled
-                    ? "text-[#111111] hover:text-[#FF6600]"
-                    : "text-white hover:text-[#FF6600]"
+                ${scrolled
+                  ? "text-[#111111] hover:text-[#FF6600]"
+                  : "text-white hover:text-[#FF6600]"
                 }
               `}
             >
@@ -110,10 +114,9 @@ export default function Header() {
               data-testid="mobile-menu-button"
               className={`
                 grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors xl:hidden
-                ${
-                  scrolled
-                    ? "bg-[#111111] text-white hover:bg-[#FF6600]"
-                    : "border border-white/20 bg-white/10 text-white hover:bg-[#FF6600] hover:border-[#FF6600]"
+                ${scrolled
+                  ? "bg-[#111111] text-white hover:bg-[#FF6600]"
+                  : "border border-white/20 bg-white/10 text-white hover:bg-[#FF6600] hover:border-[#FF6600]"
                 }
               `}
             >
@@ -191,10 +194,9 @@ function NavItem({ item, scrolled }) {
   const baseClass = `
     relative rounded-full px-3 py-2.5 text-[13px] font-medium
     transition-colors duration-200 cursor-pointer
-    ${
-      scrolled
-        ? "text-[#111111]/75 hover:text-[#FF6600]"
-        : "text-white/80 hover:text-[#FF6600]"
+    ${scrolled
+      ? "text-[#111111]/75 hover:text-[#FF6600]"
+      : "text-white/80 hover:text-[#FF6600]"
     }
   `;
 

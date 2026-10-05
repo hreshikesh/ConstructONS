@@ -76,8 +76,8 @@ async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dic
         "updated_at": now,
     }
     await db.customers.insert_one(doc)
+    doc.pop("_id", None)
     return doc
-
 
 async def _create_session(user_id: str, session_token: str) -> dict:
     """Stores the active customer session token in the database."""
