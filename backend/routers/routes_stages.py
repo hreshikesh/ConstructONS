@@ -1,4 +1,4 @@
-"""Stages, Substages & PM Stage Approval Workflows."""
+"""Stages, Substages & Workflows (Auto-Published)."""
 import uuid
 import asyncio
 from datetime import datetime, timezone
@@ -7,7 +7,7 @@ from db import db
 from auth import require_admin
 from project_schemas import (
     StageAddBody, StagePatchBody, SubstageBody, 
-    ReorderStagesBody, RejectStageBody
+    ReorderStagesBody
 )
 from project_utils import (
     _log_activity, _push_notification, 
@@ -15,6 +15,15 @@ from project_utils import (
 )
 
 router = APIRouter(prefix="/api", tags=["stages"])
+
+def _make_stage_live(stage: dict):
+    """Automatically marks a stage as approved and syncs published_data for the client portal."""
+    stage["approval_status"] = "approved"
+    stage["reject_reason"] = None
+    snap = dict(stage)
+    snap.pop("published_data", None)
+    stage["published_data"] = snap
+    return stage
 
 @router.post("/admin/projects/{project_id}/stages", dependencies=[Depends(require_admin)])
 async def add_stage(project_id: str, body: StageAddBody):
@@ -40,6 +49,9 @@ async def add_stage(project_id: str, body: StageAddBody):
         "documents": [],
         "substages": []
     }
+    
+    new_stage = _make_stage_live(new_stage)
+    
     handover_idx = next((i for i, s in enumerate(stages) if "handover" in s.get("name", "").lower()), -1)
     if handover_idx != -1:
         stages.insert(handover_idx, new_stage)
@@ -47,6 +59,7 @@ async def add_stage(project_id: str, body: StageAddBody):
         stages.append(new_stage)
     for i, s in enumerate(stages):
         s["index"] = i
+        
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -74,6 +87,7 @@ async def reorder_stages(project_id: str, body: ReorderStagesBody):
         reordered.append(handover_stage)
     for i, s in enumerate(reordered):
         s["index"] = i
+        
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": reordered, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -93,6 +107,8 @@ async def patch_stage(project_id: str, index: int, body: StagePatchBody):
     substages = stage.get("substages") or []
     has_active_children = len([s for s in substages if not s.get("archived")]) > 0
     old_photos_count = len(stage.get("photos") or [])
+    
+    old_progress = float(stage.get("progress_pct") or 0)
     patch = body.model_dump(exclude_unset=True)
     
     if has_active_children:
@@ -116,6 +132,9 @@ async def patch_stage(project_id: str, index: int, body: StagePatchBody):
     stage.update(patch)
     if has_active_children:
         stage = _recalculate_stage_from_substages(stage)
+        
+    # INSTANT PUBLISH
+    stage = _make_stage_live(stage)
     stages[index] = stage
     
     total_pct = sum(float(s.get("progress_pct") or 0) for s in stages)
@@ -130,16 +149,30 @@ async def patch_stage(project_id: str, index: int, body: StagePatchBody):
             break
     if not month_found:
         monthly_records.append({"month": current_month_label, "actual_pct": overall_progress})
-    stages[index]["approval_status"] = "draft"
+        
     await db.projects.update_one(
         {"id": project_id}, 
         {"$set": {"stages": stages, "monthly_progress": monthly_records, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
+    
+    # TRIGGER NOTIFICATIONS
     new_photos_count = len(stage.get("photos") or [])
     if new_photos_count > old_photos_count:
         photos_added = new_photos_count - old_photos_count
         await _log_activity(project_id, "Site Engineer", f"Uploaded {photos_added} photo(s) for {stage['name']}", "Progress")
         asyncio.create_task(_push_notification(project_id, "📸 New Site Photos", f"{photos_added} progress photo(s) for '{stage['name']}'.", "/portal/progress", "progress"))
+    
+    new_progress = float(stage.get("progress_pct") or 0)
+    if not has_active_children and new_progress != old_progress:
+        await _log_activity(project_id, "Site Engineer", f"Updated stage: {stage['name']} to {new_progress}%", "Progress")
+        asyncio.create_task(_push_notification(
+            project_id, 
+            "📊 Progress Updated", 
+            f"Stage '{stage['name']}' is now {new_progress}% complete.", 
+            "/portal/progress", 
+            "progress"
+        ))
+
     return stage
 
 @router.delete("/admin/projects/{project_id}/stages/{index}", dependencies=[Depends(require_admin)])
@@ -189,8 +222,11 @@ async def add_substage(project_id: str, stage_index: int, body: SubstageBody):
     substages.append(new_sub)
     stage["substages"] = substages
     stage = _recalculate_stage_from_substages(stage)
+    
+    # INSTANT PUBLISH
+    stage = _make_stage_live(stage)
     stages[stage_index] = stage
-    stages[stage_index]["approval_status"] = "draft"
+    
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -212,8 +248,12 @@ async def patch_substage(project_id: str, stage_index: int, sub_id: str, body: S
         raise HTTPException(status_code=400, detail="Substage not found")
     sub = substages[sub_idx]
     old_progress = float(sub.get("progress_pct") or 0)
+    
     if not sub.get("start_date") and body.start_date:
         sub["start_date"] = body.start_date
+    elif body.start_date:
+        sub["start_date"] = body.start_date
+        
     sub["name"] = body.name
     sub["planned_end_date"] = body.planned_end_date
     new_progress = float(body.progress_pct or 0)
@@ -223,17 +263,24 @@ async def patch_substage(project_id: str, stage_index: int, sub_id: str, body: S
     substages[sub_idx] = sub
     stage["substages"] = substages
     stage = _recalculate_stage_from_substages(stage)
+    
+    # INSTANT PUBLISH
+    stage = _make_stage_live(stage)
     stages[stage_index] = stage
-    stages[stage_index]["approval_status"] = "draft"
+    
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
+    
+    # TRIGGER NOTIFICATIONS
     if old_progress < 100 and new_progress == 100:
-        await _log_activity(project_id, "Site Engineer", f"Completed substage: {sub['name']}", "Progress")
+        await _log_activity(project_id, "Site Engineer", f"Completed task: {sub['name']}", "Progress")
         asyncio.create_task(_push_notification(project_id, "✅ Task Completed", f"'{sub['name']}' is now 100% complete.", "/portal/progress", "progress"))
-    elif old_progress == 0 and new_progress > 0:
-        await _log_activity(project_id, "Site Engineer", f"Started substage: {sub['name']}", "Progress")
+    elif new_progress != old_progress:
+        await _log_activity(project_id, "Site Engineer", f"Updated task '{sub['name']}' to {new_progress}%", "Progress")
+        asyncio.create_task(_push_notification(project_id, "📊 Progress Updated", f"Task '{sub['name']}' is now {new_progress}% complete.", "/portal/progress", "progress"))
+
     return {"success": True, "stage": stage}
 
 @router.delete("/admin/projects/{project_id}/stages/{stage_index}/substages/{sub_id}", dependencies=[Depends(require_admin)])
@@ -248,8 +295,11 @@ async def delete_substage(project_id: str, stage_index: int, sub_id: str):
     substages = [s for s in (stage.get("substages") or []) if s.get("id") != sub_id]
     stage["substages"] = substages
     stage = _recalculate_stage_from_substages(stage)
+    
+    # INSTANT PUBLISH
+    stage = _make_stage_live(stage)
     stages[stage_index] = stage
-    stages[stage_index]["approval_status"] = "draft"
+    
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -272,13 +322,17 @@ async def mark_substage_complete(project_id: str, stage_index: int, sub_id: str)
     substages[sub_idx] = _apply_progress_rules_to_substage(substages[sub_idx], 100)
     stage["substages"] = substages
     stage = _recalculate_stage_from_substages(stage)
+    
+    # INSTANT PUBLISH
+    stage = _make_stage_live(stage)
     stages[stage_index] = stage
-    stages[stage_index]["approval_status"] = "draft"
+    
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     await _log_activity(project_id, "Site Engineer", f"Marked complete: {substages[sub_idx]['name']}", "Progress")
+    asyncio.create_task(_push_notification(project_id, "✅ Task Completed", f"'{substages[sub_idx]['name']}' is now 100% complete.", "/portal/progress", "progress"))
     return {"success": True, "stage": stage}
 
 @router.post("/admin/projects/{project_id}/stages/{stage_index}/mark-all-complete", dependencies=[Depends(require_admin)])
@@ -298,8 +352,11 @@ async def mark_stage_all_complete(project_id: str, stage_index: int):
             substages[i] = _apply_progress_rules_to_substage(sub, 100)
     stage["substages"] = substages
     stage = _recalculate_stage_from_substages(stage)
+    
+    # INSTANT PUBLISH
+    stage = _make_stage_live(stage)
     stages[stage_index] = stage
-    stages[stage_index]["approval_status"] = "draft"
+    
     await db.projects.update_one(
         {"id": project_id},
         {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -307,44 +364,3 @@ async def mark_stage_all_complete(project_id: str, stage_index: int):
     await _log_activity(project_id, "Site Engineer", f"Marked all substages complete for: {stage['name']}", "Progress")
     asyncio.create_task(_push_notification(project_id, "🎉 Stage Completed", f"'{stage['name']}' is fully complete.", "/portal/progress", "progress"))
     return {"success": True, "stage": stage}
-
-@router.post("/admin/projects/{project_id}/stages/{index}/submit", dependencies=[Depends(require_admin)])
-async def submit_stage_for_approval(project_id: str, index: int):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
-    stages = p.get("stages") or []
-    if index < 0 or index >= len(stages):
-        raise HTTPException(status_code=400, detail="Invalid stage index")
-    stages[index]["approval_status"] = "submitted"
-    await db.projects.update_one({"id": project_id}, {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}})
-    await _log_activity(project_id, "Site Engineer", f"Submitted stage '{stages[index]['name']}' for PM approval", "Progress")
-    return {"success": True, "stage": stages[index]}
-
-@router.post("/admin/projects/{project_id}/stages/{index}/approve", dependencies=[Depends(require_admin)])
-async def approve_stage_changes(project_id: str, index: int):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
-    stages = p.get("stages") or []
-    if index < 0 or index >= len(stages):
-        raise HTTPException(status_code=400, detail="Invalid stage index")
-    stage = stages[index]
-    stage["approval_status"] = "approved"
-    stage["reject_reason"] = None
-    snapshot = dict(stage)
-    snapshot.pop("published_data", None)
-    stage["published_data"] = snapshot
-    stages[index] = stage
-    await db.projects.update_one({"id": project_id}, {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}})
-    await _log_activity(project_id, "Project Manager", f"Approved & Published stage '{stage['name']}'", "Progress")
-    asyncio.create_task(_push_notification(project_id, "📊 Progress Verified", f"New progress updates for '{stage['name']}' have been verified and published.", "/portal/progress", "progress"))
-    return {"success": True, "stage": stage}
-
-@router.post("/admin/projects/{project_id}/stages/{index}/reject", dependencies=[Depends(require_admin)])
-async def reject_stage_changes(project_id: str, index: int, body: RejectStageBody):
-    p = await db.projects.find_one({"id": project_id}, {"_id": 0, "stages": 1})
-    stages = p.get("stages") or []
-    if index < 0 or index >= len(stages):
-        raise HTTPException(status_code=400, detail="Invalid stage index")
-    stages[index]["approval_status"] = "rejected"
-    stages[index]["reject_reason"] = body.reason
-    await db.projects.update_one({"id": project_id}, {"$set": {"stages": stages, "updated_at": datetime.now(timezone.utc).isoformat()}})
-    await _log_activity(project_id, "Project Manager", f"Rejected stage '{stages[index]['name']}' updates", "Progress")
-    return {"success": True, "stage": stages[index]}

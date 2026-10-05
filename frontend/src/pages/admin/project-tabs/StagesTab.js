@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import {
-  Plus, X, Save, Loader2, CalendarCheck, Camera, Trash2,
-  CheckCircle2, AlertTriangle, Send, ThumbsUp, ThumbsDown,
-  List, LayoutGrid, Minimize2, Maximize2, RefreshCw, Search,
+  Plus, X, Save, Loader2, Camera, Trash2,
+  CheckCircle2, List, LayoutGrid, Minimize2, Maximize2, RefreshCw, Search,
   ChevronRight, ChevronDown, GripVertical
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
@@ -24,44 +23,54 @@ const fmtDate = (dateStr) => {
   }
 };
 
-const fmtDateLong = (dateStr) => {
-  if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "numeric", month: "short", year: "numeric",
-    });
-  } catch {
-    return "—";
-  }
-};
-
-// Split table columns (wide enough so dates don't overlap)
-const COL = {
-  name: 260,
-  weight: 50,
-  planned: 180,
-  actual: 160,
-  progress: 120,
-  status: 90,
-};
+const COL = { name: 260, weight: 50, planned: 180, actual: 160, progress: 120, status: 90 };
 const TABLE_W = Object.values(COL).reduce((a, b) => a + b, 0);
+
+const parseProgressInput = (raw) => {
+  if (raw === "" || raw === null || raw === undefined) return "";
+  const digits = String(raw).replace(/\D/g, "");
+  if (digits === "") return "";
+  const n = parseInt(digits, 10);
+  if (Number.isNaN(n)) return "";
+  return Math.min(100, Math.max(0, n));
+};
+const progressValue = (v) => (v === "" || v === null || v === undefined ? "" : v);
+
+function buildLockedStarts(stagesList) {
+  const next = new Set();
+  (stagesList || []).forEach((st) => {
+    (st.substages || []).forEach((sub) => {
+      if (sub?.id && sub.start_date) next.add(sub.id);
+    });
+  });
+  return next;
+}
+
+function normalizeStages(list) {
+  return (list || []).map((s) => ({
+    ...s,
+    photos: (s.photos || []).map((p) =>
+      typeof p === "string" ? { url: p, uploaded_at: null } : p
+    ),
+  }));
+}
 
 export default function StagesTab({ project, onSaved }) {
   const [stages, setStages] = useState([]);
+  const [lockedSubStarts, setLockedSubStarts] = useState(() => new Set()); // server-persisted start dates only
   const [saving, setSaving] = useState(null);
+  const [savingSub, setSavingSub] = useState(null); // `${stageIdx}:${subId}`
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(null);
   const [expandedStage, setExpandedStage] = useState(null);
   const [showAddStage, setShowAddStage] = useState(false);
   const [newStageName, setNewStageName] = useState("");
 
-  // Views
-  const [viewMode, setViewMode] = useState("list"); // 'list' | 'split'
+  const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedAll, setExpandedAll] = useState(new Set());
-  const [zoom, setZoom] = useState("week"); // day | week | month
+  const [expandedAll, setExpandedAll] = useState(() => new Set()); // start collapsed = less lag
+  const [zoom, setZoom] = useState("week");
 
-  // Draggable splitter
   const containerRef = useRef(null);
   const leftScrollRef = useRef(null);
   const rightScrollRef = useRef(null);
@@ -71,27 +80,20 @@ export default function StagesTab({ project, onSaved }) {
   });
   const [dragging, setDragging] = useState(false);
 
-  // ---------- init ----------
+  // Load from project prop
   useEffect(() => {
-    const normalized = (project.stages || []).map((s) => ({
-      ...s,
-      photos: (s.photos || []).map((p) =>
-        typeof p === "string" ? { url: p, uploaded_at: null } : p
-      ),
-    }));
+    const normalized = normalizeStages(project.stages);
     setStages(normalized);
-    setExpandedAll(new Set(normalized.map((_, i) => i)));
+    setLockedSubStarts(buildLockedStarts(normalized));
+    // do NOT expand all — that made the tab laggy
   }, [project]);
 
-  // ---------- drag splitter ----------
   useEffect(() => {
     if (!dragging) return;
     const onMove = (e) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const min = 380;
-      const max = rect.width - 280;
-      const w = Math.max(min, Math.min(e.clientX - rect.left, max));
+      const w = Math.max(380, Math.min(e.clientX - rect.left, rect.width - 280));
       setLeftWidth(w);
     };
     const onUp = () => {
@@ -112,7 +114,6 @@ export default function StagesTab({ project, onSaved }) {
     };
   }, [dragging, leftWidth]);
 
-  // sync vertical scroll table ↔ gantt
   const onLeftScroll = (e) => {
     if (rightScrollRef.current) rightScrollRef.current.scrollTop = e.target.scrollTop;
   };
@@ -122,26 +123,20 @@ export default function StagesTab({ project, onSaved }) {
 
   const toUrl = (p) => (typeof p === "string" ? p : p?.url || "");
 
-  // ---------- API ----------
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
       const { data } = await api.get(`/admin/projects/${project.id}`);
-      setStages(
-        (data.stages || []).map((s) => ({
-          ...s,
-          photos: (s.photos || []).map((p) =>
-            typeof p === "string" ? { url: p, uploaded_at: null } : p
-          ),
-        }))
-      );
+      const normalized = normalizeStages(data.stages);
+      setStages(normalized);
+      setLockedSubStarts(buildLockedStarts(normalized)); // lock only what server has
       onSaved?.();
     } catch {
       toast.error("Refresh failed");
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [project.id, onSaved]);
 
   const patchStageLocal = (idx, patch) => {
     setStages((prev) => {
@@ -180,7 +175,7 @@ export default function StagesTab({ project, onSaved }) {
         payload.progress_pct = Number(s.progress_pct) || 0;
       }
       await api.patch(`/admin/projects/${project.id}/stages/${idx}`, payload);
-      toast.success("Draft saved");
+      toast.success("Stage saved & Live");
       await refresh();
     } catch {
       toast.error("Save failed");
@@ -189,9 +184,9 @@ export default function StagesTab({ project, onSaved }) {
     }
   };
 
-  // Modified with silent flag for background auto-saving
-  const saveSubstage = async (stageIdx, sub, silent = false) => {
+  const saveSubstage = async (stageIdx, sub) => {
     if (!sub?.id) return;
+    setSavingSub(`${stageIdx}:${sub.id}`);
     try {
       const payload = {
         name: (sub.name || "Untitled").trim(),
@@ -206,62 +201,12 @@ export default function StagesTab({ project, onSaved }) {
         `/admin/projects/${project.id}/stages/${stageIdx}/substages/${sub.id}`,
         payload
       );
-      if (!silent) toast.success("Substage draft saved");
-      await refresh();
+      toast.success("Substage saved & Live");
+      await refresh(); // after refresh, start_date locks if it was saved
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Failed to save substage");
-    }
-  };
-
-  // Helper function to auto-save child tasks immediately on blur
-  const autoSaveSub = (stageIdx, subIdx, patch = {}) => {
-    setStages((prev) => {
-      const next = [...prev];
-      const subs = [...(next[stageIdx].substages || [])];
-      const merged = { ...subs[subIdx], ...patch };
-      subs[subIdx] = merged;
-      next[stageIdx] = { ...next[stageIdx], substages: subs };
-
-      // fire API with merged row quietly
-      queueMicrotask(() => saveSubstage(stageIdx, merged, true));
-      return next;
-    });
-  };
-
-  // --- PM WORKFLOW (names match list UI) ---
-  const submitForApproval = async (idx) => {
-    if (!window.confirm("Submit these changes to the Project Manager?")) return;
-    try {
-      await api.post(`/admin/projects/${project.id}/stages/${idx}/submit`);
-      toast.success("Submitted to PM");
-      await refresh();
-    } catch {
-      toast.error("Submission failed");
-    }
-  };
-
-  const approveStage = async (idx) => {
-    if (!window.confirm("Approve and publish these changes to the client portal?")) return;
-    try {
-      await api.post(`/admin/projects/${project.id}/stages/${idx}/approve`);
-      toast.success("Published to Client");
-      await refresh();
-    } catch {
-      toast.error("Approval failed");
-    }
-  };
-
-  const rejectStage = async (idx) => {
-    const reason = window.prompt("Reason for rejection:");
-    if (!reason?.trim()) return;
-    try {
-      await api.post(`/admin/projects/${project.id}/stages/${idx}/reject`, {
-        reason: reason.trim(),
-      });
-      toast.info("Sent back to Site Engineer");
-      await refresh();
-    } catch {
-      toast.error("Rejection failed");
+    } finally {
+      setSavingSub(null);
     }
   };
 
@@ -271,7 +216,7 @@ export default function StagesTab({ project, onSaved }) {
       await api.post(
         `/admin/projects/${project.id}/stages/${stageIdx}/substages/${subId}/mark-complete`
       );
-      toast.success("Marked complete (Draft)");
+      toast.success("Marked complete");
       await refresh();
     } catch {
       toast.error("Failed");
@@ -356,6 +301,7 @@ export default function StagesTab({ project, onSaved }) {
       });
       await refresh();
       setExpandedAll((prev) => new Set([...prev, stageIdx]));
+      setExpandedStage(stageIdx);
     } catch {
       toast.error("Failed");
     }
@@ -390,7 +336,7 @@ export default function StagesTab({ project, onSaved }) {
         };
         return next;
       });
-      toast.success("Photo uploaded — click Save Draft to commit");
+      toast.success("Photo uploaded — click Save Stage to commit");
     } catch {
       toast.error("Upload failed");
     } finally {
@@ -409,8 +355,9 @@ export default function StagesTab({ project, onSaved }) {
     });
   };
 
-  // ---------- Gantt data ----------
+  // Gantt calcs ONLY in split mode (fixes editor lag)
   const visibleRows = useMemo(() => {
+    if (viewMode !== "split") return [];
     const rows = [];
     const q = searchQuery.toLowerCase().trim();
     stages.forEach((stage, sIdx) => {
@@ -431,9 +378,12 @@ export default function StagesTab({ project, onSaved }) {
       }
     });
     return rows;
-  }, [stages, expandedAll, searchQuery]);
+  }, [stages, expandedAll, searchQuery, viewMode]);
 
   const { minDate, dayWidth, ganttWidth, dateMarkers, monthHeaders, todayPx } = useMemo(() => {
+    if (viewMode !== "split") {
+      return { minDate: new Date(), dayWidth: 12, ganttWidth: 400, dateMarkers: [], monthHeaders: [], todayPx: 0 };
+    }
     let min = new Date();
     let max = new Date();
     let has = false;
@@ -463,7 +413,6 @@ export default function StagesTab({ project, onSaved }) {
     const days = Math.max(30, Math.ceil((max - min) / MS));
     const dW = zoom === "day" ? 28 : zoom === "week" ? 12 : 4;
     const width = days * dW;
-
     const markers = [];
     const months = [];
     const cur = new Date(min);
@@ -484,20 +433,12 @@ export default function StagesTab({ project, onSaved }) {
       }
       cur.setDate(cur.getDate() + 1);
     }
-
     const tPx = Math.max(0, ((new Date() - min) / MS) * dW);
-    return {
-      minDate: min,
-      dayWidth: dW,
-      ganttWidth: width,
-      dateMarkers: markers,
-      monthHeaders: months,
-      todayPx: tPx,
-    };
-  }, [stages, zoom]);
+    return { minDate: min, dayWidth: dW, ganttWidth: width, dateMarkers: markers, monthHeaders: months, todayPx: tPx };
+  }, [stages, zoom, viewMode]);
 
   const barPx = (startStr, endStr) => {
-    if (!startStr || !endStr) return { valid: false };
+    if (viewMode !== "split" || !startStr || !endStr) return { valid: false };
     const s = new Date(startStr);
     const e = new Date(endStr);
     if (Number.isNaN(s) || Number.isNaN(e) || e < s) return { valid: false };
@@ -515,7 +456,6 @@ export default function StagesTab({ project, onSaved }) {
     });
   };
 
-  // ---------- RENDER ----------
   return (
     <div className="font-['Poppins'] flex flex-col h-[calc(100vh-160px)] min-h-[560px] bg-[#F9FAFB] rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <style>{`
@@ -595,16 +535,13 @@ export default function StagesTab({ project, onSaved }) {
         </div>
       </div>
 
-      {/* ========== LIST / EDITOR VIEW (your flow) ========== */}
       {viewMode === "list" && (
         <div className="flex-1 overflow-y-auto csb p-4 space-y-4 bg-[#F9FAFB]">
-          <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-black/5 shadow-sm">
-            <div>
-              <h2 className="font-bold text-[#000F1B] text-base">Stage Pipeline & Approvals</h2>
-              <p className="text-[10px] text-[#111111]/50 mt-1">
-                Changes are saved as Drafts. Must be Approved by PM to appear on Client Portal.
-              </p>
-            </div>
+          <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm">
+            <h2 className="font-bold text-[#111111] text-base">Stage Pipeline</h2>
+            <p className="text-[10px] text-[#111111]/50 mt-1">
+              Edit freely, then click Save. Substage start date locks only after it is saved.
+            </p>
           </div>
 
           {showAddStage && (
@@ -625,17 +562,14 @@ export default function StagesTab({ project, onSaved }) {
               </div>
               <div className="flex gap-2 sm:self-end">
                 <button
-                  onClick={() => {
-                    setShowAddStage(false);
-                    setNewStageName("");
-                  }}
+                  onClick={() => { setShowAddStage(false); setNewStageName(""); }}
                   className="px-4 py-2 text-xs font-bold border border-black/10 rounded-lg hover:bg-[#F2F2F2]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={addStage}
-                  className="px-5 py-2 text-xs font-bold bg-[#000F1B] text-white rounded-lg hover:bg-[#FF6600]"
+                  className="px-5 py-2 text-xs font-bold bg-[#111111] text-white rounded-lg hover:bg-[#FF6600]"
                 >
                   Create
                 </button>
@@ -659,14 +593,6 @@ export default function StagesTab({ project, onSaved }) {
               };
               const stat = statMap[s.status] || statMap.pending;
 
-              const approvalMap = {
-                approved: { label: "Live / Published", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-                submitted: { label: "Awaiting PM", color: "bg-amber-100 text-amber-700 border-amber-200" },
-                rejected: { label: "Changes Rejected", color: "bg-red-100 text-red-700 border-red-200" },
-                draft: { label: "Draft Changes", color: "bg-slate-100 text-slate-700 border-slate-200" },
-              };
-              const approvalBadge = approvalMap[s.approval_status || "approved"];
-
               return (
                 <div
                   key={s.id || idx}
@@ -676,20 +602,19 @@ export default function StagesTab({ project, onSaved }) {
                       : "border-black/5 hover:border-black/15"
                   }`}
                 >
-                  {/* HEADER */}
                   <div className="p-4 flex items-center gap-4">
                     <div className="flex flex-col gap-1 shrink-0">
                       <button
                         onClick={() => moveStage(idx, -1)}
                         disabled={idx === 0}
-                        className="text-[#111111]/30 hover:text-[#000F1B] disabled:opacity-20 w-5 h-4 grid place-items-center"
+                        className="text-[#111111]/30 hover:text-[#111111] disabled:opacity-20 w-5 h-4 grid place-items-center"
                       >
                         <div className="w-0 h-0 border-l-4 border-r-4 border-b-[6px] border-l-transparent border-r-transparent border-b-current" />
                       </button>
                       <button
                         onClick={() => moveStage(idx, 1)}
                         disabled={idx === stages.length - 1 || isHandover}
-                        className="text-[#111111]/30 hover:text-[#000F1B] disabled:opacity-20 w-5 h-4 grid place-items-center"
+                        className="text-[#111111]/30 hover:text-[#111111] disabled:opacity-20 w-5 h-4 grid place-items-center"
                       >
                         <div className="w-0 h-0 border-l-4 border-r-4 border-t-[6px] border-l-transparent border-r-transparent border-t-current" />
                       </button>
@@ -703,13 +628,8 @@ export default function StagesTab({ project, onSaved }) {
                         <span className="text-xs font-black text-[#111111]/30">
                           {(idx + 1).toString().padStart(2, "0")}
                         </span>
-                        <span className="font-bold text-sm sm:text-base text-[#000F1B] truncate">
+                        <span className="font-bold text-sm sm:text-base text-[#111111] truncate">
                           {s.name}
-                        </span>
-                        <span
-                          className={`text-[9px] font-bold uppercase border px-1.5 py-0.5 rounded ${approvalBadge.color}`}
-                        >
-                          {approvalBadge.label}
                         </span>
                         {isHandover && (
                           <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">
@@ -726,7 +646,7 @@ export default function StagesTab({ project, onSaved }) {
                         <span className={`font-bold px-2 py-0.5 rounded ${stat.bg} ${stat.text}`}>
                           {stat.label}
                         </span>
-                        <span className="font-bold text-[#000F1B]">{s.progress_pct || 0}% Done</span>
+                        <span className="font-bold text-[#111111]">{Number(s.progress_pct) || 0}% Done</span>
                         {activeSubs.length > 0 && (
                           <span className="hidden sm:inline font-medium text-[#111111]/50">
                             • {activeSubs.length} Substage{activeSubs.length !== 1 ? "s" : ""}
@@ -740,33 +660,20 @@ export default function StagesTab({ project, onSaved }) {
                       className={`shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition ${
                         isExpanded
                           ? "bg-[#FF6600] border-[#FF6600] text-white"
-                          : "bg-white border-black/10 text-[#000F1B] hover:bg-black/5"
+                          : "bg-white border-black/10 text-[#111111] hover:bg-black/5"
                       }`}
                     >
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                      />
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
                   </div>
 
-                  {/* BODY */}
+                  {/* Only mount heavy body when expanded — big lag win */}
                   {isExpanded && (
                     <div className="border-t border-black/5 bg-[#F9FAFB] rounded-b-xl p-5 space-y-5">
-                      {s.approval_status === "rejected" && (
-                        <div className="bg-red-50 border border-red-200 p-3 rounded-lg text-sm text-red-800 flex items-start gap-2">
-                          <AlertTriangle className="w-5 h-5 shrink-0" />
-                          <div>
-                            <strong>PM Rejected Changes:</strong> "{s.reject_reason}"
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Parent fields */}
                       <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm">
                         {hasChildren && (
                           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900">
-                            <strong>PRD Rule:</strong> Progress, dates, and status are calculated from
-                            substages and cannot be edited directly here.
+                            <strong>Note:</strong> Progress, dates, and status are calculated from substages.
                           </div>
                         )}
 
@@ -802,101 +709,72 @@ export default function StagesTab({ project, onSaved }) {
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">
-                              Start Date {hasChildren && <span className="text-blue-600">(derived)</span>}
-                            </label>
+                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Start Date</label>
                             <input
                               type="date"
                               disabled={hasChildren}
                               value={s.start_date || ""}
-                              onChange={(e) => patchStageLocal(idx, { start_date: e.target.value })}
-                              onClick={(e) => {
-                                if (!hasChildren) {
-                                  try { e.target.showPicker(); } catch {}
-                                }
-                              }}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                              onChange={(e) => patchStageLocal(idx, { start_date: e.target.value || null })}
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">
-                              Planned End {hasChildren && <span className="text-blue-600">(derived)</span>}
-                            </label>
+                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Planned End</label>
                             <input
                               type="date"
                               disabled={hasChildren}
                               value={s.planned_end_date || s.expected_date || ""}
-                              onChange={(e) =>
-                                patchStageLocal(idx, { planned_end_date: e.target.value })
-                              }
-                              onClick={(e) => {
-                                if (!hasChildren) {
-                                  try { e.target.showPicker(); } catch {}
-                                }
-                              }}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                              onChange={(e) => patchStageLocal(idx, { planned_end_date: e.target.value || null })}
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">
-                              Actual End {hasChildren && <span className="text-blue-600">(derived)</span>}
-                            </label>
+                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Actual End</label>
                             <input
                               type="date"
                               disabled={hasChildren}
                               value={s.actual_end_date || ""}
-                              onChange={(e) =>
-                                patchStageLocal(idx, { actual_end_date: e.target.value })
-                              }
-                              onClick={(e) => {
-                                if (!hasChildren) {
-                                  try { e.target.showPicker(); } catch {}
-                                }
-                              }}
-                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                              onChange={(e) => patchStageLocal(idx, { actual_end_date: e.target.value || null })}
+                              className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">
-                              Progress % {hasChildren && <span className="text-blue-600">(auto)</span>}
-                            </label>
+                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Progress %</label>
                             <div className="relative">
                               <input
                                 type="number"
                                 min="0"
                                 max="100"
+                                inputMode="numeric"
                                 disabled={hasChildren}
-                                value={s.progress_pct || 0}
+                                value={progressValue(s.progress_pct)}
                                 onChange={(e) =>
-                                  patchStageLocal(idx, { progress_pct: e.target.value })
+                                  patchStageLocal(idx, { progress_pct: parseProgressInput(e.target.value) })
                                 }
+                                onFocus={(e) => e.target.select()}
                                 className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-black text-[#FF6600] focus:ring-2 focus:ring-[#FF6600] outline-none pr-8 disabled:bg-gray-100"
                               />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#111111]/30">
-                                %
-                              </span>
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#111111]/30">%</span>
                             </div>
                           </div>
                         </div>
 
                         {!hasChildren && !isHandover && (
                           <div className="mt-4 pt-4 border-t border-black/5">
-                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-2">
-                              Progress Slider
-                            </label>
+                            <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-2">Progress Slider</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="range"
                                 min="0"
                                 max="100"
-                                value={s.progress_pct || 0}
+                                value={Number(s.progress_pct) || 0}
                                 onChange={(e) =>
-                                  patchStageLocal(idx, { progress_pct: e.target.value })
+                                  patchStageLocal(idx, { progress_pct: parseProgressInput(e.target.value) })
                                 }
                                 className="flex-1 gantt-slider"
                               />
                               <span className="text-sm font-black text-[#FF6600] w-12 text-right">
-                                {s.progress_pct || 0}%
+                                {Number(s.progress_pct) || 0}%
                               </span>
                             </div>
                           </div>
@@ -906,16 +784,11 @@ export default function StagesTab({ project, onSaved }) {
                       {/* Photos */}
                       <div className="bg-white border border-black/5 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-3 border-b border-black/5 pb-2">
-                          <h4 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-1.5">
                             <Camera className="w-3.5 h-3.5 text-[#FF6600]" /> Photos ({photos.length})
                           </h4>
                           <label className="cursor-pointer text-xs font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1.5">
-                            {uploading === idx ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Plus className="w-4 h-4" />
-                            )}{" "}
-                            Upload
+                            {uploading === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Upload
                             <input
                               type="file"
                               accept="image/*"
@@ -932,15 +805,8 @@ export default function StagesTab({ project, onSaved }) {
                         ) : (
                           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             {photos.map((p, i) => (
-                              <div
-                                key={i}
-                                className="relative group aspect-square rounded-lg overflow-hidden border border-black/10"
-                              >
-                                <img
-                                  src={resolveMediaUrl(toUrl(p))}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
+                              <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-black/10">
+                                <img src={resolveMediaUrl(toUrl(p))} alt="" className="w-full h-full object-cover" />
                                 <button
                                   onClick={() => removePhoto(idx, i)}
                                   className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition"
@@ -956,9 +822,7 @@ export default function StagesTab({ project, onSaved }) {
                       {/* Substages */}
                       <div className="bg-white border border-black/5 rounded-xl p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-4 border-b border-black/5 pb-2">
-                          <h4 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">
-                            Substages Map
-                          </h4>
+                          <h4 className="text-xs font-bold text-[#111111] uppercase tracking-wider">Substages Map</h4>
                           <div className="flex gap-2">
                             {hasChildren && (
                               <button
@@ -980,13 +844,15 @@ export default function StagesTab({ project, onSaved }) {
                         <div className="space-y-3">
                           {substages.map((sub, sIdx) => {
                             const isComplete = Number(sub.progress_pct) === 100;
+                            // LOCK ONLY if this start_date already exists on server
+                            const startLocked = lockedSubStarts.has(sub.id);
+                            const isSavingThis = savingSub === `${idx}:${sub.id}`;
+
                             return (
                               <div
                                 key={sub.id || sIdx}
                                 className={`border rounded-xl p-4 space-y-3 ${
-                                  isComplete
-                                    ? "bg-emerald-50/50 border-emerald-200"
-                                    : "bg-[#F9FAFB] border-black/10"
+                                  isComplete ? "bg-emerald-50/50 border-emerald-200" : "bg-[#F9FAFB] border-black/10"
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
@@ -997,7 +863,6 @@ export default function StagesTab({ project, onSaved }) {
                                     type="text"
                                     value={sub.name}
                                     onChange={(e) => patchSubLocal(idx, sIdx, { name: e.target.value })}
-                                    onBlur={(e) => autoSaveSub(idx, sIdx, { name: e.target.value })}
                                     className="flex-1 px-3 py-2 border border-black/10 bg-white rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FF6600] outline-none"
                                     placeholder="Name"
                                   />
@@ -1006,24 +871,18 @@ export default function StagesTab({ project, onSaved }) {
                                 <div className="grid grid-cols-3 gap-2">
                                   <div>
                                     <label className="block text-[8px] font-bold uppercase text-[#111111]/50 mb-1">
-                                      Start (locked)
+                                      Start {startLocked ? "(locked)" : "(editable until save)"}
                                     </label>
                                     <input
                                       type="date"
-                                      disabled={Boolean(sub.start_date)}
+                                      disabled={startLocked}
                                       value={sub.start_date || ""}
-                                      onChange={(e) => patchSubLocal(idx, sIdx, { start_date: e.target.value })}
-                                      onBlur={(e) => {
-                                        if (!sub.start_date && e.target.value) {
-                                          autoSaveSub(idx, sIdx, { start_date: e.target.value });
-                                        }
-                                      }}
-                                      onClick={(e) => {
-                                        if (!sub.start_date) {
-                                          try { e.target.showPicker(); } catch {}
-                                        }
-                                      }}
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100 cursor-pointer disabled:cursor-not-allowed"
+                                      onChange={(e) =>
+                                        patchSubLocal(idx, sIdx, {
+                                          start_date: e.target.value || null,
+                                        })
+                                      }
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
                                   </div>
                                   <div>
@@ -1033,12 +892,12 @@ export default function StagesTab({ project, onSaved }) {
                                     <input
                                       type="date"
                                       value={sub.planned_end_date || ""}
-                                      onChange={(e) => patchSubLocal(idx, sIdx, { planned_end_date: e.target.value })}
-                                      onBlur={(e) => autoSaveSub(idx, sIdx, { planned_end_date: e.target.value || null })}
-                                      onClick={(e) => {
-                                        try { e.target.showPicker(); } catch {}
-                                      }}
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] cursor-pointer"
+                                      onChange={(e) =>
+                                        patchSubLocal(idx, sIdx, {
+                                          planned_end_date: e.target.value || null,
+                                        })
+                                      }
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px]"
                                     />
                                   </div>
                                   <div>
@@ -1048,12 +907,12 @@ export default function StagesTab({ project, onSaved }) {
                                     <input
                                       type="date"
                                       value={sub.actual_end_date || ""}
-                                      onChange={(e) => patchSubLocal(idx, sIdx, { actual_end_date: e.target.value })}
-                                      onBlur={(e) => autoSaveSub(idx, sIdx, { actual_end_date: e.target.value || null })}
-                                      onClick={(e) => {
-                                        try { e.target.showPicker(); } catch {}
-                                      }}
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] cursor-pointer"
+                                      onChange={(e) =>
+                                        patchSubLocal(idx, sIdx, {
+                                          actual_end_date: e.target.value || null,
+                                        })
+                                      }
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px]"
                                     />
                                   </div>
                                 </div>
@@ -1067,33 +926,26 @@ export default function StagesTab({ project, onSaved }) {
                                       type="range"
                                       min="0"
                                       max="100"
-                                      value={sub.progress_pct || 0}
-                                      onChange={(e) => patchSubLocal(idx, sIdx, { progress_pct: e.target.value })}
-                                      onMouseUp={(e) => autoSaveSub(idx, sIdx, { progress_pct: Number(e.target.value) || 0 })}
-                                      onTouchEnd={(e) => autoSaveSub(idx, sIdx, { progress_pct: Number(e.target.value) || 0 })}
+                                      value={Number(sub.progress_pct) || 0}
+                                      onChange={(e) =>
+                                        patchSubLocal(idx, sIdx, {
+                                          progress_pct: parseProgressInput(e.target.value),
+                                        })
+                                      }
                                       className="flex-1 gantt-slider"
                                     />
                                     <input
                                       type="number"
                                       min="0"
                                       max="100"
-                                      value={sub.progress_pct || 0}
+                                      inputMode="numeric"
+                                      value={progressValue(sub.progress_pct)}
                                       onChange={(e) =>
                                         patchSubLocal(idx, sIdx, {
-                                          progress_pct: Math.min(
-                                            100,
-                                            Math.max(0, Number(e.target.value) || 0)
-                                          ),
+                                          progress_pct: parseProgressInput(e.target.value),
                                         })
                                       }
-                                      onBlur={(e) =>
-                                        autoSaveSub(idx, sIdx, {
-                                          progress_pct: Math.min(
-                                            100,
-                                            Math.max(0, Number(e.target.value) || 0)
-                                          ),
-                                        })
-                                      }
+                                      onFocus={(e) => e.target.select()}
                                       className="w-16 border border-black/10 rounded-lg px-2 py-1.5 text-xs font-black text-[#FF6600] outline-none"
                                     />
                                   </div>
@@ -1117,9 +969,7 @@ export default function StagesTab({ project, onSaved }) {
                                   <div className="flex items-center gap-1.5">
                                     {!isComplete && (
                                       <button
-                                        onClick={() =>
-                                          markSubComplete(idx, sub.id, sub.name)
-                                        }
+                                        onClick={() => markSubComplete(idx, sub.id, sub.name)}
                                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-[10px] font-bold rounded-lg flex items-center gap-1 text-white"
                                       >
                                         <CheckCircle2 className="w-3 h-3" /> Mark Complete
@@ -1127,9 +977,11 @@ export default function StagesTab({ project, onSaved }) {
                                     )}
                                     <button
                                       onClick={() => saveSubstage(idx, sub)}
-                                      className="px-3 py-1.5 bg-white border border-black/20 hover:bg-[#F2F2F2] text-[#000F1B] text-[10px] font-bold rounded-lg"
+                                      disabled={isSavingThis}
+                                      className="px-3 py-1.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-[10px] font-bold rounded-lg disabled:opacity-60 flex items-center gap-1"
                                     >
-                                      Save Draft
+                                      {isSavingThis ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                      Save
                                     </button>
                                     <button
                                       onClick={() => deleteSubstage(idx, sub.id)}
@@ -1143,65 +995,27 @@ export default function StagesTab({ project, onSaved }) {
                             );
                           })}
                           {substages.length === 0 && (
-                            <div className="text-center py-6 text-xs text-gray-400 italic">
-                              No substages yet
-                            </div>
+                            <div className="text-center py-6 text-xs text-gray-400 italic">No substages yet</div>
                           )}
                         </div>
                       </div>
 
-                      {/* WORKFLOW BAR — uses approveStage / submitForApproval / rejectStage */}
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-4 border-t border-black/10 bg-[#F9FAFB] p-4 rounded-xl">
-                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                          <button
-                            onClick={() => saveStage(idx)}
-                            disabled={saving === idx}
-                            className="px-5 py-2.5 bg-white border border-black/20 hover:bg-[#F2F2F2] text-[#000F1B] text-xs font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-60"
-                          >
-                            {saving === idx ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Save className="w-4 h-4" />
-                            )}{" "}
-                            Save Draft
-                          </button>
-                          {(s.approval_status === "draft" ||
-                            s.approval_status === "rejected") && (
-                            <button
-                              onClick={() => submitForApproval(idx)}
-                              className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm"
-                            >
-                              <Send className="w-4 h-4" /> Submit to PM
-                            </button>
-                          )}
-                          <button
-                            onClick={() => deleteStage(idx)}
-                            disabled={isHandover}
-                            className="px-3 py-2.5 text-red-500 hover:bg-red-50 text-xs font-bold rounded-xl disabled:opacity-30 flex items-center gap-1.5"
-                          >
-                            <Trash2 className="w-4 h-4" /> Delete Stage
-                          </button>
-                        </div>
-
-                        {s.approval_status === "submitted" && (
-                          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto bg-amber-50 border border-amber-200 p-2 rounded-xl">
-                            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider px-2 hidden sm:block">
-                              PM Review:
-                            </span>
-                            <button
-                              onClick={() => rejectStage(idx)}
-                              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded-lg flex items-center gap-1.5"
-                            >
-                              <ThumbsDown className="w-3.5 h-3.5" /> Reject
-                            </button>
-                            <button
-                              onClick={() => approveStage(idx)}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm"
-                            >
-                              <ThumbsUp className="w-3.5 h-3.5" /> Approve & Publish
-                            </button>
-                          </div>
-                        )}
+                      <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-black/10 bg-[#F9FAFB] p-4 rounded-xl">
+                        <button
+                          onClick={() => saveStage(idx)}
+                          disabled={saving === idx}
+                          className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
+                        >
+                          {saving === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          Save Stage
+                        </button>
+                        <button
+                          onClick={() => deleteStage(idx)}
+                          disabled={isHandover}
+                          className="px-3 py-2.5 text-red-500 hover:bg-red-50 text-xs font-bold rounded-xl disabled:opacity-30 flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete Stage
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1212,10 +1026,9 @@ export default function StagesTab({ project, onSaved }) {
         </div>
       )}
 
-      {/* ========== SPLIT / GANTT VIEW (no ... menus) ========== */}
+      {/* Gantt view unchanged structurally — only mounts when viewMode === split */}
       {viewMode === "split" && (
         <div className="flex-1 flex overflow-hidden bg-white" ref={containerRef}>
-          {/* LEFT: read-only schedule table */}
           <div
             className="flex flex-col shrink-0 border-r border-gray-200 bg-white z-10 shadow-[2px_0_8px_rgba(0,0,0,0.03)]"
             style={{ width: leftWidth }}
@@ -1223,149 +1036,72 @@ export default function StagesTab({ project, onSaved }) {
             <div className="flex-1 overflow-x-auto overflow-y-hidden csb flex flex-col">
               <div style={{ width: TABLE_W, minWidth: "100%" }} className="h-full flex flex-col">
                 <div className="h-10 shrink-0 bg-[#F9FAFB] border-b-2 border-gray-200 flex items-end text-[9px] font-bold text-gray-500 uppercase tracking-wide pb-1">
-                  <div style={{ width: COL.name }} className="pl-2">
-                    Task / Activity
-                  </div>
-                  <div style={{ width: COL.weight }} className="text-center">
-                    Wt
-                  </div>
+                  <div style={{ width: COL.name }} className="pl-2">Task / Activity</div>
+                  <div style={{ width: COL.weight }} className="text-center">Wt</div>
                   <div style={{ width: COL.planned }} className="text-center">
                     <div className="border-b border-gray-200 mx-2 mb-0.5">Planned</div>
                     <div className="flex justify-between px-3 text-[8px] normal-case font-semibold">
-                      <span>Start</span>
-                      <span>End</span>
+                      <span>Start</span><span>End</span>
                     </div>
                   </div>
                   <div style={{ width: COL.actual }} className="text-center">
                     <div className="border-b border-gray-200 mx-2 mb-0.5">Actual</div>
                     <div className="flex justify-between px-3 text-[8px] normal-case font-semibold">
-                      <span>Start</span>
-                      <span>End</span>
+                      <span>Start</span><span>End</span>
                     </div>
                   </div>
-                  <div style={{ width: COL.progress }} className="pl-2">
-                    Progress
-                  </div>
-                  <div style={{ width: COL.status }} className="text-center">
-                    Status
-                  </div>
+                  <div style={{ width: COL.progress }} className="pl-2">Progress</div>
+                  <div style={{ width: COL.status }} className="text-center">Status</div>
                 </div>
 
-                <div
-                  ref={leftScrollRef}
-                  onScroll={onLeftScroll}
-                  className="flex-1 overflow-y-auto csb pb-16"
-                >
+                <div ref={leftScrollRef} onScroll={onLeftScroll} className="flex-1 overflow-y-auto csb pb-16">
                   {visibleRows.map((row) => {
                     const d = row.data;
                     const isParent = row.type === "parent";
                     const sIdx = row.sIdx;
                     const open = expandedAll.has(sIdx);
-                    const subs = d.substages || [];
-                    const nChild = isParent
-                      ? subs.filter((x) => !x.archived).length
-                      : 0;
-                    const wt = isParent
-                      ? nChild
-                        ? "100%"
-                        : "—"
-                      : `${Math.round(100 / (nChild || 1))}%`;
+                    const nChild = isParent ? (d.substages || []).filter((x) => !x.archived).length : 0;
+                    const wt = isParent ? (nChild ? "100%" : "—") : `${Math.round(100 / (nChild || 1))}%`;
 
                     return (
-                      <div
-                        key={row.id}
-                        className="flex items-center h-9 border-b border-gray-50 row-h bg-white"
-                      >
-                        <div
-                          style={{ width: COL.name }}
-                          className="pl-2 flex items-center gap-1 pr-1 min-w-0"
-                        >
+                      <div key={row.id} className="flex items-center h-9 border-b border-gray-50 row-h bg-white">
+                        <div style={{ width: COL.name }} className="pl-2 flex items-center gap-1 pr-1 min-w-0">
                           {isParent ? (
                             <>
                               <button
                                 onClick={() => toggleExpandAll(sIdx)}
                                 className="w-4 h-4 grid place-items-center text-gray-400 hover:text-black shrink-0 rounded bg-gray-50"
                               >
-                                {open ? (
-                                  <ChevronDown className="w-3 h-3" />
-                                ) : (
-                                  <ChevronRight className="w-3 h-3" />
-                                )}
+                                {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                               </button>
-                              <span className="text-[9px] font-bold text-gray-700 shrink-0">
-                                {sIdx + 1}.
-                              </span>
-                              <span
-                                className="text-[11px] font-bold text-[#000F1B] truncate"
-                                title={d.name}
-                              >
-                                {d.name}
-                              </span>
-                              {d.approval_status === "draft" && (
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
-                                  title="Draft"
-                                />
-                              )}
+                              <span className="text-[9px] font-bold text-gray-700 shrink-0">{sIdx + 1}.</span>
+                              <span className="text-[11px] font-bold text-[#111111] truncate" title={d.name}>{d.name}</span>
                             </>
                           ) : (
                             <>
                               <div className="w-4 shrink-0" />
-                              <span className="text-[8px] font-mono text-gray-400 shrink-0">
-                                {sIdx + 1}.{row.subIdx + 1}
-                              </span>
-                              <span
-                                className="text-[10px] text-gray-600 truncate"
-                                title={d.name}
-                              >
-                                {d.name}
-                              </span>
+                              <span className="text-[8px] font-mono text-gray-400 shrink-0">{sIdx + 1}.{row.subIdx + 1}</span>
+                              <span className="text-[10px] text-gray-600 truncate" title={d.name}>{d.name}</span>
                             </>
                           )}
                         </div>
-                        <div
-                          style={{ width: COL.weight }}
-                          className="text-center text-[9px] font-bold text-gray-400"
-                        >
-                          {wt}
+                        <div style={{ width: COL.weight }} className="text-center text-[9px] font-bold text-gray-400">{wt}</div>
+                        <div style={{ width: COL.planned }} className="flex justify-between px-2 text-[9px] text-gray-600">
+                          <span className="w-1/2 text-center">{fmtDate(d.start_date || d.started_at)}</span>
+                          <span className="w-1/2 text-center">{fmtDate(d.planned_end_date || d.expected_date)}</span>
                         </div>
-                        <div
-                          style={{ width: COL.planned }}
-                          className="flex justify-between px-2 text-[9px] text-gray-600"
-                        >
-                          <span className="w-1/2 text-center">
-                            {fmtDate(d.start_date || d.started_at)}
-                          </span>
-                          <span className="w-1/2 text-center">
-                            {fmtDate(d.planned_end_date || d.expected_date)}
-                          </span>
+                        <div style={{ width: COL.actual }} className="flex justify-between px-2 text-[9px] text-gray-400">
+                          <span className="w-1/2 text-center">{fmtDate(d.actual_start_date || d.started_at)}</span>
+                          <span className="w-1/2 text-center font-bold text-gray-700">{fmtDate(d.actual_end_date || d.completed_at)}</span>
                         </div>
-                        <div
-                          style={{ width: COL.actual }}
-                          className="flex justify-between px-2 text-[9px] text-gray-400"
-                        >
-                          <span className="w-1/2 text-center">
-                            {fmtDate(d.actual_start_date || d.started_at)}
-                          </span>
-                          <span className="w-1/2 text-center font-bold text-gray-700">
-                            {fmtDate(d.actual_end_date || d.completed_at)}
-                          </span>
-                        </div>
-                        <div
-                          style={{ width: COL.progress }}
-                          className="flex items-center gap-1.5 px-2"
-                        >
+                        <div style={{ width: COL.progress }} className="flex items-center gap-1.5 px-2">
                           <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div
-                              className={`h-full ${
-                                d.status === "completed" ? "bg-[#10B981]" : "bg-[#FF6600]"
-                              }`}
-                              style={{ width: `${d.progress_pct || 0}%` }}
+                              className={`h-full ${d.status === "completed" ? "bg-[#10B981]" : "bg-[#FF6600]"}`}
+                              style={{ width: `${Number(d.progress_pct) || 0}%` }}
                             />
                           </div>
-                          <span className="text-[9px] font-bold text-gray-800 w-7 text-right">
-                            {d.progress_pct || 0}%
-                          </span>
+                          <span className="text-[9px] font-bold text-gray-800 w-7 text-right">{Number(d.progress_pct) || 0}%</span>
                         </div>
                         <div style={{ width: COL.status }} className="flex justify-center px-1">
                           <StatusPill status={d.status} />
@@ -1381,21 +1117,15 @@ export default function StagesTab({ project, onSaved }) {
             </div>
           </div>
 
-          {/* FIXED DRAGGER */}
           <div
             className="w-2.5 shrink-0 bg-gray-100 hover:bg-[#FF6600] border-x border-gray-200 cursor-col-resize z-20 flex items-center justify-center group transition-colors"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
+            onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
             title="Drag to resize"
           >
             <GripVertical className="w-3.5 h-5 text-gray-400 group-hover:text-white" />
           </div>
 
-          {/* RIGHT: GANTT */}
           <div className="flex-1 min-w-0 flex flex-col bg-white relative">
-            {/* Zoom chips */}
             <div className="absolute right-3 top-2 z-30 flex items-center bg-white border border-gray-200 rounded-md p-0.5 shadow-sm">
               {["day", "week", "month"].map((z) => (
                 <button
@@ -1410,90 +1140,48 @@ export default function StagesTab({ project, onSaved }) {
               ))}
             </div>
 
-            <div
-              ref={rightScrollRef}
-              onScroll={onRightScroll}
-              className="flex-1 overflow-auto csb"
-            >
-              <div
-                style={{ width: Math.max(ganttWidth, 400), minHeight: "100%" }}
-                className="relative flex flex-col"
-              >
-                {/* sticky header */}
+            <div ref={rightScrollRef} onScroll={onRightScroll} className="flex-1 overflow-auto csb">
+              <div style={{ width: Math.max(ganttWidth, 400), minHeight: "100%" }} className="relative flex flex-col">
                 <div className="sticky top-0 z-10 h-10 bg-[#F9FAFB] border-b-2 border-gray-200 shrink-0">
                   {monthHeaders.map((m, i) => (
-                    <div
-                      key={`mh-${i}`}
-                      className="absolute top-1 text-[9px] font-bold text-gray-700 -translate-x-1/2 whitespace-nowrap"
-                      style={{ left: m.leftPx }}
-                    >
+                    <div key={`mh-${i}`} className="absolute top-1 text-[9px] font-bold text-gray-700 -translate-x-1/2 whitespace-nowrap" style={{ left: m.leftPx }}>
                       {m.label}
                     </div>
                   ))}
                   {dateMarkers.map((m, i) => (
-                    <div
-                      key={`dm-${i}`}
-                      className="absolute bottom-1 border-l border-gray-300 pl-1 text-[8px] font-semibold text-gray-500"
-                      style={{ left: m.leftPx }}
-                    >
+                    <div key={`dm-${i}`} className="absolute bottom-1 border-l border-gray-300 pl-1 text-[8px] font-semibold text-gray-500" style={{ left: m.leftPx }}>
                       {m.label}
                     </div>
                   ))}
                 </div>
 
                 <div className="relative pb-16">
-                  {/* Today line */}
-                  <div
-                    className="absolute top-0 bottom-0 w-px bg-red-400 z-[1] pointer-events-none"
-                    style={{ left: todayPx }}
-                  >
-                    <div className="absolute top-0 -translate-x-1/2 bg-red-500 text-white text-[7px] font-bold px-1 py-0.5 rounded-b">
-                      TODAY
-                    </div>
+                  <div className="absolute top-0 bottom-0 w-px bg-red-400 z-[1] pointer-events-none" style={{ left: todayPx }}>
+                    <div className="absolute top-0 -translate-x-1/2 bg-red-500 text-white text-[7px] font-bold px-1 py-0.5 rounded-b">TODAY</div>
                   </div>
 
                   {visibleRows.map((row) => {
                     const d = row.data;
                     const isParent = row.type === "parent";
-                    const bar = barPx(
-                      d.start_date || d.started_at,
-                      d.planned_end_date || d.expected_date
-                    );
+                    const bar = barPx(d.start_date || d.started_at, d.planned_end_date || d.expected_date);
                     const fill =
-                      d.status === "completed"
-                        ? "bg-[#10B981]"
-                        : d.status === "in_progress"
-                        ? "bg-[#FF6600]"
-                        : "bg-gray-300";
+                      d.status === "completed" ? "bg-[#10B981]" :
+                      d.status === "in_progress" ? "bg-[#FF6600]" : "bg-gray-300";
 
                     return (
-                      <div
-                        key={row.id}
-                        className="h-9 border-b border-gray-50 relative row-h"
-                      >
+                      <div key={row.id} className="h-9 border-b border-gray-50 relative row-h">
                         {bar.valid && (
                           <div
-                            className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden border border-black/10 ${
-                              isParent ? "bg-gray-200" : "bg-gray-100"
-                            }`}
+                            className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden border border-black/10 ${isParent ? "bg-gray-200" : "bg-gray-100"}`}
                             style={{ left: bar.left, width: bar.width, minWidth: 6 }}
-                            title={`${d.name} · ${d.progress_pct || 0}%`}
+                            title={`${d.name} · ${Number(d.progress_pct) || 0}%`}
                           >
-                            <div
-                              className={`h-full ${fill} rounded-full`}
-                              style={{ width: `${Number(d.progress_pct) || 0}%` }}
-                            />
+                            <div className={`h-full ${fill} rounded-full`} style={{ width: `${Number(d.progress_pct) || 0}%` }} />
                           </div>
                         )}
                       </div>
                     );
                   })}
-
-                  {visibleRows.length === 0 && (
-                    <div className="p-10 text-center text-xs text-gray-400">
-                      No schedule bars — add dates in Editor view
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -1506,18 +1194,9 @@ export default function StagesTab({ project, onSaved }) {
 
 function StatusPill({ status }) {
   const map = {
-    completed: {
-      text: "Completed",
-      classes: "bg-[#E6F4EA] text-[#1E8E3E] border border-[#1E8E3E]/20",
-    },
-    in_progress: {
-      text: "In Progress",
-      classes: "bg-[#FF6600]/10 text-[#FF6600] border border-[#FF6600]/30",
-    },
-    pending: {
-      text: "Not Started",
-      classes: "bg-[#F1F3F4] text-[#5F6368] border border-gray-200",
-    },
+    completed: { text: "Completed", classes: "bg-[#E6F4EA] text-[#1E8E3E] border border-[#1E8E3E]/20" },
+    in_progress: { text: "In Progress", classes: "bg-[#FF6600]/10 text-[#FF6600] border border-[#FF6600]/30" },
+    pending: { text: "Not Started", classes: "bg-[#F1F3F4] text-[#5F6368] border border-gray-200" },
   };
   const c = map[status] || map.pending;
   return (

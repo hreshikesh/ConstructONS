@@ -178,7 +178,7 @@ async def download_full_progress_report_pdf(project_id: str):
               <!-- Core Chronological Metrics -->
               <div style="background:#fafafa; border:1px solid #e2e8f0; border-radius:6px; padding:10px; margin:8px 0; font-size:11px;">
                 <div style="margin-bottom:6px;"><strong>Work Done Yesterday:</strong> {work_yesterday}</div>
-                <div><strong>Work Completed Today (Detailed Brief):</strong> {work_completed_today_text}</div>
+               <div><strong>Work Planned for Today:</strong> {work_completed_today_text}</div>
               </div>
 
               <div class="two-col" style="margin-top:8px;">
@@ -391,18 +391,48 @@ async def list_daily_reports(project_id: str, status: Optional[str] = None):
 @router.post("/admin/projects/{project_id}/daily-reports", dependencies=[Depends(require_admin)])
 async def submit_daily_report(project_id: str, body: DailyReportCreateBody):
     p = await db.projects.find_one({"id": project_id}, {"id": 1})
-    if not p: raise HTTPException(status_code=404, detail="Project not found")
-    await db.projects.update_one({"id": project_id, "$or": [{"daily_reports": {"$exists": False}}, {"daily_reports": None}]}, {"$set": {"daily_reports": []}})
-    
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    await db.projects.update_one(
+        {"id": project_id, "$or": [{"daily_reports": {"$exists": False}}, {"daily_reports": None}]},
+        {"$set": {"daily_reports": []}},
+    )
+
     now = datetime.now(timezone.utc).isoformat()
     report_data = body.model_dump()
     report_data["id"] = f"rep_{uuid.uuid4().hex[:10]}"
-    report_data["is_approved"] = False
+    # AUTO PUBLISH — no PM approval
+    report_data["is_approved"] = True
+    report_data["approved_at"] = now
+    report_data["approved_by"] = "System"
     report_data["submitted_at"] = now
     report_data["submitted_by"] = "Site Engineer"
 
-    await db.projects.update_one({"id": project_id}, {"$push": {"daily_reports": {"$each": [report_data], "$position": 0}}, "$set": {"updated_at": now}})
-    await _log_activity(project_id, "Site Engineer", f"Submitted Daily Report for {body.date}", "Progress")
+    await db.projects.update_one(
+        {"id": project_id},
+        {
+            "$push": {"daily_reports": {"$each": [report_data], "$position": 0}},
+            "$set": {"updated_at": now},
+        },
+    )
+
+    await _log_activity(
+        project_id,
+        "Site Engineer",
+        f"Published Daily Report for {body.date}",
+        "Progress",
+    )
+    # Notify client immediately
+    asyncio.create_task(
+        _push_notification(
+            project_id,
+            "New Daily Progress Report",
+            f"Your site update for {body.date} is published.",
+            "/portal/progress",
+            "progress",
+        )
+    )
     return {"success": True, "report": report_data}
 
 @router.put("/admin/projects/{project_id}/daily-reports/{report_id}", dependencies=[Depends(require_admin)])
@@ -417,8 +447,8 @@ async def update_daily_report(project_id: str, report_id: str, body: DailyReport
     now = datetime.now(timezone.utc).isoformat()
     for key, value in update_data.items(): reports[idx][key] = value
     reports[idx]["updated_at"] = now
-    if reports[idx].get("is_approved") and update_data:
-        reports[idx]["is_approved"] = False
+    reports[idx]["is_approved"] = True
+    reports[idx]["updated_at"] = now
 
     await db.projects.update_one({"id": project_id}, {"$set": {"daily_reports": reports, "updated_at": now}})
     return {"success": True, "report": reports[idx]}

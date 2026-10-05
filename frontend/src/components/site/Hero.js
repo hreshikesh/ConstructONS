@@ -2,7 +2,6 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLeadModal } from "@/components/site/LeadModalProvider";
-import BrandLockup from "@/components/site/BrandLockup";
 
 export default function Hero() {
   const { open: openLead } = useLeadModal();
@@ -17,7 +16,6 @@ export default function Hero() {
           BACKGROUND IMAGE & SMART OVERLAYS
       -------------------------------------------------- */}
       <div className="absolute inset-0">
-
         {/* Construction Background Image */}
         <img
           src="/hero-construction.png"
@@ -33,7 +31,6 @@ export default function Hero() {
 
         {/* 3. Bottom fade */}
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#111111] to-transparent" />
-
       </div>
 
       {/* -------------------------------------------------
@@ -41,24 +38,28 @@ export default function Hero() {
       -------------------------------------------------- */}
       <div className="relative z-10 flex min-h-[100svh] items-center">
         <div className="mx-auto w-full max-w-[1536px] px-5 py-28 sm:px-8 md:px-12 md:py-36 lg:px-16 xl:px-20 2xl:px-24">
-
           <div className="max-w-4xl">
 
-            {/* Brand Kicker */}
-            {/* <motion.div
+            {/* AI Integrated Tagline Badge */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
                 duration: 0.7,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="mb-6 flex items-center gap-4"
+              className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#FF6600]/30 bg-black/40 px-4 py-2 backdrop-blur-md shadow-[0_0_20px_-3px_rgba(255,102,0,0.25)]"
             >
               
-              <span className="h-[2px] w-12 bg-gradient-to-r from-[#FF6600] to-[#FF0000]" />
-
-              <BrandLockup tone="dark" size="sm" className="w-[128px] h-10" />
-            </motion.div> */}
+             
+              <span className="font-[Poppins] text-xs font-medium tracking-wide text-white/90 sm:text-sm">
+                India&apos;s First{" "}
+                <span className="bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text font-semibold text-transparent">
+                  AI-Integrated
+                </span>{" "}
+                Construction Platform
+              </span>
+            </motion.div>
 
             {/* Main Heading */}
             <motion.h1
@@ -109,7 +110,6 @@ export default function Hero() {
                 className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6600] to-[#FF0000] px-8 py-3 font-[Poppins] text-base font-medium text-white transition-all duration-300 hover:opacity-95 hover:shadow-[0_8px_30px_rgba(255,102,0,0.35)] sm:w-auto"
               >
                 Explore Our Ecosystem
-
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </a>
 

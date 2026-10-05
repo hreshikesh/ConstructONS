@@ -222,31 +222,31 @@ function PackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
           <div className={`mt-2.5 text-sm font-semibold ${isPopular ? "text-white" : "text-[#000F1B]"}`}>
             {pkg.tagline}
           </div>
-          <div className={`mt-1.5 text-xs leading-relaxed line-clamp-2 ${isPopular ? "text-white/60" : "text-[#000F1B]/60"}`}>
+          {/* <div className={`mt-1.5 text-xs leading-relaxed line-clamp-2 ${isPopular ? "text-white/60" : "text-[#000F1B]/60"}`}>
             {pkg.description}
-          </div>
+          </div> */}
 
-          <ul className="mt-6 flex-1 space-y-3">
+          {/* <ul className="mt-6 flex-1 space-y-3">
             {(pkg.highlights || []).slice(0, 5).map((h, i) => (
               <li key={i} className={`flex items-start gap-2.5 text-xs sm:text-sm font-medium ${isPopular ? "text-white/90" : "text-[#000F1B]/80"}`}>
                 <Check className={`mt-0.5 h-4 w-4 shrink-0 stroke-[3] ${isPopular ? "text-[#FF8A4C]" : "text-[#FF6600]"}`} />
                 <span className="line-clamp-2">{h}</span>
               </li>
             ))}
-          </ul>
+          </ul> */}
 
           <div className="mt-6 mb-6 h-0.5 w-10 rounded-full bg-[#FF6600] transition-all duration-500 group-hover:w-16" />
 
           <div className="mt-auto flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              {/* FIX 3: Replaced transparent hover with solid orange hovers */}
+            {/* <div className="flex items-center gap-2">
+             
               <button onClick={onPreview} className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition inline-flex items-center justify-center gap-1.5 ${isPopular ? "text-white/90 hover:bg-[#FF6600] hover:text-white" : "text-[#000F1B]/80 hover:bg-[#FF6600] hover:text-white border border-transparent"}`}>
                 <Eye className="h-4 w-4" /> Preview
               </button>
               <button onClick={onBrochure} className={`flex-1 rounded-xl px-2 py-2.5 text-xs font-bold transition inline-flex items-center justify-center gap-1.5 ${isPopular ? "text-[#FF8A4C] hover:bg-[#FF6600] hover:text-white" : "text-[#FF6600] hover:bg-[#FF6600] hover:text-white border border-transparent"}`}>
                 <Download className="h-4 w-4" /> Brochure
               </button>
-            </div>
+            </div> */}
             <Link to={`/packages/${pkg.slug}`} className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold transition shadow-sm ${isPopular ? "bg-[#FF6600] text-white hover:bg-[#E04F00]" : "bg-[#000F1B] text-white hover:bg-[#0B1E30]"}`}>
               View Full Details <ArrowRight className="h-4 w-4" />
             </Link>
@@ -281,23 +281,22 @@ function CustomPackageCard({ pkg, onQuote, onBrochure, onPreview, index }) {
             <div className="text-lg font-bold text-white mb-2">{pkg.tagline}</div>
             <p className="max-w-2xl text-sm leading-relaxed text-white/70 mb-6">{pkg.description}</p>
 
-            <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+            {/* <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
               {(pkg.highlights || []).slice(0, 6).map((h, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm font-medium text-white/90">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 stroke-[3] text-[#FF8A4C]" />
                   <span>{h}</span>
                 </li>
               ))}
-            </ul>
+            </ul> */}
           </div>
 
           <div className="flex w-full shrink-0 flex-col gap-3 md:w-[240px]">
-            <div className="flex items-center overflow-hidden rounded-xl bg-white/5 border border-white/10">
-              {/* FIX 3: Replaced transparent hover with solid orange hovers */}
+            {/* <div className="flex items-center overflow-hidden rounded-xl bg-white/5 border border-white/10">
               <button onClick={onPreview} className="inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-3 text-xs font-bold text-white transition hover:bg-[#FF6600] hover:text-white"><Eye className="h-4 w-4" /> Preview</button>
               <span className="h-6 w-px bg-white/20" />
               <button onClick={onBrochure} className="inline-flex flex-1 items-center justify-center gap-1.5 px-3 py-3 text-xs font-bold text-[#FF8A4C] transition hover:bg-[#FF6600] hover:text-white"><Download className="h-4 w-4" /> Brochure</button>
-            </div>
+            </div> */}
             <Link to={`/packages/${pkg.slug}`} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-[#000F1B] transition hover:bg-[#F2F2F2]">
               View Full Details <ArrowRight className="h-4 w-4" />
             </Link>

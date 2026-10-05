@@ -26,7 +26,7 @@ const fmtINR = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN')}`;
 export default function PaymentsPage() {
   const { project, refreshProject } = usePortal();
 
-  const [activeTab, setActiveTab] = useState("invoices");
+  const [activeTab, setActiveTab] = useState("schedule");
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -70,10 +70,11 @@ export default function PaymentsPage() {
   const totalInvoiced = useMemo(() =>
     activeInvoices.reduce((s, i) => s + (Number(i.amount) || 0), 0), [activeInvoices]);
   const totalPaid = Number(project?.amount_spent) || 0;
+  
   const outstandingAmount = Math.max(0, totalInvoiced - totalPaid);
 
   const upcomingInvoices = useMemo(() =>
-    activeInvoices.filter(i => ["upcoming", "due_soon", "partially_paid"].includes(i.status))
+    activeInvoices.filter(i => ["upcoming", "due_soon", "partially_paid", "overdue"].includes(i.status))
       .sort((a, b) => new Date(a.due_date || a.date) - new Date(b.due_date || b.date)),
     [activeInvoices]);
 
@@ -164,18 +165,18 @@ export default function PaymentsPage() {
             Payments & Contract
           </h1>
           <p className="text-[11px] sm:text-xs text-gray-500 mt-1">
-            Track invoices, verified receipts & scope variations in real-time.
+            Track proforma invoices, verified receipts & scope variations in real-time.
           </p>
         </div>
         <div className="bg-[#FF6600]/5 border border-[#FF6600]/20 rounded-lg p-2.5 flex items-start gap-2 w-full md:w-auto md:max-w-sm">
           <Info className="w-4 h-4 text-[#FF6600] shrink-0 mt-0.5" />
           <p className="text-[10px] sm:text-[11px] text-[#000F1B] font-medium leading-relaxed">
-            All invoices, receipts and contract changes are transparently maintained here.
+            All proforma invoices, receipts and contract changes are transparently maintained here.
           </p>
         </div>
       </div>
 
-      {/* ====== KPI STRIP (Visible only on Invoices + Schedule) ====== */}
+      {/* ====== KPI STRIP ====== */}
       {activeTab !== "variations" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 mb-4">
           <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-xl p-3 shadow-sm">
@@ -288,8 +289,8 @@ export default function PaymentsPage() {
       {/* ====== TABS ====== */}
       <div className="flex items-center gap-4 sm:gap-6 border-b border-gray-200 mb-4 bg-white px-3 pt-2 rounded-t-xl overflow-x-auto no-scrollbar">
         {[
-          { id: "invoices", label: "Invoices & Payments" },
           { id: "schedule", label: "Payment Schedule" },
+          { id: "invoices", label: "Proforma Invoices & Receipts" },
           { id: "variations", label: "Contract Variations", badge: pendingVariationsList.length }
         ].map(tab => (
           <button
@@ -310,14 +311,58 @@ export default function PaymentsPage() {
         ))}
       </div>
 
-      {/* ====== TAB 1: INVOICES & PAYMENTS ====== */}
+      {/* ====== TAB: PAYMENT SCHEDULE ====== */}
+      {activeTab === "schedule" && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-3 border-b border-gray-100 bg-gray-50/50">
+            <h3 className="text-xs sm:text-sm font-bold text-[#000F1B]">
+              Milestone Payment Schedule
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">
+              Contractually agreed milestone-based payment plan (as added by project team).
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[11px] min-w-[600px]">
+              <thead className="bg-gray-50 text-gray-400 uppercase font-bold text-[9px]">
+                <tr>
+                  <th className="py-2.5 px-4">#</th>
+                  <th className="py-2.5 px-4">Milestone</th>
+                  <th className="py-2.5 px-4 hidden sm:table-cell">Stage</th>
+                  <th className="py-2.5 px-4">Target Date</th>
+                  <th className="py-2.5 px-4">Amount</th>
+                  <th className="py-2.5 px-4">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {(project.payment_schedule || []).length === 0 ? (
+                  <tr><td colSpan="6" className="py-8 text-center text-gray-400 italic">No milestones added yet.</td></tr>
+                ) : (
+                  (project.payment_schedule || []).map((ms, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 font-bold text-gray-400">{idx + 1}</td>
+                      <td className="py-3 px-4 font-bold text-[#000F1B]">{ms.name}</td>
+                      <td className="py-3 px-4 text-[#FF6600] font-semibold hidden sm:table-cell">
+                        {ms.stage || "General"}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">{fmtDate(ms.due_date)}</td>
+                      <td className="py-3 px-4 font-bold text-gray-900">{fmtINR(ms.amount)}</td>
+                      <td className="py-3 px-4">{getStatusBadge(ms.status)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ====== TAB: PROFORMA INVOICES & RECEIPTS ====== */}
       {activeTab === "invoices" && (
         <div className="flex flex-col lg:flex-row gap-4 items-start">
 
-          {/* LEFT: Invoice Tables */}
           <div className="flex-1 w-full space-y-4 min-w-0">
 
-            {/* Upcoming Due */}
             {upcomingInvoices.length > 0 && (
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div className="p-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
@@ -331,7 +376,7 @@ export default function PaymentsPage() {
                 <table className="w-full text-left text-[11px] table-fixed">
                   <thead className="bg-gray-50 text-gray-400 uppercase font-bold text-[9px]">
                     <tr>
-                      <th className="py-2 px-3 w-[22%]">Invoice</th>
+                      <th className="py-2 px-3 w-[22%]">Proforma</th>
                       <th className="py-2 px-3 hidden sm:table-cell">Description</th>
                       <th className="py-2 px-3 w-[20%]">Due Date</th>
                       <th className="py-2 px-3 w-[22%]">Amount</th>
@@ -344,6 +389,11 @@ export default function PaymentsPage() {
                         <td className="py-2.5 px-3 font-mono font-bold text-[#000F1B] truncate">{inv.number}</td>
                         <td className="py-2.5 px-3 font-semibold text-gray-800 hidden sm:table-cell truncate">
                           {inv.description}
+                          {inv.milestone_name && (
+                            <span className="block text-[9px] text-amber-600 font-semibold mt-0.5">
+                              ↳ Milestone: {inv.milestone_name} ({inv.milestone_stage || inv.stage})
+                            </span>
+                          )}
                         </td>
                         <td className="py-2.5 px-3 text-gray-600 truncate">{fmtDate(inv.due_date)}</td>
                         <td className="py-2.5 px-3 font-bold text-[#FF6600] truncate">{fmtINR(inv.amount)}</td>
@@ -362,10 +412,9 @@ export default function PaymentsPage() {
               </div>
             )}
 
-            {/* ★ Invoice History — NO HORIZONTAL SCROLL, FULL ROW LAYOUT */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-3 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                <h3 className="text-xs sm:text-sm font-bold text-[#000F1B]">Invoice History</h3>
+                <h3 className="text-xs sm:text-sm font-bold text-[#000F1B]">Proforma Invoice History</h3>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <div className="relative flex-1 sm:w-48">
                     <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -389,20 +438,18 @@ export default function PaymentsPage() {
               </div>
 
               {filteredInvoices.length === 0 ? (
-                <div className="py-8 text-center text-gray-400 italic text-xs">No invoices found.</div>
+                <div className="py-8 text-center text-gray-400 italic text-xs">No proforma invoices found.</div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {/* Table Header - Desktop only */}
                   <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 bg-gray-50 text-gray-400 uppercase font-bold text-[9px]">
-                    <div className="col-span-2">Invoice</div>
-                    <div className="col-span-4">Description</div>
+                    <div className="col-span-2">Proforma #</div>
+                    <div className="col-span-4">Milestone / Description</div>
                     <div className="col-span-2">Date</div>
                     <div className="col-span-2">Amount</div>
                     <div className="col-span-1">Paid</div>
                     <div className="col-span-1 text-right">Status</div>
                   </div>
 
-                  {/* Rows */}
                   {filteredInvoices.map(inv => (
                     <div
                       key={inv.id}
@@ -411,7 +458,6 @@ export default function PaymentsPage() {
                         selectedInvoice?.id === inv.id ? "bg-[#FF6600]/5 border-l-4 border-l-[#FF6600]" : "border-l-4 border-l-transparent"
                       }`}
                     >
-                      {/* Desktop Row */}
                       <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-3 items-center text-[11px]">
                         <div className="col-span-2 font-mono font-bold text-[#000F1B]">
                           {inv.number}
@@ -421,14 +467,22 @@ export default function PaymentsPage() {
                             </span>
                           )}
                         </div>
-                        <div className="col-span-4 font-semibold text-gray-800 truncate">{inv.description}</div>
+                        <div className="col-span-4 font-semibold text-gray-800 truncate">
+                          {inv.milestone_name ? (
+                            <>
+                              <div className="text-gray-900 truncate">{inv.milestone_name}</div>
+                              <div className="text-[10px] text-gray-400 font-normal truncate">{inv.description}</div>
+                            </>
+                          ) : (
+                            <div className="text-gray-700 truncate">{inv.description}</div>
+                          )}
+                        </div>
                         <div className="col-span-2 text-gray-500">{fmtDate(inv.date)}</div>
                         <div className="col-span-2 font-bold text-gray-900">{fmtINR(inv.amount)}</div>
                         <div className="col-span-1 font-bold text-emerald-600 text-[10px]">{fmtINR(inv.paid_amount || 0)}</div>
                         <div className="col-span-1 flex justify-end">{getStatusBadge(inv.status)}</div>
                       </div>
 
-                      {/* Mobile/Tablet Stacked Card Row */}
                       <div className="md:hidden p-3 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <div className="font-mono font-bold text-[#000F1B] text-xs">
@@ -441,7 +495,9 @@ export default function PaymentsPage() {
                           </div>
                           {getStatusBadge(inv.status)}
                         </div>
-                        <div className="font-semibold text-gray-800 text-[11px] truncate">{inv.description}</div>
+                        <div className="font-semibold text-gray-800 text-[11px] truncate">
+                          {inv.milestone_name ? inv.milestone_name : inv.description}
+                        </div>
                         <div className="flex items-center justify-between text-[10px]">
                           <span className="text-gray-500">{fmtDate(inv.date)}</span>
                           <div className="flex items-center gap-3">
@@ -457,7 +513,7 @@ export default function PaymentsPage() {
             </div>
           </div>
 
-          {/* RIGHT: Invoice Detail Drawer */}
+          {/* RIGHT DRAWER */}
           <div className="w-full lg:w-[380px] xl:w-[420px] 2xl:w-[480px] bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden shrink-0">
             {selectedInvoice ? (
               <div className="p-4 space-y-4">
@@ -468,22 +524,24 @@ export default function PaymentsPage() {
                       <h3 className="text-sm font-bold text-[#000F1B]">{selectedInvoice.number}</h3>
                       {getStatusBadge(selectedInvoice.status)}
                     </div>
-                    <div className="text-[11px] text-gray-500 font-medium truncate">
-                      {selectedInvoice.description}
-                    </div>
+                    {selectedInvoice.milestone_name ? (
+                      <div>
+                        <div className="text-[12px] font-bold text-gray-900 truncate">{selectedInvoice.milestone_name}</div>
+                        <div className="text-[10px] text-gray-400 font-medium truncate">{selectedInvoice.description}</div>
+                        <div className="text-[9px] text-[#FF6600] font-semibold mt-0.5 uppercase tracking-wider">{selectedInvoice.milestone_stage || selectedInvoice.stage} Stage</div>
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-gray-500 font-medium truncate">
+                        {selectedInvoice.description}
+                      </div>
+                    )}
                   </div>
 
-                  <button
-                    onClick={() => {
-                      toast.info("Generating PDF...");
-                      window.open(
-                        `${API_BASE}/portal/my-project/${project.id}/invoices/${selectedInvoice.id}/pdf`,
-                        "_blank"
-                      );
-                    }}
-                    className="px-2.5 py-1.5 bg-[#FF6600]/10 border border-[#FF6600]/20 text-[#FF6600] text-[10px] font-bold rounded flex items-center gap-1 hover:bg-[#FF6600] hover:text-white transition shadow-sm shrink-0"
+                  <button 
+                    onClick={() => window.open(`${API_BASE}/portal/my-project/${project.id}/invoices/${selectedInvoice.id}/pdf?t=${Date.now()}`, "_blank")} 
+                    className="text-[#1A73E8] p-1.5 hover:bg-blue-50 rounded-lg mr-1 text-[9px] font-bold uppercase transition"
                   >
-                    <Download className="w-3 h-3" /> PDF
+                    PDF
                   </button>
                 </div>
 
@@ -513,7 +571,7 @@ export default function PaymentsPage() {
                       {selectedInvoice.edit_history.slice(-3).reverse().map((h, i) => (
                         <div key={i} className="text-[9px] text-amber-700">
                           <span className="font-mono">{fmtDate(h.edited_at)}</span>
-                          <span className="ml-1">— {h.changes?.join(", ") || "edit"}</span>
+                          <span className="ml-1">— {h.changes?.join(", ") || "edited"}</span>
                         </div>
                       ))}
                     </div>
@@ -532,7 +590,7 @@ export default function PaymentsPage() {
 
                   {allocatedReceipts.length === 0 ? (
                     <div className="text-[10px] text-gray-400 italic bg-gray-50 p-3 rounded-lg text-center border border-dashed border-gray-200">
-                      No receipts logged for this invoice yet.
+                      No receipts logged for this proforma invoice yet.
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -541,6 +599,9 @@ export default function PaymentsPage() {
                           <div>
                             <div className="font-black text-emerald-800">{fmtINR(p.amount)}</div>
                             <div className="text-[10px] font-semibold text-gray-600">
+                              {p.receipt_number && (
+                                <span className="font-mono mr-1 text-emerald-700 font-bold">{p.receipt_number}</span>
+                              )}
                               {p.method} • <span className="font-mono">{p.reference || "No Ref"}</span>
                             </div>
                           </div>
@@ -548,9 +609,15 @@ export default function PaymentsPage() {
                             <div className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-0.5 mb-1">
                               <Check className="w-2.5 h-2.5" /> Verified
                             </div>
-                            <div className="text-gray-500 text-[9px] font-medium">
+                            <div className="text-gray-500 text-[9px] font-medium mb-1">
                               {fmtDate(p.date || p.logged_at)}
                             </div>
+                            <button 
+                              onClick={() => window.open(`${API_BASE}/portal/my-project/${project.id}/receipts/${p.id}/pdf?t=${Date.now()}`, "_blank")} 
+                              className="text-[#1A73E8] p-1.5 hover:bg-blue-50 rounded-lg mr-1 text-[9px] font-bold uppercase transition"
+                            >
+                              PDF
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -560,64 +627,16 @@ export default function PaymentsPage() {
               </div>
             ) : (
               <div className="p-8 text-center text-xs text-gray-400">
-                Select an invoice to view details.
+                Select a proforma invoice to view details.
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ====== TAB 2: PAYMENT SCHEDULE ====== */}
-      {activeTab === "schedule" && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-3 border-b border-gray-100 bg-gray-50/50">
-            <h3 className="text-xs sm:text-sm font-bold text-[#000F1B]">
-              Milestone Payment Schedule
-            </h3>
-            <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">
-              Contractually agreed milestone-based payment plan.
-            </p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[11px] min-w-[600px]">
-              <thead className="bg-gray-50 text-gray-400 uppercase font-bold text-[9px]">
-                <tr>
-                  <th className="py-2.5 px-4">Milestone</th>
-                  <th className="py-2.5 px-4 hidden sm:table-cell">Stage</th>
-                  <th className="py-2.5 px-4">Target Date</th>
-                  <th className="py-2.5 px-4">Amount</th>
-                  <th className="py-2.5 px-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(project.payment_schedule || []).length === 0 ? (
-                  <tr><td colSpan="5" className="py-8 text-center text-gray-400 italic">No milestones added yet.</td></tr>
-                ) : (
-                  [...(project.payment_schedule || [])]
-                    .sort((a, b) => new Date(a.due_date || 0) - new Date(b.due_date || 0))
-                    .map((ms, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 font-bold text-[#000F1B]">{ms.name}</td>
-                        <td className="py-3 px-4 text-[#FF6600] font-semibold hidden sm:table-cell">
-                          {ms.stage || "General"}
-                        </td>
-                        <td className="py-3 px-4 text-gray-600">{fmtDate(ms.due_date)}</td>
-                        <td className="py-3 px-4 font-bold text-gray-900">{fmtINR(ms.amount)}</td>
-                        <td className="py-3 px-4">{getStatusBadge(ms.status)}</td>
-                      </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ====== TAB 3: CONTRACT & VARIATIONS (★ NO KPI STRIP) ====== */}
+      {/* ====== TAB 3: VARIATIONS ====== */}
       {activeTab === "variations" && (
         <div className="space-y-4">
-
-          {/* Pending Variations Action Panel */}
           <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
             <div className="p-3 border-b border-amber-100 bg-amber-50/40 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -700,7 +719,6 @@ export default function PaymentsPage() {
             </div>
           </div>
 
-          {/* Approved Variations — Invoice & Payment Status */}
           {approvedVariationsList.length > 0 && (
             <div className="bg-white rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
               <div className="p-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center gap-2">
@@ -721,7 +739,7 @@ export default function PaymentsPage() {
                     <tr>
                       <th className="py-2.5 px-4">Variation Item</th>
                       <th className="py-2.5 px-4">Amount</th>
-                      <th className="py-2.5 px-4">Invoice</th>
+                      <th className="py-2.5 px-4">Proforma Invoice</th>
                       <th className="py-2.5 px-4">Payment Status</th>
                       <th className="py-2.5 px-4 hidden sm:table-cell">Approved On</th>
                     </tr>
@@ -779,7 +797,6 @@ export default function PaymentsPage() {
             </div>
           )}
 
-          {/* All Variations Decision History */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="p-3 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-xs sm:text-sm font-bold text-[#000F1B]">

@@ -26,7 +26,7 @@ export default function BrandLockup({
       src={isDarkBackground ? "/logoLight.svg" : "/logoDark.svg"}
       alt="ConstructONS - Everything Construction. Always On."
       draggable={false}
-      className={`${dimensions} shrink-0 object-cover object-left select-none ${className}`}
+      className={`${dimensions}  object-cover object-left select-none ${className}`}
     />
   );
 }

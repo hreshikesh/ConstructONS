@@ -4,7 +4,6 @@ import React, { useRef, useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { publicApi } from "@/lib/api"; // Added API import to fetch real CMS stats
-import BrandLockup from "@/components/site/BrandLockup";
 
 /* -------------------------------------------------------------------------- */
 /*                        DYNAMIC LUCIDE ICON HELPER                          */
@@ -38,11 +37,17 @@ function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF6600]" }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            BRAND LOGO TEXT                                 */
+/*                        BRAND WORDMARK (Gradient Text)                      */
 /* -------------------------------------------------------------------------- */
 
-function BrandText({ dark = false }) {
-  return <BrandLockup tone={dark ? "light" : "dark"} size="sm" className="align-middle" />;
+function BrandText({ className = "" }) {
+  return (
+    <span
+      className={`bg-gradient-to-r from-[#FF6600] to-[#FF0000] bg-clip-text text-transparent ${className}`}
+    >
+      ConstructONS
+    </span>
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -159,7 +164,7 @@ function MaskRevealHero() {
         }}
       >
         <p className="max-w-4xl text-xl font-extrabold leading-snug text-white sm:text-3xl md:text-5xl">
-          Traditional contractors leave you guessing.
+          Traditional Construction leave you guessing.
           <br />
           <span className="text-[#000F1B]">We give you total control.</span>
         </p>
@@ -185,7 +190,7 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
           Side-By-Side Comparison
         </span>
         <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#000F1B] sm:text-4xl md:text-5xl">
-          The <BrandText dark={true} /> Advantage
+          The <BrandText /> Advantage
         </h2>
         <p className="mt-3 text-base text-slate-600 sm:text-lg">
           See how tech-driven execution eliminates the risks of traditional
@@ -199,7 +204,7 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
             <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-6">
               <div>
                 <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400">The Old Way</span>
-                <h3 className="mt-1 text-xl font-extrabold text-slate-800 sm:text-2xl">Traditional Contractors</h3>
+                <h3 className="mt-1 text-xl font-extrabold text-slate-800 sm:text-2xl">Traditional Construction</h3>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500">Opaque</span>
             </div>
@@ -231,7 +236,9 @@ function ComparisonGrid({ traditional = [], constructons = [] }) {
             <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-6">
               <div>
                 <span className="text-xs font-extrabold uppercase tracking-widest text-[#FF6600]">Next-Gen Standard</span>
-                <h3 className="mt-1 text-xl font-extrabold text-white sm:text-2xl"><BrandText dark={false} /></h3>
+                <h3 className="mt-1 text-xl font-extrabold sm:text-2xl">
+                  <BrandText />
+                </h3>
               </div>
               <span className="rounded-full border border-[#FF6600]/30 bg-[#FF6600]/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#FF6600]">Recommended</span>
             </div>

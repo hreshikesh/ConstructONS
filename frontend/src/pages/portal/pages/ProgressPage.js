@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { 
-  TrendingUp, Calendar, CheckCircle2, PlayCircle, Circle, 
+import {
+  TrendingUp, Calendar, CheckCircle2, PlayCircle, Circle,
   Download, Image as ImageIcon, FileText, HardHat, LayoutGrid, List,
   Clock, Target, ChevronRight
 } from "lucide-react";
@@ -23,11 +23,11 @@ export default function ProgressPage() {
   const totalWeight = stages.length || 1;
   const overallProgress = Math.round(stages.reduce((sum, s) => sum + (Number(s.progress_pct) || 0), 0) / totalWeight);
   const stagesCompleted = stages.filter(s => s.status === "completed").length;
-  
+
   const startDate = new Date(project.start_date || project.created_at || Date.now());
   const expectedDate = project.expected_completion ? new Date(project.expected_completion) : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
   const today = new Date();
-  
+
   const daysCompleted = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
   const totalDays = Math.max(1, Math.floor((expectedDate - startDate) / (1000 * 60 * 60 * 24)));
   const daysRemaining = Math.max(0, Math.floor((expectedDate - today) / (1000 * 60 * 60 * 24)));
@@ -36,18 +36,17 @@ export default function ProgressPage() {
 
   return (
     <div className="w-full max-w-[1400px] 2xl:max-w-[1800px] mx-auto space-y-3 md:space-y-4 2xl:space-y-6 font-['Poppins'] pb-10 px-3 sm:px-4 2xl:px-8 mt-2 md:mt-4">
-      
+
       {/* TABS HEADER */}
       <div className="mb-2 md:mb-3">
         <h1 className="text-xl md:text-2xl 2xl:text-3xl font-bold text-[#000F1B] mb-2 md:mb-3">Project Progress</h1>
         <div className="flex overflow-x-auto no-scrollbar border-b border-black/5 gap-1 md:gap-2 pb-0.5">
           {TABS.map(tab => (
             <button
-              key={tab} 
+              key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 md:py-2 text-[10px] md:text-xs 2xl:text-sm uppercase tracking-wider font-bold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === tab ? "border-[#FF6600] text-[#000F1B]" : "border-transparent text-gray-400 hover:text-[#000F1B]"
-              }`}
+              className={`px-3 py-1.5 md:py-2 text-[10px] md:text-xs 2xl:text-sm uppercase tracking-wider font-bold transition-all border-b-2 whitespace-nowrap ${activeTab === tab ? "border-[#FF6600] text-[#000F1B]" : "border-transparent text-gray-400 hover:text-[#000F1B]"
+                }`}
             >
               {tab}
             </button>
@@ -92,7 +91,7 @@ function OverviewTab({ project, stages }) {
           <h3 className="text-xs md:text-sm 2xl:text-base font-bold text-[#000F1B] uppercase tracking-wider">Construction Master Plan</h3>
           <span className="text-[9px] md:text-xs 2xl:text-sm font-bold bg-[#F2F2F2] px-2 py-1 rounded-md text-[#000F1B]">{stages.length} Stages</span>
         </div>
-        
+
         {/* DESKTOP TABLE */}
         <div className="hidden sm:block overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-[10px] md:text-xs 2xl:text-sm min-w-[500px]">
@@ -110,8 +109,8 @@ function OverviewTab({ project, stages }) {
                 const isActive = stage.status === "in_progress";
                 const isCompleted = stage.status === "completed";
                 const pct = Number(stage.progress_pct) || 0;
-                const actualEnd = stage.actual_end_date 
-                  ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) 
+                const actualEnd = stage.actual_end_date
+                  ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })
                   : "—";
 
                 return (
@@ -141,7 +140,7 @@ function OverviewTab({ project, stages }) {
             const isActive = stage.status === "in_progress";
             const pct = Number(stage.progress_pct) || 0;
             const actualEnd = stage.actual_end_date ? new Date(stage.actual_end_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
-            
+
             return (
               <div key={i} className={`p-2.5 rounded-lg border ${isActive ? "border-[#FF6600] bg-[#FF6600]/5 shadow-sm" : "border-black/5 bg-white"}`}>
                 <div className="flex items-center justify-between mb-2 gap-2">
@@ -166,11 +165,11 @@ function OverviewTab({ project, stages }) {
       </div>
 
       <div className="lg:col-span-4 order-1 lg:order-2 space-y-3 md:space-y-4">
-        
+
         <div className="bg-gradient-to-br from-[#000F1B] via-[#0F1E30] to-[#000F1B] rounded-xl shadow-sm p-4 md:p-5 2xl:p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-[#FF6600]" />
           <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#FF6600]/20 blur-[15px] rounded-full" />
-          
+
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[10px] md:text-xs 2xl:text-sm font-bold text-white/60 uppercase tracking-widest flex items-center gap-1.5">
@@ -180,7 +179,7 @@ function OverviewTab({ project, stages }) {
                 <span className="text-[10px] md:text-xs 2xl:text-sm font-black bg-[#FF6600] text-white px-2 py-0.5 rounded">{activeStage.progress_pct || 0}%</span>
               )}
             </div>
-            
+
             {activeStage ? (
               <div className="space-y-2">
                 <h4 className="text-sm md:text-base 2xl:text-lg font-bold text-white leading-tight">{activeStage.name}</h4>
@@ -204,8 +203,8 @@ function OverviewTab({ project, stages }) {
           <div className="space-y-2 2xl:space-y-3">
             {team.filter(t => t.status !== "Pending").slice(0, 5).map((member, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                {member.avatar || member.photo 
-                  ? <img src={resolveMediaUrl(member.avatar || member.photo)} alt="" className="w-7 h-7 md:w-8 md:h-8 2xl:w-10 2xl:h-10 rounded-full object-cover border border-black/10" /> 
+                {member.avatar || member.photo
+                  ? <img src={resolveMediaUrl(member.avatar || member.photo)} alt="" className="w-7 h-7 md:w-8 md:h-8 2xl:w-10 2xl:h-10 rounded-full object-cover border border-black/10" />
                   : <div className="w-7 h-7 md:w-8 md:h-8 2xl:w-10 2xl:h-10 rounded-full bg-gray-100 border border-black/5 flex items-center justify-center text-[#000F1B] font-bold text-xs 2xl:text-sm">{member.name?.[0] || "?"}</div>
                 }
                 <div className="flex-1 min-w-0">
@@ -228,9 +227,9 @@ function OverviewTab({ project, stages }) {
 function SiteScheduleTab({ stages, startDate, expectedDate }) {
   const totalMs = expectedDate - startDate || 1;
   const today = new Date();
-  
+
   const todayPct = Math.max(0, Math.min(100, ((today - startDate) / totalMs) * 100));
-  
+
   const monthMarkers = [];
   const cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
   while (cur <= expectedDate) {
@@ -260,7 +259,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
       {/* Main Gantt Body - Fully horizontally scrollable for all devices */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
         <div className="min-w-[800px] md:min-w-[900px] 2xl:min-w-[1200px] pb-2">
-          
+
           <div className="flex mb-2">
             <div className="w-[45%] shrink-0 border-r border-black/10 pr-2 flex items-end pb-1 gap-2">
               <div className="flex-1 text-[9px] md:text-[10px] 2xl:text-xs font-bold text-gray-400 uppercase tracking-wider">Task Breakdown</div>
@@ -268,7 +267,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
               <div className="w-14 md:w-16 2xl:w-20 text-center text-[8px] md:text-[9px] 2xl:text-[10px] font-bold text-gray-400 uppercase tracking-wider">Planned</div>
               <div className="w-14 md:w-16 2xl:w-20 text-center text-[8px] md:text-[9px] 2xl:text-[10px] font-bold text-[#000F1B] uppercase tracking-wider">Actual</div>
             </div>
-            
+
             <div className="w-[55%] shrink-0 pl-2 relative h-5 md:h-6 border-b border-black/10">
               {monthMarkers.map((m, i) => (
                 <div key={i} className="absolute top-0 border-l border-black/10 pl-1 h-full flex flex-col justify-end pb-0.5" style={{ left: `${m.pct}%` }}>
@@ -288,7 +287,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
               const sStart = stage.start_date ? new Date(stage.start_date) : stage.started_at ? new Date(stage.started_at) : null;
               const sPlannedEnd = stage.planned_end_date ? new Date(stage.planned_end_date) : stage.expected_date ? new Date(stage.expected_date) : null;
               const sActualEnd = stage.actual_end_date ? new Date(stage.actual_end_date) : null;
-              
+
               const hasDates = sStart && (sActualEnd || sPlannedEnd);
               const activeEnd = sActualEnd || sPlannedEnd;
               const leftPct = hasDates ? Math.max(0, ((sStart - startDate) / totalMs) * 100) : 0;
@@ -300,7 +299,7 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
               return (
                 <div key={idx} className="group pb-1.5">
                   <div className="flex items-center py-1 bg-white hover:bg-[#F9FAFB] rounded border border-transparent hover:border-black/5 transition">
-                    
+
                     {/* TASK INFO & DATES */}
                     <div className="w-[45%] shrink-0 px-2 flex items-center gap-1.5 min-w-0 border-r border-black/5">
                       <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
@@ -343,20 +342,20 @@ function SiteScheduleTab({ stages, startDate, expectedDate }) {
                         return (
                           <div key={sIdx} className="flex items-center hover:bg-[#F9FAFB] transition relative py-0.5">
                             <div className="absolute top-1/2 left-0 w-2 border-t border-black/10" />
-                            
+
                             <div className="w-[45%] shrink-0 pl-3 flex items-center gap-1.5 min-w-0 border-r border-black/5">
                               <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-2">
                                 <div className="font-semibold text-[9px] md:text-[10px] 2xl:text-xs text-gray-500 truncate">{sub.name}</div>
                                 <span className="text-[8px] md:text-[9px] 2xl:text-[10px] font-bold text-gray-400 ml-auto">{sub.progress_pct || 0}%</span>
                               </div>
-                              
+
                               <div className="flex items-center gap-2 text-[8px] text-gray-400">
                                 <div className="w-14 md:w-16 text-center">{shortDate(subStart)}</div>
                                 <div className="w-14 md:w-16 text-center">{shortDate(subPlanned)}</div>
                                 <div className="w-14 md:w-16 text-center font-bold text-gray-600">{shortDate(subActual)}</div>
                               </div>
                             </div>
-                            
+
                             <div className="w-[55%] shrink-0 pl-2 relative h-2 md:h-2.5 flex items-center overflow-hidden">
                               {subHasDates && <div className={`absolute h-1 md:h-1.5 rounded-full ${subColor} opacity-90`} style={{ left: `${subLeft}%`, width: `${subWidth}%`, minWidth: '2px' }} />}
                             </div>
@@ -388,7 +387,7 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
     const totalDurationMonths = Math.max(1, (expectedDate.getFullYear() - startDate.getFullYear()) * 12 + (expectedDate.getMonth() - startDate.getMonth()));
     let monthIndex = 0;
     let lastKnownActual = 0;
-    
+
     while (current <= today && monthIndex <= totalDurationMonths) {
       const monthLabel = current.toLocaleDateString("en-US", { month: "short", year: "numeric" });
       const plannedPct = Math.min(100, Math.round(((monthIndex + 1) / totalDurationMonths) * 100));
@@ -400,7 +399,7 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
     }
     return data.slice(-8);
   };
-  
+
   const chartData = calculateChartData();
 
   const handleDownloadReport = async (monthStr) => {
@@ -452,7 +451,7 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
         <div className="p-3 md:p-4 border-b border-black/5 bg-[#F9FAFB]">
           <h3 className="text-xs md:text-sm font-bold text-[#000F1B]">Monthly Archive</h3>
         </div>
-        
+
         {/* NON-SCROLLING TABLE CONTAINER FOR MOBILE */}
         <div className="w-full">
           <table className="w-full text-left text-[9px] md:text-xs table-fixed md:table-auto">
@@ -497,25 +496,25 @@ function MonthlyProgressTab({ project, startDate, expectedDate }) {
 
 function ProjectPhotosTab({ reports, stages }) {
   const [viewMode, setViewMode] = useState("card");
-  
+
   let photos = [];
-  
-  reports.forEach(rep => { 
+
+  reports.forEach(rep => {
     (rep.photos || []).forEach(p => {
       const imgUrl = typeof p === 'string' ? p : (p.url || p.absoluteUrl);
       if (imgUrl) {
         photos.push({ url: imgUrl, caption: p.caption || "Site Update", date: rep.date, category: "Daily Update" });
       }
-    }); 
+    });
   });
-  
-  stages.forEach(stg => { 
+
+  stages.forEach(stg => {
     (stg.photos || []).forEach(p => {
       const imgUrl = typeof p === 'string' ? p : (p.url || p.absoluteUrl);
       if (imgUrl) {
         photos.push({ url: imgUrl, caption: `${stg.name} Progress`, date: stg.updated_at || stg.start_date, category: stg.name });
       }
-    }); 
+    });
   });
 
   if (photos.length === 0) {
@@ -537,7 +536,7 @@ function ProjectPhotosTab({ reports, stages }) {
           <h3 className="text-xs md:text-sm 2xl:text-base font-bold text-[#000F1B]">Site Gallery</h3>
           <p className="text-[10px] md:text-xs text-gray-400 font-medium mt-0.5">{photos.length} visual records</p>
         </div>
-        
+
         <div className="flex items-center gap-1 bg-[#F5F6F8] p-0.5 rounded border border-black/5 self-start sm:self-auto">
           <button onClick={() => setViewMode("card")} className={`p-1.5 rounded-[4px] transition ${viewMode === "card" ? "bg-white shadow-sm text-[#FF6600]" : "text-gray-400 hover:text-[#000F1B]"}`} title="Grid View">
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -622,7 +621,7 @@ function DailyProgressTab({ project, reports }) {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      
+
       {/* Header Controls */}
       <div className="bg-white p-3 md:p-4 rounded-xl border border-black/5 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <div>
@@ -645,9 +644,9 @@ function DailyProgressTab({ project, reports }) {
       {/* Report Body */}
       {report && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
-          
+
           <div className="lg:col-span-4 space-y-3 md:space-y-4">
-            
+
             {/* Status Briefing Card */}
             <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 md:p-4 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
@@ -684,12 +683,16 @@ function DailyProgressTab({ project, reports }) {
                   <div className="text-gray-700 font-semibold leading-relaxed">{report.work_done_yesterday || "—"}</div>
                 </div>
                 <div className="p-2.5 bg-[#FF6600]/5 rounded-lg border border-[#FF6600]/10 text-[10px] md:text-xs">
-                  <div className="font-bold text-[#FF6600] uppercase tracking-wider text-[8px] mb-1">Work Completed Today (Detailed Briefing)</div>
-                  <div className="text-gray-900 font-bold leading-relaxed">{report.work_completed_today || "—"}</div>
+                  <div className="font-bold text-[#FF6600] uppercase tracking-wider text-[8px] mb-1">
+                    Work Planned for Today
+                  </div>
+                  <div className="text-gray-900 font-bold leading-relaxed">
+                    {report.work_completed_today || "—"}
+                  </div>
                 </div>
               </div>
             </div>
-            
+
             {/* Completed Line Items checklist */}
             <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3 md:p-4">
               <h4 className="font-bold text-[10px] md:text-xs text-[#000F1B] mb-2 uppercase tracking-wide border-b border-black/5 pb-1.5">Completed Checklist Items</h4>
@@ -701,7 +704,7 @@ function DailyProgressTab({ project, reports }) {
                 ))}
               </ul>
             </div>
-            
+
             <div className="bg-white border border-black/5 shadow-sm rounded-xl p-3 md:p-4">
               <h4 className="font-bold text-[10px] md:text-xs text-[#000F1B] mb-2 uppercase tracking-wide border-b border-black/5 pb-1.5">Planned Tomorrow</h4>
               <ul className="space-y-1.5">
@@ -719,14 +722,14 @@ function DailyProgressTab({ project, reports }) {
               <h4 className="font-bold text-[10px] md:text-xs 2xl:text-sm text-[#000F1B] uppercase tracking-wider">Site Execution Images</h4>
               <span className="text-[9px] md:text-[10px] font-bold text-gray-500 bg-[#F5F6F8] px-2 py-0.5 rounded">{(report.photos || []).length} photos attached</span>
             </div>
-            
+
             {(report.photos || []).length === 0 ? (
               <div className="text-center py-10 text-[10px] md:text-xs italic text-gray-400 border border-dashed border-black/5 rounded-lg bg-gray-50">No photos attached for this date.</div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3">
                 {(report.photos || []).map((p, i) => {
-                   const u = typeof p === 'string' ? p : p.url;
-                   return (
+                  const u = typeof p === 'string' ? p : p.url;
+                  return (
                     <div key={i} className="group rounded-lg border border-black/5 bg-[#F9FAFB] overflow-hidden hover:shadow-sm transition duration-300">
                       <div className="aspect-video bg-black/5 overflow-hidden relative">
                         <img src={resolveMediaUrl(u)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />

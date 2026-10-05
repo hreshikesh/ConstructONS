@@ -5,7 +5,7 @@ import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import Hero from "@/components/site/Hero";
 import VideoShowcase from "@/components/site/VideoShowcase";
-import HomeCollection from "@/components/site/HomeCollection";
+// import HomeCollection from "@/components/site/HomeCollection";
 import AIPlatform from "@/components/site/AIPlatform";
 import Marketplace from "@/components/site/Marketplace";
 import FinancialServices from "@/components/site/FinancialServices";
@@ -101,7 +101,7 @@ export default function HomePage() {
 
         <VideoShowcase />
 
-        <HomeCollection homes={data.homes} />
+        {/* <HomeCollection homes={data.homes} /> */}
         
         {/* PREMIUM PACKAGES TEASER BANNER */}
         <section className="py-12 md:py-20 px-4">

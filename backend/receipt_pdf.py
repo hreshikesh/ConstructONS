@@ -7,6 +7,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 
 def draw_watermark_and_header(canvas, doc):
+    """Same watermark + logo + header as invoice, but title = RECEIPT."""
     canvas.saveState()
 
     # --- WATERMARK ---
@@ -73,10 +74,15 @@ def draw_watermark_and_header(canvas, doc):
     canvas.setFillColorRGB(0.5, 0.5, 0.5)
     canvas.drawString(40, 772, "Everything Construction. Always On.")
 
-    # ★ Document Title
-    canvas.setFont("Helvetica-Bold", 22)
+    # ★ Document Title - CHANGED TO "RECEIPT"
+    canvas.setFont("Helvetica-Bold", 28)
     canvas.setFillColorRGB(0.85, 0.85, 0.85)
-    canvas.drawRightString(550, 785, "PROFORMA INVOICE")
+    canvas.drawRightString(550, 785, "RECEIPT")
+
+    # ★ Add a small "PAYMENT ACKNOWLEDGEMENT" subtitle in emerald
+    canvas.setFont("Helvetica-Bold", 9)
+    canvas.setFillColorRGB(0.02, 0.59, 0.41)  # emerald
+    canvas.drawRightString(550, 770, "PAYMENT ACKNOWLEDGEMENT")
 
     # Separator Line
     canvas.setStrokeColorRGB(0.9, 0.9, 0.9)
@@ -85,7 +91,8 @@ def draw_watermark_and_header(canvas, doc):
     canvas.restoreState()
 
 
-def generate_invoice_pdf(invoice: dict, project: dict, settings: dict) -> bytes:
+def generate_receipt_pdf(payment: dict, project: dict, settings: dict, linked_invoice: dict = None) -> bytes:
+    """Branded receipt PDF — matches invoice styling exactly."""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -110,33 +117,35 @@ def generate_invoice_pdf(invoice: dict, project: dict, settings: dict) -> bytes:
 
     elements = []
 
-    # Billing Details Grid
+    # ── Receipt Info Grid ──
     client_name = project.get("customer_name") or "Valued Client"
     client_address = project.get("address") or "Address not provided"
     proj_code = project.get("project_code") or "N/A"
-    inv_number = invoice.get("number", "INV-000")
-    inv_date = invoice.get("date", datetime.now().strftime("%Y-%m-%d"))
-    due_date = invoice.get("due_date", "Upon Receipt")
+    rcp_number = payment.get("receipt_number", "RCP-000")
+    rcp_date = payment.get("date", datetime.now().strftime("%Y-%m-%d"))
+    method = payment.get("method", "—")
+    reference = payment.get("reference") or "—"
 
     billing_data = [
         [
-            Paragraph("<b>Billed To:</b>", normal_style),
-            Paragraph("<b>Proforma Details:</b>", normal_style),
+            Paragraph("<b>Received From:</b>", normal_style),
+            Paragraph("<b>Receipt Details:</b>", normal_style),
         ],
         [
             Paragraph(f"<b>{client_name}</b>", normal_style),
-            Paragraph(f"Proforma Number: <b>{inv_number}</b>", normal_style),
+            Paragraph(f"Receipt Number: <b>{rcp_number}</b>", normal_style),
         ],
         [
             Paragraph(client_address, normal_style),
-            Paragraph(f"Date of Issue: {inv_date}", normal_style),
+            Paragraph(f"Date Received: {rcp_date}", normal_style),
         ],
         [
             Paragraph(f"Project Code: {proj_code}", normal_style),
-            Paragraph(
-                f"Due Date: <font color='red'><b>{due_date}</b></font>",
-                normal_style,
-            ),
+            Paragraph(f"Payment Method: <b>{method}</b>", normal_style),
+        ],
+        [
+            Paragraph("", normal_style),
+            Paragraph(f"Reference / UTR: <b>{reference}</b>", normal_style),
         ],
     ]
 
@@ -150,28 +159,31 @@ def generate_invoice_pdf(invoice: dict, project: dict, settings: dict) -> bytes:
     elements.append(billing_table)
     elements.append(Spacer(1, 30))
 
-    # Line Items Table
-    stage = invoice.get("milestone_stage") or invoice.get("stage", "General")
-    desc = invoice.get("description") or "Project Milestone Payment"
-    amount = float(invoice.get("amount") or 0)
-    
-    # Clean parsing of GST percentage from site settings
-    try:
-        gst_pct = float(settings.get("invoice_gst_percent", 0) or 0)
-    except (ValueError, TypeError):
-        gst_pct = 0.0
+    # ── Payment Allocation Table ──
+    amount = float(payment.get("amount") or 0)
 
-    gst_amount = amount * (gst_pct / 100)
-    total_amount = amount + gst_amount
+    if linked_invoice:
+        inv_num = linked_invoice.get("number", "—")
+        inv_desc = linked_invoice.get("milestone_name") or linked_invoice.get("description") or "Project Milestone Payment"
+        inv_stage = linked_invoice.get("stage", "General")
+        inv_total = float(linked_invoice.get("amount") or 0)
+        inv_paid = float(linked_invoice.get("paid_amount") or 0)
+        inv_balance = max(0, inv_total - inv_paid)
 
-    line_items = [
-        ["Description", "Stage", "Amount (INR)"],
-        [desc, stage, f"{amount:,.2f}"],
-        ["", "Subtotal:", f"{amount:,.2f}"],
-    ]
-    if gst_pct > 0:
-        line_items.append(["", f"GST ({gst_pct:g}%):", f"{gst_amount:,.2f}"])
-    line_items.append(["", "Total Due:", f"{total_amount:,.2f}"])
+        line_items = [
+            ["Description", "Stage", "Amount (INR)"],
+            [f"Payment towards: {inv_desc}\n(Proforma Invoice: {inv_num})", inv_stage, f"{amount:,.2f}"],
+            ["", "Amount Received:", f"{amount:,.2f}"],
+            ["", "Proforma Total:", f"{inv_total:,.2f}"],
+            ["", "Balance Due:", f"{inv_balance:,.2f}"],
+        ]
+    else:
+        notes_text = payment.get("notes") or "General payment received (not linked to a specific proforma)."
+        line_items = [
+            ["Description", "Type", "Amount (INR)"],
+            [notes_text, "General", f"{amount:,.2f}"],
+            ["", "Amount Received:", f"{amount:,.2f}"],
+        ]
 
     item_table = Table(line_items, colWidths=[310, 100, 100])
     item_table.setStyle(
@@ -187,39 +199,54 @@ def generate_invoice_pdf(invoice: dict, project: dict, settings: dict) -> bytes:
             ("TOPPADDING", (0, 1), (-1, 1), 20),
             ("LINEBELOW", (0, 1), (-1, 1), 1, colors.lightgrey),
             ("FONTNAME", (1, -3), (-1, -1), "Helvetica-Bold"),
-            ("TEXTCOLOR", (2, -1), (2, -1), colors.Color(1.0, 0.35, 0)),
-            ("BACKGROUND", (1, -1), (-1, -1), colors.Color(0.97, 0.97, 0.97)),
-            ("TOPPADDING", (1, -1), (-1, -1), 8),
-            ("BOTTOMPADDING", (1, -1), (-1, -1), 8),
+            # ★ Emerald for Amount Received (success tone)
+            ("TEXTCOLOR", (2, 2), (2, 2), colors.Color(0.02, 0.59, 0.41)),
+            ("BACKGROUND", (1, 2), (-1, 2), colors.Color(0.92, 0.98, 0.95)),
+            ("TOPPADDING", (1, 2), (-1, 2), 8),
+            ("BOTTOMPADDING", (1, 2), (-1, 2), 8),
         ])
     )
     elements.append(item_table)
-    elements.append(Spacer(1, 50))
+    elements.append(Spacer(1, 40))
 
-    # Bank Details from Settings
-    elements.append(Paragraph("<b>Payment Instructions</b>", bold_style))
+    # ── Acknowledgement ──
+    elements.append(Paragraph("<b>Acknowledgement</b>", bold_style))
+    elements.append(Spacer(1, 8))
+    ack_text = (
+        f"This is to formally acknowledge receipt of <b>INR {amount:,.2f}</b> "
+        f"({method})"
+        + (f" against Proforma Invoice <b>{linked_invoice.get('number')}</b>" if linked_invoice else "")
+        + f" on <b>{rcp_date}</b>. "
+        "This document is a computer-generated receipt and does not constitute a tax invoice."
+    )
+    elements.append(Paragraph(ack_text, normal_style))
+    elements.append(Spacer(1, 25))
+
+    # ── Bank Details ──
+    elements.append(Paragraph("<b>Bank Details (for future payments)</b>", bold_style))
     elements.append(Spacer(1, 10))
     bank_details = (
         settings.get("invoice_bank_details")
-        if settings.get("invoice_bank_details") is not None
-        else "ConstructONS Pvt. Ltd.\nBank: HDFC Bank\nA/C: 50200000000000\nIFSC: HDFC0001234"
+        or "ConstructONS Pvt. Ltd.\nBank: HDFC Bank\nA/C: 50200000000000\nIFSC: HDFC0001234"
     )
-    for line in str(bank_details).split("\n"):
+    for line in bank_details.split("\n"):
         elements.append(Paragraph(line, normal_style))
-    elements.append(Spacer(1, 30))
+    elements.append(Spacer(1, 25))
 
-    # Footer Notes from Settings
-    # footer_notes = (
-    #     settings.get("invoice_footer_notes")
-    #     if settings.get("invoice_footer_notes") is not None
-    #     else "Thank you for building with ConstructONS. Late payments may attract a penalty of 1.5% per month."
-    # )
-    # elements.append(
-    #     Paragraph(
-    #         f"<font color='gray'><i>Note: {footer_notes}</i></font>",
-    #         normal_style,
-    #     )
-    # )
+    # ── Footer ──
+  # ★ AFTER — Prefer admin's custom receipt note, fallback to default
+    custom_note = (payment.get("notes") or "").strip()
+    if custom_note:
+        footer_notes = custom_note
+    else:
+        footer_notes = "Thank you for constructing with ConstructONS."
+
+    elements.append(
+        Paragraph(
+            f"<font color='gray'><i>Note: {footer_notes}</i></font>",
+            normal_style,
+        )
+    )
 
     doc.build(
         elements,

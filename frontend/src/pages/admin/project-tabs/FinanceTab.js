@@ -13,22 +13,28 @@ const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 const fmtINR = (n) => `₹ ${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function FinanceTab({ project, onSaved }) {
-    const [activeTab, setActiveTab] = useState("invoices");
+    const [activeTab, setActiveTab] = useState("schedule");
     const [loading, setLoading] = useState(false);
     const [savingSettings, setSavingSettings] = useState(false);
     const [contractValue, setContractValue] = useState(project.contract_value || 0);
 
-    // Edit Invoice Modal
     const [editingInvoice, setEditingInvoice] = useState(null);
     const [editForm, setEditForm] = useState({});
     const [editLoading, setEditLoading] = useState(false);
+
+    const [editingMilestone, setEditingMilestone] = useState(null);
+    const [milestoneEditForm, setMilestoneEditForm] = useState({});
+    const [milestoneEditLoading, setMilestoneEditLoading] = useState(false);
+
+    const [editingReceipt, setEditingReceipt] = useState(null);
+    const [receiptEditForm, setReceiptEditForm] = useState({});
+    const [receiptEditLoading, setReceiptEditLoading] = useState(false);
 
     const dynamicStages = useMemo(() => {
         if (!project?.stages) return [];
         return project.stages.map((s) => s.name).filter(Boolean);
     }, [project]);
 
-    // --- Forms ---
     const [invoiceForm, setInvoiceForm] = useState({
         number: `INV-${String((project.invoices?.length || 0) + 1).padStart(3, "0")}`,
         description: "", stage: "General",
@@ -62,9 +68,9 @@ export default function FinanceTab({ project, onSaved }) {
                 const { data } = await api.get("/site-settings");
                 if (data) {
                     setInvoiceSettings({
-                        invoice_gst_percent: data.invoice_gst_percent || 0,
-                        invoice_bank_details: data.invoice_bank_details || invoiceSettings.invoice_bank_details,
-                        invoice_footer_notes: data.invoice_footer_notes || invoiceSettings.invoice_footer_notes,
+                        invoice_gst_percent: data.invoice_gst_percent ?? 0,
+                        invoice_bank_details: data.invoice_bank_details ?? invoiceSettings.invoice_bank_details,
+                        invoice_footer_notes: data.invoice_footer_notes ?? invoiceSettings.invoice_footer_notes,
                     });
                 }
             } catch { /* silent */ }
@@ -83,7 +89,6 @@ export default function FinanceTab({ project, onSaved }) {
             .reduce((s, v) => s + (Number(v.amount) || 0), 0),
         [project.variations]
     );
-
     const pendingVariationsSum = useMemo(() =>
         (project.variations || []).filter((v) => v.status === "pending")
             .reduce((s, v) => s + (Number(v.amount) || 0), 0),
@@ -91,25 +96,23 @@ export default function FinanceTab({ project, onSaved }) {
     );
 
     const totalContractValue = baseContract + approvedVariations;
+    
     const totalInvoiced = invoices.filter((i) => i.status !== "void")
         .reduce((s, i) => s + (Number(i.amount) || 0), 0);
     const totalPaid = project.amount_spent || 0;
     const outstanding = Math.max(0, totalInvoiced - totalPaid);
 
-    // Helper: Get remaining balance for an invoice
     const getInvoiceRemaining = (invoiceId) => {
         const inv = invoices.find((i) => i.id === invoiceId);
         if (!inv) return 0;
         return Math.max(0, Number(inv.amount) - Number(inv.paid_amount || 0));
     };
 
-    // Helper: Get invoice label for dropdown (only unpaid)
     const getInvoiceLabel = (inv) => {
         const remaining = Math.max(0, Number(inv.amount) - Number(inv.paid_amount || 0));
         return `${inv.number} — ${fmtINR(inv.amount)} (Due: ${fmtINR(remaining)})`;
     };
 
-    // ★ NEW: Check if variation is fully paid
     const isVariationPaid = (v) => {
         if (!v.invoice_id) return false;
         const inv = invoices.find((i) => i.id === v.invoice_id);
@@ -117,7 +120,6 @@ export default function FinanceTab({ project, onSaved }) {
         return inv.status === "paid";
     };
 
-    // ★ NEW: Check if variation has partial payment
     const isVariationPartial = (v) => {
         if (!v.invoice_id) return false;
         const inv = invoices.find((i) => i.id === v.invoice_id);
@@ -138,10 +140,26 @@ export default function FinanceTab({ project, onSaved }) {
     const saveInvoiceSettings = async () => {
         setSavingSettings(true);
         try {
-            await api.put("/site-settings", invoiceSettings);
-            toast.success("Invoice PDF settings saved globally");
-        } catch { toast.error("Failed to save settings"); }
-        finally { setSavingSettings(false); }
+            const payload = {
+                invoice_gst_percent: Number(invoiceSettings.invoice_gst_percent) || 0,
+                invoice_bank_details: invoiceSettings.invoice_bank_details,
+                invoice_footer_notes: invoiceSettings.invoice_footer_notes
+            };
+            const { data } = await api.put("/site-settings", payload);
+            const savedData = data?.settings || data;
+            if (savedData) {
+                setInvoiceSettings({
+                    invoice_gst_percent: savedData.invoice_gst_percent ?? 0,
+                    invoice_bank_details: savedData.invoice_bank_details ?? "",
+                    invoice_footer_notes: savedData.invoice_footer_notes ?? "",
+                });
+            }
+            toast.success("Proforma & Receipt PDF settings saved");
+        } catch { 
+            toast.error("Failed to save settings"); 
+        } finally { 
+            setSavingSettings(false); 
+        }
     };
 
     const handleCreateInvoice = async (e) => {
@@ -151,7 +169,6 @@ export default function FinanceTab({ project, onSaved }) {
                 ...invoiceForm, amount: Number(invoiceForm.amount) || 0
             });
 
-            // If raised from a variation, link it
             if (invoiceForm.variation_id && res.data.invoice?.id) {
                 try {
                     await api.patch(
@@ -161,7 +178,7 @@ export default function FinanceTab({ project, onSaved }) {
                 } catch { /* silent fallback */ }
             }
 
-            toast.success("Invoice raised");
+            toast.success("Proforma Invoice raised");
             setInvoiceForm({
                 number: `INV-${String((project.invoices?.length || 0) + 2).padStart(3, "0")}`,
                 description: "", stage: "General",
@@ -175,7 +192,6 @@ export default function FinanceTab({ project, onSaved }) {
         } finally { setLoading(false); }
     };
 
-    // Edit Invoice
     const openEditInvoice = (inv) => {
         setEditingInvoice(inv);
         setEditForm({
@@ -193,14 +209,58 @@ export default function FinanceTab({ project, onSaved }) {
                 { ...editForm, amount: Number(editForm.amount) || 0 }
             );
             const changeCount = res.data.changes?.length || 0;
-            toast.success(`Invoice updated. ${changeCount > 0 ? `${changeCount} change${changeCount > 1 ? "s" : ""} notified to client.` : ""}`);
+            toast.success(`Proforma updated. ${changeCount > 0 ? `${changeCount} change${changeCount > 1 ? "s" : ""} notified to client.` : ""}`);
             setEditingInvoice(null); setEditForm({}); onSaved();
         } catch (err) {
             toast.error(err?.response?.data?.detail || "Failed to update invoice");
         } finally { setEditLoading(false); }
     };
 
-    // Milestone → Invoice
+    const openEditMilestone = (ms) => {
+        setEditingMilestone(ms);
+        setMilestoneEditForm({
+            name: ms.name, stage: ms.stage || "General",
+            due_date: ms.due_date || "", amount: ms.amount
+        });
+    };
+
+    const handleEditMilestone = async (e) => {
+        e.preventDefault(); setMilestoneEditLoading(true);
+        try {
+            await api.put(
+                `/admin/projects/${project.id}/payment-schedule/${editingMilestone.id}`,
+                { ...milestoneEditForm, amount: Number(milestoneEditForm.amount) || 0 }
+            );
+            toast.success("Milestone updated");
+            setEditingMilestone(null); setMilestoneEditForm({}); onSaved();
+        } catch (err) {
+            toast.error(err?.response?.data?.detail || "Failed to update milestone");
+        } finally { setMilestoneEditLoading(false); }
+    };
+
+    const openEditReceipt = (pay) => {
+        setEditingReceipt(pay);
+        setReceiptEditForm({
+            amount: pay.amount, date: pay.date,
+            method: pay.method, reference: pay.reference || "",
+            notes: pay.notes || ""
+        });
+    };
+
+    const handleEditReceipt = async (e) => {
+        e.preventDefault(); setReceiptEditLoading(true);
+        try {
+            await api.put(
+                `/admin/projects/${project.id}/payments/${editingReceipt.id}`,
+                { ...receiptEditForm, amount: Number(receiptEditForm.amount) || 0 }
+            );
+            toast.success("Receipt updated");
+            setEditingReceipt(null); setReceiptEditForm({}); onSaved();
+        } catch (err) {
+            toast.error(err?.response?.data?.detail || "Failed to update receipt");
+        } finally { setReceiptEditLoading(false); }
+    };
+
     const raiseInvoiceFromMilestone = (ms) => {
         setInvoiceForm((prev) => ({
             ...prev,
@@ -211,10 +271,9 @@ export default function FinanceTab({ project, onSaved }) {
         }));
         setActiveTab("invoices");
         window.scrollTo({ top: 0, behavior: "smooth" });
-        toast.info("Invoice form pre-filled from milestone.");
+        toast.info("Proforma form pre-filled from milestone.");
     };
 
-    // ★ NEW: Variation → Invoice
     const raiseInvoiceFromVariation = (v) => {
         setInvoiceForm((prev) => ({
             ...prev,
@@ -227,10 +286,9 @@ export default function FinanceTab({ project, onSaved }) {
         }));
         setActiveTab("invoices");
         window.scrollTo({ top: 0, behavior: "smooth" });
-        toast.info("Invoice form pre-filled from approved variation.");
+        toast.info("Proforma form pre-filled from approved variation.");
     };
 
-    // ★ NEW: Variation → Direct Receipt
     const logReceiptForVariation = (v) => {
         setPaymentForm((prev) => ({
             ...prev,
@@ -244,7 +302,6 @@ export default function FinanceTab({ project, onSaved }) {
         toast.info(`Receipt form pre-filled for variation: ${v.description}`);
     };
 
-    // Invoice → Record Payment
     const recordPaymentForInvoice = (inv) => {
         const remaining = Math.max(0, Number(inv.amount) - Number(inv.paid_amount || 0));
         setPaymentForm((prev) => ({
@@ -256,10 +313,9 @@ export default function FinanceTab({ project, onSaved }) {
         }));
         setActiveTab("payments");
         window.scrollTo({ top: 0, behavior: "smooth" });
-        toast.info(`Payment form pre-filled for ${inv.number} — Outstanding: ${fmtINR(remaining)}`);
+        toast.info(`Receipt form pre-filled for ${inv.number} — Outstanding: ${fmtINR(remaining)}`);
     };
 
-    // ★ NEW: Auto-load amount when invoice is selected in receipt form
     const handleInvoiceSelectInPayment = (invoiceId) => {
         const remaining = getInvoiceRemaining(invoiceId);
         setPaymentForm((prev) => ({
@@ -269,7 +325,6 @@ export default function FinanceTab({ project, onSaved }) {
         }));
     };
 
-    // Variations
     const handleCreateVariation = async (e) => {
         e.preventDefault(); setLoading(true);
         try {
@@ -299,7 +354,6 @@ export default function FinanceTab({ project, onSaved }) {
         } catch { toast.error("Failed"); }
     };
 
-    // Payments
     const savePayment = async (e) => {
         e.preventDefault(); setLoading(true);
         try {
@@ -308,7 +362,7 @@ export default function FinanceTab({ project, onSaved }) {
                 method: paymentForm.method, reference: paymentForm.reference,
                 notes: paymentForm.notes, invoice_id: paymentForm.invoice_id || null
             });
-            toast.success("Payment logged & Invoice updated!");
+            toast.success("Receipt logged successfully!");
             setPaymentForm({
                 amount: "", date: new Date().toISOString().split("T")[0],
                 method: "Bank Transfer", reference: "", notes: "", invoice_id: ""
@@ -319,7 +373,6 @@ export default function FinanceTab({ project, onSaved }) {
         } finally { setLoading(false); }
     };
 
-    // Milestones
     const handleAddMilestone = async (e) => {
         e.preventDefault(); setLoading(true);
         try {
@@ -334,15 +387,14 @@ export default function FinanceTab({ project, onSaved }) {
         } finally { setLoading(false); }
     };
 
-    // Deletes
     const deleteInvoice = async (id) => {
-        if (!window.confirm("Delete this invoice?")) return;
+        if (!window.confirm("Delete this proforma?")) return;
         try { await api.delete(`/admin/projects/${project.id}/invoices/${id}`); toast.success("Deleted"); onSaved(); }
         catch { toast.error("Failed"); }
     };
 
     const deletePayment = async (id) => {
-        if (!window.confirm("Reverse this payment?")) return;
+        if (!window.confirm("Reverse this receipt?")) return;
         try { await api.delete(`/admin/projects/${project.id}/payments/${id}`); toast.success("Reversed"); onSaved(); }
         catch { toast.error("Failed"); }
     };
@@ -364,7 +416,7 @@ export default function FinanceTab({ project, onSaved }) {
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                             <div className="flex items-center gap-2">
                                 <Pencil className="w-4 h-4 text-[#FF6600]" />
-                                <h3 className="text-sm font-bold text-[#000F1B]">Edit Invoice {editingInvoice.number}</h3>
+                                <h3 className="text-sm font-bold text-[#000F1B]">Edit Proforma {editingInvoice.number}</h3>
                             </div>
                             <button onClick={() => setEditingInvoice(null)} className="p-1.5 hover:bg-gray-200 rounded-lg transition">
                                 <X className="w-4 h-4 text-gray-500" />
@@ -374,12 +426,12 @@ export default function FinanceTab({ project, onSaved }) {
                         <form onSubmit={handleEditInvoice} className="p-4 space-y-4">
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[10px] text-amber-800 font-medium flex items-start gap-2">
                                 <Pencil className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                                <span>Editing this invoice will automatically notify the client via email and push notification with a summary of all changes made.</span>
+                                <span>Editing this proforma will automatically notify the client via email and push notification with a summary of all changes made.</span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 text-xs">
                                 <div>
-                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Invoice #</label>
+                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Proforma #</label>
                                     <input value={editForm.number} onChange={(e) => setEditForm({ ...editForm, number: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold outline-none focus:border-[#FF6600]" />
                                 </div>
                                 <div>
@@ -392,7 +444,7 @@ export default function FinanceTab({ project, onSaved }) {
                             </div>
 
                             <div>
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Description</label>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Heading / Description</label>
                                 <input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] text-xs" />
                             </div>
 
@@ -451,7 +503,105 @@ export default function FinanceTab({ project, onSaved }) {
                 </div>
             )}
 
-            {/* ====== FINANCIAL OVERVIEW STRIP (6 metrics) ====== */}
+            {/* ====== EDIT MILESTONE MODAL ====== */}
+            {editingMilestone && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                            <div className="flex items-center gap-2">
+                                <Pencil className="w-4 h-4 text-[#FF6600]" />
+                                <h3 className="text-sm font-bold text-[#000F1B]">Edit Milestone</h3>
+                            </div>
+                            <button onClick={() => setEditingMilestone(null)} className="p-1.5 hover:bg-gray-200 rounded-lg transition"><X className="w-4 h-4 text-gray-500" /></button>
+                        </div>
+                        <form onSubmit={handleEditMilestone} className="p-4 space-y-4">
+                            {editingMilestone.status === "paid" && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-[10px] text-red-800 font-medium">⚠ Paid milestones cannot be edited.</div>
+                            )}
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Milestone Name *</label>
+                                <input required value={milestoneEditForm.name} onChange={(e) => setMilestoneEditForm({ ...milestoneEditForm, name: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] text-xs" disabled={editingMilestone.status === "paid"} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Stage</label>
+                                    <select value={milestoneEditForm.stage} onChange={(e) => setMilestoneEditForm({ ...milestoneEditForm, stage: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg bg-white outline-none focus:border-[#FF6600]" disabled={editingMilestone.status === "paid"}>
+                                        <option value="General">General</option>
+                                        {dynamicStages.map((s) => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Target Date</label>
+                                    <input type="date" value={milestoneEditForm.due_date} onChange={(e) => setMilestoneEditForm({ ...milestoneEditForm, due_date: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600]" disabled={editingMilestone.status === "paid"} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Amount (₹) *</label>
+                                <input type="number" required value={milestoneEditForm.amount} onChange={(e) => setMilestoneEditForm({ ...milestoneEditForm, amount: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-[#FF6600] outline-none focus:border-[#FF6600]" disabled={editingMilestone.status === "paid"} />
+                            </div>
+                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                                <button type="button" onClick={() => setEditingMilestone(null)} className="px-4 py-2 text-xs font-bold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                                <button type="submit" disabled={milestoneEditLoading || editingMilestone.status === "paid"} className="px-4 py-2 bg-[#FF6600] hover:bg-[#e04f00] text-white text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5 disabled:opacity-50">
+                                    {milestoneEditLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ====== EDIT RECEIPT MODAL ====== */}
+            {editingReceipt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                            <div className="flex items-center gap-2">
+                                <Pencil className="w-4 h-4 text-emerald-600" />
+                                <h3 className="text-sm font-bold text-[#000F1B]">Edit Receipt {editingReceipt.receipt_number || ""}</h3>
+                            </div>
+                            <button onClick={() => setEditingReceipt(null)} className="p-1.5 hover:bg-gray-200 rounded-lg transition"><X className="w-4 h-4 text-gray-500" /></button>
+                        </div>
+                        <form onSubmit={handleEditReceipt} className="p-4 space-y-4">
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[10px] text-amber-800 font-medium">⚠ Editing amount auto-adjusts linked proforma balance.</div>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Amount (₹) *</label>
+                                    <input type="number" required value={receiptEditForm.amount} onChange={(e) => setReceiptEditForm({ ...receiptEditForm, amount: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-emerald-600 outline-none focus:border-[#FF6600]" />
+                                </div>
+                                <div>
+                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Date</label>
+                                    <input type="date" value={receiptEditForm.date} onChange={(e) => setReceiptEditForm({ ...receiptEditForm, date: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600]" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Method</label>
+                                <select value={receiptEditForm.method} onChange={(e) => setReceiptEditForm({ ...receiptEditForm, method: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg bg-white outline-none focus:border-[#FF6600] text-xs">
+                                    <option>Bank Transfer</option><option>UPI</option><option>Cheque</option><option>Cash</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Reference / UTR</label>
+                                <input value={receiptEditForm.reference} onChange={(e) => setReceiptEditForm({ ...receiptEditForm, reference: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] text-xs" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">
+                                    Notes (shown on PDF)
+                                    <span className="text-gray-400 normal-case font-normal ml-1">— Blank = default thank you</span>
+                                </label>
+                                <textarea rows="2" value={receiptEditForm.notes} onChange={(e) => setReceiptEditForm({ ...receiptEditForm, notes: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] text-xs" />
+                            </div>
+                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                                <button type="button" onClick={() => setEditingReceipt(null)} className="px-4 py-2 text-xs font-bold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                                <button type="submit" disabled={receiptEditLoading} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5">
+                                    {receiptEditLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ====== FINANCIAL OVERVIEW STRIP ====== */}
             <div className="bg-[#000F1B] rounded-xl p-4 text-white shadow-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 border-t-2 border-[#FF6600]">
                 <div>
                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Base Contract</div>
@@ -460,9 +610,7 @@ export default function FinanceTab({ project, onSaved }) {
                 <div>
                     <div className="text-[9px] font-bold text-amber-400 uppercase tracking-wider">Approved Variations</div>
                     <div className="text-sm font-black text-amber-400 mt-0.5">+ {fmtINR(approvedVariations)}</div>
-                    {pendingVariationsSum > 0 && (
-                        <div className="text-[8px] text-amber-300 mt-0.5">{fmtINR(pendingVariationsSum)} pending</div>
-                    )}
+                    {pendingVariationsSum > 0 && <div className="text-[8px] text-amber-300 mt-0.5">{fmtINR(pendingVariationsSum)} pending</div>}
                 </div>
                 <div className="bg-white/5 rounded-lg p-1 -m-1">
                     <div className="text-[9px] font-bold text-[#FF6600] uppercase tracking-wider">Total Contract Value</div>
@@ -486,12 +634,12 @@ export default function FinanceTab({ project, onSaved }) {
             {/* ====== TABS ====== */}
             <div className="flex items-center gap-4 border-b border-gray-200 overflow-x-auto no-scrollbar">
                 {[
-                    { id: "invoices", label: `Invoices (${invoices.length})` },
                     { id: "schedule", label: `Schedule (${(project.payment_schedule || []).length})` },
+                    { id: "invoices", label: `Proforma Invoices (${invoices.length})` },
                     { id: "variations", label: `Variations (${(project.variations || []).length})` },
                     { id: "payments", label: `Receipts (${(project.payments_log || []).length})` },
                     { id: "master", label: "Contract Setup" },
-                    { id: "settings", label: "Invoice Settings" },
+                    // { id: "settings", label: "Proforma Settings" },
                 ].map((tab) => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                         className={`pb-2 text-xs font-bold whitespace-nowrap relative ${activeTab === tab.id ? "text-[#000F1B]" : "text-gray-400 hover:text-gray-700"}`}>
@@ -501,107 +649,7 @@ export default function FinanceTab({ project, onSaved }) {
                 ))}
             </div>
 
-            {/* ====== TAB 1: INVOICES ====== */}
-            {activeTab === "invoices" && (
-                <div className="space-y-4 animate-in fade-in">
-                    <div className={`p-4 rounded-xl border shadow-sm transition-colors ${invoiceForm.milestone_id ? "bg-amber-50 border-amber-300" : invoiceForm.variation_id ? "bg-blue-50 border-blue-300" : "bg-white border-gray-200"}`}>
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">Raise New Invoice</h3>
-                            <div className="flex gap-2">
-                                {invoiceForm.milestone_id && <span className="text-[9px] font-bold text-amber-700 bg-amber-200 px-2 py-0.5 rounded uppercase">From Milestone</span>}
-                                {invoiceForm.variation_id && <span className="text-[9px] font-bold text-blue-700 bg-blue-200 px-2 py-0.5 rounded uppercase">From Variation</span>}
-                            </div>
-                        </div>
-                        <form onSubmit={handleCreateInvoice} className="grid grid-cols-2 md:grid-cols-7 gap-3 items-end text-xs">
-                            <div>
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Invoice #</label>
-                                <input required value={invoiceForm.number} onChange={(e) => setInvoiceForm({ ...invoiceForm, number: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold outline-none focus:border-[#FF6600] bg-white" />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Description *</label>
-                                <input required value={invoiceForm.description} onChange={(e) => setInvoiceForm({ ...invoiceForm, description: e.target.value })} placeholder="e.g. Phase 3 Structure" className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
-                            </div>
-                            <div>
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Stage</label>
-                                <select value={invoiceForm.stage} onChange={(e) => setInvoiceForm({ ...invoiceForm, stage: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white">
-                                    <option value="General">General</option>
-                                    {dynamicStages.map((s) => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Amount (₹) *</label>
-                                <input type="number" required value={invoiceForm.amount} onChange={(e) => setInvoiceForm({ ...invoiceForm, amount: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-[#FF6600] outline-none focus:border-[#FF6600] bg-white" />
-                            </div>
-                            <div>
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Due Date *</label>
-                                <input type="date" required value={invoiceForm.due_date} onChange={(e) => setInvoiceForm({ ...invoiceForm, due_date: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
-                            </div>
-                            <button type="submit" disabled={loading} className="bg-[#000F1B] hover:bg-[#FF6600] text-white font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1 shadow-sm">
-                                {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Raise
-                            </button>
-                        </form>
-                    </div>
-
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-[11px] min-w-[900px]">
-                                <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-bold">
-                                    <tr>
-                                        <th className="p-3">Invoice #</th><th className="p-3">Description</th><th className="p-3">Due Date</th>
-                                        <th className="p-3">Amount</th><th className="p-3">Paid</th><th className="p-3">Balance</th>
-                                        <th className="p-3 text-center">Status</th><th className="p-3 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {invoices.length === 0 ? (
-                                        <tr><td colSpan="8" className="p-8 text-center text-gray-400 italic">No invoices raised yet.</td></tr>
-                                    ) : (
-                                        [...invoices].sort((a, b) => new Date(b.date) - new Date(a.date)).map((inv) => {
-                                            const balance = Math.max(0, Number(inv.amount) - Number(inv.paid_amount || 0));
-                                            return (
-                                                <tr key={inv.id} className="hover:bg-gray-50 transition">
-                                                    <td className="p-3 font-mono font-bold text-[#000F1B]">
-                                                        {inv.number}
-                                                        {inv.edit_history?.length > 0 && (
-                                                            <span className="ml-1 text-[8px] text-amber-600 font-normal">(edited {inv.edit_history.length}×)</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3 font-bold text-gray-800 max-w-[200px] truncate">{inv.description}</td>
-                                                    <td className="p-3 text-gray-500">{inv.due_date}</td>
-                                                    <td className="p-3 font-bold text-gray-900">{fmtINR(inv.amount)}</td>
-                                                    <td className="p-3 font-bold text-emerald-600">{fmtINR(inv.paid_amount || 0)}</td>
-                                                    <td className="p-3 font-bold text-red-600">{balance > 0 ? fmtINR(balance) : "—"}</td>
-                                                    <td className="p-3 text-center">
-                                                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${inv.status === "paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                                            inv.status === "overdue" ? "bg-red-50 text-red-700 border-red-200" :
-                                                                inv.status === "void" ? "bg-gray-100 text-gray-500 border-gray-200" :
-                                                                    "bg-amber-50 text-amber-700 border-amber-200"
-                                                            }`}>{inv.status.replace("_", " ")}</span>
-                                                    </td>
-                                                    <td className="p-3 text-right whitespace-nowrap">
-                                                        <button onClick={() => openEditInvoice(inv)} className="text-[#FF6600] p-1.5 hover:bg-orange-50 rounded-lg mr-1 transition" title="Edit">
-                                                            <Pencil className="w-3.5 h-3.5" />
-                                                        </button>
-                                                        {inv.status !== "paid" && inv.status !== "void" && (
-                                                            <button onClick={() => recordPaymentForInvoice(inv)} className="bg-emerald-600 text-white px-2 py-1 rounded text-[9px] font-bold hover:bg-emerald-700 transition mr-1 inline-flex items-center gap-1">
-                                                                <IndianRupee className="w-2.5 h-2.5" /> Receipt
-                                                            </button>
-                                                        )}
-                                                        <button onClick={() => window.open(`${API_BASE}/admin/projects/${project.id}/invoices/${inv.id}/pdf`, "_blank")} className="text-[#1A73E8] p-1.5 hover:bg-blue-50 rounded-lg mr-1 text-[9px] font-bold uppercase transition">PDF</button>
-                                                        <button onClick={() => deleteInvoice(inv.id)} className="text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ====== TAB 2: PAYMENT SCHEDULE ====== */}
+            {/* ====== TAB: SCHEDULE ====== */}
             {activeTab === "schedule" && (
                 <div className="space-y-4 animate-in fade-in">
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -653,9 +701,16 @@ export default function FinanceTab({ project, onSaved }) {
                                             <td className="p-3 text-right whitespace-nowrap">
                                                 {ms.status === "pending" ? (
                                                     <button onClick={() => raiseInvoiceFromMilestone(ms)} className="px-3 py-1 bg-[#000F1B] text-white text-[9px] font-bold rounded hover:bg-[#FF6600] transition inline-flex items-center gap-1 shadow-sm mr-2">
-                                                        Raise Invoice <ArrowRight className="w-3 h-3" />
+                                                        Raise Proforma <ArrowRight className="w-3 h-3" />
                                                     </button>
                                                 ) : (<span className="text-[9px] font-bold text-gray-400 mr-4 italic">Invoiced</span>)}
+                                                
+                                                {ms.status !== "paid" && (
+                                                    <button onClick={() => openEditMilestone(ms)} className="text-[#FF6600] p-1.5 hover:bg-orange-50 rounded-lg mr-1 transition" title="Edit">
+                                                        <Pencil className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+
                                                 <button onClick={() => deleteMilestone(ms.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
                                             </td>
                                         </tr>
@@ -667,7 +722,117 @@ export default function FinanceTab({ project, onSaved }) {
                 </div>
             )}
 
-            {/* ====== TAB 3: VARIATIONS (★ UPDATED with Raise Invoice + Log Receipt) ====== */}
+            {/* ====== TAB 1: PROFORMA INVOICES ====== */}
+            {activeTab === "invoices" && (
+                <div className="space-y-4 animate-in fade-in">
+                    <div className={`p-4 rounded-xl border shadow-sm transition-colors ${invoiceForm.milestone_id ? "bg-amber-50 border-amber-300" : invoiceForm.variation_id ? "bg-blue-50 border-blue-300" : "bg-white border-gray-200"}`}>
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">Raise New Proforma Invoice</h3>
+                            <div className="flex gap-2">
+                                {invoiceForm.milestone_id && <span className="text-[9px] font-bold text-amber-700 bg-amber-200 px-2 py-0.5 rounded uppercase">From Milestone</span>}
+                                {invoiceForm.variation_id && <span className="text-[9px] font-bold text-blue-700 bg-blue-200 px-2 py-0.5 rounded uppercase">From Variation</span>}
+                            </div>
+                        </div>
+                        <form onSubmit={handleCreateInvoice} className="grid grid-cols-2 md:grid-cols-7 gap-3 items-end text-xs">
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Proforma #</label>
+                                <input required value={invoiceForm.number} onChange={(e) => setInvoiceForm({ ...invoiceForm, number: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold outline-none focus:border-[#FF6600] bg-white" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Description *</label>
+                                <input required value={invoiceForm.description} onChange={(e) => setInvoiceForm({ ...invoiceForm, description: e.target.value })} placeholder="e.g. Phase 3 Structure" className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Stage</label>
+                                <select value={invoiceForm.stage} onChange={(e) => setInvoiceForm({ ...invoiceForm, stage: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white">
+                                    <option value="General">General</option>
+                                    {dynamicStages.map((s) => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Amount (₹) *</label>
+                                <input type="number" required value={invoiceForm.amount} onChange={(e) => setInvoiceForm({ ...invoiceForm, amount: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-[#FF6600] outline-none focus:border-[#FF6600] bg-white" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Due Date *</label>
+                                <input type="date" required value={invoiceForm.due_date} onChange={(e) => setInvoiceForm({ ...invoiceForm, due_date: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
+                            </div>
+                            <button type="submit" disabled={loading} className="bg-[#000F1B] hover:bg-[#FF6600] text-white font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1 shadow-sm">
+                                {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Raise
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-[11px] min-w-[900px]">
+                                <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-bold">
+                                    <tr>
+                                        <th className="p-3">Proforma #</th>
+                                        <th className="p-3">Milestone Heading</th>
+                                        <th className="p-3">Stage</th>
+                                        <th className="p-3">Due Date</th>
+                                        <th className="p-3">Amount</th>
+                                        <th className="p-3">Paid</th>
+                                        <th className="p-3">Balance</th>
+                                        <th className="p-3 text-center">Status</th>
+                                        <th className="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {invoices.length === 0 ? (
+                                        <tr><td colSpan="9" className="p-8 text-center text-gray-400 italic">No proformas raised yet.</td></tr>
+                                    ) : (
+                                        [...invoices].sort((a, b) => new Date(b.date) - new Date(a.date)).map((inv) => {
+                                            const balance = Math.max(0, Number(inv.amount) - Number(inv.paid_amount || 0));
+                                            return (
+                                                <tr key={inv.id} className="hover:bg-gray-50 transition">
+                                                    <td className="p-3 font-mono font-bold text-[#000F1B]">
+                                                        {inv.number}
+                                                        {inv.edit_history?.length > 0 && (
+                                                            <span className="ml-1 text-[8px] text-amber-600 font-normal">(edited {inv.edit_history.length}×)</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3 max-w-[220px]">
+                                                        <div className="font-bold text-gray-900 truncate">{inv.description}</div>
+                                                    </td>
+                                                    
+                                                    <td className="p-3 text-[10px] text-[#FF6600] font-semibold">{inv.stage || "General"}</td>
+                                                    <td className="p-3 text-gray-500">{inv.due_date}</td>
+                                                    <td className="p-3 font-bold text-gray-900">{fmtINR(inv.amount)}</td>
+                                                    <td className="p-3 font-bold text-emerald-600">{fmtINR(inv.paid_amount || 0)}</td>
+                                                    <td className="p-3 font-bold text-red-600">{balance > 0 ? fmtINR(balance) : "—"}</td>
+                                                    <td className="p-3 text-center">
+                                                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${inv.status === "paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                                            inv.status === "overdue" ? "bg-red-50 text-red-700 border-red-200" :
+                                                                inv.status === "void" ? "bg-gray-100 text-gray-500 border-gray-200" :
+                                                                    "bg-amber-50 text-amber-700 border-amber-200"
+                                                            }`}>{inv.status.replace("_", " ")}</span>
+                                                    </td>
+                                                    <td className="p-3 text-right whitespace-nowrap">
+                                                        <button onClick={() => openEditInvoice(inv)} className="text-[#FF6600] p-1.5 hover:bg-orange-50 rounded-lg mr-1 transition" title="Edit">
+                                                            <Pencil className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        {inv.status !== "paid" && inv.status !== "void" && (
+                                                            <button onClick={() => recordPaymentForInvoice(inv)} className="bg-emerald-600 text-white px-2 py-1 rounded text-[9px] font-bold hover:bg-emerald-700 transition mr-1 inline-flex items-center gap-1">
+                                                                <IndianRupee className="w-2.5 h-2.5" /> Receipt
+                                                            </button>
+                                                        )}
+                                                        <button onClick={() => window.open(`${API_BASE}/admin/projects/${project.id}/invoices/${inv.id}/pdf?t=${Date.now()}`, "_blank")} className="text-[#1A73E8] p-1.5 hover:bg-blue-50 rounded-lg mr-1 text-[9px] font-bold uppercase transition">PDF</button>
+                                                        <button onClick={() => deleteInvoice(inv.id)} className="text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ====== TAB 3: VARIATIONS ====== */}
             {activeTab === "variations" && (
                 <div className="space-y-4 animate-in fade-in">
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -701,7 +866,7 @@ export default function FinanceTab({ project, onSaved }) {
                                     <th className="p-3">Description</th>
                                     <th className="p-3">Amount</th>
                                     <th className="p-3">Status</th>
-                                    <th className="p-3">Invoice</th>
+                                    <th className="p-3">Proforma</th>
                                     <th className="p-3 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -729,7 +894,6 @@ export default function FinanceTab({ project, onSaved }) {
                                                             <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                                                                 {linkedInvoice.number}
                                                             </span>
-                                                            {/* ★ Payment status indicator */}
                                                             {isPaid && (
                                                                 <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-0.5">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" /> PAID
@@ -742,36 +906,32 @@ export default function FinanceTab({ project, onSaved }) {
                                                             )}
                                                         </div>
                                                     ) : v.status === "approved" ? (
-                                                        <span className="text-[9px] text-gray-400 italic">No invoice yet</span>
+                                                        <span className="text-[9px] text-gray-400 italic">No proforma yet</span>
                                                     ) : (
                                                         <span className="text-[9px] text-gray-300">—</span>
                                                     )}
                                                 </td>
                                                 <td className="p-3 text-right whitespace-nowrap space-x-1">
-                                                    {/* Raise Invoice — only show if approved AND no invoice yet */}
                                                     {v.status === "approved" && !v.invoice_id && (
                                                         <button onClick={() => raiseInvoiceFromVariation(v)}
                                                             className="px-2 py-1 bg-[#000F1B] text-white font-bold text-[9px] rounded hover:bg-[#FF6600] transition inline-flex items-center gap-1">
-                                                            <FileText className="w-2.5 h-2.5" /> Raise Invoice
+                                                            <FileText className="w-2.5 h-2.5" /> Raise
                                                         </button>
                                                     )}
 
-                                                    {/* ★ Log Receipt — ONLY show if approved AND NOT fully paid */}
                                                     {v.status === "approved" && !isPaid && (
                                                         <button onClick={() => logReceiptForVariation(v)}
                                                             className="px-2 py-1 bg-emerald-600 text-white font-bold text-[9px] rounded hover:bg-emerald-700 transition inline-flex items-center gap-1">
-                                                            <Receipt className="w-2.5 h-2.5" /> Log Receipt
+                                                            <Receipt className="w-2.5 h-2.5" /> Receipt
                                                         </button>
                                                     )}
 
-                                                    {/* ★ Fully Paid Badge replaces Log Receipt button */}
                                                     {v.status === "approved" && isPaid && (
                                                         <span className="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold text-[9px] rounded border border-emerald-200 inline-flex items-center gap-1">
-                                                            <CheckCircle2 className="w-2.5 h-2.5" /> Fully Paid
+                                                            <CheckCircle2 className="w-2.5 h-2.5" /> Paid
                                                         </span>
                                                     )}
 
-                                                    {/* Override status buttons */}
                                                     {v.status !== "approved" && (
                                                         <button onClick={() => changeVariationStatus(v.id, "approved")}
                                                             className="px-2 py-1 bg-emerald-600 text-white font-bold text-[9px] rounded hover:bg-emerald-700 transition">
@@ -798,7 +958,7 @@ export default function FinanceTab({ project, onSaved }) {
                 </div>
             )}
 
-            {/* ====== TAB 4: PAYMENT RECEIPTS (★ UPDATED: Auto-load invoice amount) ====== */}
+            {/* ====== TAB 4: PAYMENT RECEIPTS ====== */}
             {activeTab === "payments" && (
                 <div className="space-y-4 animate-in fade-in">
                     <div className={`p-4 rounded-xl border shadow-sm transition-colors ${paymentForm.invoice_id ? "bg-emerald-50 border-emerald-300" : "bg-white border-gray-200"}`}>
@@ -816,39 +976,36 @@ export default function FinanceTab({ project, onSaved }) {
                             )}
                         </div>
 
-                        <form onSubmit={savePayment} className="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-xs">
-                            {/* ★ Invoice Selection — triggers auto-fill */}
+                        <form onSubmit={savePayment} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end text-xs">
                             <div>
                                 <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">
-                                    Allocate to Invoice
+                                    Allocate to Proforma
                                 </label>
                                 <select
                                     value={paymentForm.invoice_id}
                                     onChange={(e) => handleInvoiceSelectInPayment(e.target.value)}
                                     className="w-full p-2 border border-gray-200 rounded-lg bg-white outline-none focus:border-[#FF6600]"
                                 >
-                                    <option value="">General Payment (No Invoice)</option>
+                                    <option value="">General Payment</option>
                                     {invoices
-                                        .filter((i) => i.status !== "void" && i.status !== "paid")  // ★ Exclude paid & void
+                                        .filter((i) => i.status !== "void" && i.status !== "paid")
                                         .map((i) => (
                                             <option key={i.id} value={i.id}>{getInvoiceLabel(i)}</option>
                                         ))}
                                 </select>
-                                {/* ★ Helper text when all invoices are paid */}
                                 {invoices.filter((i) => i.status !== "void" && i.status !== "paid").length === 0 && invoices.length > 0 && (
                                     <p className="text-[9px] text-emerald-600 font-semibold mt-1">
-                                        ✅ All invoices are fully paid!
+                                        ✅ All proformas are fully paid!
                                     </p>
                                 )}
                             </div>
 
-                            {/* ★ Amount — auto-loaded but editable */}
                             <div>
                                 <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">
                                     Amount (₹) *
                                     {paymentForm.invoice_id && (
                                         <span className="text-emerald-600 ml-1 normal-case">
-                                            (Balance: {fmtINR(getInvoiceRemaining(paymentForm.invoice_id))})
+                                            (Bal: {fmtINR(getInvoiceRemaining(paymentForm.invoice_id))})
                                         </span>
                                     )}
                                 </label>
@@ -858,7 +1015,18 @@ export default function FinanceTab({ project, onSaved }) {
                                     value={paymentForm.amount}
                                     onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
                                     className="w-full p-2 border border-gray-200 rounded-lg font-bold text-emerald-600 outline-none focus:border-[#FF6600] bg-white"
-                                    placeholder={paymentForm.invoice_id ? "Auto-filled from invoice" : "Enter amount"}
+                                    placeholder={paymentForm.invoice_id ? "Auto-filled" : "Enter amount"}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Receipt Date *</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={paymentForm.date}
+                                    onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
+                                    className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white"
                                 />
                             </div>
 
@@ -868,22 +1036,30 @@ export default function FinanceTab({ project, onSaved }) {
                                     <option>Bank Transfer</option><option>UPI</option><option>Cheque</option><option>Cash</option>
                                 </select>
                             </div>
+                            
                             <div>
-                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Ref / UTR No.</label>
-                                <input value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="e.g. UTR12345" className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Ref / UTR</label>
+                                <input value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="UTR12345" className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
                             </div>
+                            
                             <button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition flex items-center justify-center gap-1 shadow-sm">
-                                {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <IndianRupee className="w-3 h-3" />} Log Payment
+                                {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <IndianRupee className="w-3 h-3" />} Log Receipt
                             </button>
-                        </form>
 
-                        {/* ★ Quick helper text */}
-                        {paymentForm.invoice_id && (
-                            <div className="mt-2 text-[9px] text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-lg p-2 flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3 h-3 shrink-0" />
-                                Amount auto-filled with remaining balance of selected invoice. You can adjust the amount for partial payments.
+                            <div className="col-span-2 md:col-span-6">
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">
+                                    Receipt Notes (shown on PDF)
+                                    <span className="text-gray-400 normal-case font-normal ml-1">— Leave blank for default thank you message</span>
+                                </label>
+                                <textarea
+                                    rows="2"
+                                    value={paymentForm.notes}
+                                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                                    placeholder="e.g. Payment received for Phase 2 completion. Thanks for the prompt transfer."
+                                    className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white text-xs"
+                                />
                             </div>
-                        )}
+                        </form>
                     </div>
 
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -891,7 +1067,7 @@ export default function FinanceTab({ project, onSaved }) {
                             <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-bold">
                                 <tr>
                                     <th className="p-3">Date</th><th className="p-3">Amount</th>
-                                    <th className="p-3">Method & Ref</th><th className="p-3">Linked Invoice</th>
+                                    <th className="p-3">Method & Ref</th><th className="p-3">Linked Proforma</th>
                                     <th className="p-3 text-right">Action</th>
                                 </tr>
                             </thead>
@@ -916,7 +1092,11 @@ export default function FinanceTab({ project, onSaved }) {
                                                         <span className="text-[9px] text-gray-400 italic">General</span>
                                                     )}
                                                 </td>
-                                                <td className="p-3 text-right">
+                                                <td className="p-3 text-right whitespace-nowrap">
+                                                    <button onClick={() => openEditReceipt(p)} className="text-[#FF6600] p-1.5 hover:bg-orange-50 rounded-lg mr-1 transition" title="Edit">
+                                                        <Pencil className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button onClick={() => window.open(`${API_BASE}/admin/projects/${project.id}/receipts/${p.id}/pdf?t=${Date.now()}`, "_blank")} className="text-[#1A73E8] p-1.5 hover:bg-blue-50 rounded-lg mr-1 text-[9px] font-bold uppercase transition">PDF</button>
                                                     <button onClick={() => deletePayment(p.id)} className="text-red-500 text-[10px] font-bold hover:underline">Reverse</button>
                                                 </td>
                                             </tr>
@@ -963,26 +1143,41 @@ export default function FinanceTab({ project, onSaved }) {
             {activeTab === "settings" && (
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm max-w-2xl animate-in fade-in">
                     <div className="mb-4 border-b border-gray-100 pb-3">
-                        <h3 className="text-sm font-bold text-[#000F1B] mb-1">PDF Invoice Branding & Settings</h3>
-                        <p className="text-[10px] text-gray-500">Update the bank details, terms, and tax percentages that appear on automatically generated PDF invoices.</p>
+                        <h3 className="text-sm font-bold text-[#000F1B] mb-1">PDF Proforma & Receipt Settings</h3>
+                        <p className="text-[10px] text-gray-500">Update the bank details, terms, and tax percentages that appear on automatically generated PDFs.</p>
                     </div>
                     <div className="space-y-4 text-xs">
                         <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Applicable GST (%)</label>
-                            <input type="number" value={invoiceSettings.invoice_gst_percent} onChange={(e) => setInvoiceSettings({ ...invoiceSettings, invoice_gst_percent: e.target.value })} className="w-full sm:w-32 p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white font-bold" />
+                            <input 
+                                type="number" 
+                                value={invoiceSettings.invoice_gst_percent} 
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, invoice_gst_percent: e.target.value })} 
+                                className="w-full sm:w-32 p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white font-bold" 
+                            />
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Bank Account Details (Visible on PDF)</label>
-                            <textarea rows="4" value={invoiceSettings.invoice_bank_details} onChange={(e) => setInvoiceSettings({ ...invoiceSettings, invoice_bank_details: e.target.value })} className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white font-mono leading-relaxed" />
+                            <textarea 
+                                rows="4" 
+                                value={invoiceSettings.invoice_bank_details} 
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, invoice_bank_details: e.target.value })} 
+                                className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white font-mono leading-relaxed" 
+                            />
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Footer Notes / Terms</label>
-                            <textarea rows="2" value={invoiceSettings.invoice_footer_notes} onChange={(e) => setInvoiceSettings({ ...invoiceSettings, invoice_footer_notes: e.target.value })} className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" />
+                            <textarea 
+                                rows="2" 
+                                value={invoiceSettings.invoice_footer_notes} 
+                                onChange={(e) => setInvoiceSettings({ ...invoiceSettings, invoice_footer_notes: e.target.value })} 
+                                className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-[#FF6600] bg-white" 
+                            />
                         </div>
                         <div className="pt-2">
                             <button onClick={saveInvoiceSettings} disabled={savingSettings} className="bg-[#1A73E8] hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5">
                                 {savingSettings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                                Save Invoice Settings
+                                Save Settings
                             </button>
                         </div>
                     </div>
