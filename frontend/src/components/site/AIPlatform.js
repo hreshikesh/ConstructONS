@@ -384,13 +384,7 @@ export default function AIPlatform({ modules = [] }) {
         {/* ═══════════ DASHBOARD PREVIEW ═══════════ */}
         <FadeIn delay={0.2} className="mt-10 lg:mt-14">
           <div className="relative rounded-3xl border border-black/5 bg-[#111111] p-1 shadow-[0_20px_60px_rgba(17,17,17,0.15)]">
-            {/* Coming Soon overlay badge */}
-            <div className="absolute top-5 right-5 z-20">
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FF6600] text-white text-[11px] font-bold uppercase tracking-wider shadow-lg">
-                <Clock size={13} /> Coming Soon
-              </span>
-            </div>
-
+        
             <div className="rounded-[22px] overflow-hidden bg-[#111111]/50 relative">
               <div className="px-4 py-2 flex items-center gap-2 border-b border-white/10">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF6600]" />
@@ -402,7 +396,7 @@ export default function AIPlatform({ modules = [] }) {
               </div>
               <div className="relative">
                 <img
-                  src="/dashboard.png"
+                  src="https://ik.imagekit.io/kno0oq7ci/image_19mBYHnKV7.png"
                   alt="ConstructONS AI Platform Dashboard — Coming Soon"
                   className="w-full h-auto object-cover object-top"
                 />
