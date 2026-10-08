@@ -206,9 +206,12 @@ class FinancialService(BaseDoc):
 import re
 from pydantic import field_validator, model_validator
 
+# In models.py -> Find the TeamMember class and update it as follows:
+
 class TeamMember(BaseDoc):
     name: str
     designation: str = ""
+    email: Optional[EmailStr] = None  # ★ NEW: Email field added for Team Members
     photo: str = ""
     bio: Optional[str] = ""
     linkedin: Optional[str] = None
@@ -223,7 +226,6 @@ class TeamMember(BaseDoc):
         v = (v or "").strip()
         if not v:
             raise ValueError("Name is required")
-        # letters and spaces only, max 30 characters
         if not re.fullmatch(r"[A-Za-z ]{1,30}", v):
             raise ValueError("Name must be 1–30 letters/spaces only (no numbers or symbols)")
         if len(v) > 30:
@@ -246,7 +248,6 @@ class TeamMember(BaseDoc):
         if v is None or str(v).strip() == "":
             return None
         raw = str(v).strip().replace(" ", "")
-        # Must be exactly +91 + 10 digits
         if not re.fullmatch(r"\+91[6-9]\d{9}", raw):
             raise ValueError("Phone/WhatsApp must be +91 followed by exactly 10 digits (e.g. +919876543210)")
         return raw
@@ -255,8 +256,7 @@ class TeamMember(BaseDoc):
     @classmethod
     def validate_photo(cls, v: str) -> str:
         return (v or "").strip()
-
-        
+    
 # ---------- AI Platform Modules ----------
 class AIPlatformModule(BaseDoc):
     name: str  # 'AI Workspace', 'Project Management', ...

@@ -25,6 +25,9 @@ from routers.routes_quality import router as quality_router
 from routers.routes_maintenance import router as maintenance_router
 from routers.routes_reports import router as reports_router
 
+# Global Audit Middleware
+from audit_middleware import GlobalAuditMiddleware
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -34,11 +37,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- STARTUP LOGIC ---
     from db import db
     from seed import seed_all
     
-    # ⚡ Build MongoDB Indexes
     logger.info("Building MongoDB indexes...")
     try:
         await db.projects.create_index("customer_email")
@@ -49,11 +50,16 @@ async def lifespan(app: FastAPI):
         await db.leads.create_index("created_at")
         await db.custom_quotes.create_index("public_token")
         await db.packages.create_index("slug")
+        await db.deleted_projects.create_index("id")
+        await db.deleted_projects.create_index(
+            "purge_at",
+            expireAfterSeconds=0,  # document expires at purge_at datetime
+        )
+        logger.info("deleted_projects TTL index verified.")
         logger.info("Indexes verified.")
     except Exception as e:
         logger.warning(f"Failed to create indexes: {e}")
 
-    # Seed data if empty
     critical_collections = [
         "homes", "packages", "hero_sections", "site_settings",
         "financial_services", "marketplace_categories",
@@ -101,7 +107,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Interior library seed failed: {e}")
 
-    yield  # Server runs
+    yield
 
     from db import client
     client.close()
@@ -113,7 +119,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 🛡️ CORS Middleware MUST be added before routers
+# 🛡️ CORS Middleware
 raw_cors = os.environ.get('CORS_ORIGINS', os.environ.get('CORS', '*'))
 
 if raw_cors.strip() == '*':
@@ -136,7 +142,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🛡️ Global Exception Handler ensures CORS headers are ALWAYS present on 500 errors
+# 🕒 Global Audit Middleware (tracks all project updates)
+app.add_middleware(GlobalAuditMiddleware)
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global unhandled error on {request.url.path}: {exc}", exc_info=True)

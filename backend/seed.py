@@ -68,15 +68,15 @@ from models import (
 #     "smart_home": "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
 #     "landscaping": "https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1200&q=80",
 # }
-AI_MODULE_IMAGES = {
-  "ai-workspace":       "https://ik.imagekit.io/kno0oq7ci/image.png",
-  "project-management": "https://ik.imagekit.io/kno0oq7ci/image_19mBYHnKV7.png",
-  "site-management":    "https://ik.imagekit.io/kno0oq7ci/image_2cShRgrGl.png",
-  "documents":          "https://ik.imagekit.io/kno0oq7ci/image_3TeCCF_lF_.png",
-  "finance":            "https://ik.imagekit.io/kno0oq7ci/image(1).png",
-  "crm":                "https://ik.imagekit.io/kno0oq7ci/image(2).png",
-  "enterprise":         "https://ik.imagekit.io/kno0oq7ci/image(3).png",
-};
+# AI_MODULE_IMAGES = {
+#   "ai-workspace":       "https://ik.imagekit.io/kno0oq7ci/image.png",
+#   "project-management": "https://ik.imagekit.io/kno0oq7ci/image_19mBYHnKV7.png",
+#   "site-management":    "https://ik.imagekit.io/kno0oq7ci/image_2cShRgrGl.png",
+#   "documents":          "https://ik.imagekit.io/kno0oq7ci/image_3TeCCF_lF_.png",
+#   "finance":            "https://ik.imagekit.io/kno0oq7ci/image(1).png",
+#   "crm":                "https://ik.imagekit.io/kno0oq7ci/image(2).png",
+#   "enterprise":         "https://ik.imagekit.io/kno0oq7ci/image(3).png",
+# };
 
 # JOURNEY_IMAGES = [
 #     "https://res.cloudinary.com/yavvnb6s/image/upload/v1788785519/b24cad4f-6f38-4b21-ba3c-4df5b82c5b21.png",
@@ -101,7 +101,7 @@ async def seed_all():
         tagline="Everything Construction. Always On.",
         phone="+91 98765 43210",
         whatsapp="+91 98765 43210",
-        email="hello@constructons.in",
+        email="hello@constructons.com",
         address="12th Floor, Prestige Tower, MG Road, Bangalore 560001, India",
         google_maps_embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.7196744857637!2d77.60423!3d12.9716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sMG%20Road%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1710000000000",
         social_links={
@@ -426,20 +426,20 @@ async def seed_all():
 
     # -------- AI Platform Modules --------
 # -------- AI Platform Modules --------
-    await _reset("ai_modules")
-    ai_modules = [
-    {"name": "AI Workspace",        "slug": "ai-workspace",       "icon": "Bot",       "tagline": "Your intelligent construction assistant",           "description": "Ask anything about your project — AI understands your timeline, budget, and site status."},
-    {"name": "Project Management",  "slug": "project-management", "icon": "LayoutDashboard","tagline": "Plan, track & manage every task",                    "description": "Milestones, Gantt views, resource allocation, and AI-driven risk alerts."},
-    {"name": "Site Management",     "slug": "site-management",    "icon": "HardHat",        "tagline": "Monitor site, labor, materials & more",              "description": "Daily site logs, labor attendance, material dispatch tracking."},
-    {"name": "Documents",           "slug": "documents",          "icon": "FileText",       "tagline": "All documents in one secure place",                  "description": "Contracts, approvals, invoices, warranties — instantly searchable."},
-    {"name": "Finance",             "slug": "finance",            "icon": "Wallet",         "tagline": "Track costs, invoices & payments",                   "description": "Live cost vs. budget, invoice approvals, escrow tracking."},
-    {"name": "CRM",                 "slug": "crm",                "icon": "Users",          "tagline": "Manage leads, customers & sales",                    "description": "For our partners: unified customer conversations across channels."},
-    {"name": "Enterprise",          "slug": "enterprise",         "icon": "Building2",      "tagline": "Scalable solutions for construction businesses",     "description": "Multi-project, multi-user, roles, audit logs, and analytics."},
-]
-    for i, m in enumerate(ai_modules):
-        m["sort_order"] = i + 1
-        m["image"] = AI_MODULE_IMAGES.get(m["slug"], "")   # ← NEW LINE
-        await db.ai_modules.insert_one(AIPlatformModule(**m).model_dump())
+#     await _reset("ai_modules")
+#     ai_modules = [
+#     {"name": "AI Workspace",        "slug": "ai-workspace",       "icon": "Bot",       "tagline": "Your intelligent construction assistant",           "description": "Ask anything about your project — AI understands your timeline, budget, and site status."},
+#     {"name": "Project Management",  "slug": "project-management", "icon": "LayoutDashboard","tagline": "Plan, track & manage every task",                    "description": "Milestones, Gantt views, resource allocation, and AI-driven risk alerts."},
+#     {"name": "Site Management",     "slug": "site-management",    "icon": "HardHat",        "tagline": "Monitor site, labor, materials & more",              "description": "Daily site logs, labor attendance, material dispatch tracking."},
+#     {"name": "Documents",           "slug": "documents",          "icon": "FileText",       "tagline": "All documents in one secure place",                  "description": "Contracts, approvals, invoices, warranties — instantly searchable."},
+#     {"name": "Finance",             "slug": "finance",            "icon": "Wallet",         "tagline": "Track costs, invoices & payments",                   "description": "Live cost vs. budget, invoice approvals, escrow tracking."},
+#     {"name": "CRM",                 "slug": "crm",                "icon": "Users",          "tagline": "Manage leads, customers & sales",                    "description": "For our partners: unified customer conversations across channels."},
+#     {"name": "Enterprise",          "slug": "enterprise",         "icon": "Building2",      "tagline": "Scalable solutions for construction businesses",     "description": "Multi-project, multi-user, roles, audit logs, and analytics."},
+# ]
+#     for i, m in enumerate(ai_modules):
+#         m["sort_order"] = i + 1
+#         m["image"] = AI_MODULE_IMAGES.get(m["slug"], "")   # ← NEW LINE
+#         await db.ai_modules.insert_one(AIPlatformModule(**m).model_dump())
 
     # # -------- Marketplace --------
     # await _reset("marketplace_categories")

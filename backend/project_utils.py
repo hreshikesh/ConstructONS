@@ -193,14 +193,18 @@ async def _build_unified_team(proj: dict) -> List[Dict[str, Any]]:
             if tid in id_map:
                 m = id_map[tid]
                 unified.append({
-                    "id": m["id"], "name": m.get("name"), "email": None,
+                    "id": m["id"], 
+                    "name": m.get("name"), 
+                    "email": m.get("email"),  # ★ FIX: Now passes real team member email!
                     "role": m.get("designation") or m.get("role") or "Staff",
                     "company": "ConstructONS",
                     "contact": m.get("phone") or m.get("whatsapp") or "",
-                    "access": "Full Access", "status": "Active",
+                    "access": "Full Access", 
+                    "status": "Active",
                     "photo": m.get("photo"),
                     "whatsapp": m.get("whatsapp") or m.get("phone"),
-                    "bio": m.get("bio"), "linkedin": m.get("linkedin"),
+                    "bio": m.get("bio"), 
+                    "linkedin": m.get("linkedin"),
                     "is_core": True,
                 })
     for ext in proj.get("team_directory") or []:
@@ -214,6 +218,54 @@ async def _build_unified_team(proj: dict) -> List[Dict[str, Any]]:
             "bio": None, "linkedin": None, "is_core": False,
         })
     return unified
+
+
+# ★ NEW: Audit Log Helper
+FIELD_LABEL_MAP = {
+    "title": "Project Title",
+    "customer_name": "Client Name",
+    "customer_email": "Client Email",
+    "customer_phone": "Client Phone",
+    "address": "Street Address",
+    "city": "City",
+    "state": "State",
+    "pincode": "Pincode",
+    "status": "Project Status",
+    "contract_value": "Total Contract Value",
+    "amount_spent": "Amount Paid",
+    "project_agreed_date": "Project Agreed Date",
+    "start_date": "Project Start Date",
+    "expected_completion": "Forecast Completion Date",
+    "actual_completion_date": "Actual Completion Date",
+    "manager_id": "Project Manager Assignment",
+    "team_ids": "Core Team Assignments",
+}
+def _diff_project_changes(old_doc: dict, upd_data: dict) -> List[str]:
+    """Compares old project document against new update payload and returns human-readable audit lines."""
+    changes = []
+    for key, new_val in upd_data.items():
+        if key not in FIELD_LABEL_MAP:
+            continue
+        old_val = old_doc.get(key)
+        
+        # Skip equal values
+        if old_val == new_val:
+            continue
+
+        label = FIELD_LABEL_MAP[key]
+        
+        # Handle empty/None representations
+        old_str = str(old_val) if old_val not in (None, "") else "Not Set"
+        new_str = str(new_val) if new_val not in (None, "") else "Cleared"
+
+        if key == "team_ids":
+            changes.append(f"Updated {label}")
+        elif key in ("contract_value", "amount_spent"):
+            changes.append(f"Updated {label}: ₹{old_str} → ₹{new_str}")
+        else:
+            changes.append(f"Updated {label}: '{old_str}' → '{new_str}'")
+
+    return changes
 
 async def _auto_activate_pending_user(project_id: str, email: str, name: str):
     proj = await db.projects.find_one({"id": project_id}, {"team_directory": 1})

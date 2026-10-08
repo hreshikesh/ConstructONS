@@ -1,7 +1,8 @@
 """Pydantic schemas and request models for ConstructONS API."""
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
-
+import re   
+from pydantic import BaseModel, Field, field_validator
 # --- Project Schemas ---
 class ProjectCreateBody(BaseModel):
     customer_email: str
@@ -9,6 +10,10 @@ class ProjectCreateBody(BaseModel):
     customer_phone: Optional[str] = None 
     title: str = "My Home Project"
     address: Optional[str] = None
+    city: Optional[str] = None                # ★ NEW
+    state: Optional[str] = None               # ★ NEW
+    pincode: Optional[str] = None
+    manager_id: Optional[str] = None              # ★ NEW
     package_slug: Optional[str] = None
     quote_id: Optional[str] = None
     contract_value: Optional[float] = 0
@@ -17,14 +22,42 @@ class ProjectCreateBody(BaseModel):
     team_ids: Optional[List[str]] = Field(default_factory=list)
     site_lat: Optional[float] = None
     site_lng: Optional[float] = None
-    expected_completion: Optional[str] = None
+    project_agreed_date: Optional[str] = None    # ★ NEW
     start_date: Optional[str] = None
+    expected_completion: Optional[str] = None
+    actual_completion_date: Optional[str] = None # ★ NEW
+
+    @field_validator("pincode")
+    @classmethod
+    def validate_pincode(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not str(v).strip():
+            return None
+        val = str(v).strip()
+        if not re.fullmatch(r"\d{6}", val):
+            raise ValueError("Pincode must be exactly 6 digits (e.g. 560001)")
+        return val
+
+    @field_validator("city", "state")
+    @classmethod
+    def validate_alpha_only(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not str(v).strip():
+            return None
+        val = str(v).strip()
+        if not re.fullmatch(r"[A-Za-z\s]+", val):
+            raise ValueError("City and State must contain alphabets and spaces only")
+        return val
+
 
 class ProjectUpdateBody(BaseModel):
     title: Optional[str] = None
-    customer_name: Optional[str] = None # <--- ADD THIS LINE
+    customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
     address: Optional[str] = None
+    city: Optional[str] = None                # ★ NEW
+    state: Optional[str] = None               # ★ NEW
+    pincode: Optional[str] = None
+    manager_id: Optional[str] = None              # ★ NEW
     status: Optional[str] = None
     package_slug: Optional[str] = None
     quote_id: Optional[str] = None
@@ -37,8 +70,41 @@ class ProjectUpdateBody(BaseModel):
     cctv_cameras: Optional[List[Dict[str, Any]]] = None
     site_lat: Optional[float] = None
     site_lng: Optional[float] = None
-    expected_completion: Optional[str] = None
+    project_agreed_date: Optional[str] = None    # ★ NEW
     start_date: Optional[str] = None
+    expected_completion: Optional[str] = None
+    actual_completion_date: Optional[str] = None # ★ NEW
+
+    @field_validator("pincode")
+    @classmethod
+    def validate_pincode(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not str(v).strip():
+            return None
+        val = str(v).strip()
+        if not re.fullmatch(r"\d{6}", val):
+            raise ValueError("Pincode must be exactly 6 digits (e.g. 560001)")
+        return val
+
+    @field_validator("city", "state")
+    @classmethod
+    def validate_alpha_only(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not str(v).strip():
+            return None
+        val = str(v).strip()
+        if not re.fullmatch(r"[A-Za-z\s]+", val):
+            raise ValueError("City and State must contain alphabets and spaces only")
+        return val
+
+class ProjectDeleteBody(BaseModel):
+    reason: str = Field(..., min_length=5, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, v: str) -> str:
+        v = (v or "").strip()
+        if len(v) < 5:
+            raise ValueError("Delete reason must be at least 5 characters")
+        return v
 
 # --- Stages & Substages Schemas ---
 class SubstageBody(BaseModel):
