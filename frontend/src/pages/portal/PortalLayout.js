@@ -1,13 +1,7 @@
 import React from "react";
 import { Outlet, Link } from "react-router-dom";
 import { 
-  Loader2, 
-  LogOut, 
-  Phone, 
-  MessageCircle, 
-  RefreshCw, 
-  Building2, 
-  ArrowRight
+  Loader2, LogOut, Phone, MessageCircle, RefreshCw, Building2, ArrowRight
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { PortalProvider, usePortal } from "./context/PortalContext";
@@ -81,30 +75,17 @@ function NoProjectView() {
 
           {/* Action Buttons */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto">
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm min-h-[44px]"
-            >
+            <a href={waUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm min-h-[44px]">
               <MessageCircle className="w-4 h-4" />
               <span>WhatsApp Desk</span>
             </a>
 
-            <a
-              href="tel:+919876543210"
-              className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white text-xs font-bold transition shadow-sm min-h-[44px]"
-            >
+            <a href="tel:+919876543210" className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-[#000F1B] hover:bg-[#FF6600] text-white text-xs font-bold transition shadow-sm min-h-[44px]">
               <Phone className="w-4 h-4" />
               <span>Call Support</span>
             </a>
 
-            <button
-              type="button"
-              onClick={reload}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 p-3.5 rounded-xl border border-black/10 bg-white hover:bg-[#F5F6F8] text-[#000F1B] text-xs font-bold transition min-h-[44px]"
-            >
+            <button type="button" onClick={reload} disabled={loading} className="flex items-center justify-center gap-2 p-3.5 rounded-xl border border-black/10 bg-white hover:bg-[#F5F6F8] text-[#000F1B] text-xs font-bold transition min-h-[44px]">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#FF6600]" : ""}`} />
               <span>Re-check Status</span>
             </button>
@@ -140,19 +121,18 @@ function PortalShell() {
     );
   }
 
-  // 1. INTERCEPT: First-time user must complete onboarding wizard
-  if (user && user.onboarding_completed === false) {
+  const hasProject = Boolean(project && (project.id || project.title || project.project_code));
+
+  // ★ NEW LOGIC: Only show Onboarding Wizard if they DO NOT have a project
+  if (user && user.onboarding_completed === false && !hasProject) {
     return <OnboardingWizard user={user} onComplete={reload} />;
   }
-
-  // 2. INTERCEPT: User completed onboarding but has no active project
-  const hasProject = Boolean(project && (project.id || project.title || project.project_code));
 
   if (!hasProject) {
     return <NoProjectView />;
   }
 
-  // 3. FULL PORTAL ACCESS
+  // 3. FULL PORTAL ACCESS (Straight to Dashboard!)
   return (
     <div className="h-screen bg-[#F5F6F8] font-['Poppins'] text-[#111111] flex overflow-hidden">
       <SEO

@@ -1,9 +1,5 @@
 """
-Customer-facing authentication via Native Google Identity Services.
-ConstructONS™ — India's First Integrated Construction Ecosystem.
-
-Completely independent of third-party intermediaries.
-Uses native httpOnly `customer_session` cookie + MongoDB `customers` and `customer_sessions`.
+Customer-facing authentication via Native Google Identity Services and Magic Links.
 """
 import os
 import uuid
@@ -12,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 import httpx
+import jwt  # ★ REQUIRED FOR MAGIC LINKS
 from fastapi import HTTPException, Request, Response
 from pydantic import BaseModel
 
@@ -23,11 +20,13 @@ COOKIE_NAME = "customer_session"
 SESSION_DAYS = 7
 GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-
+SECRET_KEY = os.environ.get("SECRET_KEY", "constructons_magic_secret_2024")
 
 class GoogleAuthBody(BaseModel):
     credential: str  # Google ID token (JWT) returned by Google GIS SDK
 
+class MagicAuthBody(BaseModel):
+    token: str
 
 class CustomerProfileUpdate(BaseModel):
     name: Optional[str] = None
@@ -40,6 +39,15 @@ class CustomerProfileUpdate(BaseModel):
     budget_range: Optional[str] = None
     site_photos: Optional[List[str]] = None
     onboarding_completed: Optional[bool] = None
+
+# ★ NEW: Generate a Magic Link Token valid for 30 Days
+def generate_magic_link_token(email: str, name: str) -> str:
+    payload = {
+        "email": email,
+        "name": name,
+        "exp": datetime.now(timezone.utc) + timedelta(days=30)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
 
 async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dict:
@@ -71,7 +79,7 @@ async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dic
         "style_pref": "",
         "budget_range": "",
         "site_photos": [],
-        "onboarding_completed": False,  # First-time users trigger onboarding wizard
+        "onboarding_completed": False,
         "created_at": now,
         "updated_at": now,
     }
@@ -80,7 +88,6 @@ async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dic
     return doc
 
 async def _create_session(user_id: str, session_token: str) -> dict:
-    """Stores the active customer session token in the database."""
     expires_at = datetime.now(timezone.utc) + timedelta(days=SESSION_DAYS)
     doc = {
         "user_id": user_id,
@@ -95,9 +102,7 @@ async def _create_session(user_id: str, session_token: str) -> dict:
     )
     return doc
 
-
 def _set_session_cookie(resp: Response, session_token: str) -> None:
-    """Sets a secure httpOnly cookie with cross-domain support."""
     resp.set_cookie(
         key=COOKIE_NAME,
         value=session_token,
@@ -108,14 +113,30 @@ def _set_session_cookie(resp: Response, session_token: str) -> None:
         path="/",
     )
 
-
 def _clear_session_cookie(resp: Response) -> None:
-    """Deletes the customer session cookie."""
     resp.delete_cookie(COOKIE_NAME, path="/", samesite="none", secure=True)
 
+# ★ NEW: Process Magic Token Verification
+async def process_magic_auth(body: MagicAuthBody, resp: Response) -> dict:
+    try:
+        payload = jwt.decode(body.token, SECRET_KEY, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Magic link is invalid or has expired.")
+
+    email = payload.get("email")
+    name = payload.get("name") or "Client"
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid token payload.")
+
+    session_token = f"cust_sess_{uuid.uuid4().hex}{uuid.uuid4().hex}"
+    customer = await _upsert_customer(email, name, None)
+    await _create_session(customer["user_id"], session_token)
+    _set_session_cookie(resp, session_token)
+
+    return customer
 
 async def process_google_auth(body: GoogleAuthBody, resp: Response) -> dict:
-    """Verifies Google Token directly with Google APIs and creates an application session."""
     if not body.credential:
         raise HTTPException(status_code=400, detail="Google credential required")
 
@@ -126,18 +147,12 @@ async def process_google_auth(body: GoogleAuthBody, resp: Response) -> dict:
                 params={"id_token": body.credential}
             )
             if r.status_code != 200:
-                logger.error(f"[customer-auth] Google token validation failed {r.status_code}: {r.text[:200]}")
                 raise HTTPException(status_code=401, detail="Invalid Google security credential")
             data = r.json()
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"[customer-auth] Google API network call error: {e}")
         raise HTTPException(status_code=502, detail="Google auth server unreachable")
-
-    aud = data.get("aud") or ""
-    if GOOGLE_CLIENT_ID and aud != GOOGLE_CLIENT_ID:
-        logger.warning(f"[customer-auth] Audience mismatch! Got: {aud}, Expected: {GOOGLE_CLIENT_ID}")
 
     email = (data.get("email") or "").lower()
     name = data.get("name") or email.split("@")[0]
@@ -154,9 +169,7 @@ async def process_google_auth(body: GoogleAuthBody, resp: Response) -> dict:
 
     return customer
 
-
 async def get_current_customer(request: Request) -> dict:
-    """Validates the active httpOnly cookie session, returns customer document."""
     token = request.cookies.get(COOKIE_NAME)
     if not token:
         auth = request.headers.get("Authorization") or ""
@@ -184,9 +197,7 @@ async def get_current_customer(request: Request) -> dict:
 
     return customer
 
-
 async def logout_customer(request: Request, resp: Response) -> dict:
-    """Invalidates active session from DB and deletes local cookie."""
     token = request.cookies.get(COOKIE_NAME)
     if token:
         await db.customer_sessions.delete_one({"session_token": token})

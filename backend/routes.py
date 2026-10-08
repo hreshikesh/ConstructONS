@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import logging
 import asyncio
 
+from customer_auth import MagicAuthBody, process_magic_auth
 from db import db, serialize_doc
 from auth import (
     require_admin, verify_admin_credentials, create_admin_token,
@@ -110,6 +111,14 @@ async def admin_reseed():
 async def customer_process_google(body: GoogleAuthBody, response: FastAPIResponse):
     """Authenticate customer directly using Google ID token credential."""
     return await process_google_auth(body, response)
+
+
+
+
+@router.post("/customer/auth/magic")
+async def customer_process_magic(body: MagicAuthBody, response: FastAPIResponse):
+    """Authenticate customer directly using a Magic Link token."""
+    return await process_magic_auth(body, response)
 
 
 @router.get("/customer/me")

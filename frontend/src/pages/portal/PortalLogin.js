@@ -1,13 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom"; // ★ Added useSearchParams
 import { 
-  Loader2, 
-  ArrowLeft, 
-  Smartphone, 
-  FileText, 
-  Clock, 
-  ShieldCheck,
-  AlertCircle
+  Loader2, ArrowLeft, Smartphone, FileText, Clock, ShieldCheck, AlertCircle
 } from "lucide-react";
 import axios from "axios";
 import SEO from "@/components/site/SEO";
@@ -15,7 +9,6 @@ import BrandLockup from "@/components/site/BrandLockup";
 
 const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") + "/api";
 
-// Sourced with clean string sanitization and fallback
 const GOOGLE_CLIENT_ID = (
   process.env.REACT_APP_GOOGLE_CLIENT_ID ||
   "519701626953-d4dneugq3bphakti7ss79omkc74e2e4q.apps.googleusercontent.com"
@@ -23,6 +16,9 @@ const GOOGLE_CLIENT_ID = (
 
 export default function PortalLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // ★ Get Magic Link Token
+  const magicToken = searchParams.get("magic");
+  
   const [checking, setChecking] = useState(true);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState(null);
@@ -36,7 +32,22 @@ export default function PortalLogin() {
       .finally(() => setChecking(false));
   }, [navigate]);
 
-  // 2. Handle Token Response (wrapped in useCallback)
+  // ★ 2. NEW: Magic Link Interceptor
+  useEffect(() => {
+    if (!checking && magicToken) {
+      setSigningIn(true);
+      axios.post(`${API_BASE}/customer/auth/magic`, { token: magicToken }, { withCredentials: true })
+        .then(() => {
+          navigate("/portal", { replace: true });
+        })
+        .catch((err) => {
+          setError(err?.response?.data?.detail || "Magic link invalid or expired.");
+          setSigningIn(false);
+        });
+    }
+  }, [checking, magicToken, navigate]);
+
+  // 3. Handle Google Auth Response
   const handleGoogleAuthResponse = useCallback(async (response) => {
     if (!response.credential) {
       setError("Unable to obtain Google profile. Please try again.");
@@ -54,17 +65,14 @@ export default function PortalLogin() {
       );
       navigate("/portal", { replace: true });
     } catch (err) {
-      console.error("[ConstructONS Auth] Google login error:", err);
-      setError(
-        err?.response?.data?.detail || "Authentication failed. Access restricted."
-      );
+      setError(err?.response?.data?.detail || "Authentication failed.");
       setSigningIn(false);
     }
   }, [navigate]);
 
-  // 3. Initialize Google Identity Services (GSI)
+  // 4. Initialize Google Identity Services
   useEffect(() => {
-    if (checking) return;
+    if (checking || magicToken) return; // Skip if processing magic link
 
     if (!GOOGLE_CLIENT_ID) {
       setError("Google Client ID is missing. Please configure REACT_APP_GOOGLE_CLIENT_ID.");
@@ -86,7 +94,7 @@ export default function PortalLogin() {
 
           const btnContainer = document.getElementById("google-signin-btn-container");
           if (btnContainer) {
-            btnContainer.innerHTML = ""; // clean any prior instances
+            btnContainer.innerHTML = "";
             window.google.accounts.id.renderButton(btnContainer, {
               theme: "outline",
               size: "large",
@@ -113,61 +121,38 @@ export default function PortalLogin() {
     } else {
       initGoogleGSI();
     }
-  }, [checking, handleGoogleAuthResponse]);
+  }, [checking, magicToken, handleGoogleAuthResponse]);
 
   if (checking) {
     return (
-      <div 
-        className="min-h-screen grid place-items-center bg-[#F2F2F2]" 
-        role="status" 
-        aria-live="polite"
-      >
+      <div className="min-h-screen grid place-items-center bg-[#F2F2F2]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#FF6600]" />
-          <span className="text-sm font-medium text-[#111111]/70 font-['Poppins']">
-            Checking session...
-          </span>
+          <span className="text-sm font-medium text-[#111111]/70 font-['Poppins']">Checking session...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div 
-      className="min-h-screen bg-[#F2F2F2] flex flex-col md:grid md:grid-cols-2 font-['Poppins'] relative selection:bg-[#FF6600]/20 selection:text-[#000F1B]"
-      data-testid="portal-login"
-    >
-      <SEO
-        title="Client Portal Login"
-        description="Sign in to your ConstructONS Client Portal to access live site updates, drawings, and quality milestones."
-        canonical="/portal/login"
-        noindex={true}
-      />
+    <div className="min-h-screen bg-[#F2F2F2] flex flex-col md:grid md:grid-cols-2 font-['Poppins'] relative selection:bg-[#FF6600]/20 selection:text-[#000F1B]">
+      <SEO title="Client Portal Login" description="Sign in to your ConstructONS Client Portal." canonical="/portal/login" noindex={true} />
 
       {/* 📱 Mobile Top Header */}
       <header className="md:hidden bg-[#000F1B] border-b border-white/10 px-4 py-3 flex items-center justify-between z-10">
-        <Link
-          to="/"
-          aria-label="Back to ConstructONS Home"
-          className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium transition-colors py-2 px-3 -ml-2 rounded-lg active:bg-white/10 min-h-[44px]"
-        >
-          <ArrowLeft className="w-4 h-4 text-[#FF6600]" aria-hidden="true" />
+        <Link to="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium transition-colors py-2 px-3 -ml-2 rounded-lg active:bg-white/10 min-h-[44px]">
+          <ArrowLeft className="w-4 h-4 text-[#FF6600]" />
           <span>Home</span>
         </Link>
         <BrandLockup tone="dark" size="sm" />
       </header>
 
-      {/* 💻 Left Hero Column: Brand Ecosystem Showcase */}
+      {/* 💻 Left Hero Column */}
       <div className="hidden md:flex bg-[#000F1B] text-white flex-col justify-between p-10 lg:p-14 xl:p-16 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FF6600]" />
-
         <div>
-          <Link
-            to="/"
-            aria-label="Back to ConstructONS Home"
-            className="inline-flex items-center gap-2.5 text-white/80 hover:text-white text-sm font-medium transition-all py-2 px-3.5 -ml-3 rounded-xl hover:bg-white/10 min-h-[44px] group"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#FF6600] transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true" />
+          <Link to="/" className="inline-flex items-center gap-2.5 text-white/80 hover:text-white text-sm font-medium transition-all py-2 px-3.5 -ml-3 rounded-xl hover:bg-white/10 min-h-[44px] group">
+            <ArrowLeft className="w-4 h-4 text-[#FF6600] transition-transform duration-200 group-hover:-translate-x-1" />
             <span>Back to Home</span>
           </Link>
 
@@ -185,33 +170,16 @@ export default function PortalLogin() {
           </div>
         </div>
 
-        {/* Feature List */}
         <div className="space-y-4 max-w-md my-8">
           {[
-            {
-              Icon: Smartphone,
-              title: "Live Site Updates",
-              desc: "Daily milestone progress with verified site photos.",
-            },
-            {
-              Icon: FileText,
-              title: "Digital Documents & Legal",
-              desc: "Architectural drawings, agreements, and approvals stored securely.",
-            },
-            {
-              Icon: Clock,
-              title: "Project Timeline & Payments",
-              desc: "Transparent milestone tracking with stage-linked payment schedules.",
-            },
-            {
-              Icon: ShieldCheck,
-              title: "100+ Quality Checks",
-              desc: "Dedicated site engineers conducting standardized quality inspections.",
-            },
+            { Icon: Smartphone, title: "Live Site Updates", desc: "Daily milestone progress with verified site photos." },
+            { Icon: FileText, title: "Digital Documents & Legal", desc: "Architectural drawings, agreements, and approvals stored securely." },
+            { Icon: Clock, title: "Project Timeline & Payments", desc: "Transparent milestone tracking with stage-linked payment schedules." },
+            { Icon: ShieldCheck, title: "100+ Quality Checks", desc: "Dedicated site engineers conducting standardized quality inspections." },
           ].map((item, index) => (
             <div key={index} className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-[#white]/5 border border-white/10 grid place-items-center shrink-0 mt-0.5">
-                <item.Icon className="w-4 h-4 text-[#FF6600]" strokeWidth={2} aria-hidden="true" />
+              <div className="w-9 h-9 rounded-xl bg-[white]/5 border border-white/10 grid place-items-center shrink-0 mt-0.5">
+                <item.Icon className="w-4 h-4 text-[#FF6600]" strokeWidth={2} />
               </div>
               <div>
                 <div className="text-sm font-semibold text-white">{item.title}</div>
@@ -221,23 +189,18 @@ export default function PortalLogin() {
           ))}
         </div>
 
-        <div className="text-xs text-white/40 border-t border-white/10 pt-4">
-          India's First Integrated Construction Ecosystem
-        </div>
+        <div className="text-xs text-white/40 border-t border-white/10 pt-4">India's First Integrated Construction Ecosystem</div>
       </div>
 
       {/* 🔐 Right Sign-In Card */}
       <div className="flex-1 grid place-items-center p-6 sm:p-10 lg:p-12">
         <main className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-black/5 p-8 sm:p-10">
           <BrandLockup tone="light" size="xs" />
-          <h2 className="mt-2 text-2xl font-bold text-[#000F1B] tracking-tight">
-            Sign in to your portal
-          </h2>
+          <h2 className="mt-2 text-2xl font-bold text-[#000F1B] tracking-tight">Sign in to your portal</h2>
           <p className="mt-2 text-sm text-[#111111]/70 leading-relaxed">
             Verify identity with your Google account to access your live home construction project.
           </p>
 
-          {/* Error Notice */}
           {error && (
             <div className="mt-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2.5 animate-in fade-in">
               <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
@@ -245,7 +208,6 @@ export default function PortalLogin() {
             </div>
           )}
 
-          {/* Google Sign-In Container */}
           <div className="mt-8 flex justify-center">
             {signingIn ? (
               <div className="w-full py-3.5 px-4 rounded-xl border border-black/10 bg-[#F2F2F2] flex items-center justify-center gap-2.5 text-xs sm:text-sm font-semibold text-[#000F1B]">
@@ -254,10 +216,7 @@ export default function PortalLogin() {
               </div>
             ) : (
               <div className="w-full flex justify-center">
-                <div 
-                  id="google-signin-btn-container" 
-                  className="w-full min-h-[44px] flex justify-center" 
-                />
+                <div id="google-signin-btn-container" className="w-full min-h-[44px] flex justify-center" />
               </div>
             )}
           </div>
@@ -266,15 +225,9 @@ export default function PortalLogin() {
             By signing in, you access ConstructONS™ secure project management. Direct Google authentication is used securely to identify your verified profile.
           </div>
 
-          {/* Switch to Staff Login */}
           <div className="mt-8 pt-6 border-t border-black/5 flex items-center justify-between text-xs text-[#111111]/70">
             <span>Admin or Site Engineer?</span>
-            <Link
-              to="/admin/login"
-              className="text-[#FF6600] font-semibold hover:underline focus:outline-none focus:ring-1 focus:ring-[#FF6600] rounded px-1 py-0.5"
-            >
-              Staff Login &rarr;
-            </Link>
+            <Link to="/admin/login" className="text-[#FF6600] font-semibold hover:underline">Staff Login &rarr;</Link>
           </div>
         </main>
       </div>

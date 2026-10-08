@@ -24,6 +24,7 @@ from project_utils import (
     _build_unified_team, _auto_activate_pending_user,
     _diff_project_changes  # ★ Imported audit helper
 )
+from customer_auth import generate_magic_link_token
 router = APIRouter(prefix="/api", tags=["core_projects"])
 
 # ============================================================================
@@ -301,17 +302,23 @@ async def create_project(body: ProjectCreateBody):
     doc.pop("_id", None)
 
     # ★ NEW: Asynchronously send project created email trigger
+
+
+# Replace the existing `portal_link="/portal"` with:
+    magic_token = generate_magic_link_token(email, owner_name)
+    magic_portal_link = f"/portal/login?magic={magic_token}"
+
     asyncio.create_task(
         send_project_created_email(
             to_email=email,
             customer_name=owner_name,
             project_title=body.title,
             project_code=proj_code,
-            portal_link="/portal"
+            portal_link=magic_portal_link, # ★ MAGIC LINK ATTACHED
         )
-    )
-
+)
     return doc
+
 def _strip_mongo_id(doc: dict) -> dict:
     if not doc:
         return doc
