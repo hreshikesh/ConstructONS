@@ -1,7 +1,7 @@
 """Core Project CRUD, Portal Overview, Team Management & Attendance."""
 import uuid
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends, Request, File, UploadFile
 from db import db
@@ -10,14 +10,20 @@ from customer_auth import get_current_customer
 from media_service import put_object, build_storage_path
 from project_schemas import (
     ProjectCreateBody, ProjectUpdateBody, TeamInviteBody, 
-    AttendanceBody, NotificationMarkReadBody
+    AttendanceBody, NotificationMarkReadBody,ProjectDeleteBody
 )
 from project_utils import (
     _ist_today, apply_rate_limit, _enforce_full_access, 
     _default_stage_list, _log_activity, _push_notification,
     _build_unified_team, _auto_activate_pending_user
 )
-
+from email_service import send_project_created_email
+from project_utils import (
+    _ist_today, apply_rate_limit, _enforce_full_access, 
+    _default_stage_list, _log_activity, _push_notification,
+    _build_unified_team, _auto_activate_pending_user,
+    _diff_project_changes  # ★ Imported audit helper
+)
 router = APIRouter(prefix="/api", tags=["core_projects"])
 
 # ============================================================================
@@ -70,6 +76,21 @@ async def portal_my_project(project_id: Optional[str] = None, customer=Depends(g
         return {"project": None}
     await _auto_activate_pending_user(proj["id"], email, name)
     proj["team"] = await _build_unified_team(proj)
+    proj["manager"] = None
+    if proj.get("manager_id"):
+        mgr = await db.team_members.find_one({"id": proj["manager_id"]}, {"_id": 0})
+        if mgr:
+            proj["manager"] = {
+                "id": mgr.get("id"),
+                "name": mgr.get("name"),
+                "email": mgr.get("email"),
+                "role": mgr.get("designation") or mgr.get("role") or "Project Manager",
+                "photo": mgr.get("photo"),
+                "contact": mgr.get("phone") or mgr.get("whatsapp") or "",
+                "whatsapp": mgr.get("whatsapp") or mgr.get("phone"),
+            }
+
+    notifs = proj.get("notifications") or []
     notifs = proj.get("notifications") or []
     drawings = proj.get("drawings") or []
     materials = proj.get("materials") or []
@@ -205,51 +226,276 @@ async def create_project(body: ProjectCreateBody):
     existing = await db.projects.find_one({"customer_email": email}, {"id": 1})
     if existing:
         raise HTTPException(status_code=409, detail="Project already exists for this customer")
+    
     now = datetime.now(timezone.utc).isoformat()
     count = await db.projects.count_documents({})
     proj_code = f"CON-{datetime.now(timezone.utc).year}-{(count + 1):04d}"
     owner_name = body.customer_name or email.split("@")[0]
-    owner_record = {"id": f"usr_{uuid.uuid4().hex[:12]}", "name": owner_name, "email": email, "phone": body.customer_phone or "", "role": "Project Owner", "company": "Home Owner","contact": body.customer_phone or "",  "access": "Full Access", "status": "Active", "avatar": None}
-    init_activity = {"id": str(uuid.uuid4()), "user_name": "System Admin", "action": "Project initialized", "module": "System", "timestamp": now}
-    init_notif = {"id": str(uuid.uuid4()), "title": "Project Created", "message": f"Welcome to {body.title}! Your digital home tracker is active.", "link": "/portal", "icon": "system", "is_read": False, "timestamp": now}
+    
+    owner_record = {
+        "id": f"usr_{uuid.uuid4().hex[:12]}", 
+        "name": owner_name, 
+        "email": email, 
+        "phone": body.customer_phone or "", 
+        "role": "Project Owner", 
+        "company": "Home Owner",
+        "contact": body.customer_phone or "",  
+        "access": "Full Access", 
+        "status": "Active", 
+        "avatar": None
+    }
+    
+    init_activity = {
+        "id": str(uuid.uuid4()), 
+        "user_name": "System Admin", 
+        "action": f"Project initialized ({proj_code})", 
+        "module": "System", 
+        "timestamp": now
+    }
+    
+    init_notif = {
+        "id": str(uuid.uuid4()), 
+        "title": "Project Created", 
+        "message": f"Welcome to {body.title}! Your digital home tracker is active.", 
+        "link": "/portal", 
+        "icon": "system", 
+        "is_read": False, 
+        "timestamp": now
+    }
+
     doc = {
-        "id": str(uuid.uuid4()), "project_code": proj_code, "customer_email": email, "customer_name": owner_name,"customer_phone": body.customer_phone,
-        "title": body.title, "address": body.address, "package_slug": body.package_slug, "quote_id": body.quote_id,
-        "status": "active", "stages": _default_stage_list(),
-        "contract_value": body.contract_value or 0, "amount_spent": body.amount_spent or 0,
-        "cover_image": body.cover_image, "team_ids": body.team_ids or [],
-        "team_directory": [owner_record], "activities": [init_activity], "notifications": [init_notif],
+        "id": str(uuid.uuid4()), 
+        "project_code": proj_code, 
+        "customer_email": email, 
+        "customer_name": owner_name,
+        "customer_phone": body.customer_phone,
+        "title": body.title, 
+        "address": body.address, 
+        "city": body.city,                       # ★ NEW
+        "state": body.state,                     # ★ NEW
+        "pincode": body.pincode,   
+        "manager_id": body.manager_id,              # ★ NEW
+        "package_slug": body.package_slug, 
+        "quote_id": body.quote_id,
+        "status": "active", 
+        "stages": _default_stage_list(),
+        "contract_value": body.contract_value or 0, 
+        "amount_spent": body.amount_spent or 0,
+        "cover_image": body.cover_image, 
+        "team_ids": body.team_ids or [],
+        "team_directory": [owner_record], 
+        "activities": [init_activity], 
+        "notifications": [init_notif],
         "drawings": [], "materials": [], "payments_log": [],
         "attendance": [], "documents": [], "approvals": [], "cctv_cameras": [],
         "created_at": now, "updated_at": now,
-        "site_lat": body.site_lat, "site_lng": body.site_lng,
-        "expected_completion": body.expected_completion,
+        "site_lat": body.site_lat, 
+        "site_lng": body.site_lng,
+        "project_agreed_date": body.project_agreed_date,       # ★ NEW
         "start_date": body.start_date or now[:10],
+        "expected_completion": body.expected_completion,
+        "actual_completion_date": body.actual_completion_date, # ★ NEW
     }
+    
     await db.projects.insert_one(doc)
+    doc.pop("_id", None)
+
+    # ★ NEW: Asynchronously send project created email trigger
+    asyncio.create_task(
+        send_project_created_email(
+            to_email=email,
+            customer_name=owner_name,
+            project_title=body.title,
+            project_code=proj_code,
+            portal_link="/portal"
+        )
+    )
+
+    return doc
+def _strip_mongo_id(doc: dict) -> dict:
+    if not doc:
+        return doc
+    doc = dict(doc)
     doc.pop("_id", None)
     return doc
 
+
+@router.post("/admin/projects/{project_id}/delete", dependencies=[Depends(require_admin)])
+async def soft_delete_project(
+    project_id: str,
+    body: ProjectDeleteBody,
+    admin_user=Depends(require_admin),
+):
+    """
+    Soft-delete: move full project to deleted_projects for 3 days.
+    Requires a reason. Recoverable until purge_at.
+    """
+    proj = await db.projects.find_one({"id": project_id})
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    now = datetime.now(timezone.utc)
+    purge_at = now + timedelta(days=3)
+    admin_id = admin_user.get("email") or admin_user.get("name") or "Admin"
+
+    archive = _strip_mongo_id(proj)
+    archive.update({
+        "deleted_at": now.isoformat(),
+        "delete_reason": body.reason.strip(),
+        "deleted_by": admin_id,
+        "purge_at": purge_at,  # datetime for Mongo TTL
+        "original_id": proj.get("id"),
+    })
+
+    # Upsert archive (if re-deleted after restore edge case)
+    await db.deleted_projects.update_one(
+        {"id": project_id},
+        {"$set": archive},
+        upsert=True,
+    )
+    await db.projects.delete_one({"id": project_id})
+
+    # Optional: audit-style log on archive only (project gone from live)
+    logger = __import__("logging").getLogger(__name__)
+    logger.info(
+        f"[SoftDelete] project={project_id} by={admin_id} reason={body.reason[:80]}"
+    )
+
+    return {
+        "success": True,
+        "message": "Project moved to recycle bin. Recoverable for 3 days.",
+        "purge_at": purge_at.isoformat(),
+        "delete_reason": body.reason.strip(),
+    }
+
+
+# Keep old DELETE as alias → same soft delete requires body, so deprecate hard route:
+@router.delete("/admin/projects/{project_id}", dependencies=[Depends(require_admin)])
+async def delete_project_legacy(project_id: str):
+    """Blocked: use POST /admin/projects/{id}/delete with reason."""
+    raise HTTPException(
+        status_code=400,
+        detail="Hard delete disabled. Use POST /admin/projects/{id}/delete with JSON {\"reason\": \"...\"}",
+    )
+
+
+@router.get("/admin/projects-trash", dependencies=[Depends(require_admin)])
+async def list_deleted_projects():
+    """List soft-deleted projects still within 3-day window."""
+    now = datetime.now(timezone.utc)
+    # Clean any already-expired without waiting for TTL
+    await db.deleted_projects.delete_many({"purge_at": {"$lte": now}})
+
+    docs = await db.deleted_projects.find({}, {"_id": 0}).sort("deleted_at", -1).to_list(200)
+    # Normalize purge_at for JSON
+    for d in docs:
+        pa = d.get("purge_at")
+        if hasattr(pa, "isoformat"):
+            d["purge_at"] = pa.isoformat()
+        # days left
+        try:
+            purge_dt = pa if isinstance(pa, datetime) else datetime.fromisoformat(str(pa).replace("Z", "+00:00"))
+            if purge_dt.tzinfo is None:
+                purge_dt = purge_dt.replace(tzinfo=timezone.utc)
+            d["hours_remaining"] = max(0, int((purge_dt - now).total_seconds() // 3600))
+        except Exception:
+            d["hours_remaining"] = None
+    return docs
+
+
+@router.post("/admin/projects-trash/{project_id}/restore", dependencies=[Depends(require_admin)])
+async def restore_deleted_project(project_id: str, admin_user=Depends(require_admin)):
+    """Restore project from recycle bin back to live projects."""
+    arch = await db.deleted_projects.find_one({"id": project_id})
+    if not arch:
+        # also try original_id
+        arch = await db.deleted_projects.find_one({"original_id": project_id})
+    if not arch:
+        raise HTTPException(status_code=404, detail="Deleted project not found or already purged")
+
+    # Expired?
+    purge_at = arch.get("purge_at")
+    now = datetime.now(timezone.utc)
+    if isinstance(purge_at, datetime):
+        pa = purge_at if purge_at.tzinfo else purge_at.replace(tzinfo=timezone.utc)
+        if pa <= now:
+            await db.deleted_projects.delete_one({"_id": arch["_id"]})
+            raise HTTPException(status_code=410, detail="Recovery window expired (3 days). Project permanently removed.")
+
+    live_id = arch.get("id") or arch.get("original_id")
+    existing = await db.projects.find_one({"id": live_id}, {"id": 1})
+    if existing:
+        raise HTTPException(status_code=409, detail="A live project with this id already exists")
+
+    # Same customer_email uniqueness rule as create
+    email = (arch.get("customer_email") or "").lower().strip()
+    if email:
+        clash = await db.projects.find_one({"customer_email": email}, {"id": 1})
+        if clash:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Cannot restore: another live project already uses client email {email}",
+            )
+
+    doc = _strip_mongo_id(arch)
+    for k in ("deleted_at", "delete_reason", "deleted_by", "purge_at", "original_id"):
+        doc.pop(k, None)
+
+    doc["updated_at"] = now.isoformat()
+    # Log restore on activities
+    activities = doc.get("activities") or []
+    activities.append({
+        "id": str(__import__("uuid").uuid4()),
+        "user_name": admin_user.get("email") or "Admin",
+        "action": f"Project restored from recycle bin (was deleted: {arch.get('delete_reason', '')[:80]})",
+        "module": "System",
+        "timestamp": now.isoformat(),
+    })
+    doc["activities"] = activities[-100:]
+
+    await db.projects.insert_one(doc)
+    await db.deleted_projects.delete_one({"id": live_id})
+
+    doc.pop("_id", None)
+    return {"success": True, "project": doc}
+
+
+@router.delete("/admin/projects-trash/{project_id}", dependencies=[Depends(require_admin)])
+async def purge_deleted_project(project_id: str, admin_user=Depends(require_admin)):
+    """Permanently delete from recycle bin before 3 days (master admin action)."""
+    res = await db.deleted_projects.delete_one({"id": project_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Not found in recycle bin")
+    return {"success": True, "message": "Permanently deleted"}
+
 @router.put("/admin/projects/{project_id}", dependencies=[Depends(require_admin)])
-async def update_project(project_id: str, body: ProjectUpdateBody):
-    # This endpoint updates team_ids, team_directory, and base project settings
+async def update_project(project_id: str, body: ProjectUpdateBody, admin_user=Depends(require_admin)):
+    # 1. Fetch current project to perform diff
+    old_proj = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not old_proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+
     upd = {k: v for k, v in body.model_dump().items() if v is not None}
     upd["updated_at"] = datetime.now(timezone.utc).isoformat()
-    if body.team_ids is not None:
-        await _log_activity(project_id, "System Admin", "Updated internal team assignments", "Team")
-        if len(body.team_ids) > 0:
-            asyncio.create_task(_push_notification(project_id, "Team Update", "New staff members have been assigned to your project.", "/portal/team", "team"))
+
+    # 2. Extract admin identity for audit tracking
+    admin_identifier = admin_user.get("email") or admin_user.get("name") or "Admin"
+
+    # 3. Track all edits in activities array (Audit Log)
+    changes = _diff_project_changes(old_proj, upd)
+    for change_msg in changes:
+        await _log_activity(project_id, admin_identifier, change_msg, "Project Settings")
+
+    if body.team_ids is not None and len(body.team_ids) > 0:
+        asyncio.create_task(
+            _push_notification(project_id, "Team Update", "New staff members have been assigned to your project.", "/portal/team", "team")
+        )
+
     res = await db.projects.update_one({"id": project_id}, {"$set": upd})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Not found")
-    return await db.projects.find_one({"id": project_id}, {"_id": 0})
 
-@router.delete("/admin/projects/{project_id}", dependencies=[Depends(require_admin)])
-async def delete_project(project_id: str):
-    res = await db.projects.delete_one({"id": project_id})
-    if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Not found")
-    return {"success": True}
+    return await db.projects.find_one({"id": project_id}, {"_id": 0})
 
 @router.patch("/admin/projects/{project_id}/attendance", dependencies=[Depends(require_admin)])
 async def set_attendance(project_id: str, body: AttendanceBody):

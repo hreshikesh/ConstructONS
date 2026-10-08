@@ -197,16 +197,16 @@ def generate_invoice_pdf(invoice: dict, project: dict, settings: dict) -> bytes:
     elements.append(Spacer(1, 50))
 
     # Bank Details from Settings
-    elements.append(Paragraph("<b>Payment Instructions</b>", bold_style))
-    elements.append(Spacer(1, 10))
-    bank_details = (
-        settings.get("invoice_bank_details")
-        if settings.get("invoice_bank_details") is not None
-        else "ConstructONS Pvt. Ltd.\nBank: HDFC Bank\nA/C: 50200000000000\nIFSC: HDFC0001234"
-    )
-    for line in str(bank_details).split("\n"):
-        elements.append(Paragraph(line, normal_style))
-    elements.append(Spacer(1, 30))
+    # elements.append(Paragraph("<b>Payment Instructions</b>", bold_style))
+    # elements.append(Spacer(1, 10))
+    # bank_details = (
+    #     settings.get("invoice_bank_details")
+    #     if settings.get("invoice_bank_details") is not None
+    #     else "ConstructONS Pvt. Ltd.\nBank: HDFC Bank\nA/C: 50200000000000\nIFSC: HDFC0001234"
+    # )
+    # for line in str(bank_details).split("\n"):
+    #     elements.append(Paragraph(line, normal_style))
+    # elements.append(Spacer(1, 30))
 
     # Footer Notes from Settings
     # footer_notes = (

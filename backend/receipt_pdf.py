@@ -223,15 +223,15 @@ def generate_receipt_pdf(payment: dict, project: dict, settings: dict, linked_in
     elements.append(Spacer(1, 25))
 
     # ── Bank Details ──
-    elements.append(Paragraph("<b>Bank Details (for future payments)</b>", bold_style))
-    elements.append(Spacer(1, 10))
-    bank_details = (
-        settings.get("invoice_bank_details")
-        or "ConstructONS Pvt. Ltd.\nBank: HDFC Bank\nA/C: 50200000000000\nIFSC: HDFC0001234"
-    )
-    for line in bank_details.split("\n"):
-        elements.append(Paragraph(line, normal_style))
-    elements.append(Spacer(1, 25))
+    # elements.append(Paragraph("<b>Bank Details (for future payments)</b>", bold_style))
+    # elements.append(Spacer(1, 10))
+    # bank_details = (
+    #     settings.get("invoice_bank_details")
+    #     or "ConstructONS Pvt. Ltd.\nBank: HDFC Bank\nA/C: 50200000000000\nIFSC: HDFC0001234"
+    # )
+    # for line in bank_details.split("\n"):
+    #     elements.append(Paragraph(line, normal_style))
+    # elements.append(Spacer(1, 25))
 
     # ── Footer ──
   # ★ AFTER — Prefer admin's custom receipt note, fallback to default

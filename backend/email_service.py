@@ -2,13 +2,51 @@ import os
 import logging
 import base64
 import httpx
-from typing import Optional
+from typing import Optional, List, Union
 
 logger = logging.getLogger(__name__)
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "ConstructONS Updates <onboarding@resend.dev>")
 PUBLIC_PORTAL_URL = os.environ.get("PUBLIC_PORTAL_URL", "https://construct-ons-six.vercel.app")
+
+
+def _env_cc_list() -> List[str]:
+    """
+    Global CC from env only.
+    PROJECT_NOTIFY_CC_EMAIL=one@x.com
+    or comma-separated: a@x.com,b@x.com
+    """
+    raw = (os.environ.get("PROJECT_NOTIFY_CC_EMAIL") or "").strip()
+    if not raw:
+        return []
+    out: List[str] = []
+    seen = set()
+    for part in raw.split(","):
+        addr = part.strip().lower()
+        if not addr or "@" not in addr or addr in seen:
+            continue
+        seen.add(addr)
+        out.append(addr)
+    return out
+
+
+def _normalize_emails(emails: Optional[Union[str, List[str]]]) -> List[str]:
+    if not emails:
+        return []
+    if isinstance(emails, str):
+        emails = [emails]
+    out: List[str] = []
+    seen = set()
+    for e in emails:
+        if not e:
+            continue
+        addr = str(e).strip().lower()
+        if "@" not in addr or addr in seen:
+            continue
+        seen.add(addr)
+        out.append(addr)
+    return out
 
 
 def _get_branded_html_template(
@@ -100,24 +138,37 @@ async def send_email_via_resend(
     to_email: str,
     subject: str,
     html_content: str,
-    attachments: Optional[list] = None
+    attachments: Optional[list] = None,
+    use_env_cc: bool = True,
 ) -> bool:
-    """Dispatches email via Resend. Now supports optional PDF attachments."""
+    """
+    Dispatches email via Resend.
+    - To: client / recipient
+    - Cc: only PROJECT_NOTIFY_CC_EMAIL from .env (global, like audit)
+    - Optional PDF attachments
+    """
     if not RESEND_API_KEY:
         logger.warning("[Resend] RESEND_API_KEY not configured. Skipped.")
         return False
-    if not to_email or "@" not in to_email:
+    if not to_email or "@" not in str(to_email):
         logger.warning(f"[Resend] Invalid email '{to_email}'. Skipped.")
         return False
 
+    to_addr = str(to_email).strip().lower()
+
     payload = {
         "from": SENDER_EMAIL,
-        "to": [to_email.strip().lower()],
+        "to": [to_addr],
         "subject": subject,
         "html": html_content,
     }
 
-    # ★ NEW: Attachments support (base64-encoded)
+    # ★ Global CC from env only
+    if use_env_cc:
+        cc_list = [c for c in _env_cc_list() if c != to_addr]
+        if cc_list:
+            payload["cc"] = cc_list
+
     if attachments:
         payload["attachments"] = attachments
 
@@ -132,7 +183,9 @@ async def send_email_via_resend(
                 },
             )
             if response.status_code in (200, 201):
-                logger.info(f"[Resend] Sent to {to_email}. ID: {response.json().get('id')}")
+                logger.info(
+                    f"[Resend] Sent to={to_addr} cc={payload.get('cc', '-')} ID={response.json().get('id')}"
+                )
                 return True
             else:
                 logger.error(f"[Resend] Failed {response.status_code}: {response.text}")
@@ -143,19 +196,25 @@ async def send_email_via_resend(
 
 
 async def send_project_notification_email(
-    to_email: str, customer_name: str, project_title: str,
-    notification_title: str, notification_message: str, portal_link: str
+    to_email: str,
+    customer_name: str,
+    project_title: str,
+    notification_title: str,
+    notification_message: str,
+    portal_link: str,
 ):
-    """Standard notification email (no attachment)."""
+    """Standard notification email (no attachment). Env CC applied automatically."""
     subject = f"[{project_title}] {notification_title} — ConstructONS"
     html = _get_branded_html_template(
-        customer_name, project_title,
-        notification_title, notification_message, portal_link
+        customer_name,
+        project_title,
+        notification_title,
+        notification_message,
+        portal_link,
     )
     await send_email_via_resend(to_email, subject, html)
 
 
-# ★ NEW: Send receipt email with PDF attachment
 async def send_receipt_email(
     to_email: str,
     customer_name: str,
@@ -167,7 +226,7 @@ async def send_receipt_email(
     linked_invoice_number: str = None,
     pdf_bytes: bytes = None,
 ):
-    """Send payment receipt email with PDF attachment to client."""
+    """Send payment receipt email with PDF attachment to client. Env CC applied automatically."""
     subject = f"Payment Receipt {receipt_number} — {project_title} — ConstructONS"
 
     invoice_line = (
@@ -204,7 +263,33 @@ async def send_receipt_email(
     await send_email_via_resend(to_email, subject, html, attachments=attachments)
 
 
-# ★ Alias used by payments.py invoice-edit email
 async def send_email(to_email: str, subject: str, html_content: str):
-    """Simple wrapper for backwards compatibility."""
+    """Simple wrapper for backwards compatibility. Env CC applied automatically."""
     await send_email_via_resend(to_email, subject, html_content)
+
+
+async def send_project_created_email(
+    to_email: str,
+    customer_name: str,
+    project_title: str,
+    project_code: str,
+    portal_link: str = "/portal",
+):
+    """Welcome email when a project is created. Env CC applied automatically."""
+    subject = f"Your Project {project_code} is Now Live — ConstructONS"
+
+    client_greeting = customer_name if customer_name else "Valued Client"
+    message = f"""
+        We are thrilled to announce that your construction project <strong>{project_title}</strong> (Ref: <strong>{project_code}</strong>) is now officially initialized on ConstructONS.<br/><br/>
+        You can track real-time site updates, daily progress reports, architectural drawings, material approvals, and financial logs live on your client portal.
+    """
+
+    html = _get_branded_html_template(
+        customer_name=client_greeting,
+        project_title=project_title,
+        notification_title="Welcome to Your Project Workspace",
+        notification_message=message,
+        portal_link=portal_link,
+    )
+
+    await send_email_via_resend(to_email, subject, html)
