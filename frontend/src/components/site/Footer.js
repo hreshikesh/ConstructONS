@@ -68,18 +68,59 @@ const COLUMNS = [
   },
 ];
 
+// Icon map for keys stored in site_settings.social_links
+const SOCIAL_ICON_MAP = {
+  facebook: Facebook,
+  instagram: Instagram,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  reddit: MessageSquare,
+  // optional aliases admins might type
+  fb: Facebook,
+  ig: Instagram,
+  li: Linkedin,
+  yt: Youtube,
+};
+
+function normalizeSocialLinks(raw) {
+  // Accept object { facebook: "https://...", reddit: "..." }
+  // or array [{ platform, url }] / [{ key, link }]
+  if (!raw) return {};
+  if (Array.isArray(raw)) {
+    const out = {};
+    raw.forEach((item) => {
+      if (!item || typeof item !== "object") return;
+      const key = String(item.platform || item.key || item.name || "").toLowerCase().trim();
+      const url = String(item.url || item.link || item.href || "").trim();
+      if (key && url) out[key] = url;
+    });
+    return out;
+  }
+  if (typeof raw === "object") {
+    const out = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      const key = String(k || "").toLowerCase().trim();
+      const url = String(v || "").trim();
+      if (key && url) out[key] = url;
+    });
+    return out;
+  }
+  return {};
+}
+
 export default function Footer({ settings }) {
   const s = settings || {};
+  // ★ Social links ONLY from backend site settings
+  const socialLinks = normalizeSocialLinks(s.social_links);
 
-  // Social media links: Facebook, Instagram, LinkedIn, and YouTube are disconnected (empty string) 
-  // so they don't clash with backend, but Reddit is kept hardcoded as requested.
-  const socialLinks = {
-    facebook: "",
-    instagram: "",
-    linkedin: "",
-    youtube: "",
-    reddit: "https://www.reddit.com/r/ConstructONS/",
-  };
+  // Stable display order when present
+  const preferredOrder = ["facebook", "instagram", "linkedin", "youtube", "reddit"];
+  const socialEntries = [
+    ...preferredOrder
+      .filter((k) => socialLinks[k])
+      .map((k) => [k, socialLinks[k]]),
+    ...Object.entries(socialLinks).filter(([k]) => !preferredOrder.includes(k)),
+  ];
 
   return (
     <footer className="bg-brand-navy text-white" data-testid="site-footer">
@@ -90,13 +131,18 @@ export default function Footer({ settings }) {
             <p className="mt-4 text-white/60 text-sm max-w-xs">
               India&rsquo;s most intelligent construction platform for premium home owners.
             </p>
-            <div className="mt-6 flex items-center gap-2 flex-wrap">
-              <SocialLink href={socialLinks.facebook} icon={Facebook} title="Facebook" />
-              <SocialLink href={socialLinks.instagram} icon={Instagram} title="Instagram" />
-              <SocialLink href={socialLinks.linkedin} icon={Linkedin} title="LinkedIn" />
-              <SocialLink href={socialLinks.youtube} icon={Youtube} title="YouTube" />
-              <SocialLink href={socialLinks.reddit} icon={MessageSquare} title="Reddit" />
-            </div>
+
+            {socialEntries.length > 0 && (
+              <div className="mt-6 flex items-center gap-2 flex-wrap">
+                {socialEntries.map(([key, href]) => {
+                  const Icon = SOCIAL_ICON_MAP[key] || MessageSquare;
+                  const title = key.charAt(0).toUpperCase() + key.slice(1);
+                  return (
+                    <SocialLink key={key} href={href} icon={Icon} title={title} />
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {COLUMNS.map((c) => (
@@ -135,19 +181,15 @@ export default function Footer({ settings }) {
 }
 
 function SocialLink({ href, icon: Icon, title }) {
-  // Always render the button icon even if href is empty/disconnected, 
-  // but prevent clicking dead links if href is missing.
+  if (!href) return null;
+
   return (
     <a
-      href={href || "#"}
-      target={href ? "_blank" : undefined}
-      rel={href ? "noreferrer" : undefined}
+      href={href}
+      target="_blank"
+      rel="noreferrer"
       title={title}
-      onClick={(e) => {
-        if (!href) e.preventDefault();
-      }}
-      className={`w-9 h-9 rounded-full grid place-items-center bg-white/5 transition ${href ? "hover:bg-brand-orange cursor-pointer" : "opacity-60 cursor-default"
-        }`}
+      className="w-9 h-9 rounded-full grid place-items-center bg-white/5 transition hover:bg-brand-orange cursor-pointer"
     >
       <Icon className="w-4 h-4" />
     </a>

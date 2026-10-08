@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { 
-  Menu, Search, Bell, LogOut, MapPin, X, ChevronDown, 
+import {
+  Menu, Search, Bell, LogOut, MapPin, X, ChevronDown,
   Check, UserPlus, HardHat, FileText, CheckCircle2, Power,
   Package, PencilRuler, FolderOpen, Users
 } from "lucide-react";
@@ -15,14 +15,14 @@ const API_BASE = (process.env.REACT_APP_BACKEND_URL || "http://localhost:8000") 
 export default function PortalTopBar() {
   const navigate = useNavigate();
   const { user, project, projectsList, switchProject, activeProjectId, logout, setSidebarOpen, reload } = usePortal();
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState({});
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [projDropdownOpen, setProjDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  
+
   // Local state to hide notifications without deleting from DB
   const [hiddenNotifIds, setHiddenNotifIds] = useState(new Set());
 
@@ -32,12 +32,12 @@ export default function PortalTopBar() {
 
   const projectTitle = project?.title || project?.name || "My Project";
   const projectLocation = project?.address || project?.location || project?.city || "Awaiting Location";
-  
+
   // Filter out locally cleared notifications
   const rawNotifications = project?.notifications || [];
   const visibleNotifs = rawNotifications.filter(n => !hiddenNotifIds.has(n.id));
   const unreadCount = visibleNotifs.filter(n => !n.is_read).length;
-  
+
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : "U";
@@ -133,7 +133,7 @@ export default function PortalTopBar() {
   return (
     <header className="h-16 bg-white border-b border-black/5 sticky top-0 z-30 shrink-0 font-['Poppins']">
       <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-3">
-        
+
         {/* Left Side */}
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <button
@@ -149,13 +149,12 @@ export default function PortalTopBar() {
 
           {/* Active Project Dropdown Trigger (Desktop) */}
           <div className="relative hidden lg:block" ref={projDropdownRef}>
-            <button 
+            <button
               onClick={() => projectsList?.length > 1 ? setProjDropdownOpen(!projDropdownOpen) : null}
-              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border min-w-0 transition ${
-                projectsList?.length > 1 
-                  ? "bg-white border-black/10 hover:bg-[#F2F2F2] cursor-pointer" 
+              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border min-w-0 transition ${projectsList?.length > 1
+                  ? "bg-white border-black/10 hover:bg-[#F2F2F2] cursor-pointer"
                   : "bg-[#F2F2F2]/80 border-black/5 cursor-default"
-              }`}
+                }`}
             >
               <div className="w-8 h-8 rounded-lg bg-[#000F1B] grid place-items-center shrink-0 overflow-hidden border border-black/10">
                 {project?.cover_image ? (
@@ -213,7 +212,7 @@ export default function PortalTopBar() {
 
         {/* Right Side */}
         <div className="flex items-center gap-2 sm:gap-3">
-          
+
           {/* SEARCH BAR */}
           <div className="relative hidden md:block" ref={searchRef}>
             <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-[#F9FAFB] px-3 py-2 w-48 xl:w-64 focus-within:ring-2 focus-within:ring-[#FF6600] focus-within:bg-white transition">
@@ -274,8 +273,8 @@ export default function PortalTopBar() {
 
           {/* NOTIFICATION BELL WITH NUMBER BADGE */}
           <div className="relative" ref={notifDropdownRef}>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
               className="relative w-10 h-10 rounded-xl grid place-items-center hover:bg-[#F2F2F2] text-[#000F1B] min-h-[44px] transition"
             >
@@ -295,10 +294,10 @@ export default function PortalTopBar() {
                     <span className="text-xs font-bold text-[#000F1B] uppercase tracking-wider">Notifications</span>
                     {unreadCount > 0 && <span className="text-[9px] font-bold text-white bg-[#FF6600] px-2 py-0.5 rounded-full">{unreadCount} New</span>}
                   </div>
-                  
+
                   {/* LOCAL CLEAR BUTTON */}
                   {visibleNotifs.length > 0 && (
-                    <button 
+                    <button
                       onClick={handleClearAllLocal}
                       className="text-[10px] font-bold text-[#111111]/40 hover:text-[#000F1B] transition uppercase tracking-wider"
                     >
@@ -306,14 +305,14 @@ export default function PortalTopBar() {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto">
                   {visibleNotifs.length === 0 ? (
                     <div className="p-8 text-center text-xs text-[#111111]/50 italic">You're all caught up. No new notifications.</div>
                   ) : (
                     visibleNotifs.map(n => (
-                      <button 
-                        key={n.id} 
+                      <button
+                        key={n.id}
                         onClick={() => handleReadNotification(n.id, n.link)}
                         className={`w-full text-left p-4 border-b border-black/5 last:border-0 hover:bg-[#F2F2F2]/50 transition flex gap-3 ${!n.is_read ? "bg-[#FF6600]/5" : ""}`}
                       >
@@ -327,13 +326,13 @@ export default function PortalTopBar() {
                         <div className="flex-1 min-w-0">
                           <div className={`text-xs font-bold truncate ${!n.is_read ? "text-[#000F1B]" : "text-[#111111]/70"}`}>{n.title}</div>
                           <div className={`text-[10px] mt-0.5 leading-relaxed ${!n.is_read ? "text-[#111111]/70" : "text-[#111111]/50"}`}>{n.message}</div>
-                          <div className="text-[9px] font-semibold text-[#111111]/40 mt-1.5 uppercase tracking-wider">{new Date(n.timestamp).toLocaleString("en-IN", {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"})}</div>
+                          <div className="text-[9px] font-semibold text-[#111111]/40 mt-1.5 uppercase tracking-wider">{new Date(n.timestamp).toLocaleString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
                         </div>
                       </button>
                     ))
                   )}
                 </div>
-                
+
                 <Link to="/portal/site-reports" onClick={() => setNotifDropdownOpen(false)} className="block w-full p-3 text-center text-[10px] font-bold text-[#FF6600] bg-white border-t border-black/5 hover:bg-[#F9FAFB] transition shrink-0 uppercase tracking-widest">
                   View Full Activity Log
                 </Link>
@@ -343,10 +342,15 @@ export default function PortalTopBar() {
 
           <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-black/5">
             {user?.picture ? (
-              <img src={user.picture} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full border border-black/10 object-cover" />
+              <img
+                src={user.picture}
+                alt={user.name || "User profile"}
+                referrerPolicy="no-referrer"
+                className="w-8 h-8 rounded-full border border-black/10 object-cover"
+              />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#000F1B] text-white text-[10px] font-bold grid place-items-center">
-                {initials}
+              <div className="w-8 h-8 rounded-full bg-[#000F1B] text-white font-bold grid place-items-center text-xs">
+                {user?.name?.charAt(0)?.toUpperCase() || "C"}
               </div>
             )}
             <div className="hidden sm:block text-left leading-tight max-w-[120px]">

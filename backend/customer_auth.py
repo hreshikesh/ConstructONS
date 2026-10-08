@@ -51,16 +51,27 @@ def generate_magic_link_token(email: str, name: str) -> str:
 
 
 async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dict:
-    """Inserts or updates customer identity in MongoDB."""
+    """Inserts or updates customer identity in MongoDB without erasing Google avatar/name."""
     existing = await db.customers.find_one({"email": email}, {"_id": 0})
     now = datetime.now(timezone.utc).isoformat()
+    
     if existing:
+        update_fields = {"updated_at": now}
+        
+        # ★ Preserve Google Picture: Only update if a new valid picture is provided
+        if picture:
+            update_fields["picture"] = picture
+            existing["picture"] = picture
+            
+        # ★ Preserve Google Name: Only update if user doesn't already have a valid Google name
+        if name and not existing.get("name"):
+            update_fields["name"] = name
+            existing["name"] = name
+            
         await db.customers.update_one(
             {"user_id": existing["user_id"]},
-            {"$set": {"name": name, "picture": picture, "updated_at": now}},
+            {"$set": update_fields},
         )
-        existing["name"] = name
-        existing["picture"] = picture
         existing["updated_at"] = now
         return existing
 
@@ -68,7 +79,7 @@ async def _upsert_customer(email: str, name: str, picture: Optional[str]) -> dic
     doc = {
         "user_id": user_id,
         "email": email,
-        "name": name,
+        "name": name or email.split("@")[0],
         "picture": picture,
         "role": "customer",
         "phone": "",

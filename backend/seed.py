@@ -99,11 +99,11 @@ async def seed_all():
     settings = SiteSettings(
         company_name="ConstructONS",
         tagline="Everything Construction. Always On.",
-        phone="+91 98765 43210",
-        whatsapp="+91 98765 43210",
+        phone="+91 9187912978",
+        whatsapp="+91 9187912978",
         email="hello@constructons.com",
-        address="12th Floor, Prestige Tower, MG Road, Bangalore 560001, India",
-        google_maps_embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.7196744857637!2d77.60423!3d12.9716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sMG%20Road%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1710000000000",
+        address="99/2, 4th Floor, 8th Main, 20th Cross Rd, G Block, Sahakar Nagar, Bengaluru, Karnataka 560092",
+        google_maps_embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d473.52473410584696!2d77.59095635884356!3d13.063177621059147!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae19001135b2bb%3A0xa09dbd8be93df793!2sNatraj%20Chole%20Bhature%20Sahakar%20Nagar!5e1!3m2!1sen!2sin!4v1791461918103!5m2!1sen!2sin",
         social_links={
             "facebook": "https://www.facebook.com/people/Construct-ONS/61594580780965/#",
             "twitter": "https://twitter.com/constructons",
