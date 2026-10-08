@@ -74,10 +74,11 @@ function validateTeamItem(item, fields) {
 const ENTITY_CONFIG = {
   team: {
     title: "Team Members",
-    listCols: ["name", "designation", "phone", "sort_order"],
+    listCols: ["name", "designation", "email", "phone", "sort_order"], // ★ ADDED "email" TO TABLE COLS
     fields: [
       { name: "name", label: "Full Name", type: "string", required: true, maxLength: 30 },
       { name: "designation", label: "Designation", type: "string", required: true, maxLength: 60 },
+      { name: "email", label: "Email Address", type: "string", required: false }, // ★ ADDED EMAIL FIELD
       { name: "photo", label: "Profile Photo", type: "image", category: "team", required: false, maxBytes: 1024 * 1024 },
       { name: "phone", label: "Phone Number", type: "phone91", required: false },
       { name: "whatsapp", label: "WhatsApp Number", type: "whatsapp_sync", syncWith: "phone", required: false },

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar, Flag, CloudRain, Droplets, CheckCircle2,
-  Clock, ShieldAlert, Camera, Video, Sun, Cloud, Check
+  Clock, ShieldAlert, Camera, Video, Sun, Cloud, Check, Activity, User
 } from "lucide-react";
 import axios from "axios";
 
@@ -34,6 +34,7 @@ export default function DashboardHeaders({ user, project }) {
   const quality = project?.quality_inspections || [];
   const drawings = project?.drawings || [];
   const cameras = project?.cctv_cameras || [];
+  const activities = project?.activities || [];
   const today = new Date();
 
   const completedStages = stages.filter((s) => s.status === "completed").length;
@@ -41,44 +42,13 @@ export default function DashboardHeaders({ user, project }) {
   const currentStage = stages.find((s) => s.status === "in_progress");
   const expectedCompletionDate = project?.expected_completion || (stages.length > 0 ? stages[stages.length - 1]?.expected_date : null);
 
-  // REAL DATA MAPPING FOR HEALTH METRICS
   const healthData = [
-    { 
-      key: "Schedule", 
-      status: stages.some((s) => s.status !== "completed" && s.expected_date && new Date(s.expected_date) < today) 
-        ? "At Risk" 
-        : "On Track" 
-    },
-    { 
-      key: "Cost", 
-      status: (Number(project?.amount_spent) > Number(project?.contract_value) && Number(project?.contract_value) > 0) 
-        ? "At Risk" 
-        : "On Track" 
-    },
-    { 
-      key: "Materials", 
-      status: materials.length > 0 && materials.every(m => m.status !== "delivered" && m.status !== "installed") 
-        ? "Attention" 
-        : "On Track" 
-    },
-    { 
-      key: "Quality", 
-      status: quality.some((q) => q.status === "failed" || q.status === "rectification") 
-        ? "At Risk" 
-        : "On Track" 
-    },
-    { 
-      key: "Approvals", 
-      status: drawings.some((d) => d.status === "pending" || d.status === "changes_required" || d.status === "rejected") 
-        ? "Attention" 
-        : "On Track" 
-    },
-    { 
-      key: "Payments", 
-      status: (Number(project?.amount_spent) > (Number(project?.contract_value) || 0)) 
-        ? "At Risk" 
-        : "On Track" 
-    }
+    { key: "Schedule", status: stages.some((s) => s.status !== "completed" && s.expected_date && new Date(s.expected_date) < today) ? "At Risk" : "On Track" },
+    { key: "Cost", status: (Number(project?.amount_spent) > Number(project?.contract_value) && Number(project?.contract_value) > 0) ? "At Risk" : "On Track" },
+    { key: "Materials", status: materials.length > 0 && materials.every(m => m.status !== "delivered" && m.status !== "installed") ? "Attention" : "On Track" },
+    { key: "Quality", status: quality.some((q) => q.status === "failed" || q.status === "rectification") ? "At Risk" : "On Track" },
+    { key: "Approvals", status: drawings.some((d) => d.status === "pending" || d.status === "changes_required" || d.status === "rejected") ? "Attention" : "On Track" },
+    { key: "Payments", status: (Number(project?.amount_spent) > (Number(project?.contract_value) || 0)) ? "At Risk" : "On Track" }
   ];
 
   const overallHealth = healthData.some((h) => h.status === "At Risk") 
@@ -153,8 +123,6 @@ export default function DashboardHeaders({ user, project }) {
           
           <div className="overflow-x-auto no-scrollbar scroll-smooth">
             <div className="flex items-center min-w-[760px] md:min-w-0 justify-between relative py-1.5 px-2">
-              
-              {/* Connecting Background Line */}
               <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-100 -translate-y-1/2 z-0" />
 
               {stages.map((stg, idx) => {
@@ -163,38 +131,26 @@ export default function DashboardHeaders({ user, project }) {
                 
                 return (
                   <div key={idx} className="flex flex-col items-center flex-1 relative z-10 px-1">
-                    
-                    {/* Circle Indicator */}
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                       isCompleted ? "bg-emerald-500 text-white" : 
                       isCurrent ? "bg-[#FF6600] text-white ring-4 ring-[#FF6600]/25 animate-pulse" : 
                       "bg-white border-2 border-slate-200 text-slate-400"
                     }`}>
-                      {isCompleted ? (
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      ) : (
-                        <span className="text-[10px] font-black">{idx + 1}</span>
-                      )}
+                      {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <span className="text-[10px] font-black">{idx + 1}</span>}
                     </div>
 
-                    {/* Stage Name */}
                     <span className={`text-[9px] font-bold mt-2 text-center max-w-[110px] truncate leading-tight ${
-                      isCompleted ? "text-emerald-600" : 
-                      isCurrent ? "text-[#000F1B] font-black" : 
-                      "text-[#111111]/45"
+                      isCompleted ? "text-emerald-600" : isCurrent ? "text-[#000F1B] font-black" : "text-[#111111]/45"
                     }`}>
                       {stg.name}
                     </span>
 
-                    {/* Stage mini-status badge */}
                     <span className="text-[7px] font-semibold mt-0.5 uppercase tracking-wider opacity-60">
                       {isCompleted ? "Completed" : isCurrent ? `${stg.progress_pct}% Done` : "Pending"}
                     </span>
-
                   </div>
                 );
               })}
-
             </div>
           </div>
         </div>
@@ -203,7 +159,7 @@ export default function DashboardHeaders({ user, project }) {
       {/* 3. Row 1 Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         
-        {/* Project & Payment Health */}
+        {/* Project Health */}
         <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -268,45 +224,68 @@ export default function DashboardHeaders({ user, project }) {
           </div>
         </div>
 
-        {/* CCTV Camera Grid */}
-        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px] md:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between mb-2">
+        {/* ★ CHANGE 1: LIVE SITE ACTIVITY & CHANGE LOG WIDGET */}
+                {/* Live Site Activity — WHAT updated only */}
+        <div className="bg-white rounded-2xl border border-black/5 p-4 shadow-sm flex flex-col h-[185px]">
+          <div className="flex items-center justify-between mb-2 border-b border-black/5 pb-2">
             <div className="flex items-center gap-1.5">
-              <Camera className="w-4 h-4 text-[#FF6600]" />
-              <h2 className="text-sm font-bold text-[#000F1B]">CCTV Grid</h2>
+              <Activity className="w-4 h-4 text-[#FF6600]" />
+              <h2 className="text-sm font-bold text-[#000F1B]">Live Site Activity</h2>
             </div>
-            <Link to="/portal/cctv" className="text-[10px] font-bold text-blue-600 hover:underline">View All</Link>
+            <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+              {activities.length} updates
+            </span>
           </div>
-          
-          <div className="flex-1 grid grid-cols-2 gap-1.5">
-            {cameras.slice(0, 4).map((cam, idx) => (
-              <div key={idx} className="relative rounded-lg overflow-hidden bg-[#000F1B] border border-black/10 flex items-center justify-center">
-                {cam.status === "online" ? (
-                  cam.camera_type === "youtube" ? (
-                    <iframe src={`${cam.url}?autoplay=0&mute=1&controls=0`} className="absolute inset-0 w-full h-full pointer-events-none opacity-80" title={`cctv-${idx}`} />
-                  ) : (
-                    <Video className="w-4 h-4 text-white/30" />
-                  )
-                ) : (
-                  <div className="text-center">
-                    <Video className="w-4 h-4 text-white/20 mx-auto" />
-                    <span className="text-[7px] text-white/40 block">Offline</span>
+
+          <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 pr-1">
+            {activities.length === 0 ? (
+              <div className="py-6 text-center text-[10px] text-gray-400 italic">
+                No recent updates yet.
+              </div>
+            ) : (
+              activities.slice(0, 8).map((act, idx) => {
+                // Prefer clean "what" text; strip noisy "Updated by X" style if present
+                const what =
+                  (act.action || act.message || act.title || "Project update")
+                    .replace(/^(Admin|System Admin|Site Engineer|System)\s*[:\-–]?\s*/i, "")
+                    .trim();
+
+                const when = act.timestamp
+                  ? new Date(act.timestamp).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "";
+
+                const moduleLabel = act.module
+                  ? String(act.module).replace(/_/g, " ")
+                  : null;
+
+                return (
+                  <div
+                    key={act.id || idx}
+                    className="p-2 rounded-lg bg-[#F9FAFB] border border-black/5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[11px] font-semibold text-[#000F1B] leading-snug flex-1">
+                        {what}
+                      </p>
+                      {when && (
+                        <span className="text-[8px] text-gray-400 font-mono shrink-0 whitespace-nowrap">
+                          {when}
+                        </span>
+                      )}
+                    </div>
+                    {moduleLabel && (
+                      <span className="inline-block mt-1 text-[8px] font-bold uppercase tracking-wider bg-white border border-black/5 text-gray-500 px-1.5 py-0.5 rounded">
+                        {moduleLabel}
+                      </span>
+                    )}
                   </div>
-                )}
-                <div className="absolute bottom-1 left-1 bg-black/60 px-1 py-0.5 rounded text-[6px] font-bold text-white uppercase tracking-wider truncate max-w-[80%]">
-                  {cam.name || `Cam ${idx + 1}`}
-                </div>
-                <div className="absolute top-1 right-1 flex items-center gap-0.5 bg-red-600 text-white text-[5px] font-bold px-1 py-0.2 rounded">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  LIVE
-                </div>
-              </div>
-            ))}
-            {cameras.length === 0 && (
-              <div className="col-span-2 flex flex-col items-center justify-center text-[#111111]/40 border border-dashed border-black/10 rounded-lg bg-[#F9FAFB]">
-                <Video className="w-6 h-6 mb-1 opacity-40" />
-                <span className="text-[10px] font-semibold">No Cameras Setup</span>
-              </div>
+                );
+              })
             )}
           </div>
         </div>
