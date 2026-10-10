@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, Loader2, Camera, Trash2,
   CheckCircle2, List, LayoutGrid, Minimize2, Maximize2, RefreshCw, Search,
-  ChevronRight, ChevronDown, GripVertical
+  ChevronRight, ChevronDown, GripVertical, Circle, PlayCircle
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { adminApi } from "@/lib/api";
@@ -23,8 +23,43 @@ const fmtDate = (dateStr) => {
   }
 };
 
+const shortDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: '2-digit' }) : "—";
+
 const COL = { name: 260, weight: 50, planned: 180, actual: 160, progress: 120, status: 90 };
 const TABLE_W = Object.values(COL).reduce((a, b) => a + b, 0);
+
+// --- GANTT LOGIC HELPERS ---
+const MS = 86400000;
+const parseLocal = (d) => {
+  if (!d) return null;
+  try {
+    const str = String(d).slice(0, 10);
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+    if (!m) return null;
+
+    let year = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10) - 1;
+    const day = parseInt(m[3], 10);
+
+    // FIX: Prevent typos like '0026' from becoming '1926' due to JS Date quirks
+    if (year > 0 && year < 100) {
+      year += 2000;
+    }
+
+    const dt = new Date(year, month, day);
+    dt.setFullYear(year); // Force 4-digit year
+
+    if (Number.isNaN(dt.getTime())) return null;
+    return dt;
+  } catch {
+    return null;
+  }
+};
+const addDays = (dt, n) => {
+  const x = new Date(dt.getTime());
+  x.setDate(x.getDate() + n);
+  return x;
+};
 
 const parseProgressInput = (raw) => {
   if (raw === "" || raw === null || raw === undefined) return "";
@@ -34,7 +69,50 @@ const parseProgressInput = (raw) => {
   if (Number.isNaN(n)) return "";
   return Math.min(100, Math.max(0, n));
 };
+
 const progressValue = (v) => (v === "" || v === null || v === undefined ? "" : v);
+
+// --- Anti-Lag Safe Inputs ---
+function SafeInput({ value, onChange, parseFn, ...props }) {
+  const [val, setVal] = useState(value || "");
+  useEffect(() => setVal(value || ""), [value]);
+
+  const commit = () => {
+    const finalVal = parseFn ? parseFn(val) : val;
+    if (finalVal !== value) onChange(finalVal);
+  };
+
+  return (
+    <input
+      {...props}
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === "Enter" && commit()}
+    />
+  );
+}
+
+function SafeSlider({ value, onChange, ...props }) {
+  const [val, setVal] = useState(value || 0);
+  useEffect(() => setVal(value || 0), [value]);
+
+  const commit = () => {
+    if (Number(val) !== Number(value)) onChange(val);
+  };
+
+  return (
+    <input
+      type="range"
+      {...props}
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onMouseUp={commit}
+      onTouchEnd={commit}
+      onKeyUp={commit}
+    />
+  );
+}
 
 function buildLockedStarts(stagesList) {
   const next = new Set();
@@ -55,20 +133,20 @@ function normalizeStages(list) {
   }));
 }
 
-export default function StagesTab({ project, onSaved }) {
+export default function StagesTab({ project, onSaved, hasEditAccess = true }) {
   const [stages, setStages] = useState([]);
-  const [lockedSubStarts, setLockedSubStarts] = useState(() => new Set()); // server-persisted start dates only
+  const [lockedSubStarts, setLockedSubStarts] = useState(() => new Set()); 
   const [saving, setSaving] = useState(null);
-  const [savingSub, setSavingSub] = useState(null); // `${stageIdx}:${subId}`
+  const [savingSub, setSavingSub] = useState(null); 
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(null);
   const [expandedStage, setExpandedStage] = useState(null);
   const [showAddStage, setShowAddStage] = useState(false);
   const [newStageName, setNewStageName] = useState("");
 
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("split");
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedAll, setExpandedAll] = useState(() => new Set()); // start collapsed = less lag
+  const [expandedAll, setExpandedAll] = useState(() => new Set()); 
   const [zoom, setZoom] = useState("week");
 
   const containerRef = useRef(null);
@@ -80,14 +158,22 @@ export default function StagesTab({ project, onSaved }) {
   });
   const [dragging, setDragging] = useState(false);
 
-  // Load from project prop
+  // Sync local stages safely (prevents call stack size exceeded)
   useEffect(() => {
-    const normalized = normalizeStages(project.stages);
+    if (!project) return;
+    const normalized = normalizeStages(project.stages || []);
     setStages(normalized);
     setLockedSubStarts(buildLockedStarts(normalized));
-    // do NOT expand all — that made the tab laggy
-  }, [project]);
+  }, [project?.id, project?.updated_at]);
 
+  // Auto-expand Gantt chart on load
+  useEffect(() => {
+    if (viewMode !== "split") return;
+    if (!stages.length) return;
+    setExpandedAll(new Set(stages.map((_, i) => i)));
+  }, [viewMode, project?.id]);
+
+  // Dragging logic for split view
   useEffect(() => {
     if (!dragging) return;
     const onMove = (e) => {
@@ -129,7 +215,7 @@ export default function StagesTab({ project, onSaved }) {
       const { data } = await api.get(`/admin/projects/${project.id}`);
       const normalized = normalizeStages(data.stages);
       setStages(normalized);
-      setLockedSubStarts(buildLockedStarts(normalized)); // lock only what server has
+      setLockedSubStarts(buildLockedStarts(normalized)); 
       onSaved?.();
     } catch {
       toast.error("Refresh failed");
@@ -139,6 +225,7 @@ export default function StagesTab({ project, onSaved }) {
   }, [project.id, onSaved]);
 
   const patchStageLocal = (idx, patch) => {
+    if (!hasEditAccess) return;
     setStages((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], ...patch };
@@ -147,6 +234,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const patchSubLocal = (stageIdx, subIdx, patch) => {
+    if (!hasEditAccess) return;
     setStages((prev) => {
       const next = [...prev];
       const subs = [...(next[stageIdx].substages || [])];
@@ -157,6 +245,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const saveStage = async (idx) => {
+    if (!hasEditAccess) return;
     setSaving(idx);
     try {
       const s = stages[idx];
@@ -185,7 +274,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const saveSubstage = async (stageIdx, sub) => {
-    if (!sub?.id) return;
+    if (!hasEditAccess || !sub?.id) return;
     setSavingSub(`${stageIdx}:${sub.id}`);
     try {
       const payload = {
@@ -197,12 +286,9 @@ export default function StagesTab({ project, onSaved }) {
         status: sub.status || "pending",
         progress_pct: Number(sub.progress_pct) || 0,
       };
-      await api.patch(
-        `/admin/projects/${project.id}/stages/${stageIdx}/substages/${sub.id}`,
-        payload
-      );
+      await api.patch(`/admin/projects/${project.id}/stages/${stageIdx}/substages/${sub.id}`, payload);
       toast.success("Substage saved & Live");
-      await refresh(); // after refresh, start_date locks if it was saved
+      await refresh(); 
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Failed to save substage");
     } finally {
@@ -211,11 +297,10 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const markSubComplete = async (stageIdx, subId, subName) => {
+    if (!hasEditAccess) return;
     if (!window.confirm(`Mark "${subName || "substage"}" as 100% Complete?`)) return;
     try {
-      await api.post(
-        `/admin/projects/${project.id}/stages/${stageIdx}/substages/${subId}/mark-complete`
-      );
+      await api.post(`/admin/projects/${project.id}/stages/${stageIdx}/substages/${subId}/mark-complete`);
       toast.success("Marked complete");
       await refresh();
     } catch {
@@ -224,6 +309,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const markAllChildrenComplete = async (stageIdx, stageName) => {
+    if (!hasEditAccess) return;
     if (!window.confirm(`Mark ALL substages of "${stageName}" as 100% Complete?`)) return;
     try {
       await api.post(`/admin/projects/${project.id}/stages/${stageIdx}/mark-all-complete`);
@@ -235,7 +321,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const addStage = async () => {
-    if (!newStageName.trim()) return;
+    if (!hasEditAccess || !newStageName.trim()) return;
     try {
       await api.post(`/admin/projects/${project.id}/stages`, {
         name: newStageName.trim(),
@@ -252,12 +338,10 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const moveStage = async (idx, dir) => {
+    if (!hasEditAccess) return;
     const newIdx = idx + dir;
     if (newIdx < 0 || newIdx >= stages.length) return;
-    if (
-      stages[idx].name.toLowerCase().includes("handover") ||
-      stages[newIdx].name.toLowerCase().includes("handover")
-    ) {
+    if (stages[idx].name.toLowerCase().includes("handover") || stages[newIdx].name.toLowerCase().includes("handover")) {
       toast.error("Handover must stay at the end");
       return;
     }
@@ -275,6 +359,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const deleteStage = async (idx) => {
+    if (!hasEditAccess) return;
     if (stages[idx].name.toLowerCase().includes("handover")) {
       toast.error("Handover cannot be deleted");
       return;
@@ -291,6 +376,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const addSubstage = async (stageIdx) => {
+    if (!hasEditAccess) return;
     const name = window.prompt("Substage name:");
     if (!name?.trim()) return;
     try {
@@ -308,11 +394,10 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const deleteSubstage = async (stageIdx, subId) => {
+    if (!hasEditAccess) return;
     if (!window.confirm("Delete this substage?")) return;
     try {
-      await api.delete(
-        `/admin/projects/${project.id}/stages/${stageIdx}/substages/${subId}`
-      );
+      await api.delete(`/admin/projects/${project.id}/stages/${stageIdx}/substages/${subId}`);
       await refresh();
     } catch {
       toast.error("Delete failed");
@@ -320,7 +405,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const uploadPhoto = async (idx, file) => {
-    if (!file) return;
+    if (!hasEditAccess || !file) return;
     setUploading(idx);
     try {
       const res = await adminApi.uploadImage(file, "project-photos");
@@ -330,10 +415,7 @@ export default function StagesTab({ project, onSaved }) {
       };
       setStages((prev) => {
         const next = [...prev];
-        next[idx] = {
-          ...next[idx],
-          photos: [...(next[idx].photos || []), photoObj],
-        };
+        next[idx] = { ...next[idx], photos: [...(next[idx].photos || []), photoObj] };
         return next;
       });
       toast.success("Photo uploaded — click Save Stage to commit");
@@ -345,6 +427,7 @@ export default function StagesTab({ project, onSaved }) {
   };
 
   const removePhoto = (stageIdx, photoIdx) => {
+    if (!hasEditAccess) return;
     setStages((prev) => {
       const next = [...prev];
       next[stageIdx] = {
@@ -355,7 +438,7 @@ export default function StagesTab({ project, onSaved }) {
     });
   };
 
-  // Gantt calcs ONLY in split mode (fixes editor lag)
+  // --- GANTT CHART DATA PREPARATION ---
   const visibleRows = useMemo(() => {
     if (viewMode !== "split") return [];
     const rows = [];
@@ -384,38 +467,52 @@ export default function StagesTab({ project, onSaved }) {
     if (viewMode !== "split") {
       return { minDate: new Date(), dayWidth: 12, ganttWidth: 400, dateMarkers: [], monthHeaders: [], todayPx: 0 };
     }
-    let min = new Date();
-    let max = new Date();
-    let has = false;
+    
+    let min = null;
+    let max = null;
+
+    // --- SANITY BOUNDS ---
+    // Protect the Gantt chart from blowing up due to typo dates (e.g., 2001 or 1904)
+    const todayRef = new Date();
+    const safeMin = new Date(todayRef.getFullYear() - 3, 0, 1);  // Max 3 years in the past
+    const safeMax = new Date(todayRef.getFullYear() + 8, 0, 1);  // Max 8 years in the future
+
     const take = (d) => {
-      if (!d) return;
-      const dt = new Date(d);
-      if (Number.isNaN(dt.getTime())) return;
-      if (!has || dt < min) min = new Date(dt);
-      if (!has || dt > max) max = new Date(dt);
-      has = true;
+      const dt = parseLocal(d);
+      if (!dt) return;
+      
+      // If the date is an extreme typo, ignore it so it doesn't stretch the chart 
+      if (dt < safeMin || dt > safeMax) return;
+
+      if (!min || dt < min) min = new Date(dt.getTime());
+      if (!max || dt > max) max = new Date(dt.getTime());
     };
+
     stages.forEach((s) => {
       [s.start_date, s.started_at, s.planned_end_date, s.expected_date, s.actual_end_date, s.completed_at].forEach(take);
       (s.substages || []).forEach((sub) => {
+        if (sub.archived) return;
         [sub.start_date, sub.planned_end_date, sub.actual_end_date, sub.actual_start_date].forEach(take);
       });
     });
-    if (!has) {
-      min = new Date();
-      max = new Date();
-      max.setDate(max.getDate() + 60);
-    }
-    min.setDate(min.getDate() - 5);
-    max.setDate(max.getDate() + 20);
 
-    const MS = 86400000;
-    const days = Math.max(30, Math.ceil((max - min) / MS));
+    if (!min) min = parseLocal(new Date()) || new Date();
+    if (!max) max = addDays(min, 60);
+    if (max <= min) max = addDays(min, 30);
+
+    min = addDays(min, -5);
+    max = addDays(max, 20);
+
+    // [ ... Keep the rest of the while loop below exactly the same ... ]
+
+    const totalDays = Math.max(30, Math.ceil((max - min) / MS));
     const dW = zoom === "day" ? 28 : zoom === "week" ? 12 : 4;
-    const width = days * dW;
+    const width = Math.max(400, totalDays * dW);
+
     const markers = [];
     const months = [];
     const cur = new Date(min);
+
     while (cur <= max) {
       const leftPx = ((cur - min) / MS) * dW;
       if (zoom === "month" && cur.getDate() === 1) {
@@ -433,18 +530,29 @@ export default function StagesTab({ project, onSaved }) {
       }
       cur.setDate(cur.getDate() + 1);
     }
-    const tPx = Math.max(0, ((new Date() - min) / MS) * dW);
+    const today = parseLocal(new Date()) || new Date();
+    const tPx = Math.max(0, ((today - min) / MS) * dW);
     return { minDate: min, dayWidth: dW, ganttWidth: width, dateMarkers: markers, monthHeaders: months, todayPx: tPx };
   }, [stages, zoom, viewMode]);
 
   const barPx = (startStr, endStr) => {
-    if (viewMode !== "split" || !startStr || !endStr) return { valid: false };
-    const s = new Date(startStr);
-    const e = new Date(endStr);
-    if (Number.isNaN(s) || Number.isNaN(e) || e < s) return { valid: false };
-    const MS = 86400000;
+    if (viewMode !== "split" || !minDate) return { valid: false };
+
+    let s = parseLocal(startStr);
+    let e = parseLocal(endStr);
+
+    if (s && !e) e = addDays(s, 7);
+    if (e && !s) s = addDays(e, -7);
+    if (!s || !e) return { valid: false };
+
+    if (e < s) {
+      const t = s; s = e; e = t;
+    }
+
     const left = Math.max(0, ((s - minDate) / MS) * dayWidth);
-    const w = Math.max(dayWidth * 0.8, ((e - s) / MS) * dayWidth);
+    const diffDays = Math.round((e - s) / MS) + 1; 
+    const w = Math.max(dayWidth * 0.8, diffDays * dayWidth);
+
     return { valid: true, left: `${left}px`, width: `${w}px` };
   };
 
@@ -467,8 +575,8 @@ export default function StagesTab({ project, onSaved }) {
         .row-h:hover{background:#F8F9FA!important}
       `}</style>
 
-      {/* Toolbar */}
-      <div className="shrink-0 flex flex-wrap items-center gap-2 p-2.5 border-b border-gray-200 bg-white">
+      {/* TOOLBAR */}
+      <div className="shrink-0 flex flex-wrap items-center gap-2 p-2.5 border-b border-gray-200 bg-white z-10 relative">
         <div className="flex items-center gap-0.5 bg-gray-50 border border-gray-200 rounded-lg p-0.5">
           <button
             onClick={() => setViewMode("list")}
@@ -479,7 +587,10 @@ export default function StagesTab({ project, onSaved }) {
             <List className="w-3.5 h-3.5" /> Editor
           </button>
           <button
-            onClick={() => setViewMode("split")}
+            onClick={() => {
+              setViewMode("split");
+              setExpandedAll(new Set(stages.map((_, i) => i)));
+            }}
             className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 ${
               viewMode === "split" ? "bg-white shadow text-[#FF6600]" : "text-gray-500"
             }`}
@@ -494,7 +605,7 @@ export default function StagesTab({ project, onSaved }) {
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks..."
+              placeholder="Filter tasks..."
               className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none focus:border-[#FF6600]"
             />
           </div>
@@ -524,7 +635,7 @@ export default function StagesTab({ project, onSaved }) {
           >
             <RefreshCw className="w-3 h-3" /> Sync
           </button>
-          {viewMode === "list" && (
+          {viewMode === "list" && hasEditAccess && (
             <button
               onClick={() => setShowAddStage(true)}
               className="px-3 py-1.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm"
@@ -535,6 +646,7 @@ export default function StagesTab({ project, onSaved }) {
         </div>
       </div>
 
+      {/* ================= EDITOR (LIST) ================= */}
       {viewMode === "list" && (
         <div className="flex-1 overflow-y-auto csb p-4 space-y-4 bg-[#F9FAFB]">
           <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm">
@@ -544,7 +656,7 @@ export default function StagesTab({ project, onSaved }) {
             </p>
           </div>
 
-          {showAddStage && (
+          {showAddStage && hasEditAccess && (
             <div className="bg-white border-2 border-[#FF6600]/40 rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center shadow-sm">
               <div className="flex-1">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">
@@ -586,13 +698,6 @@ export default function StagesTab({ project, onSaved }) {
               const hasChildren = activeSubs.length > 0;
               const photos = s.photos || [];
 
-              const statMap = {
-                completed: { text: "text-emerald-700", bg: "bg-emerald-50", label: "Completed" },
-                in_progress: { text: "text-[#FF6600]", bg: "bg-[#FF6600]/10", label: "In Progress" },
-                pending: { text: "text-[#111111]/50", bg: "bg-slate-100", label: "Pending" },
-              };
-              const stat = statMap[s.status] || statMap.pending;
-
               return (
                 <div
                   key={s.id || idx}
@@ -606,14 +711,14 @@ export default function StagesTab({ project, onSaved }) {
                     <div className="flex flex-col gap-1 shrink-0">
                       <button
                         onClick={() => moveStage(idx, -1)}
-                        disabled={idx === 0}
+                        disabled={idx === 0 || !hasEditAccess}
                         className="text-[#111111]/30 hover:text-[#111111] disabled:opacity-20 w-5 h-4 grid place-items-center"
                       >
                         <div className="w-0 h-0 border-l-4 border-r-4 border-b-[6px] border-l-transparent border-r-transparent border-b-current" />
                       </button>
                       <button
                         onClick={() => moveStage(idx, 1)}
-                        disabled={idx === stages.length - 1 || isHandover}
+                        disabled={idx === stages.length - 1 || isHandover || !hasEditAccess}
                         className="text-[#111111]/30 hover:text-[#111111] disabled:opacity-20 w-5 h-4 grid place-items-center"
                       >
                         <div className="w-0 h-0 border-l-4 border-r-4 border-t-[6px] border-l-transparent border-r-transparent border-t-current" />
@@ -643,9 +748,7 @@ export default function StagesTab({ project, onSaved }) {
                         )}
                       </div>
                       <div className="flex items-center gap-3 text-xs mt-1">
-                        <span className={`font-bold px-2 py-0.5 rounded ${stat.bg} ${stat.text}`}>
-                          {stat.label}
-                        </span>
+                        <StatusBadge status={s.status} />
                         <span className="font-bold text-[#111111]">{Number(s.progress_pct) || 0}% Done</span>
                         {activeSubs.length > 0 && (
                           <span className="hidden sm:inline font-medium text-[#111111]/50">
@@ -667,7 +770,6 @@ export default function StagesTab({ project, onSaved }) {
                     </button>
                   </div>
 
-                  {/* Only mount heavy body when expanded — big lag win */}
                   {isExpanded && (
                     <div className="border-t border-black/5 bg-[#F9FAFB] rounded-b-xl p-5 space-y-5">
                       <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm">
@@ -683,11 +785,11 @@ export default function StagesTab({ project, onSaved }) {
                               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/50 mb-1">
                                 Stage Name
                               </label>
-                              <input
+                              <SafeInput
                                 type="text"
+                                disabled={isHandover || !hasEditAccess}
                                 value={s.name}
-                                disabled={isHandover}
-                                onChange={(e) => patchStageLocal(idx, { name: e.target.value })}
+                                onChange={(v) => patchStageLocal(idx, { name: v })}
                                 className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                               />
                             </div>
@@ -697,7 +799,7 @@ export default function StagesTab({ project, onSaved }) {
                               </label>
                               <select
                                 value={s.status}
-                                disabled={hasChildren}
+                                disabled={hasChildren || !hasEditAccess}
                                 onChange={(e) => patchStageLocal(idx, { status: e.target.value })}
                                 className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#FF6600] outline-none bg-white disabled:bg-gray-100"
                               >
@@ -710,48 +812,46 @@ export default function StagesTab({ project, onSaved }) {
 
                           <div>
                             <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Start Date</label>
-                            <input
+                            <SafeInput
                               type="date"
-                              disabled={hasChildren}
+                              disabled={hasChildren || !hasEditAccess}
                               value={s.start_date || ""}
-                              onChange={(e) => patchStageLocal(idx, { start_date: e.target.value || null })}
+                              onChange={(v) => patchStageLocal(idx, { start_date: v || null })}
                               className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Planned End</label>
-                            <input
+                            <SafeInput
                               type="date"
-                              disabled={hasChildren}
+                              disabled={hasChildren || !hasEditAccess}
                               value={s.planned_end_date || s.expected_date || ""}
-                              onChange={(e) => patchStageLocal(idx, { planned_end_date: e.target.value || null })}
+                              onChange={(v) => patchStageLocal(idx, { planned_end_date: v || null })}
                               className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Actual End</label>
-                            <input
+                            <SafeInput
                               type="date"
-                              disabled={hasChildren}
+                              disabled={hasChildren || !hasEditAccess}
                               value={s.actual_end_date || ""}
-                              onChange={(e) => patchStageLocal(idx, { actual_end_date: e.target.value || null })}
+                              onChange={(v) => patchStageLocal(idx, { actual_end_date: v || null })}
                               className="w-full px-3 py-2 border border-black/10 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-1">Progress %</label>
                             <div className="relative">
-                              <input
+                              <SafeInput
                                 type="number"
                                 min="0"
                                 max="100"
                                 inputMode="numeric"
-                                disabled={hasChildren}
+                                disabled={hasChildren || !hasEditAccess}
                                 value={progressValue(s.progress_pct)}
-                                onChange={(e) =>
-                                  patchStageLocal(idx, { progress_pct: parseProgressInput(e.target.value) })
-                                }
-                                onFocus={(e) => e.target.select()}
+                                parseFn={parseProgressInput}
+                                onChange={(v) => patchStageLocal(idx, { progress_pct: v })}
                                 className="w-full px-3 py-2 border border-black/10 rounded-lg text-sm font-black text-[#FF6600] focus:ring-2 focus:ring-[#FF6600] outline-none pr-8 disabled:bg-gray-100"
                               />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#111111]/30">%</span>
@@ -763,14 +863,12 @@ export default function StagesTab({ project, onSaved }) {
                           <div className="mt-4 pt-4 border-t border-black/5">
                             <label className="block text-[10px] font-bold uppercase text-[#111111]/50 mb-2">Progress Slider</label>
                             <div className="flex items-center gap-3">
-                              <input
-                                type="range"
+                              <SafeSlider
                                 min="0"
                                 max="100"
+                                disabled={!hasEditAccess}
                                 value={Number(s.progress_pct) || 0}
-                                onChange={(e) =>
-                                  patchStageLocal(idx, { progress_pct: parseProgressInput(e.target.value) })
-                                }
+                                onChange={(v) => patchStageLocal(idx, { progress_pct: parseProgressInput(v) })}
                                 className="flex-1 gantt-slider"
                               />
                               <span className="text-sm font-black text-[#FF6600] w-12 text-right">
@@ -787,16 +885,18 @@ export default function StagesTab({ project, onSaved }) {
                           <h4 className="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-1.5">
                             <Camera className="w-3.5 h-3.5 text-[#FF6600]" /> Photos ({photos.length})
                           </h4>
-                          <label className="cursor-pointer text-xs font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1.5">
-                            {uploading === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Upload
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              disabled={uploading === idx}
-                              onChange={(e) => uploadPhoto(idx, e.target.files?.[0])}
-                            />
-                          </label>
+                          {hasEditAccess && (
+                            <label className="cursor-pointer text-xs font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1.5">
+                              {uploading === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={uploading === idx}
+                                onChange={(e) => uploadPhoto(idx, e.target.files?.[0])}
+                              />
+                            </label>
+                          )}
                         </div>
                         {photos.length === 0 ? (
                           <div className="text-center py-4 text-xs text-[#111111]/40 italic border border-dashed border-black/10 rounded-lg">
@@ -807,12 +907,14 @@ export default function StagesTab({ project, onSaved }) {
                             {photos.map((p, i) => (
                               <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-black/10">
                                 <img src={resolveMediaUrl(toUrl(p))} alt="" className="w-full h-full object-cover" />
-                                <button
-                                  onClick={() => removePhoto(idx, i)}
-                                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
+                                {hasEditAccess && (
+                                  <button
+                                    onClick={() => removePhoto(idx, i)}
+                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -824,7 +926,7 @@ export default function StagesTab({ project, onSaved }) {
                         <div className="flex items-center justify-between mb-4 border-b border-black/5 pb-2">
                           <h4 className="text-xs font-bold text-[#111111] uppercase tracking-wider">Substages Map</h4>
                           <div className="flex gap-2">
-                            {hasChildren && (
+                            {hasChildren && hasEditAccess && (
                               <button
                                 onClick={() => markAllChildrenComplete(idx, s.name)}
                                 className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded hover:bg-emerald-100"
@@ -832,19 +934,20 @@ export default function StagesTab({ project, onSaved }) {
                                 Mark All Done
                               </button>
                             )}
-                            <button
-                              onClick={() => addSubstage(idx)}
-                              className="text-[10px] font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1"
-                            >
-                              <Plus className="w-3 h-3" /> Add Substage
-                            </button>
+                            {hasEditAccess && (
+                              <button
+                                onClick={() => addSubstage(idx)}
+                                className="text-[10px] font-bold text-[#FF6600] hover:text-[#FF0000] flex items-center gap-1"
+                              >
+                                <Plus className="w-3 h-3" /> Add Substage
+                              </button>
+                            )}
                           </div>
                         </div>
 
                         <div className="space-y-3">
                           {substages.map((sub, sIdx) => {
                             const isComplete = Number(sub.progress_pct) === 100;
-                            // LOCK ONLY if this start_date already exists on server
                             const startLocked = lockedSubStarts.has(sub.id);
                             const isSavingThis = savingSub === `${idx}:${sub.id}`;
 
@@ -859,11 +962,12 @@ export default function StagesTab({ project, onSaved }) {
                                   <span className="text-[#111111]/30 font-mono text-[10px] shrink-0">
                                     {(sIdx + 1).toString().padStart(2, "0")}
                                   </span>
-                                  <input
+                                  <SafeInput
                                     type="text"
                                     value={sub.name}
-                                    onChange={(e) => patchSubLocal(idx, sIdx, { name: e.target.value })}
-                                    className="flex-1 px-3 py-2 border border-black/10 bg-white rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FF6600] outline-none"
+                                    disabled={!hasEditAccess}
+                                    onChange={(v) => patchSubLocal(idx, sIdx, { name: v })}
+                                    className="flex-1 px-3 py-2 border border-black/10 bg-white rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FF6600] outline-none disabled:bg-gray-100"
                                     placeholder="Name"
                                   />
                                 </div>
@@ -871,17 +975,13 @@ export default function StagesTab({ project, onSaved }) {
                                 <div className="grid grid-cols-3 gap-2">
                                   <div>
                                     <label className="block text-[8px] font-bold uppercase text-[#111111]/50 mb-1">
-                                      Start {startLocked ? "(locked)" : "(editable until save)"}
+                                      Start {startLocked ? "(locked)" : ""}
                                     </label>
-                                    <input
+                                    <SafeInput
                                       type="date"
-                                      disabled={startLocked}
+                                      disabled={startLocked || !hasEditAccess}
                                       value={sub.start_date || ""}
-                                      onChange={(e) =>
-                                        patchSubLocal(idx, sIdx, {
-                                          start_date: e.target.value || null,
-                                        })
-                                      }
+                                      onChange={(v) => patchSubLocal(idx, sIdx, { start_date: v || null })}
                                       className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
                                   </div>
@@ -889,30 +989,24 @@ export default function StagesTab({ project, onSaved }) {
                                     <label className="block text-[8px] font-bold uppercase text-[#111111]/50 mb-1">
                                       Planned End
                                     </label>
-                                    <input
+                                    <SafeInput
                                       type="date"
+                                      disabled={!hasEditAccess}
                                       value={sub.planned_end_date || ""}
-                                      onChange={(e) =>
-                                        patchSubLocal(idx, sIdx, {
-                                          planned_end_date: e.target.value || null,
-                                        })
-                                      }
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px]"
+                                      onChange={(v) => patchSubLocal(idx, sIdx, { planned_end_date: v || null })}
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100"
                                     />
                                   </div>
                                   <div>
                                     <label className="block text-[8px] font-bold uppercase text-[#111111]/50 mb-1">
                                       Actual End
                                     </label>
-                                    <input
+                                    <SafeInput
                                       type="date"
+                                      disabled={!hasEditAccess}
                                       value={sub.actual_end_date || ""}
-                                      onChange={(e) =>
-                                        patchSubLocal(idx, sIdx, {
-                                          actual_end_date: e.target.value || null,
-                                        })
-                                      }
-                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px]"
+                                      onChange={(v) => patchSubLocal(idx, sIdx, { actual_end_date: v || null })}
+                                      className="w-full border border-black/10 rounded-lg px-2 py-1.5 text-[10px] disabled:bg-gray-100"
                                     />
                                   </div>
                                 </div>
@@ -922,74 +1016,58 @@ export default function StagesTab({ project, onSaved }) {
                                     Progress %
                                   </label>
                                   <div className="flex items-center gap-3">
-                                    <input
-                                      type="range"
+                                    <SafeSlider
                                       min="0"
                                       max="100"
+                                      disabled={!hasEditAccess}
                                       value={Number(sub.progress_pct) || 0}
-                                      onChange={(e) =>
-                                        patchSubLocal(idx, sIdx, {
-                                          progress_pct: parseProgressInput(e.target.value),
-                                        })
-                                      }
+                                      onChange={(v) => patchSubLocal(idx, sIdx, { progress_pct: parseProgressInput(v) })}
                                       className="flex-1 gantt-slider"
                                     />
-                                    <input
+                                    <SafeInput
                                       type="number"
                                       min="0"
                                       max="100"
                                       inputMode="numeric"
+                                      disabled={!hasEditAccess}
                                       value={progressValue(sub.progress_pct)}
-                                      onChange={(e) =>
-                                        patchSubLocal(idx, sIdx, {
-                                          progress_pct: parseProgressInput(e.target.value),
-                                        })
-                                      }
-                                      onFocus={(e) => e.target.select()}
-                                      className="w-16 border border-black/10 rounded-lg px-2 py-1.5 text-xs font-black text-[#FF6600] outline-none"
+                                      parseFn={parseProgressInput}
+                                      onChange={(v) => patchSubLocal(idx, sIdx, { progress_pct: v })}
+                                      className="w-16 border border-black/10 rounded-lg px-2 py-1.5 text-xs font-black text-[#FF6600] outline-none disabled:bg-gray-100"
                                     />
                                   </div>
                                 </div>
 
                                 <div className="flex items-center justify-between gap-2 pt-2 border-t border-black/5">
                                   <div className="text-[10px] font-semibold text-[#111111]/50">
-                                    Status:{" "}
-                                    <span
-                                      className={`font-bold ${
-                                        sub.status === "completed"
-                                          ? "text-emerald-600"
-                                          : sub.status === "in_progress"
-                                          ? "text-[#FF6600]"
-                                          : "text-[#111111]/50"
-                                      }`}
-                                    >
-                                      {(sub.status || "pending").replace("_", " ").toUpperCase()}
-                                    </span>
+                                    Status: <StatusBadge status={sub.status} />
                                   </div>
-                                  <div className="flex items-center gap-1.5">
-                                    {!isComplete && (
+                                  {hasEditAccess && (
+                                    <div className="flex items-center gap-1.5">
+                                      {!isComplete && (
+                                        <button
+                                          onClick={() => markSubComplete(idx, sub.id, sub.name)}
+                                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-[10px] font-bold rounded-lg flex items-center gap-1 text-white"
+                                        >
+                                          <CheckCircle2 className="w-3 h-3" /> Mark Complete
+                                        </button>
+                                      )}
                                       <button
-                                        onClick={() => markSubComplete(idx, sub.id, sub.name)}
-                                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-[10px] font-bold rounded-lg flex items-center gap-1 text-white"
+                                        onClick={() => saveSubstage(idx, sub)}
+                                        disabled={isSavingThis}
+                                        className="px-3 py-1.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-[10px] font-bold rounded-lg disabled:opacity-60 flex items-center gap-1"
                                       >
-                                        <CheckCircle2 className="w-3 h-3" /> Mark Complete
+                                        {isSavingThis ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                        Save
                                       </button>
-                                    )}
-                                    <button
-                                      onClick={() => saveSubstage(idx, sub)}
-                                      disabled={isSavingThis}
-                                      className="px-3 py-1.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-[10px] font-bold rounded-lg disabled:opacity-60 flex items-center gap-1"
-                                    >
-                                      {isSavingThis ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                                      Save
-                                    </button>
-                                    <button
-                                      onClick={() => deleteSubstage(idx, sub.id)}
-                                      className="p-1.5 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white rounded-lg"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
+                                      <button
+                                        onClick={() => deleteSubstage(idx, sub.id)}
+                                        className="p-1.5 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white rounded-lg"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -1000,23 +1078,25 @@ export default function StagesTab({ project, onSaved }) {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-black/10 bg-[#F9FAFB] p-4 rounded-xl">
-                        <button
-                          onClick={() => saveStage(idx)}
-                          disabled={saving === idx}
-                          className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
-                        >
-                          {saving === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                          Save Stage
-                        </button>
-                        <button
-                          onClick={() => deleteStage(idx)}
-                          disabled={isHandover}
-                          className="px-3 py-2.5 text-red-500 hover:bg-red-50 text-xs font-bold rounded-xl disabled:opacity-30 flex items-center gap-1.5"
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete Stage
-                        </button>
-                      </div>
+                      {hasEditAccess && (
+                        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-black/10 bg-[#F9FAFB] p-4 rounded-xl">
+                          <button
+                            onClick={() => saveStage(idx)}
+                            disabled={saving === idx}
+                            className="px-5 py-2.5 bg-[#FF6600] hover:bg-[#FF0000] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
+                          >
+                            {saving === idx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            Save Stage
+                          </button>
+                          <button
+                            onClick={() => deleteStage(idx)}
+                            disabled={isHandover}
+                            className="px-3 py-2.5 text-red-500 hover:bg-red-50 text-xs font-bold rounded-xl disabled:opacity-30 flex items-center gap-1.5"
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete Stage
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1026,9 +1106,9 @@ export default function StagesTab({ project, onSaved }) {
         </div>
       )}
 
-      {/* Gantt view unchanged structurally — only mounts when viewMode === split */}
+      {/* ================= GANTT VIEW (SPLIT) ================= */}
       {viewMode === "split" && (
-        <div className="flex-1 flex overflow-hidden bg-white" ref={containerRef}>
+        <div className="flex-1 flex min-h-0 overflow-hidden bg-white" ref={containerRef}>
           <div
             className="flex flex-col shrink-0 border-r border-gray-200 bg-white z-10 shadow-[2px_0_8px_rgba(0,0,0,0.03)]"
             style={{ width: leftWidth }}
@@ -1097,14 +1177,14 @@ export default function StagesTab({ project, onSaved }) {
                         <div style={{ width: COL.progress }} className="flex items-center gap-1.5 px-2">
                           <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div
-                              className={`h-full ${d.status === "completed" ? "bg-[#10B981]" : "bg-[#FF6600]"}`}
+                              className={`h-full ${d.status === "completed" ? "bg-emerald-500" : "bg-[#FF6600]"}`}
                               style={{ width: `${Number(d.progress_pct) || 0}%` }}
                             />
                           </div>
                           <span className="text-[9px] font-bold text-gray-800 w-7 text-right">{Number(d.progress_pct) || 0}%</span>
                         </div>
                         <div style={{ width: COL.status }} className="flex justify-center px-1">
-                          <StatusPill status={d.status} />
+                          <StatusBadge status={d.status} />
                         </div>
                       </div>
                     );
@@ -1125,7 +1205,7 @@ export default function StagesTab({ project, onSaved }) {
             <GripVertical className="w-3.5 h-5 text-gray-400 group-hover:text-white" />
           </div>
 
-          <div className="flex-1 min-w-0 flex flex-col bg-white relative">
+          <div className="flex-1 min-w-[200px] flex flex-col bg-white relative overflow-hidden">
             <div className="absolute right-3 top-2 z-30 flex items-center bg-white border border-gray-200 rounded-md p-0.5 shadow-sm">
               {["day", "week", "month"].map((z) => (
                 <button
@@ -1140,8 +1220,8 @@ export default function StagesTab({ project, onSaved }) {
               ))}
             </div>
 
-            <div ref={rightScrollRef} onScroll={onRightScroll} className="flex-1 overflow-auto csb">
-              <div style={{ width: Math.max(ganttWidth, 400), minHeight: "100%" }} className="relative flex flex-col">
+            <div ref={rightScrollRef} onScroll={onRightScroll} className="flex-1 min-h-0 overflow-auto csb">
+              <div style={{ width: Math.max(ganttWidth, 600), minHeight: "100%" }} className="relative flex flex-col">
                 <div className="sticky top-0 z-10 h-10 bg-[#F9FAFB] border-b-2 border-gray-200 shrink-0">
                   {monthHeaders.map((m, i) => (
                     <div key={`mh-${i}`} className="absolute top-1 text-[9px] font-bold text-gray-700 -translate-x-1/2 whitespace-nowrap" style={{ left: m.leftPx }}>
@@ -1156,28 +1236,49 @@ export default function StagesTab({ project, onSaved }) {
                 </div>
 
                 <div className="relative pb-16">
-                  <div className="absolute top-0 bottom-0 w-px bg-red-400 z-[1] pointer-events-none" style={{ left: todayPx }}>
-                    <div className="absolute top-0 -translate-x-1/2 bg-red-500 text-white text-[7px] font-bold px-1 py-0.5 rounded-b">TODAY</div>
+                  {/* Polish matching client portal "Today" marker style with elevated z-index & smooth shadow glow */}
+                  <div className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none shadow-[0_0_6px_rgba(239,68,68,0.6)]" style={{ left: todayPx }}>
+                    <div className="absolute top-0 -translate-x-1/2 bg-red-500 text-white text-[8px] tracking-wide font-black px-1.5 py-0.5 rounded-b shadow-sm uppercase">TODAY</div>
                   </div>
 
                   {visibleRows.map((row) => {
                     const d = row.data;
                     const isParent = row.type === "parent";
-                    const bar = barPx(d.start_date || d.started_at, d.planned_end_date || d.expected_date);
-                    const fill =
-                      d.status === "completed" ? "bg-[#10B981]" :
-                      d.status === "in_progress" ? "bg-[#FF6600]" : "bg-gray-300";
+                    const start = d.start_date || d.started_at || d.actual_start_date;
+                    const end = d.planned_end_date || d.expected_date || d.actual_end_date || d.completed_at;
+                    const bar = barPx(start, end);
+
+                    // --- Client Portal Matching Colors ---
+                    const trackBg =
+                      d.status === "completed" ? "bg-emerald-50 border-emerald-100/80" :
+                      d.status === "in_progress" ? "bg-orange-50 border-orange-100/60" :
+                      "bg-gray-50 border-gray-100";
+
+                    const fillGradient =
+                      d.status === "completed" ? "bg-emerald-500" :
+                      d.status === "in_progress" ? "bg-gradient-to-r from-[#FF6600] to-[#FFA500]" :
+                      isParent ? "bg-slate-400" : "bg-slate-300";
 
                     return (
                       <div key={row.id} className="h-9 border-b border-gray-50 relative row-h">
-                        {bar.valid && (
+                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gray-100 pointer-events-none" />
+                        
+                        {bar.valid ? (
                           <div
-                            className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-full overflow-hidden border border-black/10 ${isParent ? "bg-gray-200" : "bg-gray-100"}`}
-                            style={{ left: bar.left, width: bar.width, minWidth: 6 }}
+                            className={`absolute top-1/2 -translate-y-1/2 h-3.5 rounded-full overflow-hidden border shadow-sm z-10 transition-all ${trackBg}`}
+                            style={{ left: bar.left, width: bar.width, minWidth: 8 }}
                             title={`${d.name} · ${Number(d.progress_pct) || 0}%`}
                           >
-                            <div className={`h-full ${fill} rounded-full`} style={{ width: `${Number(d.progress_pct) || 0}%` }} />
+                            {/* Inner progress fill */}
+                            {Number(d.progress_pct) > 0 && (
+                              <div 
+                                className={`h-full ${fillGradient} rounded-full transition-all duration-300`} 
+                                style={{ width: `${Number(d.progress_pct) || 0}%` }} 
+                              />
+                            )}
                           </div>
+                        ) : (
+                          <div className="absolute top-1/2 -translate-y-1/2 left-2 h-2 w-6 rounded bg-gray-200 border border-gray-300 z-10" title="No dates set yet" />
                         )}
                       </div>
                     );
@@ -1192,16 +1293,31 @@ export default function StagesTab({ project, onSaved }) {
   );
 }
 
-function StatusPill({ status }) {
+// --- STATUS BADGE AT BOTTOM ---
+function StatusBadge({ status }) {
   const map = {
-    completed: { text: "Completed", classes: "bg-[#E6F4EA] text-[#1E8E3E] border border-[#1E8E3E]/20" },
-    in_progress: { text: "In Progress", classes: "bg-[#FF6600]/10 text-[#FF6600] border border-[#FF6600]/30" },
-    pending: { text: "Not Started", classes: "bg-[#F1F3F4] text-[#5F6368] border border-gray-200" },
+    completed: {
+      label: "Completed",
+      classes: "bg-[#E6F4EA] text-[#1E8E3E] border border-[#1E8E3E]/20",
+      Icon: CheckCircle2,
+    },
+    in_progress: {
+      label: "Active",
+      classes: "bg-[#FF6600]/10 text-[#FF6600] border border-[#FF6600]/30",
+      Icon: PlayCircle,
+    },
+    pending: {
+      label: "Pending",
+      classes: "bg-[#F1F3F4] text-[#5F6368] border border-gray-200",
+      Icon: Circle,
+    },
   };
   const c = map[status] || map.pending;
+  const Icon = c.Icon;
   return (
-    <span className={`text-[8px] font-bold px-2 py-0.5 rounded whitespace-nowrap ${c.classes}`}>
-      {c.text}
+    <span className={`inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap ${c.classes}`}>
+      <Icon className="w-2.5 h-2.5" />
+      <span className="hidden xl:inline">{c.label}</span>
     </span>
   );
 }
