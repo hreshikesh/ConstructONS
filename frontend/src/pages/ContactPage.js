@@ -37,7 +37,6 @@ function RedditIcon(props) {
   );
 }
 
-// Claymorphic style for social links
 const customSocialCardStyle = {
   background: "rgb(223, 225, 235)",
   borderRadius: "32px",
@@ -55,25 +54,21 @@ export default function ContactPage() {
       .catch(() => setSettings(null));
   }, []);
 
-  // Dynamic Contact Details from backend settings with fallbacks
   const phone = settings?.phone || settings?.contact_phone || "";
   const whatsapp = settings?.whatsapp || settings?.phone || "";
   const email = settings?.email || settings?.support_email || "";
 
-  // Dynamic Map URLs from backend settings
   const directMapUrl = settings?.map_direction_url || settings?.google_maps_url || "";
   const mapEmbed = settings?.map_embed_url || settings?.google_maps_embed || "";
 
-  // Formatted WhatsApp URL
   const waNumber = String(whatsapp).replace(/\D/g, "");
   const waLink = waNumber 
-    ? `https://wa.me/${waNumber}?text=${encodeURIComponent("Hi ConstructONS, I'd like a consultation for my construction project.")}`
+    ? `https://wa.me/${waNumber}?text=${encodeURIComponent("Hi ConstructONS, I'd like a consultation for my construction project in Bangalore.")}`
     : "#";
   const waQr = waNumber
     ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=${encodeURIComponent(waLink)}`
     : "";
 
-  // Social Media Links mapped dynamically from backend settings, with hardcoded fallback/override for Reddit
   const socialLinks = [
     {
       name: "Instagram",
@@ -112,6 +107,7 @@ export default function ContactPage() {
     },
   ];
 
+  // UPGRADED SCHEMA: Added Geo Coordinates, Price Range, and Opening Hours
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -119,15 +115,17 @@ export default function ContactPage() {
         "@type": "ContactPage",
         "@id": "https://constructons.com/contact#webpage",
         "url": "https://constructons.com/contact",
-        "name": "Contact ConstructONS",
-        "description": "Contact India's premium residential builders for standard and luxury pricing estimators."
+        "name": "Contact ConstructONS - Home Construction Company in Bangalore",
+        "description": "Contact ConstructONS HQ in Bengaluru for turnkey home construction quotes."
       },
       {
-        "@type": "LocalBusiness",
+        "@type": "ConstructionBusiness",
         "name": "ConstructONS",
         "image": "https://constructons.com/icon.svg",
         "telephone": phone || "+91-XXXXXXXXXX",
         "email": email || "support@constructons.com",
+        "url": "https://constructons.com",
+        "priceRange": "₹₹₹",
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "Bengaluru Head Office",
@@ -136,7 +134,18 @@ export default function ContactPage() {
           "postalCode": "560001",
           "addressCountry": "IN"
         },
-        "url": "https://constructons.com"
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 12.9716,
+          "longitude": 77.5946
+        },
+        "openingHoursSpecification": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "opens": "09:00",
+          "closes": "19:00"
+        },
+        "areaServed": ["Bengaluru", "Hyderabad", "Pune", "Chennai", "Mumbai"]
       }
     ]
   };
@@ -144,10 +153,11 @@ export default function ContactPage() {
   return (
     <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white min-h-screen">
       <SEO
-        title="Contact Us - Free Construction Consultation"
-        description="Have questions about house construction packages? Get in touch with ConstructONS headquarters in Bengaluru. Call directly, WhatsApp, email, or visit our design studio."
+        title="Contact ConstructONS | Home Construction Company in Bangalore"
+        description="Contact ConstructONS, the leading home construction company in Bangalore. Get a free quote for turnkey house construction, visit our studio, or chat on WhatsApp."
         canonical="/contact"
-        keywords="contact constructons, home builder phone number, modular house consult, modular construction studio Bangalore, cost estimation quote"
+        keywords="contact constructons, home construction company Bangalore, builders in bangalore contact, house construction quote bangalore"
+        image="/images/contact/contacthero.webp"
         structuredData={structuredData}
       />
 
@@ -188,7 +198,7 @@ export default function ContactPage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="mt-4 text-white/75 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl"
               >
-                Reach out directly via phone, WhatsApp, or email. Visit our headquarters or scan the QR code to chat directly with our engineering team.
+                Reach out directly via phone, WhatsApp, or email to discuss your home construction project in Bangalore.
               </motion.p>
 
               <motion.div
@@ -223,7 +233,7 @@ export default function ContactPage() {
                 <figure className="w-full h-full relative overflow-hidden rounded-lg">
                   <img
                     src="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&w=600&q=80"
-                    alt="Call ConstructONS"
+                    alt="Call ConstructONS home construction company in Bangalore"
                     loading="lazy"
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
@@ -252,7 +262,7 @@ export default function ContactPage() {
                 <figure className="w-full h-full relative overflow-hidden rounded-lg">
                   <img
                     src="https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=600&q=80"
-                    alt="WhatsApp Consultation"
+                    alt="WhatsApp construction consultation ConstructONS"
                     loading="lazy"
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
@@ -279,7 +289,7 @@ export default function ContactPage() {
                 <figure className="w-full h-full relative overflow-hidden rounded-lg">
                   <img
                     src="https://images.unsplash.com/photo-1586769852044-692d6e3703f0?auto=format&fit=crop&w=600&q=80"
-                    alt="Email ConstructONS"
+                    alt="Email ConstructONS for house construction quote"
                     loading="lazy"
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />

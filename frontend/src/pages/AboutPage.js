@@ -43,19 +43,16 @@ function cn(...classes) {
 function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF6600]" }) {
   if (!name) return <LucideIcons.Home className={className} strokeWidth={2} />;
 
-  // If name is already a valid React Component
   if (typeof name === "function" || typeof name === "object") {
     const CustomIcon = name;
     return <CustomIcon className={className} strokeWidth={2} />;
   }
 
-  // Exact Match
   if (LucideIcons[name]) {
     const IconComponent = LucideIcons[name];
     return <IconComponent className={className} strokeWidth={2} />;
   }
 
-  // PascalCase Match
   const pascalName = name
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -74,9 +71,7 @@ function DynamicLucideIcon({ name, className = "h-6 w-6 text-[#FF6600]" }) {
    ANIMATED NUMBER
 ========================================================= */
 
-function AnimatedNumber({
-  value,
-}) {
+function AnimatedNumber({ value }) {
   const ref = useRef(null);
 
   const isInView = useInView(ref, {
@@ -84,7 +79,6 @@ function AnimatedNumber({
     margin: "-50px",
   });
 
-  // Extract both numbers and any non-numeric suffix (like "%" or "+")
   const numeric = parseFloat(String(value).replace(/[^\d.]/g, "")) || 0;
   const suffix = String(value).replace(/[\d.]/g, "").trim();
 
@@ -93,10 +87,7 @@ function AnimatedNumber({
     duration: 2200,
   });
 
-  const out = useTransform(
-    spring,
-    (v) => Math.round(v) + suffix
-  );
+  const out = useTransform(spring, (v) => Math.round(v) + suffix);
 
   useEffect(() => {
     if (isInView) {
@@ -147,8 +138,7 @@ export default function AboutPage() {
     publicApi.getTeam().then(setTeam).catch(() => setTeam([]));
     publicApi.getFaqs().then(setFaqs).catch(() => setFaqs([]));
     publicApi.getSiteSettings().then(setSettings).catch(() => setSettings(null));
-    
-    // Fetch CMS Stats for the hero block
+
     publicApi.bootstrap().then((data) => {
       if (data && data.stats) setStats(data.stats);
     }).catch(() => setStats([]));
@@ -166,43 +156,82 @@ export default function AboutPage() {
     accent: "#FF6600",
   }));
 
+  // Dynamically build FAQ Schema from CMS data (big SEO boost!)
+  const faqSchema =
+    faqs.length > 0
+      ? {
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: f.answer,
+            },
+          })),
+        }
+      : null;
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "AboutPage",
         "@id": "https://constructons.com/about#webpage",
-        "url": "https://constructons.com/about",
-        "name": "About ConstructONS",
-        "description": "Learn about India's most advanced transparent residential construction platform."
+        url: "https://constructons.com/about",
+        name: "About ConstructONS - Home Construction Company in Bangalore",
+        description:
+          "ConstructONS is a tech-enabled home construction company in Bangalore offering turnkey house construction with transparent pricing and AI live tracking.",
+        isPartOf: {
+          "@type": "WebSite",
+          name: "ConstructONS",
+          url: "https://constructons.com",
+        },
       },
       {
         "@type": "BreadcrumbList",
-        "itemListElement": [
+        itemListElement: [
           {
             "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": "https://constructons.com"
+            position: 1,
+            name: "Home",
+            item: "https://constructons.com",
           },
           {
             "@type": "ListItem",
-            "position": 2,
-            "name": "About Us",
-            "item": "https://constructons.com/about"
-          }
-        ]
-      }
-    ]
+            position: 2,
+            name: "About Us",
+            item: "https://constructons.com/about",
+          },
+        ],
+      },
+      {
+        "@type": "ConstructionBusiness",
+        name: "ConstructONS",
+        url: "https://constructons.com",
+        logo: "https://constructons.com/icon.svg",
+        description:
+          "AI-powered home construction company in Bangalore offering turnkey house construction from ₹1,499/sqft.",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Bengaluru",
+          addressRegion: "Karnataka",
+          addressCountry: "IN",
+        },
+        areaServed: ["Bengaluru", "Hyderabad", "Pune", "Chennai", "Mumbai"],
+      },
+      ...(faqSchema ? [faqSchema] : []),
+    ],
   };
 
   return (
     <div className="bg-white font-['Poppins',sans-serif] selection:bg-[#FF6600] selection:text-white min-h-screen">
       <SEO
-        title="About Us - Intelligent & Transparent Builders"
-        description="We are India's premium tech-enabled construction platform. Read our mission to bring complete structural transparency and AI-driven efficiency to your dream home."
+        title="About ConstructONS | Home Construction Company in Bangalore"
+        description="ConstructONS is a leading home construction company in Bangalore. We build turnkey homes with transparent pricing from ₹1,499/sqft, AI live tracking, and zero hidden costs."
         canonical="/about"
-        keywords="about constructons, house building platform, construction company Bangalore, premium home developers India, civil engineers architectural studio"
+        keywords="about constructons, home construction company Bangalore, house construction company, turnkey construction Bangalore, transparent builders Bangalore"
+        image="/images/about/about.webp"
         structuredData={structuredData}
       />
 
@@ -221,14 +250,24 @@ export default function AboutPage() {
               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
               className="w-full flex flex-col items-center justify-center"
             >
-              <h1 className="font-extrabold text-[#000F1B] text-[13vw] sm:text-[11vw] md:text-[10vw] lg:text-[9vw] leading-none tracking-tight whitespace-nowrap flex items-center justify-center">
+              {/* Visual Logo Wordmark (not H1 for SEO reasons) */}
+              <div
+                aria-hidden="true"
+                className="font-extrabold text-[#000F1B] text-[13vw] sm:text-[11vw] md:text-[10vw] lg:text-[9vw] leading-none tracking-tight whitespace-nowrap flex items-center justify-center"
+              >
                 Construct
                 <span className="inline-flex items-center text-[#FF6600]">
                   <PowerIcon className="w-[0.72em] h-[0.72em] stroke-[#FF6600] inline-block -mt-[0.05em]" />
                   NS
                 </span>
                 <sup className="text-[0.35em] font-bold text-[#FF6600] -top-[0.8em] ml-[0.05em]">™</sup>
+              </div>
+
+              {/* REAL SEO H1 */}
+              <h1 className="mt-4 text-[#000F1B] font-bold text-base sm:text-lg md:text-xl tracking-tight max-w-2xl px-4">
+                About ConstructONS — Home Construction Company in Bangalore
               </h1>
+
               <p className="mt-3 text-[#000F1B]/50 font-medium text-xs sm:text-sm md:text-base tracking-[0.2em] uppercase">
                 Everything Construction. Always On.
               </p>
@@ -245,7 +284,9 @@ export default function AboutPage() {
             <img
               src="/images/about/about.webp"
               loading="lazy"
-              alt="ConstructONS Architecture"
+              alt="ConstructONS home construction team and architecture studio in Bangalore"
+              width={1600}
+              height={900}
               className="w-full max-w-6xl max-h-[50vh] sm:max-h-[60vh] md:max-h-[68vh] object-contain object-bottom drop-shadow-[0_25px_60px_rgba(0,15,27,0.2)]"
               onError={(e) => {
                 e.currentTarget.src = "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80";
@@ -303,12 +344,10 @@ export default function AboutPage() {
           <section className="py-12 md:py-16 bg-white relative z-30">
             <div className="container-wide">
               <div className="relative overflow-hidden bg-[#000F1B] rounded-[2.5rem] md:rounded-full py-8 md:py-10 px-5 sm:px-8 md:px-12 border border-white/10 shadow-2xl shadow-[#000F1B]/20">
-                
-                {/* Glowing decorative circles */}
+
                 <div className="pointer-events-none absolute -right-10 -bottom-10 w-60 h-60 bg-[#FF6600]/15 rounded-full blur-3xl" />
                 <div className="pointer-events-none absolute -left-10 -top-10 w-60 h-60 bg-[#FF6600]/10 rounded-full blur-3xl" />
 
-                {/* STATS GRID */}
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-y-8 md:gap-y-0">
                   {stats.slice(0, 4).map((stat, i) => (
                     <motion.div
@@ -367,7 +406,7 @@ export default function AboutPage() {
         <section id="faq" className="py-20 md:py-28 bg-white border-t border-black/5">
           <div className="container-wide">
             <div className="grid lg:grid-cols-[1fr_1.5fr] gap-12 lg:gap-20 items-start">
-              
+
               <div className="lg:sticky lg:top-32">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#FF6600]/20 bg-[#FF6600]/5 px-3 py-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#FF6600] animate-pulse" />
@@ -468,7 +507,13 @@ function Portrait({ member, active }) {
     <div style={style} className={cn("relative h-full overflow-hidden rounded-[1.05rem] bg-[#E8EEF2] transition-colors duration-500", active && "bg-[color-mix(in_srgb,var(--team-accent)_12%,white)]")}>
       <div aria-hidden="true" className={cn("absolute inset-0 opacity-55 transition-opacity duration-500", active && "opacity-100")} style={{ background: "radial-gradient(circle at 68% 20%, color-mix(in srgb, var(--team-accent) 36%, transparent), transparent 36%), radial-gradient(circle at 22% 82%, color-mix(in srgb, var(--team-accent) 16%, transparent), transparent 42%)" }} />
       {member.image ? (
-        <img src={member.image} alt={member.name} loading="lazy" draggable={false} className={cn("absolute inset-0 h-full w-full object-cover object-top grayscale transition-[filter,transform,opacity] duration-500 ease-out", active ? "scale-[1.03] grayscale-0" : "scale-100 grayscale opacity-85")} />
+        <img
+          src={member.image}
+          alt={`${member.name} - ${member.role} at ConstructONS home construction company`}
+          loading="lazy"
+          draggable={false}
+          className={cn("absolute inset-0 h-full w-full object-cover object-top grayscale transition-[filter,transform,opacity] duration-500 ease-out", active ? "scale-[1.03] grayscale-0" : "scale-100 grayscale opacity-85")}
+        />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-end overflow-hidden">
           <div aria-hidden="true" className={cn("absolute top-[13%] aspect-square h-[36%] rounded-full bg-black/10 transition-[transform,background-color] duration-500", active && "-translate-y-0.5 scale-105 bg-[var(--team-accent)]")} />

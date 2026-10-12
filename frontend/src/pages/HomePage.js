@@ -15,7 +15,7 @@ import Testimonials from "@/components/site/Testimonials";
 import ContactCTA from "@/components/site/ContactCTA";
 import FloatingActions from "@/components/site/FloatingActions";
 import { RefreshCw, AlertTriangle, ArrowRight } from "lucide-react";
-import SEO, { organizationSchema } from "@/components/site/SEO";
+import SEO, { constructionBusinessSchema  } from "@/components/site/SEO";
 
 export default function HomePage() {
   const [data, setData] = useState(null);
@@ -88,11 +88,11 @@ export default function HomePage() {
   return (
     <>
       <SEO
-        title="AI-Powered Home Construction Platform"
+        title="Home Construction Company in Bangalore"
         description="Build your dream home with ConstructONS. India's premium tech-enabled construction platform. Get transparent pricing from ₹1,499/sqft, real-time live site tracking, and AI design modules."
         canonical="/"
-        keywords="home construction India, house construction cost, civil contractors, transparent pricing, turnkey home building, custom home builder, AI floor plans, live CCTV tracking"
-        structuredData={organizationSchema}
+        keywords="home construction Bengaluru, house construction cost, civil contractors, transparent pricing, turnkey home building, custom home builder, AI floor plans, live CCTV tracking"
+        structuredData={constructionBusinessSchema }
       />
 
       <Header />
