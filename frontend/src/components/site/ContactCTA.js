@@ -160,6 +160,7 @@ export default function ContactCTA({ settings = {} }) {
                           src={waQr}
                           alt="Scan to chat on WhatsApp"
                           className="w-full h-full object-contain rounded-lg"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="text-[10px] text-slate-400">Loading...</div>

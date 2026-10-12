@@ -180,6 +180,7 @@ export default function DiagonalCarousel({
                           : "",
                         imageClassName
                       )}
+                      loading="lazy"
                     />
                   )}
                 </button>

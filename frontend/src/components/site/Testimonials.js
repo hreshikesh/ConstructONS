@@ -172,6 +172,7 @@ export default function TestimonialsSection({
                               src={item.avatar}
                               alt={item.name}
                               className="h-full w-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             <User className="h-6 w-6" />

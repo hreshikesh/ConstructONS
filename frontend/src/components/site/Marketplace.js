@@ -66,6 +66,7 @@ function MarketCard({ item, index }) {
             e.currentTarget.src = fallback;
           }}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 group-focus-within:scale-105"
+        
         />
         {/* base gradient so title stays readable before banner rises */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#000F1B]/80 via-[#000F1B]/25 to-transparent" />

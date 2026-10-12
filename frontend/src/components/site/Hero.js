@@ -21,6 +21,7 @@ export default function Hero() {
           src="/hero-construction.png"
           alt="Construction site"
           className="absolute inset-0 h-full w-full scale-[1.02] object-cover"
+          loading="lazy"
         />
 
         {/* 1. Base darkening */}

@@ -634,7 +634,9 @@ export default function ContractorsPage() {
               </button>
 
               <div className="flex items-center gap-4 mb-6">
-                <img src={portfolioView.avatar} alt={portfolioView.name} className="w-14 h-14 rounded-2xl object-cover border border-black/10" />
+                <img src={portfolioView.avatar} alt={portfolioView.name} 
+                loading="lazy"
+                className="w-14 h-14 rounded-2xl object-cover border border-black/10" />
                 <div>
                   <h3 className="text-lg font-bold text-[#000F1B]">{portfolioView.name}</h3>
                   <p className="text-xs text-[#111111]/60">{portfolioView.role} • {portfolioView.location}</p>
@@ -651,7 +653,10 @@ export default function ContractorsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {portfolioView.portfolio?.map((imgUrl, idx) => (
                     <div key={idx} className="aspect-4/3 rounded-2xl overflow-hidden border border-black/10 group relative bg-black/5">
-                      <img src={imgUrl} alt={`Project ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      <img src={imgUrl} alt={`Project ${idx + 1}`} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      loading="lazy"
+                       />
                     </div>
                   ))}
                 </div>

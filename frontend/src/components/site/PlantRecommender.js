@@ -263,7 +263,7 @@ export default function PlantRecommender() {
                     className="bg-[#F9FAFB] border border-black/5 rounded-2xl overflow-hidden hover:shadow-md hover:border-[#FF6600]/30 transition group"
                   >
                     <div className="h-32 overflow-hidden bg-emerald-50">
-                      <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400"; }} />
+                      <img src={p.image} alt={p.name}  className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400"; }} />
                     </div>
                     <div className="p-3">
                       <h5 className="text-sm font-bold text-[#000F1B] leading-tight">{p.name}</h5>

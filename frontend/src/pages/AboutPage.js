@@ -244,6 +244,7 @@ export default function AboutPage() {
           >
             <img
               src="/images/about/about.webp"
+              loading="lazy"
               alt="ConstructONS Architecture"
               className="w-full max-w-6xl max-h-[50vh] sm:max-h-[60vh] md:max-h-[68vh] object-contain object-bottom drop-shadow-[0_25px_60px_rgba(0,15,27,0.2)]"
               onError={(e) => {

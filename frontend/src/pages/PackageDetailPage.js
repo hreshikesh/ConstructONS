@@ -156,7 +156,7 @@ export default function PackageDetailPage() {
       <section className="relative overflow-hidden pt-28 pb-16 bg-brand-navy">
         <div className="absolute inset-0">
           {pkg.hero_image && (
-            <img src={pkg.hero_image} alt="" className="w-full h-full object-cover opacity-25" />
+            <img src={pkg.hero_image} alt="" loading="lazy" className="w-full h-full object-cover opacity-25" />
           )}
           <div className="absolute inset-0 bg-gradient-to-br from-brand-navy via-brand-navy/95 to-brand-navySoft" />
         </div>

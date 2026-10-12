@@ -349,7 +349,7 @@ function EngineerCard({ pro, index, reduce, onOpen, onChat }) {
       <div className="p-6 md:p-7 flex-1 flex flex-col">
         <div className="flex items-start gap-4 mb-5">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#FF6600]/20 shadow-md shrink-0">
-            <img src={pro.avatar} alt="" className="w-full h-full object-cover" />
+            <img src={pro.avatar} alt="" loading="lazy" className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-bold text-[#000F1B] leading-tight mb-0.5">{pro.name}</h3>
@@ -465,7 +465,7 @@ function CredentialsModal({ view, setView, onChat }) {
                 {pro.techImages.map((img, n) => (
                   <button key={n} onClick={() => setI(n)} aria-label={`View doc ${n + 1}`}
                     className={`h-16 flex-1 rounded-xl overflow-hidden border-2 transition cursor-pointer ${n === i ? "border-[#FF6600]" : "border-transparent opacity-50 hover:opacity-100"}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" loading="lazy" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -476,7 +476,8 @@ function CredentialsModal({ view, setView, onChat }) {
               <button onClick={() => setView(null)} aria-label="Close" className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 grid place-items-center cursor-pointer transition z-10"><X className="w-4 h-4 text-[#000F1B]" /></button>
 
               <div className="flex items-center gap-4 mb-6 pt-4">
-                <img src={pro.avatar} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-[#FF6600]/20 shadow-sm" />
+                <img src={pro.avatar} alt="" loading="lazy"
+                 className="w-16 h-16 rounded-full object-cover border-2 border-[#FF6600]/20 shadow-sm" />
                 <div>
                   <h3 className="text-2xl font-bold text-[#000F1B] leading-tight mb-1">{pro.name}</h3>
                   <div className="text-sm font-semibold text-[#FF6600]">{pro.firm}</div>

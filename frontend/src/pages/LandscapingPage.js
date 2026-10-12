@@ -145,7 +145,7 @@ export default function LandscapingPage() {
                   initial={reduce ? false : { opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.15 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                   className={`overflow-hidden rounded-2xl bg-white/5 border border-white/10 ${i % 2 ? "mt-12" : ""} ${i < 2 ? "aspect-[3/4]" : "aspect-[4/5]"} group relative`}>
-                  <img src={p.image} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" loading="lazy" />
+                  <img src={p.image} alt={p.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition duration-700"  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition" />
                   <div className="absolute bottom-3 left-3 text-white text-[9px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition">
                     {p.style}
@@ -345,7 +345,7 @@ function ShowcaseModal({ view, setView, onChat }) {
 
             {/* Left: Image */}
             <div className="relative lg:w-[55%] h-[45%] lg:h-full bg-black">
-              <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
+              <img src={item.image} alt={item.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
             </div>
 

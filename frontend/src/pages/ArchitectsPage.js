@@ -310,7 +310,7 @@ function ArchitectCard({ pro, index, reduce, onOpen, onChat }) {
 
       <div className="p-6 md:p-8 flex-1 flex flex-col relative">
         <div className="absolute -top-10 left-6 w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white z-10">
-          <img src={pro.avatar} alt="" className="w-full h-full object-cover" />
+          <img src={pro.avatar} alt={`Avatar of ${pro.name}`} className="w-full h-full object-cover" loading="lazy"/>
         </div>
 
         <div className="flex justify-between items-start mt-10 mb-4">
@@ -413,7 +413,7 @@ function PortfolioModal({ view, setView, onChat }) {
                 {pro.images.map((img, n) => (
                   <button key={n} onClick={() => setI(n)} aria-label={`Show photo ${n + 1}`}
                     className={`h-16 flex-1 rounded-xl overflow-hidden border-2 transition cursor-pointer ${n === i ? "border-[#FF6600]" : "border-transparent opacity-50 hover:opacity-100"}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt={`Project ${n + 1}`} loading="lazy" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -424,7 +424,7 @@ function PortfolioModal({ view, setView, onChat }) {
               <button onClick={() => setView(null)} aria-label="Close" className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 grid place-items-center cursor-pointer transition"><X className="w-4 h-4 text-[#000F1B]" /></button>
 
               <div className="flex items-center gap-4 mb-8 pt-4">
-                <img src={pro.avatar} alt="" className="w-16 h-16 rounded-2xl object-cover border border-black/10 shadow-sm" />
+                <img src={pro.avatar} alt="avatar"  loading="lazy" className="w-16 h-16 rounded-2xl object-cover border border-black/10 shadow-sm" />
                 <div>
                   <h3 className="text-2xl font-bold text-[#000F1B] leading-tight mb-1">{pro.name}</h3>
                   <div className="text-sm font-semibold text-[#FF6600]">{pro.firm}</div>

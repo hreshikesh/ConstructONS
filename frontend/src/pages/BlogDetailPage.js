@@ -104,7 +104,7 @@ export default function BlogDetailPage() {
             <span>{b.read_minutes} min read</span>
           </div>
           <div className="mt-6 rounded-2xl overflow-hidden aspect-[16/9] bg-brand-bg">
-            <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover" />
+            <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <article
             data-testid="blog-content"

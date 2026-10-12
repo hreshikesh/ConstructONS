@@ -294,7 +294,8 @@ export default function SuppliersPage() {
                   <div className="w-full sm:w-32 h-36 sm:h-auto shrink-0 rounded-xl overflow-hidden relative bg-gray-100">
                     <img 
                       src={vendor.image} 
-                      alt={vendor.name} 
+                      alt={vendor.name}
+                      loading="lazy" 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                     <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md flex items-center gap-1 text-[10px] font-bold text-white">

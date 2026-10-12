@@ -39,6 +39,7 @@ export default function HomeCollection({ homes = [] }) {
           alt=""
           aria-hidden="true"
           className="h-full w-full object-cover"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px]" />
       </div>
@@ -56,6 +57,7 @@ export default function HomeCollection({ homes = [] }) {
                   alt=""
                   aria-hidden="true"
                   className="h-full w-full object-cover"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-[#111111]/95 via-[#111111]/90 to-[#111111]/80" />
                 <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-[#FF6600]/20 blur-3xl pointer-events-none" />
@@ -216,6 +218,7 @@ export default function HomeCollection({ homes = [] }) {
                 src={h?.cover_image || "/images/placeholder.webp"}
                 alt={h?.name || "Thumbnail"}
                 className="h-20 w-16 object-cover"
+                loading="lazy"
               />
             </button>
           ))}

@@ -357,7 +357,7 @@ export default function PublicQuotePage() {
               {q.floor_plans.map((s, i) => (
                 <div key={s.id || i} className="rounded-xl overflow-hidden border border-black/10">
                   {s.image_url && (
-                    <img src={s.image_url.startsWith("http") ? s.image_url : s.image_url} alt={s.title} className="w-full h-56 object-contain bg-brand-bg" />
+                    <img src={s.image_url.startsWith("http") ? s.image_url : s.image_url} alt={s.title} className="w-full h-56 object-contain bg-brand-bg" loading="lazy" />
                   )}
                   <div className="p-3 bg-brand-navy text-white text-xs grid grid-cols-4 gap-2">
                     <div><div className="text-brand-orangeLight text-[9px] uppercase">Sheet</div><div className="font-semibold">{s.sheet_number || i + 1}</div></div>
@@ -380,7 +380,7 @@ export default function PublicQuotePage() {
               {q.elevations.map((s, i) => (
                 <div key={s.id || i} className="rounded-xl overflow-hidden border border-black/10">
                   {s.image_url && (
-                    <img src={s.image_url} alt={s.title} className="w-full h-56 object-contain bg-brand-bg" />
+                    <img src={s.image_url} alt={s.title} className="w-full h-56 object-contain bg-brand-bg" loading="lazy" />
                   )}
                   <div className="p-2 text-xs text-brand-navy/70 bg-brand-bg">{s.title} · scale {s.scale || "1:100"}</div>
                 </div>
@@ -401,7 +401,7 @@ export default function PublicQuotePage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {(board.images || []).map((img, ii) => (
                       <div key={img.id || ii} className="relative">
-                        <img src={img.url} alt={img.caption || ""} className="w-full h-32 object-cover rounded-lg" />
+                        <img src={img.url} alt={img.caption || ""} loading="lazy" className="w-full h-32 object-cover rounded-lg" />
                         {img.caption && <div className="text-[10px] text-brand-navy/60 mt-1">{img.caption}</div>}
                       </div>
                     ))}

@@ -123,7 +123,7 @@ export default function EquipmentPage() {
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute inset-0 z-0"
                   >
-                    <img src={activeMachine.image} alt={activeMachine.name} className="w-full h-full object-cover opacity-60" />
+                    <img src={activeMachine.image} alt={activeMachine.name} loading="lazy" className="w-full h-full object-cover opacity-60" />
                     
                     {/* Vignette Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#000F1B] via-transparent to-[#000F1B]/50" />

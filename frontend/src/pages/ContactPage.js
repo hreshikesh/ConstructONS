@@ -224,6 +224,7 @@ export default function ContactPage() {
                   <img
                     src="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&w=600&q=80"
                     alt="Call ConstructONS"
+                    loading="lazy"
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
@@ -252,6 +253,7 @@ export default function ContactPage() {
                   <img
                     src="https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=600&q=80"
                     alt="WhatsApp Consultation"
+                    loading="lazy"
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
@@ -278,6 +280,7 @@ export default function ContactPage() {
                   <img
                     src="https://images.unsplash.com/photo-1586769852044-692d6e3703f0?auto=format&fit=crop&w=600&q=80"
                     alt="Email ConstructONS"
+                    loading="lazy"
                     className="w-full h-full object-cover rounded-lg brightness-50 group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
@@ -305,6 +308,7 @@ export default function ContactPage() {
                       src={waQr}
                       alt="WhatsApp QR Code"
                       className="w-full h-full object-contain rounded-xl"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Loading...</div>

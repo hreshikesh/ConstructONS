@@ -64,7 +64,7 @@ export default function BlogListPage() {
             {blogs.map((b) => (
               <Link key={b.id} to={`/blog/${b.slug}`} className="group rounded-2xl overflow-hidden bg-white border border-black/5 shadow-soft hover:shadow-premium transition">
                 <div className="aspect-[16/10] overflow-hidden">
-                  <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy"/>
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-2 text-[11px] text-brand-navy/60">

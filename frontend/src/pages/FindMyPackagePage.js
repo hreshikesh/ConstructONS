@@ -219,6 +219,7 @@ function LogoMark({ className = "w-6 h-6" }) {
           e.currentTarget.style.display = "none";
         }}
         className="w-full h-full object-contain"
+        loading="lazy"
       />
     </div>
   );
@@ -552,6 +553,7 @@ function QuizScreen({ step, total, current, answers, onPick, onBack }) {
                           <img
                             src={opt.img}
                             alt={opt.label}
+                            loading="lazy"
                             className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
                               active ? "scale-105" : "group-hover:scale-105"
                             }`}
@@ -997,6 +999,7 @@ function SmallHomeCard({ home, isBest }) {
         <img
           src={home.cover_image}
           alt={home.name}
+          loading="lazy"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#000F1B]/60 to-transparent" />

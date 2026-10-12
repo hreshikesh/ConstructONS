@@ -128,6 +128,7 @@ export default function CustomerJourney({ steps = [] }) {
                     onError={(e) => {
                       e.currentTarget.src = "/logo.png";
                     }}
+                    loading="lazy"
                   />
                 </div>
               </div>
@@ -258,6 +259,7 @@ export default function CustomerJourney({ steps = [] }) {
                 onError={(e) => {
                   e.currentTarget.src = "/logo.png";
                 }}
+                loading="lazy"
               />
             </div>
           </div>

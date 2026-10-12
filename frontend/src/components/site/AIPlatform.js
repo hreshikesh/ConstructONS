@@ -399,6 +399,7 @@ export default function AIPlatform({ modules = [] }) {
                   src="https://ik.imagekit.io/kno0oq7ci/image_19mBYHnKV7.png"
                   alt="ConstructONS AI Platform Dashboard — Coming Soon"
                   className="w-full h-auto object-cover object-top"
+                  loading="lazy"
                 />
                 {/* subtle dim so it feels locked / preview */}
                 <div className="absolute inset-0 bg-[#111111]/25 pointer-events-none" />

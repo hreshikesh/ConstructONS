@@ -195,7 +195,7 @@ export default function HomeDetailPage() {
                             : "border-transparent opacity-55 hover:opacity-100"
                         }`}
                       >
-                        <img src={g} alt="" className="w-full h-full object-cover" />
+                        <img src={g} alt="" className="w-full h-full object-cover" loading="lazy" />
                         {selected === i && (
                           <span className="absolute inset-x-1 bottom-1 h-0.5 rounded-full bg-[#FF6600]" />
                         )}
@@ -216,6 +216,7 @@ export default function HomeDetailPage() {
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
                         className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </AnimatePresence>
 
@@ -563,6 +564,7 @@ export default function HomeDetailPage() {
               exit={{ scale: 0.95, opacity: 0 }}
               className="max-w-[95vw] max-h-[85vh] object-contain rounded-xl"
               onClick={(e) => e.stopPropagation()}
+              loading="lazy"
             />
 
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 shadow-md flex items-center">
@@ -626,7 +628,7 @@ function AboutModal({ open, onClose, home }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-48 sm:h-56 shrink-0 overflow-hidden">
-              <img src={home.cover_image} alt={home.name} className="absolute inset-0 w-full h-full object-cover" />
+              <img src={home.cover_image} alt={home.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#000F1B]/85 via-[#000F1B]/30 to-transparent" />
 
               <button
@@ -860,7 +862,7 @@ function FloorPlanCard({ home }) {
 
       {home.floorplan_image && (
         <div className="mt-5 rounded-2xl overflow-hidden bg-[#F7F7F7] border border-black/5 relative">
-          <img src={home.floorplan_image} alt="Floor plan blueprint" className="w-full h-auto object-cover" />
+          <img src={home.floorplan_image} alt="Floor plan blueprint" loading="lazy" className="w-full h-auto object-cover"  />
           <div className="absolute top-3 left-3 bg-white/95 backdrop-blur rounded-full px-3 py-1.5 shadow-sm flex items-center">
             <BrandLockup tone="light" size="xs" />
           </div>
