@@ -196,7 +196,7 @@ export default function ContactCTA({ settings = {} }) {
                     Mon – Sat · 9:00 AM – 7:00 PM
                   </div>
                   <div className="text-[11px] text-white/45 mt-0.5">
-                    Average response under 30 mins
+                    Average response under 5 mins
                   </div>
                 </div>
               </div>
