@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
@@ -9,11 +9,15 @@ import SEO from "@/components/site/SEO";
 export default function BlogListPage() {
   const [blogs, setBlogs] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [category, setCategory] = useState("All topics");
 
   useEffect(() => {
-    publicApi.getBlogs().then(setBlogs);
+    publicApi.getBlogs().then((items) => setBlogs(Array.isArray(items) ? items : [])).catch(() => setBlogs([]));
     publicApi.getSiteSettings().then(setSettings);
   }, []);
+
+  const categories = useMemo(() => ["All topics", ...new Set(blogs.map((b) => b.category).filter(Boolean))], [blogs]);
+  const visibleBlogs = useMemo(() => category === "All topics" ? blogs : blogs.filter((b) => b.category === category), [blogs, category]);
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -60,14 +64,17 @@ export default function BlogListPage() {
         <div className="container-wide">
           <div className="section-eyebrow">Blog</div>
           <h1 className="mt-2 text-brand-navy font-bold">Insights on modern construction</h1>
+          <p className="mt-3 max-w-2xl text-brand-navy/65">Practical guidance for planning, budgeting and building a home in India, written by people who work in construction.</p>
+          {categories.length > 1 && <nav aria-label="Filter articles by topic" className="mt-6 flex flex-wrap gap-2">{categories.map((item) => <button key={item} type="button" onClick={() => setCategory(item)} aria-pressed={category === item} className={`rounded-full border px-4 py-2 text-sm transition ${category === item ? "border-brand-navy bg-brand-navy text-white" : "border-brand-navy/15 text-brand-navy hover:border-brand-orange"}`}>{item}</button>)}</nav>}
           <div className="mt-10 grid md:grid-cols-3 gap-5">
-            {blogs.map((b) => (
+            {visibleBlogs.map((b) => (
               <Link key={b.id} to={`/blog/${b.slug}`} className="group rounded-2xl overflow-hidden bg-white border border-black/5 shadow-soft hover:shadow-premium transition">
                 <div className="aspect-[16/10] overflow-hidden">
                   <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy"/>
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-2 text-[11px] text-brand-navy/60">
+                    {b.category && <><span>{b.category}</span><span className="divider-dot" /></>}
                     <span>{b.author}</span>
                     <span className="divider-dot" />
                     <span>{b.read_minutes} min read</span>
@@ -81,6 +88,7 @@ export default function BlogListPage() {
               </Link>
             ))}
           </div>
+          {visibleBlogs.length === 0 && <p className="mt-10 text-brand-navy/60">New construction guides are on the way.</p>}
         </div>
       </main>
       <Footer settings={settings} />

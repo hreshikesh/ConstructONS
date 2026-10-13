@@ -7,12 +7,19 @@ import { publicApi } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
 import SEO from "@/components/site/SEO";
 
+function formatArticleDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "long", year: "numeric" }).format(date);
+}
+
 export default function BlogDetailPage() {
   const { slug } = useParams();
   const [b, setB] = useState(null);
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    setB(null);
     publicApi.getBlog(slug).then(setB).catch(() => setB({}));
     publicApi.getSiteSettings().then(setSettings);
   }, [slug]);
@@ -35,7 +42,7 @@ export default function BlogDetailPage() {
         {
           "@type": "BlogPosting",
           "headline": b.title,
-          "image": b.cover_image || "https://constructons.com/icon.svg",
+          ...(b.cover_image ? { "image": b.cover_image } : {}),
           "author": {
             "@type": "Person",
             "name": b.author || "ConstructONS Team"
@@ -48,8 +55,12 @@ export default function BlogDetailPage() {
               "url": "https://constructons.com/icon.svg"
             }
           },
-          "description": b.excerpt || b.title,
-          "mainEntityOfPage": `https://constructons.com/blog/${b.slug}`
+          "description": b.meta_description || b.excerpt || b.title,
+          "mainEntityOfPage": `https://constructons.com/blog/${b.slug}`,
+          ...(b.published_at ? { "datePublished": b.published_at } : {}),
+          ...(b.updated_at || b.published_at ? { "dateModified": b.updated_at || b.published_at } : {}),
+          ...(b.category ? { "articleSection": b.category } : {}),
+          ...(Array.isArray(b.tags) && b.tags.length ? { "keywords": b.tags.join(", ") } : {})
         },
         {
           "@type": "BreadcrumbList",
@@ -79,16 +90,22 @@ export default function BlogDetailPage() {
   }, [b]);
 
   if (!b) return <div className="min-h-screen grid place-items-center"><div className="w-8 h-8 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" /></div>;
+  if (!b.id) return <>
+    <SEO title="Article not found" description="This article could not be found." canonical={`/blog/${slug}`} noindex />
+    <Header />
+    <main className="container-wide min-h-[55vh] pt-36 pb-24"><h1 className="text-brand-navy font-bold">Article not found</h1><p className="mt-3 text-brand-navy/65">This article may have been moved or unpublished.</p><Link to="/blog" className="mt-6 inline-flex text-brand-orange">Browse construction insights <ArrowLeft className="ml-2 h-4 w-4 rotate-180" /></Link></main>
+    <Footer settings={settings} />
+  </>;
 
   return (
     <>
       <SEO
-        title={b.title ? `${b.title}` : "Blog Article"}
-        description={b.excerpt || `${b.title} — insights from the ConstructONS team on modern home construction.`}
+        title={b.seo_title || b.title || "Blog Article"}
+        description={b.meta_description || b.excerpt || `${b.title} — insights from the ConstructONS team on modern home construction.`}
         canonical={`/blog/${b.slug || slug}`}
         image={b.cover_image}
         type="article"
-        keywords="home construction article, architecture design guide, building cost insights, house building tips"
+        keywords={Array.isArray(b.tags) ? b.tags.join(", ") : ""}
         structuredData={structuredData}
       />
 
@@ -102,6 +119,7 @@ export default function BlogDetailPage() {
             <span>{b.author}</span>
             <span className="divider-dot" />
             <span>{b.read_minutes} min read</span>
+            {formatArticleDate(b.published_at) && <><span className="divider-dot" /><time dateTime={b.published_at}>{formatArticleDate(b.published_at)}</time></>}
           </div>
           <div className="mt-6 rounded-2xl overflow-hidden aspect-[16/9] bg-brand-bg">
             <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover" loading="lazy" />

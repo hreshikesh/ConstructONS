@@ -3,9 +3,11 @@ import os
 import logging
 from pathlib import Path
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from urllib.parse import quote
+from xml.sax.saxutils import escape
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -118,6 +120,52 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap_xml():
+    """Serve a fresh sitemap so published CMS slugs do not depend on a frontend rebuild."""
+    from db import db
+
+    static_paths = [
+        "/", "/packages", "/packages/compare", "/find-my-package",
+        "/marketplace/architects", "/marketplace/contractors", "/marketplace/engineers",
+        "/marketplace/interior", "/marketplace/materials", "/marketplace/equipment",
+        "/marketplace/smart-home", "/marketplace/landscaping", "/about", "/blog", "/contact",
+    ]
+    entries = [f"  <url><loc>https://constructons.com{path}</loc></url>" for path in static_paths]
+    seen_urls = {f"https://constructons.com{path}" for path in static_paths}
+    blogs = await db.blogs.find(
+        {"is_published": True},
+        {"_id": 0, "slug": 1, "updated_at": 1, "published_at": 1},
+    ).to_list(50000)
+
+    for blog in blogs:
+        slug = blog.get("slug")
+        if not isinstance(slug, str) or not slug.strip():
+            continue
+        encoded_slug = quote(slug.strip(), safe="-")
+        article_url = f"https://constructons.com/blog/{encoded_slug}"
+        if article_url in seen_urls:
+            continue
+        seen_urls.add(article_url)
+        entry = f"  <url><loc>{escape(article_url)}</loc>"
+        modified = blog.get("updated_at") or blog.get("published_at")
+        if isinstance(modified, str) and modified.strip():
+            entry += f"<lastmod>{escape(modified.strip())}</lastmod>"
+        entries.append(f"{entry}</url>")
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(entries)
+        + "\n</urlset>"
+    )
+    return Response(
+        content=xml,
+        media_type="application/xml",
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 # 🛡️ CORS Middleware
 raw_cors = os.environ.get('CORS_ORIGINS', os.environ.get('CORS', '*'))

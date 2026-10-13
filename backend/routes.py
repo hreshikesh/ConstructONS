@@ -728,6 +728,14 @@ def make_crud(path: str, collection: str, ModelCls):
 
     @router.get(f"/{path}/{{id_or_slug}}")
     async def _get(id_or_slug: str):
+        if collection == "blogs":
+            blog = await db[collection].find_one(
+                {"$or": [{"id": id_or_slug}, {"slug": id_or_slug}], "is_published": True},
+                {"_id": 0},
+            )
+            if not blog:
+                raise HTTPException(status_code=404, detail="blogs not found")
+            return blog
         return await get_doc(collection, id_or_slug)
 
     @router.post(f"/{path}", dependencies=[Depends(require_admin)])

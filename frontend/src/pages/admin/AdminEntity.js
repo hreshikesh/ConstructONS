@@ -219,17 +219,21 @@ const ENTITY_CONFIG = {
   },
   blogs: {
     title: "Blogs",
-    listCols: ["title", "author", "read_minutes", "sort_order"],
+    listCols: ["title", "category", "author", "published_at", "is_published"],
     fields: [
       { name: "title", type: "string", required: true },
       { name: "slug", type: "string", required: true },
       { name: "excerpt", type: "text" },
+      { name: "seo_title", label: "SEO title (optional)", type: "string" },
+      { name: "meta_description", label: "Search description", type: "text" },
+      { name: "category", label: "Topic category", type: "string", placeholder: "Construction costs" },
       { name: "cover_image", type: "image", category: "blogs" },
       { name: "author", type: "string" },
       { name: "author_avatar", type: "image", category: "team" },
       { name: "read_minutes", type: "number" },
       { name: "tags", type: "tags" },
       { name: "content_html", type: "richtext" },
+      { name: "published_at", label: "Publish date and time", type: "datetime" },
       { name: "sort_order", type: "number" },
       { name: "is_published", type: "bool" },
     ],
@@ -733,6 +737,40 @@ function FieldEditor({ field, value, onChange, editingItem }) {
         {label}
         <input type="number" value={value ?? 0} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]" />
       </label>
+    );
+  }
+
+  if (field.type === "datetime") {
+    const parsed = value ? new Date(value) : null;
+    const validDate = parsed && !Number.isNaN(parsed.getTime());
+    const localDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const localTime = (date) => `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    const toStoredValue = (datePart, timePart) => {
+      if (!datePart || !timePart) return "";
+      const date = new Date(`${datePart}T${timePart}:00`);
+      if (Number.isNaN(date.getTime())) return "";
+      const offset = -date.getTimezoneOffset();
+      const sign = offset >= 0 ? "+" : "-";
+      const zone = `${sign}${String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0")}:${String(Math.abs(offset) % 60).padStart(2, "0")}`;
+      return `${datePart}T${timePart}:00${zone}`;
+    };
+    const datePart = validDate ? localDate(parsed) : "";
+    const timePart = validDate ? localTime(parsed) : "";
+    const updatePart = (nextDate, nextTime) => onChange(nextDate && nextTime ? toStoredValue(nextDate, nextTime) : "");
+    const setToday = () => updatePart(localDate(new Date()), timePart || "09:00");
+    const setNow = () => updatePart(datePart || localDate(new Date()), localTime(new Date()));
+
+    return (
+      <div className="block">
+        {label}
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-2">
+          <input aria-label="Publish date" type="date" value={datePart} onChange={(e) => updatePart(e.target.value, timePart || "09:00")} className="min-w-0 rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]" />
+          <input aria-label="Publish time" type="time" step="60" value={timePart} onChange={(e) => updatePart(datePart || localDate(new Date()), e.target.value)} className="min-w-0 rounded-xl border border-black/10 bg-white px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#FF6600] text-sm text-[#000F1B]" />
+          <button type="button" onClick={setToday} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-[#000F1B] hover:bg-black/5">Today</button>
+          <button type="button" onClick={setNow} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-[#000F1B] hover:bg-black/5">Now</button>
+        </div>
+        <p className="mt-1 text-[10px] text-[#111111]/45">Use the date/time fields or type directly. Saved with your local timezone.</p>
+      </div>
     );
   }
 

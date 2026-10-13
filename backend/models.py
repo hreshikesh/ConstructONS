@@ -170,6 +170,9 @@ class Blog(BaseDoc):
     title: str
     slug: str
     excerpt: str = ""
+    seo_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    category: Optional[str] = None
     cover_image: str
     author: str = "ConstructONS Team"
     author_avatar: Optional[str] = None
@@ -177,6 +180,7 @@ class Blog(BaseDoc):
     tags: List[str] = Field(default_factory=list)
     content_html: str  # simple HTML body
     published_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 # ---------- Marketplace ----------
