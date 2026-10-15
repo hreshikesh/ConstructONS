@@ -2,15 +2,15 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 
 const SITE_URL = "https://constructons.com";
-const DEFAULT_TITLE = "ConstructONS | Home Construction Company in Bangalore";
+const DEFAULT_TITLE = "ConstructONS | AI-Powered Home Construction Platform in India";
 const DEFAULT_DESC =
-  "ConstructONS is a leading home construction company in Bangalore offering turnkey house construction from ₹1,499/sqft. AI live site tracking & zero hidden costs.";
-const DEFAULT_IMAGE = `${SITE_URL}/icon.svg`;
+  "ConstructONS is India's leading AI-powered home construction platform. Get transparent pricing from ₹1,499/sqft, real-time live site tracking, and 3D design tools.";
+const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 
 export default function SEO({
   title,
   description,
-  canonical = "",
+  canonical,       // e.g. "/contact" or "/packages"
   image,
   type = "website",
   noindex = false,
@@ -21,9 +21,18 @@ export default function SEO({
   const fullTitle = title ? `${title} | ConstructONS` : DEFAULT_TITLE;
   const desc = description || DEFAULT_DESC;
   const ogImage = image || DEFAULT_IMAGE;
-  const canonicalUrl = canonical
-    ? `${SITE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`
-    : SITE_URL;
+
+  // ✅ FIX 1: Build canonical from prop OR current browser URL
+  // ✅ FIX 2: Never render canonical on noindex pages
+  let canonicalUrl = null;
+  if (!noindex) {
+    if (canonical) {
+      canonicalUrl = `${SITE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
+    } else if (typeof window !== "undefined") {
+      // Auto-detect from current URL if no canonical prop passed
+      canonicalUrl = `${SITE_URL}${window.location.pathname}`;
+    }
+  }
 
   return (
     <Helmet>
@@ -31,16 +40,23 @@ export default function SEO({
       <title>{fullTitle}</title>
       <meta name="description" content={desc} />
       {keywords && <meta name="keywords" content={keywords} />}
-      <link rel="canonical" href={canonicalUrl} />
+
+      {/* Robots: noindex for admin/portal, index for public */}
       {noindex ? (
         <meta name="robots" content="noindex, nofollow" />
       ) : (
-        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        />
       )}
 
-      {/* Open Graph / Facebook / WhatsApp Preview */}
+      {/* ✅ Canonical: only on indexable pages, never on noindex */}
+      {!noindex && canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+      {/* Open Graph */}
       <meta property="og:type" content={type} />
-      <meta property="og:url" content={canonicalUrl} />
+      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={desc} />
       <meta property="og:image" content={ogImage} />
@@ -49,12 +65,12 @@ export default function SEO({
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content={canonicalUrl} />
+      {canonicalUrl && <meta name="twitter:url" content={canonicalUrl} />}
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* Structured Data (JSON-LD) */}
+      {/* Structured Data */}
       {structuredData && (
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
@@ -66,16 +82,15 @@ export default function SEO({
   );
 }
 
-// Local Construction Business Schema for Home & Local Pages
 export const constructionBusinessSchema = {
   "@context": "https://schema.org",
-  "@type": "ConstructionBusiness",
+  "@type": "HomeAndConstructionBusiness",
   name: "ConstructONS",
   url: "https://constructons.com",
-  logo: "https://constructons.com/icon.svg",
-  image: "https://constructons.com/icon.svg",
+  logo: "https://constructons.com/logo.webp",
+  image: "https://constructons.com/og-image.png",
   description: DEFAULT_DESC,
-  priceRange: "₹₹",
+  priceRange: "₹1,499/sqft - ₹3,500/sqft",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Bengaluru",
@@ -86,13 +101,13 @@ export const constructionBusinessSchema = {
   geo: {
     "@type": "GeoCoordinates",
     latitude: 13.063165220577533,
-    longitude:  77.59103013329107,
+    longitude: 77.59103013329107,
   },
   areaServed: [
     { "@type": "City", name: "Bengaluru" },
     { "@type": "City", name: "Hyderabad" },
     { "@type": "City", name: "Pune" },
     { "@type": "City", name: "Chennai" },
-    { "@type": "City", name: "Mumbai" }
-  ]
+    { "@type": "City", name: "Mumbai" },
+  ],
 };

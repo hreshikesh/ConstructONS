@@ -127,14 +127,32 @@ async def sitemap_xml():
     """Serve a fresh sitemap so published CMS slugs do not depend on a frontend rebuild."""
     from db import db
 
-    static_paths = [
-        "/", "/packages", "/packages/compare", "/find-my-package",
-        "/marketplace/architects", "/marketplace/contractors", "/marketplace/engineers",
-        "/marketplace/interior", "/marketplace/materials", "/marketplace/equipment",
-        "/marketplace/smart-home", "/marketplace/landscaping", "/about", "/blog", "/contact",
+    static_urls = [
+        ("/", "daily", "1.0"),
+        ("/packages", "weekly", "0.9"),
+        ("/packages/compare", "monthly", "0.7"),
+        ("/find-my-package", "monthly", "0.8"),
+        ("/marketplace/architects", "monthly", "0.7"),
+        ("/marketplace/contractors", "monthly", "0.7"),
+        ("/marketplace/engineers", "monthly", "0.7"),
+        ("/marketplace/interior", "monthly", "0.7"),
+        ("/marketplace/materials", "monthly", "0.6"),
+        ("/marketplace/equipment", "monthly", "0.6"),
+        ("/marketplace/smart-home", "monthly", "0.7"),
+        ("/marketplace/landscaping", "monthly", "0.6"),
+        ("/about", "monthly", "0.6"),
+        ("/blog", "weekly", "0.8"),
+        ("/contact", "monthly", "0.7"),
     ]
-    entries = [f"  <url><loc>https://constructons.com{path}</loc></url>" for path in static_paths]
-    seen_urls = {f"https://constructons.com{path}" for path in static_paths}
+    entries = [
+        "  <url>"
+        f"<loc>https://constructons.com{path}</loc>"
+        f"<changefreq>{frequency}</changefreq>"
+        f"<priority>{priority}</priority>"
+        "</url>"
+        for path, frequency, priority in static_urls
+    ]
+    seen_urls = {f"https://constructons.com{path}" for path, _, _ in static_urls}
     blogs = await db.blogs.find(
         {"is_published": True},
         {"_id": 0, "slug": 1, "updated_at": 1, "published_at": 1},
@@ -153,6 +171,7 @@ async def sitemap_xml():
         modified = blog.get("updated_at") or blog.get("published_at")
         if isinstance(modified, str) and modified.strip():
             entry += f"<lastmod>{escape(modified.strip())}</lastmod>"
+        entry += "<changefreq>monthly</changefreq><priority>0.7</priority>"
         entries.append(f"{entry}</url>")
 
     xml = (
@@ -171,13 +190,18 @@ async def sitemap_xml():
 raw_cors = os.environ.get('CORS_ORIGINS', os.environ.get('CORS', '*'))
 
 if raw_cors.strip() == '*':
+  
     origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "https://construct-ons-six.vercel.app",
-        "https://constructons.com"
+        "https://constructons.com",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "capacitor://localhost",       # ← Add if using Capacitor mobile app
+        "https://localhost",            # ← Add if needed for local HTTPS
     ]
 else:
     origins = [origin.strip() for origin in raw_cors.split(',') if origin.strip()]

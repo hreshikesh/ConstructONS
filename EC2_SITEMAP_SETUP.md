@@ -20,9 +20,10 @@ Reload Nginx after validating its configuration. The checked-in `frontend/public
 
 ## Verify after deployment
 
-1. Open `https://constructons.com/sitemap.xml`. It should return HTTP 200 with `Content-Type: application/xml`.
-2. Confirm a currently published post appears as `https://constructons.com/blog/{slug}` and an unpublished post does not.
-3. Change a post slug in Admin, then reload the sitemap. The new slug should appear without rebuilding the frontend. The previous article URL will need a redirect if people or search engines already know it.
-4. In Google Search Console, open **Sitemaps** and confirm the existing `/sitemap.xml` submission has a recent successful read. The sitemap URL itself does not change, so resubmission is generally unnecessary. Inspect important new article URLs when needed.
+1. Confirm the production CMS API returns the article from `https://constructons.com/api/blogs`, with the intended `slug` and `is_published: true`. If the post is absent there, first correct the admin/API production environment or publish state; the sitemap can only include records returned by the production CMS.
+2. On the EC2 host, check that FastAPI itself returns the generated sitemap: `curl -i http://127.0.0.1:8000/sitemap.xml`. It should be HTTP 200 with XML content and the article URL.
+3. Check `https://constructons.com/sitemap.xml`. It should return the same dynamic XML. If the EC2 FastAPI response is dynamic but the public URL remains the old 15-URL XML file, Nginx is still serving the static frontend file; add the exact-match proxy rule above and reload Nginx with `sudo nginx -t && sudo systemctl reload nginx`.
+4. Confirm published blog URLs appear and unpublished URLs do not. Change a slug in Admin and reload the sitemap. The new slug should appear without rebuilding React. The previous article URL will need a redirect if people or search engines already know it.
+5. In Google Search Console, open **Sitemaps** and confirm the existing `/sitemap.xml` submission has a recent successful read. The sitemap URL itself does not change, so resubmission is generally unnecessary. Inspect important new article URLs when needed.
 
 Sitemap discovery is a crawl hint; it does not force Google to crawl or index every URL. Keep published posts linked from `/blog`, and make sure each article provides useful, substantive content. The React article pages still fetch content client-side, so server-rendered article HTML remains a worthwhile separate SEO improvement.

@@ -14,6 +14,8 @@ import {
   EyeOff
 } from "lucide-react";
 
+import SEO from "@/components/site/SEO";
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +44,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] flex flex-col justify-between font-['Poppins'] text-[#111111] selection:bg-[#FF6600]/20 selection:text-[#000F1B] p-4 sm:p-6 lg:p-8">
+           <SEO title="Admin Login" noindex={true} />
       <Toaster richColors position="top-right" />
 
       {/* 🧭 Top Navigation Exit Bar */}
