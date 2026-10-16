@@ -226,13 +226,21 @@ const ENTITY_CONFIG = {
       { name: "excerpt", type: "text" },
       { name: "seo_title", label: "SEO title (optional)", type: "string" },
       { name: "meta_description", label: "Search description", type: "text" },
+      { name: "primary_keyword", label: "Primary keyword", type: "string", placeholder: "AI powered home construction" },
+      { name: "secondary_keywords", label: "Secondary keywords", type: "tags", placeholder: "home construction company, turnkey construction" },
+      { name: "search_intent", label: "Search intent", type: "string", placeholder: "Informational and commercial investigation" },
+      { name: "target_audience", label: "Target audience", type: "text" },
+      { name: "geographic_focus", label: "Geographic focus", type: "text", placeholder: "Karnataka and South India; verify current service areas" },
       { name: "category", label: "Topic category", type: "string", placeholder: "Construction costs" },
       { name: "cover_image", type: "image", category: "blogs" },
+      { name: "cover_image_alt", label: "Featured image alt text", type: "string" },
+      { name: "cover_image_title", label: "Featured image title", type: "string" },
+      { name: "cover_image_caption", label: "Featured image caption", type: "text" },
       { name: "author", type: "string" },
       { name: "author_avatar", type: "image", category: "team" },
       { name: "read_minutes", type: "number" },
       { name: "tags", type: "tags" },
-      { name: "content_html", type: "richtext" },
+      { name: "content_html", type: "richtext", placeholder: "Write the article body. The article title is the page H1; use H2 and H3 for section headings." },
       { name: "published_at", label: "Publish date and time", type: "datetime" },
       { name: "sort_order", type: "number" },
       { name: "is_published", type: "bool" },
@@ -836,6 +844,7 @@ function FieldEditor({ field, value, onChange, editingItem }) {
       <input
         value={value || ""}
         maxLength={maxLen || undefined}
+        placeholder={field.placeholder || ""}
         onChange={(e) => {
           let v = e.target.value;
           if (field.name === "name") {

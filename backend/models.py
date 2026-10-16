@@ -172,8 +172,16 @@ class Blog(BaseDoc):
     excerpt: str = ""
     seo_title: Optional[str] = None
     meta_description: Optional[str] = None
+    primary_keyword: Optional[str] = None
+    secondary_keywords: List[str] = Field(default_factory=list)
+    search_intent: Optional[str] = None
+    target_audience: Optional[str] = None
+    geographic_focus: Optional[str] = None
     category: Optional[str] = None
     cover_image: str
+    cover_image_alt: Optional[str] = None
+    cover_image_title: Optional[str] = None
+    cover_image_caption: Optional[str] = None
     author: str = "ConstructONS Team"
     author_avatar: Optional[str] = None
     read_minutes: int = 5

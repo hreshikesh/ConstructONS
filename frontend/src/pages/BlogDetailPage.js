@@ -36,13 +36,26 @@ export default function BlogDetailPage() {
 
   const structuredData = useMemo(() => {
     if (!b || !b.id) return null;
+    const seoKeywords = [
+      b.primary_keyword,
+      ...(Array.isArray(b.secondary_keywords) ? b.secondary_keywords : []),
+      ...(Array.isArray(b.tags) ? b.tags : []),
+    ].filter(Boolean);
     return {
       "@context": "https://schema.org",
       "@graph": [
         {
           "@type": "BlogPosting",
           "headline": b.title,
-          ...(b.cover_image ? { "image": b.cover_image } : {}),
+          ...(b.cover_image ? {
+            "image": {
+              "@type": "ImageObject",
+              "url": b.cover_image,
+              "name": b.cover_image_title || b.title,
+              "description": b.cover_image_alt || b.title,
+              ...(b.cover_image_caption ? { "caption": b.cover_image_caption } : {}),
+            }
+          } : {}),
           "author": {
             "@type": "Person",
             "name": b.author || "ConstructONS Team"
@@ -60,7 +73,7 @@ export default function BlogDetailPage() {
           ...(b.published_at ? { "datePublished": b.published_at } : {}),
           ...(b.updated_at || b.published_at ? { "dateModified": b.updated_at || b.published_at } : {}),
           ...(b.category ? { "articleSection": b.category } : {}),
-          ...(Array.isArray(b.tags) && b.tags.length ? { "keywords": b.tags.join(", ") } : {})
+          ...(seoKeywords.length ? { "keywords": seoKeywords.join(", ") } : {})
         },
         {
           "@type": "BreadcrumbList",
@@ -105,7 +118,11 @@ export default function BlogDetailPage() {
         canonical={`/blog/${b.slug || slug}`}
         image={b.cover_image}
         type="article"
-        keywords={Array.isArray(b.tags) ? b.tags.join(", ") : ""}
+        keywords={[
+          b.primary_keyword,
+          ...(Array.isArray(b.secondary_keywords) ? b.secondary_keywords : []),
+          ...(Array.isArray(b.tags) ? b.tags : []),
+        ].filter(Boolean).join(", ")}
         structuredData={structuredData}
       />
 
@@ -121,9 +138,20 @@ export default function BlogDetailPage() {
             <span>{b.read_minutes} min read</span>
             {formatArticleDate(b.published_at) && <><span className="divider-dot" /><time dateTime={b.published_at}>{formatArticleDate(b.published_at)}</time></>}
           </div>
-          <div className="mt-6 rounded-2xl overflow-hidden aspect-[16/9] bg-brand-bg">
-            <img src={b.cover_image} alt={b.title} className="w-full h-full object-cover" loading="lazy" />
-          </div>
+          <figure className="mt-6">
+            <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-brand-bg">
+              <img
+                src={b.cover_image}
+                alt={b.cover_image_alt || b.title}
+                title={b.cover_image_title || undefined}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            {b.cover_image_caption && (
+              <figcaption className="mt-2 text-sm text-brand-navy/60">{b.cover_image_caption}</figcaption>
+            )}
+          </figure>
           <article
             data-testid="blog-content"
             className="prose prose-slate mt-6 max-w-none text-brand-navy/80"
