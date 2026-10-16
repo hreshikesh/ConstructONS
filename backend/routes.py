@@ -721,6 +721,12 @@ async def portal_ai_chat(body: PortalChatRequest, customer=Depends(get_current_c
 
 
 # ----------------------- Generic factory for simpler collections -----------------------
+@router.get("/admin/blogs", dependencies=[Depends(require_admin)])
+async def list_admin_blogs():
+    """Return published and draft blogs to authenticated CMS users."""
+    return await list_docs("blogs", published_only=False)
+
+
 def make_crud(path: str, collection: str, ModelCls):
     @router.get(f"/{path}")
     async def _list():

@@ -108,7 +108,7 @@ export const adminApi = {
   login: (email, password) => api.post("/admin/login", { email, password }).then((r) => r.data),
   logout: () => api.post("/admin/logout", {}).then((r) => r.data).catch(() => ({ success: true })),
   me: () => api.get("/admin/me").then((r) => r.data),
-  list: (path) => api.get(`/${path}`).then((r) => r.data),
+  list: (path) => api.get(path === "blogs" ? "/admin/blogs" : `/${path}`).then((r) => r.data),
   get: (path, id) => api.get(`/${path}/${id}`).then((r) => r.data),
   create: (path, body) => api.post(`/${path}`, body).then((r) => r.data),
   update: (path, id, body) => api.put(`/${path}/${id}`, body).then((r) => r.data),
